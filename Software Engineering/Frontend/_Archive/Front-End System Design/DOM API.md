@@ -1,0 +1,3 @@
+- API Refresher 
+- Querying methods
+- Optimizing query performance 

@@ -1,0 +1,2 @@
+![[CheatsheetfortheCourse.png]]
+

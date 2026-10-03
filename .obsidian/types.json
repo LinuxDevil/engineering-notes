@@ -1,0 +1,23 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "tags": "tags",
+    "Concrete Class": "text",
+    "Principle": "text",
+    "REST": "text",
+    "Features": "text",
+    "Authorization": "text",
+    "Command": "text",
+    "Example": "text",
+    "File/Directory": "text",
+    "Filter Operator": "text",
+    "Description": "text",
+    "Syntax": "text",
+    "Function": "text",
+    "GROUP BY": "text",
+    "INNER JOIN": "text",
+    "SR.NO.": "number",
+    "UNION": "text"
+  }
+}

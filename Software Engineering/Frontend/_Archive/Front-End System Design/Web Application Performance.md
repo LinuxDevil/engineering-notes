@@ -1,0 +1,4 @@
+- JS
+- CSS
+- Images
+- Other assets

@@ -1,0 +1,52 @@
+---
+tags: [backend, backend/java, course]
+aliases: [Reactive Course, Java Reactive Programming Course]
+updated: 2026-09-27
+---
+# Java Reactive Course
+
+> [!tldr] TL;DR
+> Course notes on reactive programming in Java with **Project Reactor**. The starting point is the four I/O models (sync-blocking, async, non-blocking, non-blocking + async) and why reactive code tries to never hold a thread while waiting. The Reactor details (Mono, Flux, operators, schedulers, backpressure) are in [[Reactor - Mono & Flux]].
+
+## The four I/O models (the insurance-company phone call)
+
+Imagine calling an insurance company that puts you on hold.
+
+| Model | Phone-call analogy | In code |
+|---|---|---|
+| 1. **Sync + blocking** (default) | You hold the phone and wait, doing nothing else | `String body = httpClient.send(...)` on the request thread |
+| 2. **Async** | You hire someone (another thread) to hold the phone for you, so *you* are free; but that person is blocked | `CompletableFuture.supplyAsync(() -> blockingCall(), pool)` |
+| 3. **Non-blocking** | You ask them to call you back; you keep checking your phone | Low-level: `Selector`/NIO polling, "is it ready yet?" |
+| 4. **Non-blocking + async** (the "hyped" approach) | They call you back when ready and you react; nobody waits on hold | Event loop + callbacks: Netty, Reactor, WebFlux |
+
+```mermaid
+sequenceDiagram
+  participant T as Request thread
+  participant P as Other thread
+  participant S as Remote service
+  Note over T,S: 1. Sync + blocking
+  T->>S: call
+  S-->>T: (thread idle until) response
+  Note over T,S: 2. Async
+  T->>P: hand off
+  P->>S: call (P is blocked)
+  S-->>P: response
+  P-->>T: result later
+  Note over T,S: 4. Non-blocking + async
+  T->>S: register call + callback, thread moves on
+  S-->>T: event: response ready → callback on any free thread
+```
+
+Reactive programming (model 4) lets a handful of threads serve thousands of concurrent requests because no thread sits idle waiting for I/O. Since Java 21, **virtual threads** give similar scalability with plain blocking code; see [[Java Concurrency & Virtual Threads]] for when each fits.
+
+## Course notes
+- [[Reactor - Mono & Flux]]: publishers, laziness, `just` vs `fromSupplier`, operators, schedulers, backpressure
+
+## Related
+- [[Java & Spring Index]]
+- [[Reactive Spring Book]] · [[Reactive Spring - Ch 4 IO & Reactive Streams]] · [[Reactive Spring - Ch 5 Reactor & Backpressure]]
+- [[Java Concurrency & Virtual Threads]]
+
+## Sources
+- [Project Reactor reference guide](https://projectreactor.io/docs/core/release/reference/)
+- [Reactive Streams specification](https://www.reactive-streams.org/)
