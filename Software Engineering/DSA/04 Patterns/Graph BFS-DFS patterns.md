@@ -1,16 +1,20 @@
 ---
+title: "Graph BFS-DFS patterns"
 tags: [dsa, dsa/patterns]
 aliases: [Graph patterns, Grid BFS, Number of Islands pattern, Multi-source BFS, Topological Sort, Kahn's algorithm, 0-1 BFS]
 updated: 2026-09-27
 ---
 # Graph BFS-DFS patterns
 
-> [!tldr] TL;DR
-> Most graph interview problems are one of a handful of shapes: **count connected components** (islands), **shortest path in an unweighted graph** (BFS), **spread from many sources at once** (multi-source BFS), **detect a cycle**, or **order tasks with dependencies** (topological sort). The engine is always the same: a **visited set** plus a **queue (BFS)** or **stack / recursion (DFS)**, costing O(V + E). A 2D grid is just a graph where each cell has up to 4 neighbors.
+<Note>
+**TL;DR**
+
+Most graph interview problems are one of a handful of shapes: **count connected components** (islands), **shortest path in an unweighted graph** (BFS), **spread from many sources at once** (multi-source BFS), **detect a cycle**, or **order tasks with dependencies** (topological sort). The engine is always the same: a **visited set** plus a **queue (BFS)** or **stack / recursion (DFS)**, costing O(V + E). A 2D grid is just a graph where each cell has up to 4 neighbors.
+</Note>
 
 ## The idea
 
-A graph is nodes plus edges (see [[Graphs]]). You rarely get a ready-made graph class in interviews. Instead you get:
+A graph is nodes plus edges (see [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)). You rarely get a ready-made graph class in interviews. Instead you get:
 
 - an **edge list** `[[a, b], ...]` that you turn into an adjacency list,
 - a **grid** where cells are nodes and up/down/left/right are edges,
@@ -52,7 +56,7 @@ Process the queue in batches of `len(queue)`: each batch is one distance level. 
 Push **all** sources into the queue before starting (all rotten oranges, all gates, all zeros). BFS then computes, for every cell, the distance to the **nearest** source in one O(V + E) pass, instead of one BFS per source.
 
 ### Cycle detection
-- **Undirected**: during DFS, seeing a visited neighbor that is **not your parent** means a cycle. Or use [[Union-Find]]: an edge whose endpoints are already connected closes a cycle.
+- **Undirected**: during DFS, seeing a visited neighbor that is **not your parent** means a cycle. Or use [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find): an edge whose endpoints are already connected closes a cycle.
 - **Directed**: three colors. White = unvisited, gray = on the current DFS path, black = done. An edge to a **gray** node is a back edge, so a cycle.
 
 ### Topological sort
@@ -63,7 +67,7 @@ Only for DAGs (directed acyclic graphs).
 ### Mentions
 - **Bidirectional BFS**: search from start and goal at the same time and stop when frontiers meet. With branching factor b and distance d, work drops from about b^d to about 2·b^(d/2). Classic use: [127. Word Ladder](https://leetcode.com/problems/word-ladder/).
 - **0-1 BFS**: when edges cost 0 or 1, use a deque; push 0-cost neighbors to the **front** and 1-cost neighbors to the **back**. It is Dijkstra in O(V + E). Example: [1368. Minimum Cost to Make at Least One Valid Path in a Grid](https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/).
-- **Positive weights**: Dijkstra with a min-heap, O((V + E) log V). See [[Top-K & Heaps pattern]].
+- **Positive weights**: Dijkstra with a min-heap, O((V + E) log V). See [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern).
 
 ## Complexity
 
@@ -363,7 +367,7 @@ Time O(R·C), space O(R·C) for the queue. The `while q and fresh` condition avo
 - **"Minimum number of steps / moves / transformations"** with every move costing the same: BFS.
 - **Many starting points** spreading simultaneously, or "distance to the nearest X": multi-source BFS.
 - **"Prerequisites", "dependencies", "build order", "can all tasks finish"**: topological sort / directed cycle detection.
-- **"Is it a valid tree?", "redundant connection"**, dynamic connectivity: DFS or [[Union-Find]].
+- **"Is it a valid tree?", "redundant connection"**, dynamic connectivity: DFS or [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find).
 - **States** that are not obviously a graph (lock combinations, word transformations, puzzle boards): model each state as a node and BFS over it.
 - Weights **0/1**: 0-1 BFS. Positive weights: Dijkstra. Negative weights: Bellman-Ford.
 
@@ -380,7 +384,7 @@ Time O(R·C), space O(R·C) for the queue. The `while q and fresh` condition avo
 
 ## Senior perspective
 
-- **Real graph traversals everywhere**: package managers and build tools (npm, Bazel, Gradle, Turborepo) use topological sort and cycle detection on dependency graphs; spreadsheets recompute cells in topological order; garbage collectors do a mark phase that is graph reachability from roots (see [[Memory Management & Garbage Collection]]); web crawlers are BFS with a visited set that must be distributed.
+- **Real graph traversals everywhere**: package managers and build tools (npm, Bazel, Gradle, Turborepo) use topological sort and cycle detection on dependency graphs; spreadsheets recompute cells in topological order; garbage collectors do a mark phase that is graph reachability from roots (see [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)); web crawlers are BFS with a visited set that must be distributed.
 - **Social "degrees of separation"** and routing on huge graphs use bidirectional BFS or landmarks, because a plain BFS frontier grows exponentially.
 - **Memory is the bottleneck** at scale. A visited set of 10^8 nodes does not fit a hash set comfortably; use bitsets indexed by node id or Bloom filters (accepting false positives) in crawlers.
 - **Representation matters.** Adjacency lists (arrays of arrays, or CSR format: one flat array of neighbors plus offsets) are cache friendly. Matrices only pay off for dense graphs.
@@ -400,33 +404,40 @@ Time O(R·C), space O(R·C) for the queue. The `while q and fresh` condition avo
 
 ## Interview questions
 
-> [!question]- Why does BFS give the shortest path in an unweighted graph but DFS does not?
-> BFS visits nodes in nondecreasing order of distance (all distance-1 nodes, then distance-2, ...), so the first time it reaches a node is via a fewest-edge path. DFS may reach a node through a long detour first and mark it visited.
+<Accordion title="Why does BFS give the shortest path in an unweighted graph but DFS does not?">
+BFS visits nodes in nondecreasing order of distance (all distance-1 nodes, then distance-2, ...), so the first time it reaches a node is via a fewest-edge path. DFS may reach a node through a long detour first and mark it visited.
+</Accordion>
 
-> [!question]- Why mark nodes visited when pushing rather than when popping?
-> Otherwise several neighbors can enqueue the same node before it is popped, so the queue holds duplicates and work can grow beyond O(V + E). Marking on push guarantees each node enters the queue once.
+<Accordion title="Why mark nodes visited when pushing rather than when popping?">
+Otherwise several neighbors can enqueue the same node before it is popped, so the queue holds duplicates and work can grow beyond O(V + E). Marking on push guarantees each node enters the queue once.
+</Accordion>
 
-> [!question]- What is multi-source BFS and when do you need it?
-> Seed the queue with every source before starting. BFS then computes distance to the nearest source for all nodes in one pass. Use it for rotting oranges, walls and gates, 01 matrix, and "distance to nearest X" problems. Running BFS from each source separately would be O(S·(V + E)).
+<Accordion title="What is multi-source BFS and when do you need it?">
+Seed the queue with every source before starting. BFS then computes distance to the nearest source for all nodes in one pass. Use it for rotting oranges, walls and gates, 01 matrix, and "distance to nearest X" problems. Running BFS from each source separately would be O(S·(V + E)).
+</Accordion>
 
-> [!question]- How do you detect a cycle in a directed vs an undirected graph?
-> Directed: DFS with three colors; an edge to a gray (in-progress) node is a back edge. Or run Kahn's algorithm: if not all nodes get processed, there is a cycle. Undirected: a visited neighbor that is not the parent means a cycle, or Union-Find finds an edge whose endpoints are already connected.
+<Accordion title="How do you detect a cycle in a directed vs an undirected graph?">
+Directed: DFS with three colors; an edge to a gray (in-progress) node is a back edge. Or run Kahn's algorithm: if not all nodes get processed, there is a cycle. Undirected: a visited neighbor that is not the parent means a cycle, or Union-Find finds an edge whose endpoints are already connected.
+</Accordion>
 
-> [!question]- Explain Kahn's algorithm and its output.
-> Count in-degrees, queue all nodes with in-degree 0, repeatedly pop a node, append it to the order and decrement its neighbors, queueing any that hit 0. The output is a valid topological order; if its length is less than V, the graph has a cycle. O(V + E).
+<Accordion title="Explain Kahn's algorithm and its output.">
+Count in-degrees, queue all nodes with in-degree 0, repeatedly pop a node, append it to the order and decrement its neighbors, queueing any that hit 0. The output is a valid topological order; if its length is less than V, the graph has a cycle. O(V + E).
+</Accordion>
 
-> [!question]- BFS vs DFS vs Union-Find for counting connected components?
-> All work in about O(V + E). DFS/BFS are simplest on a static graph. Union-Find shines when edges arrive over time (online connectivity, "number of islands II") or when you only need connectivity, not paths.
+<Accordion title="BFS vs DFS vs Union-Find for counting connected components?">
+All work in about O(V + E). DFS/BFS are simplest on a static graph. Union-Find shines when edges arrive over time (online connectivity, "number of islands II") or when you only need connectivity, not paths.
+</Accordion>
 
-> [!question]- What is 0-1 BFS?
-> A shortest-path algorithm for graphs whose edge weights are 0 or 1. Use a deque: relax a 0-weight edge by pushing to the front, a 1-weight edge by pushing to the back. It behaves like Dijkstra but runs in O(V + E).
+<Accordion title="What is 0-1 BFS?">
+A shortest-path algorithm for graphs whose edge weights are 0 or 1. Use a deque: relax a 0-weight edge by pushing to the front, a 1-weight edge by pushing to the back. It behaves like Dijkstra but runs in O(V + E).
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Graphs]] · [[Tree Traversal - DFS & BFS]] · [[Union-Find]] · [[Stacks & Queues]]
-- [[Top-K & Heaps pattern]] (Dijkstra's heap) · [[Backtracking]] (DFS over choices) · [[Dynamic Programming]] (DP on DAGs)
-- [[Recursion & Backtracking]] · [[Execution Context & Call Stack]] (recursion depth)
-- [[Big-O & Complexity Analysis]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) · [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues)
+- [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) (Dijkstra's heap) · [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) (DFS over choices) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (DP on DAGs)
+- [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) (recursion depth)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
 
 ## Sources
 - [Sedgewick & Wayne, Algorithms 4th ed.: Undirected Graphs](https://algs4.cs.princeton.edu/41graph/) and [Directed Graphs](https://algs4.cs.princeton.edu/42digraph/)

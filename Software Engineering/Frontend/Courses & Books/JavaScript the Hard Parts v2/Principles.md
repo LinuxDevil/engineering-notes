@@ -1,4 +1,7 @@
-![[Screenshot_2023-08-26_at_6.03.43_PM.png]]
+---
+title: "Principles"
+---
+![Screenshot_2023-08-26_at_6.03.43_PM](/Attachments/Screenshot_2023-08-26_at_6.03.43_PM.png)
 
 Thread of execution → <u>The ability to go through the code and execute it</u>
 

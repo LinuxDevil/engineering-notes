@@ -1,12 +1,16 @@
 ---
+title: "Monorepos"
 tags: [frontend, frontend/tooling, frontend/architecture]
 aliases: [Monorepo, Polyrepo, Nx, Turborepo, pnpm workspaces, Changesets]
 updated: 2026-09-27
 ---
 # Monorepos
 
-> [!tldr] TL;DR
-> A **monorepo** keeps many apps and libraries in **one Git repository**; a **polyrepo** setup gives each its own repo. Monorepos make sharing code, atomic cross-project changes and centralised tooling easy, but they need tooling to stay fast: **workspaces** (pnpm/npm/Yarn/Bun) to link packages, and a **task runner** (Nx, Turborepo) for **caching** and **affected-only** builds. Versioning published packages is handled with **Changesets** (or Nx Release). Monorepos pair naturally with micro-frontends and design systems.
+<Note>
+**TL;DR**
+
+A **monorepo** keeps many apps and libraries in **one Git repository**; a **polyrepo** setup gives each its own repo. Monorepos make sharing code, atomic cross-project changes and centralised tooling easy, but they need tooling to stay fast: **workspaces** (pnpm/npm/Yarn/Bun) to link packages, and a **task runner** (Nx, Turborepo) for **caching** and **affected-only** builds. Versioning published packages is handled with **Changesets** (or Nx Release). Monorepos pair naturally with micro-frontends and design systems.
+</Note>
 
 ## Monorepo vs polyrepo (from *Building Micro-frontends with React*, Chapter 3)
 
@@ -14,11 +18,11 @@ There are many strategies to manage repos — Git submodules, Git subtrees, poly
 
 - **Monorepo**: mono = single — all code lives in **one Git repository** that contains multiple applications; all team members work in that common repo.
 
-![[Untitled 53.png]]
+![Untitled 53](/Attachments/Untitled%2053.png)
 
 - **Polyrepo**: each app has **its own repository**; teams work across multiple repos, switching as they work on different apps (ideally one at a time).
 
-![[Untitled 54.png]]
+![Untitled 54](/Attachments/Untitled%2054.png)
 
 ### Differences
 
@@ -34,7 +38,7 @@ There are many strategies to manage repos — Git submodules, Git subtrees, poly
 
 Chapter 2 of the book adds: polyrepos are the easiest to start with and give complete team independence (simpler DevOps), at the cost of isolation and duplicated tooling; monorepos increase collaboration and centralise tooling/automation, with risks of a more complex DevOps setup and the need for folder-level permissions so teams don't overwrite each other's code. For a shared **component library**, you can publish it as an npm package, or — in a monorepo — **build directly from source** (the library lives in `libs/`).
 
-Book notes: [[Chapter 3  Monorepo versus Polyrepos for Microfrontends]] · [[Building Micro-frontends with React]]
+Book notes: [Chapter 3  Monorepo versus Polyrepos for Microfrontends](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Chapter%203%20%20Monorepo%20versus%20Polyrepos%20for%20Microfrontends) · [Building Micro-frontends with React](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro-frontends%20with%20React)
 
 ### Popular monorepo tools (owner's list, updated)
 1. **Lerna** — the original JS monorepo tool; package-based. Stewardship was taken over by **Nrwl** (the company behind Nx) in 2022; it now uses Nx under the hood for task running.
@@ -42,9 +46,12 @@ Book notes: [[Chapter 3  Monorepo versus Polyrepos for Microfrontends]] · [[Bui
 3. **Turborepo** — **package-based**: a fast task runner/cache on top of your package manager's workspaces (by Vercel).
 4. Others: **pnpm workspaces** alone (for small repos), **Rush** (Microsoft), **moon**, **Bazel** (polyglot, very large scale).
 
-> [!note] Package-based vs integrated
-> - **Package-based**: every app/lib is a real package with its own `package.json` and scripts; the tool orchestrates `build`/`test` scripts across packages. Low lock-in.
-> - **Integrated**: the tool owns more (generators, executors, dependency rules, often a single version policy). More consistency and automation, more coupling to the tool.
+<Note>
+**Package-based vs integrated**
+
+- **Package-based**: every app/lib is a real package with its own `package.json` and scripts; the tool orchestrates `build`/`test` scripts across packages. Low lock-in.
+- **Integrated**: the tool owns more (generators, executors, dependency rules, often a single version policy). More consistency and automation, more coupling to the tool.
+</Note>
 
 ## Why monorepos (and when not)
 
@@ -209,7 +216,7 @@ The Changesets GitHub Action opens a "Version Packages" PR automatically. Altern
 - A monorepo hosts multiple micro-frontends (multi-SPA or Module Federation remotes) plus the shell, shared design system and contracts — with **independent deployment** still possible per app, driven by affected builds.
 - Shared libs can be consumed **from source** (fast iteration, always in sync) or as **versioned packages** (independent upgrades, the polyrepo-like model).
 - Watch out for tight coupling: the monorepo makes cross-app imports easy — enforce boundaries (Nx rules, ESLint import restrictions, `exports` maps) so micro-frontends stay independent.
-- See [[Micro-frontends & Module Federation]] and [[Design Systems]].
+- See [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) and [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems).
 
 ## Other practical concerns
 - **CODEOWNERS** for review ownership per folder.
@@ -219,53 +226,66 @@ The Changesets GitHub Action opens a "Version Packages" PR automatically. Altern
 - **Git at scale**: shallow clones, sparse checkout, `git maintenance`.
 - **Single version policy** vs allowing multiple versions — decide explicitly (pnpm catalogs help).
 
-> [!warning] Common pitfalls
-> - No caching/affected setup → CI time explodes as the repo grows.
-> - Undeclared cache inputs (env vars, generated files) → stale cache hits and "works on CI, broken in prod".
-> - Circular dependencies between packages.
-> - Everything depends on one giant `shared` package → every change affects everything.
-> - Treating the monorepo as a monolith: apps importing each other's internals.
+<Warning>
+**Common pitfalls**
 
-> [!info]+ 🆕 2025–2026
-> - **pnpm 11** (2026-04-28) and **pnpm 12** (2026-08-26, Rust rewrite) — faster installs for large workspaces, plus supply-chain defaults (1-day `minimumReleaseAge`). See [[Supply Chain Security]].
-> - **Biome v2** (2025-06-17) added `"extends": "//"` for monorepo-root config inheritance.
-> - **Vite+ beta** (2026-07-02) bundles `run`/`check`/`test`/`build`/`pack` in one `vp` CLI aimed at monorepos too — see [[Linting, Formatting, Package Managers & Runtimes]].
-> - **Vitest 5** (2026-09-03) supports nested projects, useful for per-package test configs.
+- No caching/affected setup → CI time explodes as the repo grows.
+- Undeclared cache inputs (env vars, generated files) → stale cache hits and "works on CI, broken in prod".
+- Circular dependencies between packages.
+- Everything depends on one giant `shared` package → every change affects everything.
+- Treating the monorepo as a monolith: apps importing each other's internals.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **pnpm 11** (2026-04-28) and **pnpm 12** (2026-08-26, Rust rewrite) — faster installs for large workspaces, plus supply-chain defaults (1-day `minimumReleaseAge`). See [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
+- **Biome v2** (2025-06-17) added `"extends": "//"` for monorepo-root config inheritance.
+- **Vite+ beta** (2026-07-02) bundles `run`/`check`/`test`/`build`/`pack` in one `vp` CLI aimed at monorepos too — see [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes).
+- **Vitest 5** (2026-09-03) supports nested projects, useful for per-package test configs.
+</Info>
 
 ## Interview questions
 
-> [!question]- Monorepo vs polyrepo — how do you decide?
-> Monorepo when apps share a lot of code, need atomic cross-cutting changes and consistent tooling/versions, and the org can invest in caching/affected CI. Polyrepo when teams/products are truly independent, need different stacks or release processes, or strict code visibility separation.
+<Accordion title="Monorepo vs polyrepo — how do you decide?">
+Monorepo when apps share a lot of code, need atomic cross-cutting changes and consistent tooling/versions, and the org can invest in caching/affected CI. Polyrepo when teams/products are truly independent, need different stacks or release processes, or strict code visibility separation.
+</Accordion>
 
-> [!question]- How do you keep a big monorepo's CI fast?
-> Task graph with parallelism, content-hash caching (local + remote), affected-only runs, distributed execution, and good package boundaries so a change affects few projects.
+<Accordion title="How do you keep a big monorepo's CI fast?">
+Task graph with parallelism, content-hash caching (local + remote), affected-only runs, distributed execution, and good package boundaries so a change affects few projects.
+</Accordion>
 
-> [!question]- What does `dependsOn: ["^build"]` mean?
-> Before running this package's `build`, run `build` in all of its workspace dependencies (the `^` means "upstream dependencies").
+<Accordion title="What does `dependsOn: [&quot;^build&quot;]` mean?">
+Before running this package's `build`, run `build` in all of its workspace dependencies (the `^` means "upstream dependencies").
+</Accordion>
 
-> [!question]- How is code ownership handled in a monorepo?
-> A `CODEOWNERS` file maps folders to teams who must review changes, plus branch protection; Nx module-boundary rules or lint rules prevent unwanted imports.
+<Accordion title="How is code ownership handled in a monorepo?">
+A `CODEOWNERS` file maps folders to teams who must review changes, plus branch protection; Nx module-boundary rules or lint rules prevent unwanted imports.
+</Accordion>
 
-> [!question]- Nx vs Turborepo?
-> Turborepo is a lightweight, package-based task runner with caching and filtering. Nx is a fuller platform: project graph, affected commands, generators, migrations, module-boundary enforcement, distributed CI, and it supports both integrated and package-based repos.
+<Accordion title="Nx vs Turborepo?">
+Turborepo is a lightweight, package-based task runner with caching and filtering. Nx is a fuller platform: project graph, affected commands, generators, migrations, module-boundary enforcement, distributed CI, and it supports both integrated and package-based repos.
+</Accordion>
 
-> [!question]- How do you version packages in a monorepo?
-> Changesets: developers add a changeset per PR describing bumps; on release the tool bumps versions, updates internal dependents and changelogs, and publishes. Alternatives: Nx Release, semantic-release. Unpublished apps don't need versions.
+<Accordion title="How do you version packages in a monorepo?">
+Changesets: developers add a changeset per PR describing bumps; on release the tool bumps versions, updates internal dependents and changelogs, and publishes. Alternatives: Nx Release, semantic-release. Unpublished apps don't need versions.
+</Accordion>
 
-> [!question]- How do monorepos relate to micro-frontends?
-> They're orthogonal but complementary: a monorepo can host many independently deployed micro-frontends with a shared design system and tooling; the trade-off is making sure easy imports don't recreate a coupled monolith.
+<Accordion title="How do monorepos relate to micro-frontends?">
+They're orthogonal but complementary: a monorepo can host many independently deployed micro-frontends with a shared design system and tooling; the trade-off is making sure easy imports don't recreate a coupled monolith.
+</Accordion>
 
 ## Related
-- [[Chapter 3  Monorepo versus Polyrepos for Microfrontends]]
-- [[Building Micro-frontends with React]]
-- [[Micro-frontends & Module Federation]]
-- [[Design Systems]]
-- [[Build Tools & Bundlers]]
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[Supply Chain Security]]
+- [Chapter 3  Monorepo versus Polyrepos for Microfrontends](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Chapter%203%20%20Monorepo%20versus%20Polyrepos%20for%20Microfrontends)
+- [Building Micro-frontends with React](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro-frontends%20with%20React)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
 
 ## Sources
-- Owner's notes: [[Chapter 3  Monorepo versus Polyrepos for Microfrontends]] and Chapter 2 of [[Building Micro-frontends with React]]
+- Owner's notes: [Chapter 3  Monorepo versus Polyrepos for Microfrontends](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Chapter%203%20%20Monorepo%20versus%20Polyrepos%20for%20Microfrontends) and Chapter 2 of [Building Micro-frontends with React](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro-frontends%20with%20React)
 - [pnpm – Workspaces](https://pnpm.io/workspaces), [Catalogs](https://pnpm.io/catalogs)
 - [Turborepo docs](https://turborepo.com/docs)
 - [Nx – Mental model / affected](https://nx.dev/concepts/mental-model), [Nx – Integrated vs package-based](https://nx.dev/concepts/integrated-vs-package-based)

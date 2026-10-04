@@ -1,3 +1,6 @@
+---
+title: "Local Storage vs Session Storage vs Cookie"
+---
 **LocalStorage**
 
 localStorage is a way to store data on the client’s computer. It allows the saving of key/value pairs in a web browser and it stores data with no expiration date. localStorage can only be accessed via JavaScript, and HTML5. However, the user has the ability to clear the browser data/cache to erase all localStorage data.
@@ -32,4 +35,4 @@ localStorage is a way to store data on the client’s computer. It allows the sa
 - Size must be less than 4KB.
 - Cookies can be made secure by setting the httpOnly flag as true for that cookie. This prevents client-side access to that cookie.
 
-![[Untitled 23.png]]
+![Untitled 23](/Attachments/Untitled%2023.png)

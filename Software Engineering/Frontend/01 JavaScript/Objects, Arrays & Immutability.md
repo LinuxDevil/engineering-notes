@@ -1,17 +1,21 @@
 ---
+title: "Objects, Arrays & Immutability"
 tags: [frontend, frontend/javascript]
 aliases: [Immutability, Shallow vs Deep Copy, Deep Copy, structuredClone, Arrays in React state]
 updated: 2026-09-27
 ---
 # Objects, Arrays & Immutability
 
-> [!tldr] TL;DR
-> Objects and arrays are **reference types**: variables hold a pointer, not the value. Copying with spread/`slice`/`Object.assign` is **shallow** (one level deep), so nested objects are still shared. React, Redux and most UI frameworks detect change by **reference equality**, so you update state by *replacing* objects, never mutating them. Modern JS gives you `structuredClone` for deep copies and ES2023 copy methods (`toSorted`, `toReversed`, `toSpliced`, `with`) for non-mutating array updates.
+<Note>
+**TL;DR**
+
+Objects and arrays are **reference types**: variables hold a pointer, not the value. Copying with spread/`slice`/`Object.assign` is **shallow** (one level deep), so nested objects are still shared. React, Redux and most UI frameworks detect change by **reference equality**, so you update state by *replacing* objects, never mutating them. Modern JS gives you `structuredClone` for deep copies and ES2023 copy methods (`toSorted`, `toReversed`, `toSpliced`, `with`) for non-mutating array updates.
+</Note>
 
 ## Values vs references
 
 - **Primitives** (`string`, `number`, `boolean`, `null`, `undefined`, `symbol`, `bigint`) are copied by value and are immutable.
-- **Non-primitives** (objects, arrays, functions, Maps, Sets...) live on the heap; a variable holds a *reference* to them. See [[Memory Management & Garbage Collection]].
+- **Non-primitives** (objects, arrays, functions, Maps, Sets...) live on the heap; a variable holds a *reference* to them. See [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection).
 - Objects are collections of key–value pairs and are **mutable** by default. Arrays are "just another kind of object" with numeric keys and a `length`.
 
 ```js
@@ -79,18 +83,21 @@ flowchart LR
 | Objects | `{ ...obj }`, `Object.assign({}, obj)` | `structuredClone(obj)` |
 | Cost | Cheap (O(top-level keys)) | Expensive (walks the whole graph) |
 
-> [!example] Shallow copy shares nested objects
-> ```js
-> const user = { name: 'Lou', address: { city: 'Dubai' } };
-> const shallow = { ...user };
-> shallow.name = 'Sam';              // fine, top-level is new
-> shallow.address.city = 'Cairo';    // mutates the SHARED address object
-> console.log(user.address.city);    // 'Cairo'  (!)
->
-> const deep = structuredClone(user);
-> deep.address.city = 'Riyadh';
-> console.log(user.address.city);    // still 'Cairo'
-> ```
+<Info>
+**Shallow copy shares nested objects**
+
+```js
+const user = { name: 'Lou', address: { city: 'Dubai' } };
+const shallow = { ...user };
+shallow.name = 'Sam';              // fine, top-level is new
+shallow.address.city = 'Cairo';    // mutates the SHARED address object
+console.log(user.address.city);    // 'Cairo'  (!)
+
+const deep = structuredClone(user);
+deep.address.city = 'Riyadh';
+console.log(user.address.city);    // still 'Cairo'
+```
+</Info>
 
 ### Ways to deep copy (and their trade-offs)
 
@@ -101,8 +108,11 @@ flowchart LR
 | Lodash `cloneDeep()` | Most things incl. class prototypes | Extra dependency / bundle size |
 | Hand-written recursive clone | Whatever you code | Easy to get wrong (cycles, special types) |
 
-> [!tip] Rule of thumb
-> Prefer `structuredClone` over the JSON trick in 2026. But in UI state you rarely need a full deep copy: copy **only the path you change** (structural sharing). Deep-cloning a whole store on every update is slow and also breaks memoization, because every nested object gets a new reference.
+<Tip>
+**Rule of thumb**
+
+Prefer `structuredClone` over the JSON trick in 2026. But in UI state you rarely need a full deep copy: copy **only the path you change** (structural sharing). Deep-cloning a whole store on every update is slow and also breaks memoization, because every nested object gets a new reference.
+</Tip>
 
 ## Immutable update patterns
 
@@ -133,7 +143,7 @@ flowchart TB
 
 ### Why React/Redux care
 
-React compares state with `Object.is`. If you mutate and call `setState(sameObject)`, React sees the same reference and **skips the re-render**. Memoized selectors, `React.memo`, `useMemo` deps all rely on "new reference = changed". See [[State, Props & Data Flow]] and [[Redux & Redux Toolkit]].
+React compares state with `Object.is`. If you mutate and call `setState(sameObject)`, React sees the same reference and **skips the re-render**. Memoized selectors, `React.memo`, `useMemo` deps all rely on "new reference = changed". See [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow) and [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit).
 
 - Objects in React state are technically mutable, but treat them **as if** they were immutable, like numbers and strings. **Replace** them instead of mutating.
 - Props are immutable too: a component asks its parent for *different props* (a new object).
@@ -153,22 +163,28 @@ In JavaScript arrays are just objects, so **treat arrays in React state as read-
 - `splice` **mutates** the array (to insert or delete items). Its copy twin is `toSpliced`.
 - Alternatively, [use Immer](https://react.dev/learn/updating-arrays-in-state#write-concise-update-logic-with-immer), which lets you use methods from both columns.
 
-> [!warning] Copying the array is not enough if you mutate items
-> `const next = [...todos]; next[0].done = true;` still mutates the **shared** todo object. Copy the item too: `todos.map(t => t.id === id ? { ...t, done: true } : t)`.
+<Warning>
+**Copying the array is not enough if you mutate items**
 
-> [!example] Common array updates in a component
-> ```jsx
-> const [items, setItems] = useState([]);
->
-> const add     = (item) => setItems(prev => [...prev, item]);
-> const insertAt = (i, item) => setItems(prev => prev.toSpliced(i, 0, item));
-> const remove  = (id)   => setItems(prev => prev.filter(x => x.id !== id));
-> const rename  = (id, name) =>
->   setItems(prev => prev.map(x => (x.id === id ? { ...x, name } : x)));
-> const sortByName = () =>
->   setItems(prev => prev.toSorted((a, b) => a.name.localeCompare(b.name)));
-> const replaceAt  = (i, item) => setItems(prev => prev.with(i, item));
-> ```
+`const next = [...todos]; next[0].done = true;` still mutates the **shared** todo object. Copy the item too: `todos.map(t => t.id === id ? { ...t, done: true } : t)`.
+</Warning>
+
+<Info>
+**Common array updates in a component**
+
+```jsx
+const [items, setItems] = useState([]);
+
+const add     = (item) => setItems(prev => [...prev, item]);
+const insertAt = (i, item) => setItems(prev => prev.toSpliced(i, 0, item));
+const remove  = (id)   => setItems(prev => prev.filter(x => x.id !== id));
+const rename  = (id, name) =>
+  setItems(prev => prev.map(x => (x.id === id ? { ...x, name } : x)));
+const sortByName = () =>
+  setItems(prev => prev.toSorted((a, b) => a.name.localeCompare(b.name)));
+const replaceAt  = (i, item) => setItems(prev => prev.with(i, item));
+```
+</Info>
 
 ## ES2023 "change array by copy" methods
 
@@ -210,8 +226,11 @@ const [person, updatePerson] = useImmer(initial);
 updatePerson(draft => { draft.artwork.city = 'Lagos'; });
 ```
 
-> [!warning] Immer rules
-> Either **mutate the draft** *or* **return a new value**, not both. Don't hold on to drafts after `produce` finishes (they are revoked proxies). In development Immer auto-freezes results, so accidental later mutation throws.
+<Warning>
+**Immer rules**
+
+Either **mutate the draft** *or* **return a new value**, not both. Don't hold on to drafts after `produce` finishes (they are revoked proxies). In development Immer auto-freezes results, so accidental later mutation throws.
+</Warning>
 
 ## Freezing: `Object.freeze` and friends
 
@@ -223,7 +242,7 @@ updatePerson(draft => { draft.artwork.city = 'Lagos'; });
 
 - `Object.freeze` is **shallow**: nested objects stay mutable. For a deep freeze, recurse.
 - In strict mode (modules, classes) writes to a frozen object **throw** a `TypeError`; in sloppy mode they fail silently.
-- `const` only freezes the **binding**, not the value: `const a = []; a.push(1)` is fine. See [[Hoisting, TDZ & var-let-const]].
+- `const` only freezes the **binding**, not the value: `const a = []; a.push(1)` is fine. See [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const).
 
 ```js
 function deepFreeze(o) {
@@ -262,43 +281,53 @@ Object.hasOwn(o, 'key');   // ES2022, safer than o.hasOwnProperty('key')
 const { a, ...rest } = o;  // omit a key immutably
 ```
 
-> [!warning] Common pitfalls
-> - Spreading copies only **own enumerable** properties; getters are invoked and turned into plain values; prototypes are lost.
-> - `sort()` without a comparator sorts **as strings**: `[10, 9, 1].sort()` gives `[1, 10, 9]`.
-> - `arr.sort()` returns the *same* array (mutated), so `setItems(items.sort())` does not re-render.
-> - `structuredClone` of a class instance returns a plain object (methods gone).
+<Warning>
+**Common pitfalls**
+
+- Spreading copies only **own enumerable** properties; getters are invoked and turned into plain values; prototypes are lost.
+- `sort()` without a comparator sorts **as strings**: `[10, 9, 1].sort()` gives `[1, 10, 9]`.
+- `arr.sort()` returns the *same* array (mutated), so `setItems(items.sort())` does not re-render.
+- `structuredClone` of a class instance returns a plain object (methods gone).
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is the difference between a shallow copy and a deep copy?
-> A shallow copy creates a new top-level object/array whose properties still reference the same nested objects (spread, `slice`, `Object.assign`), so nested changes show up in both. A deep copy recursively copies every level (`structuredClone`, lodash `cloneDeep`), so the copies are fully independent.
+<Accordion title="What is the difference between a shallow copy and a deep copy?">
+A shallow copy creates a new top-level object/array whose properties still reference the same nested objects (spread, `slice`, `Object.assign`), so nested changes show up in both. A deep copy recursively copies every level (`structuredClone`, lodash `cloneDeep`), so the copies are fully independent.
+</Accordion>
 
-> [!question]- Why is `JSON.parse(JSON.stringify(x))` a poor deep clone?
-> It loses `undefined`, functions, symbols, `Map`/`Set` (become `{}`), turns `Date` into strings, `NaN` into `null`, and throws on circular references and `BigInt`. `structuredClone` handles dates, maps, sets, typed arrays and cycles.
+<Accordion title="Why is `JSON.parse(JSON.stringify(x))` a poor deep clone?">
+It loses `undefined`, functions, symbols, `Map`/`Set` (become `{}`), turns `Date` into strings, `NaN` into `null`, and throws on circular references and `BigInt`. `structuredClone` handles dates, maps, sets, typed arrays and cycles.
+</Accordion>
 
-> [!question]- Why must React state be updated immutably?
-> React decides whether to re-render by comparing the old and new state with `Object.is`. Mutating keeps the same reference, so React (and `memo`, selectors, effect deps) can't see the change. Immutable updates also make time-travel/debugging and concurrent rendering safe.
+<Accordion title="Why must React state be updated immutably?">
+React decides whether to re-render by comparing the old and new state with `Object.is`. Mutating keeps the same reference, so React (and `memo`, selectors, effect deps) can't see the change. Immutable updates also make time-travel/debugging and concurrent rendering safe.
+</Accordion>
 
-> [!question]- How would you update a deeply nested value without mutation?
-> Spread each level along the path (`{...s, a: {...s.a, b: {...s.a.b, c: 1}}}`), or use Immer's `produce`, where you mutate a Proxy draft and Immer builds the new object with structural sharing. Also consider normalizing (flattening) state so updates are shallow.
+<Accordion title="How would you update a deeply nested value without mutation?">
+Spread each level along the path (`{...s, a: {...s.a, b: {...s.a.b, c: 1}}}`), or use Immer's `produce`, where you mutate a Proxy draft and Immer builds the new object with structural sharing. Also consider normalizing (flattening) state so updates are shallow.
+</Accordion>
 
-> [!question]- What do `toSorted`, `toReversed`, `toSpliced` and `with` do?
-> ES2023 non-mutating versions of `sort`, `reverse`, `splice` and index assignment. They return a new array and leave the original unchanged, which fits React/Redux state updates.
+<Accordion title="What do `toSorted`, `toReversed`, `toSpliced` and `with` do?">
+ES2023 non-mutating versions of `sort`, `reverse`, `splice` and index assignment. They return a new array and leave the original unchanged, which fits React/Redux state updates.
+</Accordion>
 
-> [!question]- Is `Object.freeze` deep? Does `const` make an object immutable?
-> No to both. `Object.freeze` is shallow (nested objects remain mutable), and `const` only prevents reassigning the variable; the object it points to can still be mutated.
+<Accordion title="Is `Object.freeze` deep? Does `const` make an object immutable?">
+No to both. `Object.freeze` is shallow (nested objects remain mutable), and `const` only prevents reassigning the variable; the object it points to can still be mutated.
+</Accordion>
 
-> [!question]- How do you group an array of objects by a key?
-> `Object.groupBy(arr, fn)` returns a null-prototype object of arrays; `Map.groupBy(arr, fn)` returns a Map (keys can be any value). Before ES2024 you'd use `reduce`.
+<Accordion title="How do you group an array of objects by a key?">
+`Object.groupBy(arr, fn)` returns a null-prototype object of arrays; `Map.groupBy(arr, fn)` returns a Map (keys can be any value). Before ES2024 you'd use `reduce`.
+</Accordion>
 
 ## Related
-- [[State, Props & Data Flow]]
-- [[Redux & Redux Toolkit]]
-- [[Collections - Map, Set, WeakMap & WeakRef]]
-- [[Memory Management & Garbage Collection]]
-- [[Types, Coercion & Equality]]
-- [[Modern JavaScript ES2022-ES2027]]
-- [[Principles]]
+- [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow)
+- [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit)
+- [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)
+- [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
+- [Types, Coercion & Equality](/Software%20Engineering/Frontend/01%20JavaScript/Types%2C%20Coercion%20%26%20Equality)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
+- [Principles](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Principles)
 
 ## Sources
 - react.dev: [Updating Arrays in State](https://react.dev/learn/updating-arrays-in-state), [Updating Objects in State](https://react.dev/learn/updating-objects-in-state)

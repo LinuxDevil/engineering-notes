@@ -1,12 +1,16 @@
 ---
+title: "Neural Networks & Deep Learning Basics"
 tags: [ai-ml, ai-ml/deep-learning]
 aliases: [Neural Networks, Deep Learning, Backpropagation, Activation Functions, CNN, RNN, Overfitting, Regularization]
 updated: 2026-09-27
 ---
 # Neural Networks & Deep Learning Basics
 
-> [!tldr] TL;DR
-> A neural network is a stack of layers; each neuron computes a **weighted sum plus bias** and passes it through a non-linear **activation function**. Training runs data forward, measures the **loss**, uses **backpropagation** (the chain rule) to get the gradient of the loss for every weight, and nudges weights downhill with **gradient descent**. **CNNs** exploit spatial structure (images), **RNNs** carry state through sequences, and **transformers** replaced RNNs for language. Deep models overfit easily, so you fight it with more data, **regularisation** (weight decay, dropout), early stopping and augmentation.
+<Note>
+**TL;DR**
+
+A neural network is a stack of layers; each neuron computes a **weighted sum plus bias** and passes it through a non-linear **activation function**. Training runs data forward, measures the **loss**, uses **backpropagation** (the chain rule) to get the gradient of the loss for every weight, and nudges weights downhill with **gradient descent**. **CNNs** exploit spatial structure (images), **RNNs** carry state through sequences, and **transformers** replaced RNNs for language. Deep models overfit easily, so you fight it with more data, **regularisation** (weight decay, dropout), early stopping and augmentation.
+</Note>
 
 ## From perceptron to deep network
 
@@ -19,12 +23,12 @@ output = 1 if (w·x + b) > 0 else 0
 
 It draws one straight line (hyperplane) between two classes. It can learn AND and OR, but famously **not XOR**, because XOR isn't linearly separable. That limitation stalled the field until multi-layer networks could be trained.
 
-![[Perceptron.png]]
+![Perceptron](/Attachments/Perceptron.png)
 
 ### Multi-layer perceptron (MLP)
 Stack layers of neurons with non-linear activations between them and the network can approximate almost any function (the **universal approximation theorem**). "Deep" just means many hidden layers.
 
-![[multilayer-perceptron-neural-network.png]]
+![multilayer-perceptron-neural-network](/Attachments/multilayer-perceptron-neural-network.png)
 
 ```python
 import torch.nn as nn
@@ -43,7 +47,7 @@ Without non-linearity, stacking layers collapses into a single linear function. 
 
 | Activation | Formula | Range | Used for | Notes |
 |---|---|---|---|---|
-| **Step** | 1 if z > 0 else 0 | {0, 1} | original perceptron | no gradient, can't train with backprop |
+| **Step** | 1 if z > 0 else 0 | \{0, 1\} | original perceptron | no gradient, can't train with backprop |
 | **Sigmoid** | 1 / (1 + e^−z) | (0, 1) | binary output probability | saturates → vanishing gradients in deep nets |
 | **Tanh** | (e^z − e^−z)/(e^z + e^−z) | (−1, 1) | older hidden layers, RNNs | zero-centred, still saturates |
 | **ReLU** | max(0, z) | [0, ∞) | default hidden layer for CNNs/MLPs | cheap, no saturation for z > 0; "dead" neurons possible |
@@ -95,7 +99,7 @@ for epoch in range(10):
 ## Architectures: intuition
 
 ### CNN (convolutional neural network): images
-A small filter (say 3×3) slides across the image and computes a dot product at each position, producing a **feature map**. The same filter weights are reused everywhere (**weight sharing**), so a "vertical edge" detector works anywhere in the image. **Pooling** shrinks the maps. Early layers learn edges and textures, deeper layers learn parts and objects. See [[Example 3 Detecting Spills]].
+A small filter (say 3×3) slides across the image and computes a dot product at each position, producing a **feature map**. The same filter weights are reused everywhere (**weight sharing**), so a "vertical edge" detector works anywhere in the image. **Pooling** shrinks the maps. Early layers learn edges and textures, deeper layers learn parts and objects. See [Example 3 Detecting Spills](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%203%20Detecting%20Spills).
 
 ```text
 image → [conv → ReLU → pool] × N → flatten → dense → softmax(classes)
@@ -104,15 +108,15 @@ image → [conv → ReLU → pool] × N → flatten → dense → softmax(classe
 ### RNN / LSTM: sequences
 An RNN processes one element at a time and carries a **hidden state** forward, like a `for` loop with memory: `h_t = f(W·x_t + U·h_{t−1})`. Plain RNNs forget long-range context (vanishing gradients); **LSTMs/GRUs** add gates that decide what to keep. Their weakness: they're **sequential**, so they can't be parallelised across a sentence, which limited scale.
 
-![[recurrent-neural-network-diagram.png]]
+![recurrent-neural-network-diagram](/Attachments/recurrent-neural-network-diagram.png)
 
 ### Residual networks
 Skip connections add a layer's input to its output (`y = x + f(x)`), giving gradients a highway backwards. This made 100+ layer networks trainable and is used inside every transformer block.
 
-![[residual-neural-network-diagram.png]]
+![residual-neural-network-diagram](/Attachments/residual-neural-network-diagram.png)
 
 ### Transformers
-Replace recurrence with **attention**: every token looks at every other token at once, in parallel. That parallelism made it possible to train on internet-scale data. See [[Transformers & How LLMs Work]].
+Replace recurrence with **attention**: every token looks at every other token at once, in parallel. That parallelism made it possible to train on internet-scale data. See [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work).
 
 | Architecture | Data | Key idea | Status today |
 |---|---|---|---|
@@ -158,28 +162,34 @@ loss
 
 ## Interview questions
 
-> [!question]- Why can't a single perceptron learn XOR?
-> A perceptron draws one linear boundary, and XOR's positive cases (0,1) and (1,0) can't be separated from (0,0) and (1,1) by one line. A hidden layer with a non-linear activation solves it.
+<Accordion title="Why can't a single perceptron learn XOR?">
+A perceptron draws one linear boundary, and XOR's positive cases (0,1) and (1,0) can't be separated from (0,0) and (1,1) by one line. A hidden layer with a non-linear activation solves it.
+</Accordion>
 
-> [!question]- Explain backpropagation.
-> After a forward pass computes the loss, backprop applies the chain rule from the output layer backwards to compute the gradient of the loss with respect to every weight, reusing intermediate values so the cost is about one extra forward pass. An optimizer then updates weights against those gradients.
+<Accordion title="Explain backpropagation.">
+After a forward pass computes the loss, backprop applies the chain rule from the output layer backwards to compute the gradient of the loss with respect to every weight, reusing intermediate values so the cost is about one extra forward pass. An optimizer then updates weights against those gradients.
+</Accordion>
 
-> [!question]- Why ReLU over sigmoid in hidden layers?
-> Sigmoid saturates at 0 and 1 where its gradient is near zero, so gradients vanish in deep networks. ReLU has gradient 1 for positive inputs, is cheap to compute, and trains faster. Sigmoid is still used for binary output probabilities.
+<Accordion title="Why ReLU over sigmoid in hidden layers?">
+Sigmoid saturates at 0 and 1 where its gradient is near zero, so gradients vanish in deep networks. ReLU has gradient 1 for positive inputs, is cheap to compute, and trains faster. Sigmoid is still used for binary output probabilities.
+</Accordion>
 
-> [!question]- What does dropout do and when is it active?
-> During training it randomly zeroes a fraction of activations, forcing redundancy and reducing overfitting. At inference it's turned off (activations are scaled so expected values match).
+<Accordion title="What does dropout do and when is it active?">
+During training it randomly zeroes a fraction of activations, forcing redundancy and reducing overfitting. At inference it's turned off (activations are scaled so expected values match).
+</Accordion>
 
-> [!question]- CNN vs RNN vs transformer in one sentence each?
-> CNN: shared local filters for grid data like images. RNN: processes sequences step by step with a hidden state. Transformer: attention lets all positions interact in parallel, which scales best for language and more.
+<Accordion title="CNN vs RNN vs transformer in one sentence each?">
+CNN: shared local filters for grid data like images. RNN: processes sequences step by step with a hidden state. Transformer: attention lets all positions interact in parallel, which scales best for language and more.
+</Accordion>
 
-> [!question]- Your validation loss rises while training loss falls. What do you do?
-> That's overfitting. Stop earlier (early stopping), add regularisation (weight decay, dropout), augment or collect more data, reduce model size, or start from a pretrained model.
+<Accordion title="Your validation loss rises while training loss falls. What do you do?">
+That's overfitting. Stop earlier (early stopping), add regularisation (weight decay, dropout), augment or collect more data, reduce model size, or start from a pretrained model.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]] · [[ML Core Concepts]] · [[Machine Learning]] (course)
-- [[Step 3 Train the model]] · [[Step 4 Evaluate the model]] · [[Example 3 Detecting Spills]]
-- Next: [[Transformers & How LLMs Work]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index) · [ML Core Concepts](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/ML%20Core%20Concepts) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course)
+- [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model) · [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model) · [Example 3 Detecting Spills](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%203%20Detecting%20Spills)
+- Next: [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work)
 
 ## Sources
 - Goodfellow, Bengio & Courville, [Deep Learning](https://www.deeplearningbook.org/) (MIT Press, 2016)

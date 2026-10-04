@@ -1,14 +1,18 @@
 ---
+title: "Unit 07 MongoDB CRUD Operations Insert and Find Documents"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB insertOne, MongoDB find, MongoDB Query Operators, elemMatch, MongoDB Unit 7]
 updated: 2026-09-27
 ---
 # Unit 07 MongoDB CRUD Operations Insert and Find Documents
 
-> [!tldr] TL;DR
-> Insert with `insertOne()` / `insertMany()` (the collection is created on first insert). Read with `find()`, which returns a **cursor**, or `findOne()`. Filters are documents: `{ field: value }` is shorthand for `$eq`; add **comparison** (`$gt`, `$lt`, `$in`, ...), **logical** (`$and`, `$or`, `$not`, `$nor`) and **array** operators (`$elemMatch`, `$all`, `$size`). Use `$elemMatch` when several conditions must hold on the **same** array element.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 7 · Prev: [[Unit 06 Connecting to MongoDB in Node.js]] · Next: [[Unit 08 MongoDB CRUD Operations Replace and Delete Documents]]
+Insert with `insertOne()` / `insertMany()` (the collection is created on first insert). Read with `find()`, which returns a **cursor**, or `findOne()`. Filters are documents: `{ field: value }` is shorthand for `$eq`; add **comparison** (`$gt`, `$lt`, `$in`, ...), **logical** (`$and`, `$or`, `$not`, `$nor`) and **array** operators (`$elemMatch`, `$all`, `$size`). Use `$elemMatch` when several conditions must hold on the **same** array element.
+</Note>
+
+> Course: MongoDB University, Unit 7 · Prev: [Unit 06 Connecting to MongoDB in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2006%20Connecting%20to%20MongoDB%20in%20Node.js) · Next: [Unit 08 MongoDB CRUD Operations Replace and Delete Documents](/Software%20Engineering/Databases/MongoDB/Unit%2008%20MongoDB%20CRUD%20Operations%20Replace%20and%20Delete%20Documents)
 
 ## What this unit covers
 CRUD basics by inserting and finding documents, queries with comparison and logical operators, and querying elements inside arrays.
@@ -132,7 +136,7 @@ db.<collection>.find({
 db.<collection>.find({ <expression>, <expression> })
 ```
 
-Correction to the original note: the implicit form is a single object with several fields, `find({ a: 1, b: 2 })`, not several objects as separate arguments. The second argument of `find()` is a **projection** ([[Unit 09 MongoDB CRUD Operations Modifying Query Results]]).
+Correction to the original note: the implicit form is a single object with several fields, `find({ a: 1, b: 2 })`, not several objects as separate arguments. The second argument of `find()` is a **projection** ([Unit 09 MongoDB CRUD Operations Modifying Query Results](/Software%20Engineering/Databases/MongoDB/Unit%2009%20MongoDB%20CRUD%20Operations%20Modifying%20Query%20Results)).
 
 ```js
 db.routes.find({ airline: "Southwest Airlines", stops: { $gte: 1 } })
@@ -161,7 +165,7 @@ db.routes.find({
 - Type mismatch: `{ zip: 85001 }` won't match `"85001"`.
 - `$ne` / `$nin` also match documents where the field is missing, and usually can't use indexes efficiently.
 - Forgetting `$elemMatch` gives "cross-element" matches.
-- Unindexed `find()` on a big collection is a **collection scan** ([[Unit 12 MongoDB Indexes]]).
+- Unindexed `find()` on a big collection is a **collection scan** ([Unit 12 MongoDB Indexes](/Software%20Engineering/Databases/MongoDB/Unit%2012%20MongoDB%20Indexes)).
 
 ## Senior perspective
 - **Bulk inserts**: use `insertMany` with `ordered: false` or `bulkWrite` for throughput; batch sizes are handled by the driver (max 100,000 ops/batch, 48 MB messages).
@@ -170,21 +174,25 @@ db.routes.find({
 - **Injection**: never pass raw user JSON as a filter. `{ password: { $ne: null } }` from a request body is a classic NoSQL injection. Validate types, or use `$eq` explicitly.
 
 ## Interview questions
-> [!question]- What does find() return?
-> A cursor, a pointer to the result set that fetches documents in batches as you iterate. `findOne()` returns a single document or `null`.
+<Accordion title="What does find() return?">
+A cursor, a pointer to the result set that fetches documents in batches as you iterate. `findOne()` returns a single document or `null`.
+</Accordion>
 
-> [!question]- What's the difference between filtering on "arr.field" and using $elemMatch?
-> Dot-notation conditions can be satisfied by different elements; `$elemMatch` requires one element to satisfy all conditions.
+<Accordion title="What's the difference between filtering on &quot;arr.field&quot; and using $elemMatch?">
+Dot-notation conditions can be satisfied by different elements; `$elemMatch` requires one element to satisfy all conditions.
+</Accordion>
 
-> [!question]- When do you need an explicit $and?
-> When combining conditions that would use the same key twice in one object, e.g. two `$or` clauses or two conditions on the same field with the same operator. Otherwise conditions in one filter document are implicitly ANDed.
+<Accordion title="When do you need an explicit $and?">
+When combining conditions that would use the same key twice in one object, e.g. two `$or` clauses or two conditions on the same field with the same operator. Otherwise conditions in one filter document are implicitly ANDed.
+</Accordion>
 
-> [!question]- What is NoSQL injection in MongoDB and how do you prevent it?
-> Passing user-controlled objects into a filter lets attackers inject operators (`{ $ne: null }`, `$where`). Prevent it by validating/casting input types, rejecting keys starting with `$`, using `$eq`, and disabling server-side JS.
+<Accordion title="What is NoSQL injection in MongoDB and how do you prevent it?">
+Passing user-controlled objects into a filter lets attackers inject operators (`{ $ne: null }`, `$where`). Prevent it by validating/casting input types, rejecting keys starting with `$`, using `$eq`, and disabling server-side JS.
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Database Indexes]] · [[Query Optimization & EXPLAIN]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - [MongoDB Manual: Insert Documents](https://www.mongodb.com/docs/manual/tutorial/insert-documents/)

@@ -1,12 +1,16 @@
 ---
+title: "Union-Find"
 tags: [dsa, dsa/data-structures]
 aliases: [Union Find, UnionFind, DSU, Disjoint Set Union, Disjoint Set, Disjoint-Set Forest]
 updated: 2026-09-27
 ---
 # Union-Find
 
-> [!tldr] TL;DR
-> **Union-Find** (Disjoint Set Union, DSU) tracks a collection of non-overlapping groups and supports two operations: `find(x)` (which group is x in?) and `union(a, b)` (merge their groups). Each group is a tree stored in a `parent` array; the root is the group's representative. With **path compression** plus **union by rank or size**, both operations run in amortized **O(alpha(n))**, where alpha is the inverse Ackermann function, at most 4 for any realistic n. Use it for dynamic connectivity: connected components, cycle detection in undirected graphs, and Kruskal's MST.
+<Note>
+**TL;DR**
+
+**Union-Find** (Disjoint Set Union, DSU) tracks a collection of non-overlapping groups and supports two operations: `find(x)` (which group is x in?) and `union(a, b)` (merge their groups). Each group is a tree stored in a `parent` array; the root is the group's representative. With **path compression** plus **union by rank or size**, both operations run in amortized **O(alpha(n))**, where alpha is the inverse Ackermann function, at most 4 for any realistic n. Use it for dynamic connectivity: connected components, cycle detection in undirected graphs, and Kruskal's MST.
+</Note>
 
 ## The idea
 
@@ -24,7 +28,7 @@ find(2) -> 1 -> 0 (root)   find(4) -> 3   find(5) -> 5
 same(2, 4)? roots 0 and 3 -> no
 ```
 
-It answers "are these connected?" fast while edges keep arriving, which BFS/DFS cannot do without re-traversing ([[Graphs]]). It cannot efficiently **split** groups or delete edges.
+It answers "are these connected?" fast while edges keep arriving, which BFS/DFS cannot do without re-traversing ([Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)). It cannot efficiently **split** groups or delete edges.
 
 ## How it works
 
@@ -161,8 +165,11 @@ d.union(0, 1); d.union(1, 2); d.union(3, 4)
 print(d.connected(0, 2), d.connected(2, 4), d.count)  # True False 3
 ```
 
-> [!tip] Keys that are not 0..n-1
-> For strings or sparse ids, use a hash map for `parent` and create entries on first sight (`parent.setdefault(x, x)` in Python, `if (!parent.has(x)) parent.set(x, x)` in TS), or map each key to an integer id first, as in Accounts Merge below.
+<Tip>
+**Keys that are not 0..n-1**
+
+For strings or sparse ids, use a hash map for `parent` and create entries on first sight (`parent.setdefault(x, x)` in Python, `if (!parent.has(x)) parent.set(x, x)` in TS), or map each key to an integer id first, as in Accounts Merge below.
+</Tip>
 
 The recursive full-compression `find` is shorter (`if p[x] != x: p[x] = find(p[x])`) but can hit Python's recursion limit on the first call over a long chain if you do not also use union by size.
 
@@ -201,8 +208,8 @@ Trace for `edges = [[1,2], [1,3], [2,3]]` (nodes are 1-indexed, so use `DSU(n + 
 
 | Edge | find(u) | find(v) | Action | Groups |
 |---|---|---|---|---|
-| [1,2] | 1 | 2 | union | {1,2} {3} |
-| [1,3] | 1 | 3 | union | {1,2,3} |
+| [1,2] | 1 | 2 | union | \{1,2\} \{3\} |
+| [1,3] | 1 | 3 | union | \{1,2,3\} |
 | [2,3] | 1 | 1 | same root: **answer** | |
 
 ```ts
@@ -224,7 +231,7 @@ def find_redundant_connection(edges: list[list[int]]) -> list[int]:
 
 ### Kruskal's MST
 
-Sort edges by weight and add an edge only if `union` returns true. The DSU is what makes Kruskal O(E log E): the sort dominates. Full code in [[Graphs]].
+Sort edges by weight and add an edge only if `union` returns true. The DSU is what makes Kruskal O(E log E): the sort dominates. Full code in [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs).
 
 ### Accounts Merge (LC 721)
 
@@ -293,7 +300,7 @@ Complexity: O(N * alpha(N) + N log N) where N is the total number of emails; the
 - **1-indexed nodes** (LC 684, many graph problems): allocate `n + 1`.
 - **Recursion depth** in recursive `find` on a long chain; use the iterative version.
 - **No deletions or splits**: DSU only merges. If edges get removed, think offline in reverse, or use a different structure (link-cut trees, or recompute).
-- **Directed graphs**: DSU tracks undirected connectivity. For directed cycles use DFS or Kahn's topological sort ([[Graphs]]).
+- **Directed graphs**: DSU tracks undirected connectivity. For directed cycles use DFS or Kahn's topological sort ([Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)).
 - **When BFS/DFS is simpler**: for a static graph answered once, a single traversal is O(V + E) and just as good. DSU shines when edges arrive incrementally or you need many connectivity queries interleaved with merges.
 
 ## Senior perspective
@@ -318,29 +325,35 @@ Complexity: O(N * alpha(N) + N log N) where N is the total number of emails; the
 
 ## Interview questions
 
-> [!question]- What problem does Union-Find solve?
-> Dynamic connectivity over disjoint sets: merge two groups and ask whether two elements are in the same group, with edges arriving over time. Typical uses are connected components, undirected cycle detection, Kruskal's MST, and grouping/deduplication.
+<Accordion title="What problem does Union-Find solve?">
+Dynamic connectivity over disjoint sets: merge two groups and ask whether two elements are in the same group, with edges arriving over time. Typical uses are connected components, undirected cycle detection, Kruskal's MST, and grouping/deduplication.
+</Accordion>
 
-> [!question]- Explain path compression and union by rank/size.
-> Path compression makes every node visited during `find` point closer to (or directly at) the root, flattening the tree for future calls. Union by rank/size attaches the shorter or smaller tree under the other root so trees stay shallow. Together they give amortized O(alpha(n)) per operation.
+<Accordion title="Explain path compression and union by rank/size.">
+Path compression makes every node visited during `find` point closer to (or directly at) the root, flattening the tree for future calls. Union by rank/size attaches the shorter or smaller tree under the other root so trees stay shallow. Together they give amortized O(alpha(n)) per operation.
+</Accordion>
 
-> [!question]- What is alpha(n) and why is it "effectively constant"?
-> The inverse Ackermann function. The Ackermann function grows so fast that its inverse is at most 4 for any input size that could exist in practice, so the amortized cost per operation is bounded by a small constant.
+<Accordion title="What is alpha(n) and why is it &quot;effectively constant&quot;?">
+The inverse Ackermann function. The Ackermann function grows so fast that its inverse is at most 4 for any input size that could exist in practice, so the amortized cost per operation is bounded by a small constant.
+</Accordion>
 
-> [!question]- When would you use Union-Find instead of BFS/DFS?
-> When edges are added incrementally and you need connectivity answers between additions, when you process edges in a specific order (Kruskal, sorted by weight), or when you only need grouping, not paths. For a single question on a static graph, BFS/DFS is equally good and gives paths too.
+<Accordion title="When would you use Union-Find instead of BFS/DFS?">
+When edges are added incrementally and you need connectivity answers between additions, when you process edges in a specific order (Kruskal, sorted by weight), or when you only need grouping, not paths. For a single question on a static graph, BFS/DFS is equally good and gives paths too.
+</Accordion>
 
-> [!question]- How do you detect a cycle in an undirected graph with Union-Find?
-> Process each edge (u, v): if `find(u) == find(v)` they are already connected, so this edge closes a cycle; otherwise union them. This is exactly LC 684.
+<Accordion title="How do you detect a cycle in an undirected graph with Union-Find?">
+Process each edge (u, v): if `find(u) == find(v)` they are already connected, so this edge closes a cycle; otherwise union them. This is exactly LC 684.
+</Accordion>
 
-> [!question]- Can Union-Find handle edge deletions?
-> Not directly; it only merges. Options: process operations offline in reverse (deletions become unions), use a rollback DSU (union by rank without path compression, undo via a stack) for divide-and-conquer offline algorithms, or use more complex dynamic connectivity structures.
+<Accordion title="Can Union-Find handle edge deletions?">
+Not directly; it only merges. Options: process operations offline in reverse (deletions become unions), use a rollback DSU (union by rank without path compression, undo via a stack) for divide-and-conquer offline algorithms, or use more complex dynamic connectivity structures.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Graphs]] (Kruskal, components, cycle detection) · [[Graph BFS-DFS patterns]]
-- [[Trees & Binary Search Trees]] (DSU is a forest of trees) · [[Hash Tables]] (non-integer keys)
-- [[Big-O & Complexity Analysis]] (amortized analysis)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) (Kruskal, components, cycle detection) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns)
+- [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) (DSU is a forest of trees) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) (non-integer keys)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) (amortized analysis)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022: ch. 19 (Data structures for disjoint sets)

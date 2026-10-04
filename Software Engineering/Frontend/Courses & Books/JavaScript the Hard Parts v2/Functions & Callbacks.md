@@ -1,8 +1,11 @@
+---
+title: "Functions & Callbacks"
+---
 When we create function we need to think about their reusability and not to break the DRY principle.
 
 Bad function:
 
-![[Screenshot_2023-08-26_at_7.10.39_PM.png]]
+![Screenshot_2023-08-26_at_7.10.39_PM](/Attachments/Screenshot_2023-08-26_at_7.10.39_PM.png)
 
 ```typescript
 ------ Global Memory ------
@@ -33,7 +36,7 @@ Good function:
 
 Now by passing the function as a parameter, leaving out some of our functionality undetermined:
 
-![[Screenshot_2023-08-27_at_10.52.01_PM.png]]
+![Screenshot_2023-08-27_at_10.52.01_PM](/Attachments/Screenshot_2023-08-27_at_10.52.01_PM.png)
 
 ```typescript
 ------ Global Memory ------
@@ -80,7 +83,7 @@ result: [2,4,6]
 
 How could we pass the function as a parameter ?
 
-![[Screenshot_2023-08-27_at_11.04.24_PM.png]]
+![Screenshot_2023-08-27_at_11.04.24_PM](/Attachments/Screenshot_2023-08-27_at_11.04.24_PM.png)
 
 First class means everything that an object have it have it too, it can be treated like objects.
 

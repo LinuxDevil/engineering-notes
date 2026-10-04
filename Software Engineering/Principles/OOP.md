@@ -1,14 +1,18 @@
 ---
+title: "OOP"
 tags: [principles, principles/oop]
 aliases: [Object-Oriented Programming, Object Oriented Programming, OOP Pillars, Four Pillars of OOP, Polymorphism, Encapsulation, Inheritance]
 updated: 2026-09-27
 ---
 # OOP
 
-> [!tldr] TL;DR
-> **Object-oriented programming** organises code around **objects**: data plus the behaviour that guards it. The four classic pillars are **encapsulation, abstraction, inheritance and polymorphism**. Senior practice is more selective than textbook OOP: encapsulate invariants, program to interfaces, prefer **composition over inheritance**, and use plain immutable data (records, sealed types, pattern matching) where objects add no value.
+<Note>
+**TL;DR**
 
-![[Untitled 16.png]]
+**Object-oriented programming** organises code around **objects**: data plus the behaviour that guards it. The four classic pillars are **encapsulation, abstraction, inheritance and polymorphism**. Senior practice is more selective than textbook OOP: encapsulate invariants, program to interfaces, prefer **composition over inheritance**, and use plain immutable data (records, sealed types, pattern matching) where objects add no value.
+</Note>
+
+![Untitled 16](/Attachments/Untitled%2016.png)
 
 ## Basic terminology
 
@@ -48,8 +52,11 @@ public class BankAccount {
 }
 ```
 
-> [!tip] "Tell, don't ask"
-> Instead of asking an object for its data and deciding outside (`if (acc.getBalance() > x) acc.setBalance(...)`), tell the object what to do (`acc.withdraw(x)`). The decision lives next to the data. Getter/setter pairs for every field are encapsulation in name only.
+<Tip>
+**"Tell, don't ask"**
+
+Instead of asking an object for its data and deciding outside (`if (acc.getBalance() > x) acc.setBalance(...)`), tell the object what to do (`acc.withdraw(x)`). The decision lives next to the data. Getter/setter pairs for every field are encapsulation in name only.
+</Tip>
 
 ### 2. Abstraction
 
@@ -69,7 +76,7 @@ There are two kinds:
 - Abstraction is a form of generalisation: code that applies to more than one specific situation. It includes encapsulation, information hiding and generalisation. Inheritance is one way to express it.
 - Encapsulation hides unnecessary data inside a capsule; abstraction shows only the essential features. **Encapsulation enables abstraction.**
 
-See [[Abstract Class and Interface]] for the language tools used to express abstraction, and [[Coupling, Cohesion & Modularity]] for "deep modules" (a lot of functionality behind a small interface).
+See [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) for the language tools used to express abstraction, and [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity) for "deep modules" (a lot of functionality behind a small interface).
 
 ### 3. Inheritance
 
@@ -83,18 +90,21 @@ Inheritance is the process where one class acquires the fields and methods of an
 4. **Hierarchical**: `B extends A` and `C extends A`
 5. **Hybrid**: a combination of the above
 
-![[Untitled 17.png]]
+![Untitled 17](/Attachments/Untitled%2017.png)
 
-> [!warning] Inheritance is the strongest form of coupling
-> A subclass depends on the **implementation** of its parent, not just its interface (the *fragile base class* problem). A change to a protected method or to the order of internal calls can break every subclass. Guidelines:
-> - Use inheritance only for true is-a relationships that satisfy the [[SOLID|Liskov Substitution Principle]].
-> - Keep hierarchies shallow (1–2 levels).
-> - Mark classes `final` (Java/Kotlin default) unless designed for extension. Joshua Bloch: "design and document for inheritance or else prohibit it".
-> - Prefer **composition** ("has-a") for reuse. See [[Coupling, Cohesion & Modularity#Composition over inheritance]].
+<Warning>
+**Inheritance is the strongest form of coupling**
+
+A subclass depends on the **implementation** of its parent, not just its interface (the *fragile base class* problem). A change to a protected method or to the order of internal calls can break every subclass. Guidelines:
+- Use inheritance only for true is-a relationships that satisfy the [Liskov Substitution Principle](/Software%20Engineering/Principles/SOLID).
+- Keep hierarchies shallow (1–2 levels).
+- Mark classes `final` (Java/Kotlin default) unless designed for extension. Joshua Bloch: "design and document for inheritance or else prohibit it".
+- Prefer **composition** ("has-a") for reuse. See [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity#composition-over-inheritance).
+</Warning>
 
 ### 4. Polymorphism
 
-Polymorphism (Greek: "many forms") means one name or interface can stand for different behaviours depending on context. It lets you write code against an abstraction and plug in new behaviour without changing the caller (the basis of the [[SOLID|Open-Closed Principle]]).
+Polymorphism (Greek: "many forms") means one name or interface can stand for different behaviours depending on context. It lets you write code against an abstraction and plug in new behaviour without changing the caller (the basis of the [Open-Closed Principle](/Software%20Engineering/Principles/SOLID)).
 
 | Kind | When resolved | Mechanism | Example |
 |---|---|---|---|
@@ -145,8 +155,11 @@ class Printer {
 | Resolved | At runtime, by the object's type | At compile time, by the argument types |
 | When it breaks | Bugs show up at runtime (harder) | Usually a compile error (easy to fix) |
 
-> [!tip] Use `@Override` (Java) / `override` (Kotlin, C#, TypeScript 4.3+ with `noImplicitOverride`)
-> The compiler then errors if you think you are overriding but the signature does not match, a classic silent bug.
+<Tip>
+**Use `@Override` (Java) / `override` (Kotlin, C#, TypeScript 4.3+ with `noImplicitOverride`)**
+
+The compiler then errors if you think you are overriding but the signature does not match, a classic silent bug.
+</Tip>
 
 ## Beyond the pillars: modern OOP in practice
 
@@ -171,7 +184,7 @@ class CachedUserRepo implements UserRepo {
 const repo: UserRepo = new CachedUserRepo(new SqlUserRepo(), new Map());
 ```
 
-See [[Structural Patterns]] (Decorator, Adapter) and [[Dependency Injection & Inversion of Control]].
+See [Structural Patterns](/Software%20Engineering/Principles/Structural%20Patterns) (Decorator, Adapter) and [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control).
 
 ### Objects vs data (data-oriented programming)
 
@@ -200,58 +213,71 @@ static double area(Shape s) {
 
 This trade-off is the **expression problem**. Senior engineers mix both: objects to guard invariants and hide I/O, records and sealed types for domain values and messages. The same idea exists in Kotlin (`sealed` + `data class` + `when`), TypeScript (discriminated unions + `switch` on a `kind` field), Dart 3 (`sealed class` + records + patterns), Rust (`enum` + `match`) and C# (records + switch expressions).
 
-> [!info]+ 🆕 2025–2026
-> - **Java 25 LTS (GA 2025-09-16)** finalised **JEP 513 Flexible Constructor Bodies**: statements (validation, computing arguments) may now appear **before** `super(...)`/`this(...)`, so constructors can reject bad input before the parent runs. It also finalised **JEP 512 Compact Source Files and Instance Main Methods** (a class-less `void main()` for small programs) and **JEP 511 Module Import Declarations**.
-> - Primitive types in patterns (`case int i`) is still in preview: third preview in Java 25 (JEP 507), fourth in **Java 26** (GA 2026-03-17, JEP 530) and fifth in **Java 27** (GA 2026-09-15, JEP 532).
-> - Records (Java 16), sealed classes (Java 17), pattern matching for `switch` and record patterns (Java 21) are all final, so data-oriented style is idiomatic in any LTS from 21 onward.
-> - TypeScript 5.8 (2025) added `--erasableSyntaxOnly`, which rejects `enum`, `namespace` and constructor **parameter properties** so code can run with Node's type stripping. Class-heavy TS written with `constructor(private x: X)` needs explicit fields under that flag. See [[TypeScript 5.8 to 7.0]].
+<Info>
+**🆕 2025–2026**
+
+- **Java 25 LTS (GA 2025-09-16)** finalised **JEP 513 Flexible Constructor Bodies**: statements (validation, computing arguments) may now appear **before** `super(...)`/`this(...)`, so constructors can reject bad input before the parent runs. It also finalised **JEP 512 Compact Source Files and Instance Main Methods** (a class-less `void main()` for small programs) and **JEP 511 Module Import Declarations**.
+- Primitive types in patterns (`case int i`) is still in preview: third preview in Java 25 (JEP 507), fourth in **Java 26** (GA 2026-03-17, JEP 530) and fifth in **Java 27** (GA 2026-09-15, JEP 532).
+- Records (Java 16), sealed classes (Java 17), pattern matching for `switch` and record patterns (Java 21) are all final, so data-oriented style is idiomatic in any LTS from 21 onward.
+- TypeScript 5.8 (2025) added `--erasableSyntaxOnly`, which rejects `enum`, `namespace` and constructor **parameter properties** so code can run with Node's type stripping. Class-heavy TS written with `constructor(private x: X)` needs explicit fields under that flag. See [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common OOP mistakes
-> - **God objects**: one `Manager`/`Service` class that knows everything. Split by responsibility ([[SOLID]]).
-> - **Anemic domain model**: classes with only getters/setters and all logic in "service" classes. Fine for CRUD, painful for rich rules. See [[Domain-Driven Design (DDD)]].
-> - **Deep inheritance trees** built for reuse, not substitutability.
-> - **Getter/setter for everything**, which leaks internals and breaks encapsulation.
-> - **Shared mutable state** between objects, which becomes a concurrency bug later. See [[Immutability Across Languages]].
-> - **Overusing patterns**: an interface with one implementation "just in case" (see YAGNI in [[DRY, KISS & YAGNI]]).
+<Warning>
+**Common OOP mistakes**
+
+- **God objects**: one `Manager`/`Service` class that knows everything. Split by responsibility ([SOLID](/Software%20Engineering/Principles/SOLID)).
+- **Anemic domain model**: classes with only getters/setters and all logic in "service" classes. Fine for CRUD, painful for rich rules. See [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)).
+- **Deep inheritance trees** built for reuse, not substitutability.
+- **Getter/setter for everything**, which leaks internals and breaks encapsulation.
+- **Shared mutable state** between objects, which becomes a concurrency bug later. See [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages).
+- **Overusing patterns**: an interface with one implementation "just in case" (see YAGNI in [DRY, KISS & YAGNI](/Software%20Engineering/Principles/DRY%2C%20KISS%20%26%20YAGNI)).
+</Warning>
 
 ## Senior perspective
 
 - Ask **"what invariant does this class protect?"** If the answer is none, it may be a record/struct plus functions.
-- Keep constructors honest: an object should be valid right after construction (use factories or builders for complex setup; see [[Creational Patterns]]).
+- Keep constructors honest: an object should be valid right after construction (use factories or builders for complex setup; see [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns)).
 - Object identity vs value equality: entities have identity (a `User` with ID 42), value objects are equal by value (`Money(10, "EUR")`). Get `equals`/`hashCode` right, or use records/data classes.
 - Inheritance across module or service boundaries is a versioning trap: prefer interfaces and composition at public API boundaries.
 - In reviews look for: public mutable fields, `instanceof` chains (missing polymorphism or a missing sealed type), `protected` state, subclasses that throw `UnsupportedOperationException` (an LSP violation).
 
 ## Interview questions
 
-> [!question]- What are the four pillars of OOP?
-> **Encapsulation** (bundle data with the methods that guard it and hide the data), **abstraction** (expose what, hide how), **inheritance** (a class acquires another's members; is-a), **polymorphism** (one interface, many implementations, resolved at compile time via overloading or at runtime via overriding).
+<Accordion title="What are the four pillars of OOP?">
+**Encapsulation** (bundle data with the methods that guard it and hide the data), **abstraction** (expose what, hide how), **inheritance** (a class acquires another's members; is-a), **polymorphism** (one interface, many implementations, resolved at compile time via overloading or at runtime via overriding).
+</Accordion>
 
-> [!question]- What is the difference between encapsulation and abstraction?
-> Encapsulation is a mechanism: hiding state behind methods and access modifiers so invariants can't be broken. Abstraction is a design idea: presenting only the essential behaviour of something and hiding details. Encapsulation is one of the tools that makes abstraction possible.
+<Accordion title="What is the difference between encapsulation and abstraction?">
+Encapsulation is a mechanism: hiding state behind methods and access modifiers so invariants can't be broken. Abstraction is a design idea: presenting only the essential behaviour of something and hiding details. Encapsulation is one of the tools that makes abstraction possible.
+</Accordion>
 
-> [!question]- Overloading vs overriding?
-> Overloading: same method name, different parameter lists, in the same class, resolved at compile time. Overriding: a subclass redefines a method with the same signature, resolved at runtime by the object's actual type. Overriding enables runtime polymorphism.
+<Accordion title="Overloading vs overriding?">
+Overloading: same method name, different parameter lists, in the same class, resolved at compile time. Overriding: a subclass redefines a method with the same signature, resolved at runtime by the object's actual type. Overriding enables runtime polymorphism.
+</Accordion>
 
-> [!question]- Why "composition over inheritance"?
-> Inheritance couples the subclass to the parent's implementation (fragile base class), fixes the relationship at compile time and forces single-hierarchy thinking. Composition depends only on an interface, can be changed at runtime, and combines behaviours freely (Decorator, Strategy). Use inheritance for genuine, substitutable is-a relationships.
+<Accordion title="Why &quot;composition over inheritance&quot;?">
+Inheritance couples the subclass to the parent's implementation (fragile base class), fixes the relationship at compile time and forces single-hierarchy thinking. Composition depends only on an interface, can be changed at runtime, and combines behaviours freely (Decorator, Strategy). Use inheritance for genuine, substitutable is-a relationships.
+</Accordion>
 
-> [!question]- Why doesn't Java support multiple inheritance of classes?
-> To avoid the diamond problem with state and implementation: if B and C both extend A and override a method, which version does D inherit? Java allows multiple inheritance of interfaces; since Java 8 default methods can conflict, and the class must then override and pick explicitly (`B.super.m()`).
+<Accordion title="Why doesn't Java support multiple inheritance of classes?">
+To avoid the diamond problem with state and implementation: if B and C both extend A and override a method, which version does D inherit? Java allows multiple inheritance of interfaces; since Java 8 default methods can conflict, and the class must then override and pick explicitly (`B.super.m()`).
+</Accordion>
 
-> [!question]- When would you use a sealed interface with records instead of classic polymorphism?
-> When the set of variants is closed and known (payment states, AST nodes, API results) and you expect to add operations more often than variants. The compiler checks `switch` exhaustiveness, so adding a variant surfaces every place that must handle it. Use classic virtual methods when third parties need to add new implementations.
+<Accordion title="When would you use a sealed interface with records instead of classic polymorphism?">
+When the set of variants is closed and known (payment states, AST nodes, API results) and you expect to add operations more often than variants. The compiler checks `switch` exhaustiveness, so adding a variant surfaces every place that must handle it. Use classic virtual methods when third parties need to add new implementations.
+</Accordion>
 
-> [!question]- What is an anemic domain model and is it always bad?
-> Objects that hold data with no behaviour, while logic lives in service classes. Fowler calls it an anti-pattern for complex domains because invariants are scattered. For simple CRUD or data pipelines it is fine and often simpler.
+<Accordion title="What is an anemic domain model and is it always bad?">
+Objects that hold data with no behaviour, while logic lives in service classes. Fowler calls it an anti-pattern for complex domains because invariants are scattered. For simple CRUD or data pipelines it is fine and often simpler.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Abstract Class and Interface]] · [[SOLID]] · [[Design Patterns]] · [[Coupling, Cohesion & Modularity]]
-- [[Functional Programming Principles]] · [[Immutability Across Languages]] · [[Domain-Driven Design (DDD)]]
-- JavaScript specifics: [[Prototypes, Classes & Inheritance]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)
+- [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) · [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages) · [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))
+- JavaScript specifics: [Prototypes, Classes & Inheritance](/Software%20Engineering/Frontend/01%20JavaScript/Prototypes%2C%20Classes%20%26%20Inheritance)
 
 ## Sources
 - [Oracle Java Tutorials: Object-Oriented Programming Concepts](https://docs.oracle.com/javase/tutorial/java/concepts/)

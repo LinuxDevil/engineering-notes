@@ -1,12 +1,16 @@
 ---
+title: "Modern Angular v17 to v22"
 tags: [frontend, frontend/angular, frontend/whats-new]
 aliases: [Angular 17-22, What's new in Angular, Angular migration, Angular v22]
 updated: 2026-09-27
 ---
 # Modern Angular v17 to v22
 
-> [!tldr] TL;DR
-> Between v17 (Nov 2023) and v22 (June 2026) Angular was rebuilt around **standalone components, built-in control flow, deferrable views, signals and zoneless change detection**, with first-class **SSR and incremental hydration**. v22 flips the last big defaults: `OnPush` by default, stable Signal Forms and `httpResource`, fetch-based HttpClient and `strictTemplates`. This note is the "diff" to learn and a checklist to migrate a real app.
+<Note>
+**TL;DR**
+
+Between v17 (Nov 2023) and v22 (June 2026) Angular was rebuilt around **standalone components, built-in control flow, deferrable views, signals and zoneless change detection**, with first-class **SSR and incremental hydration**. v22 flips the last big defaults: `OnPush` by default, stable Signal Forms and `httpResource`, fetch-based HttpClient and `strictTemplates`. This note is the "diff" to learn and a checklist to migrate a real app.
+</Note>
 
 ```mermaid
 flowchart LR
@@ -49,11 +53,14 @@ Control flow moved from directives (`*ngIf`, `*ngFor`, `ngSwitch`) into the temp
 - `@let total = price() * qty();` (v18.1) declares a template-local variable.
 - Migration: `ng generate @angular/core:control-flow`.
 
-> [!info]+ 🆕 2025–2026 template syntax
-> - v20: exponent `**`, the `in` operator, untagged template literals in templates.
-> - v21: regular expressions in templates.
-> - v22: arrow functions, spread, and **multiple values per `@case`**.
-> - v22.2: `@boundary` error-boundary block (developer preview) and private class members usable in templates.
+<Info>
+**🆕 2025–2026 template syntax**
+
+- v20: exponent `**`, the `in` operator, untagged template literals in templates.
+- v21: regular expressions in templates.
+- v22: arrow functions, spread, and **multiple values per `@case`**.
+- v22.2: `@boundary` error-boundary block (developer preview) and private class members usable in templates.
+</Info>
 
 ## 2. Deferrable views: `@defer` (v17)
 
@@ -83,10 +90,13 @@ Control flow moved from directives (`*ngIf`, `*ngFor`, `ngSwitch`) into the temp
 
 `prefetch on ...` downloads the code earlier than it renders. On the server, `@defer` renders the **placeholder** (unless you use incremental hydration, below).
 
-> [!warning] @defer gotchas
-> - Deferred dependencies must be standalone and **not referenced elsewhere** in the same file, otherwise they end up in the main bundle.
-> - `@placeholder` content is eagerly loaded, keep it light.
-> - Avoid layout shift: give the placeholder the same size as the final content (see [[Core Web Vitals]]).
+<Warning>
+**@defer gotchas**
+
+- Deferred dependencies must be standalone and **not referenced elsewhere** in the same file, otherwise they end up in the main bundle.
+- `@placeholder` content is eagerly loaded, keep it light.
+- Avoid layout shift: give the placeholder the same size as the final content (see [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)).
+</Warning>
 
 ## 3. SSR, hydration and incremental hydration
 
@@ -126,10 +136,13 @@ export const serverRoutes: ServerRoute[] = [
 <!-- also: hydrate on interaction | idle | timer(...) | when cond | never -->
 ```
 
-Incremental hydration is Angular's version of **partial/progressive hydration**: the HTML is there for SEO and first paint, but JS for that block is only downloaded and executed when needed. See [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]].
+Incremental hydration is Angular's version of **partial/progressive hydration**: the HTML is there for SEO and first paint, but JS for that block is only downloaded and executed when needed. See [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands).
 
-> [!warning] Hydration mismatches
-> Hydration requires server and client DOM to match. Direct DOM manipulation (`nativeElement.innerHTML`, third-party libs touching the DOM) breaks it; wrap browser-only code in `afterNextRender`, or mark a subtree with `ngSkipHydration`.
+<Warning>
+**Hydration mismatches**
+
+Hydration requires server and client DOM to match. Direct DOM manipulation (`nativeElement.innerHTML`, third-party libs touching the DOM) breaks it; wrap browser-only code in `afterNextRender`, or mark a subtree with `ngSkipHydration`.
+</Warning>
 
 ## 4. Signal inputs, outputs, model and queries
 
@@ -170,7 +183,7 @@ Migrations: `ng g @angular/core:signal-input-migration`, `ng g @angular/core:out
 - **New apps are zoneless by default.**
 - **Vitest is the default test runner.** Migration: `ng g @schematics/angular:refactor-jasmine-vitest`.
 - **Signal Forms** (experimental).
-- **Angular Aria** (`@angular/aria`, developer preview): headless, accessible UI patterns. See [[Design Systems]].
+- **Angular Aria** (`@angular/aria`, developer preview): headless, accessible UI patterns. See [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems).
 - Angular CLI **MCP server** stable.
 
 ### v22 (June 3, 2026)
@@ -189,8 +202,11 @@ Migrations: `ng g @angular/core:signal-input-migration`, `ng g @angular/core:out
 - Private members usable in templates.
 - Vitest 5 integration.
 
-> [!warning] Not shipped
-> "Selectorless components" were discussed in the community but do **not** appear in the v22 announcement or the current roadmap. Don't cite them as a feature.
+<Warning>
+**Not shipped**
+
+"Selectorless components" were discussed in the community but do **not** appear in the v22 announcement or the current roadmap. Don't cite them as a feature.
+</Warning>
 
 ```ts
 // v22 in one snippet
@@ -215,7 +231,7 @@ ng g @schematics/angular:refactor-jasmine-vitest   # rewrites spies/matchers
 | `fakeAsync` + `tick()` | `vi.useFakeTimers()` + `vi.advanceTimersByTime()` (fakeAsync relies on zone.js) |
 | `toBeTrue()` | `toBe(true)` |
 
-TestBed still works. End-to-end: **Protractor is dead** (deprecated in v12, end of life in 2023); use Playwright or Cypress. See [[Frontend Testing]].
+TestBed still works. End-to-end: **Protractor is dead** (deprecated in v12, end of life in 2023); use Playwright or Cypress. See [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
 
 ## 7. Migration checklist (legacy app → v22)
 
@@ -236,29 +252,34 @@ TestBed still works. End-to-end: **Protractor is dead** (deprecated in v12, end 
 
 ## Interview questions
 
-> [!question]- What problem does `@defer` solve and how is it different from lazy routes?
-> It code-splits part of a template (component, its deps) and loads it on a trigger (viewport, interaction, idle...). Lazy routes split by URL; `@defer` splits within a page. With SSR plus incremental hydration, `hydrate on ...` also delays hydration of that block.
+<Accordion title="What problem does `@defer` solve and how is it different from lazy routes?">
+It code-splits part of a template (component, its deps) and loads it on a trigger (viewport, interaction, idle...). Lazy routes split by URL; `@defer` splits within a page. With SSR plus incremental hydration, `hydrate on ...` also delays hydration of that block.
+</Accordion>
 
-> [!question]- Why is `track` mandatory in `@for`?
-> It gives each item a stable identity so Angular can move DOM nodes instead of recreating them. Forcing it prevents the classic `*ngFor` performance bug of re-rendering whole lists.
+<Accordion title="Why is `track` mandatory in `@for`?">
+It gives each item a stable identity so Angular can move DOM nodes instead of recreating them. Forcing it prevents the classic `*ngFor` performance bug of re-rendering whole lists.
+</Accordion>
 
-> [!question]- What is incremental hydration?
-> Server-rendered `@defer` blocks stay as static HTML until a `hydrate on` trigger fires; only then is the JS fetched and the block hydrated. Event replay makes early clicks work. It's Angular's partial/progressive hydration and has been stable since v20.
+<Accordion title="What is incremental hydration?">
+Server-rendered `@defer` blocks stay as static HTML until a `hydrate on` trigger fires; only then is the JS fetched and the block hydrated. Event replay makes early clicks work. It's Angular's partial/progressive hydration and has been stable since v20.
+</Accordion>
 
-> [!question]- What changed in Angular v22 that affects existing code the most?
-> OnPush by default (mutation-based updates stop refreshing), `strictTemplates` on by default, HttpClient on fetch, TypeScript 6 required, webpack builder deprecated. Plus new stable APIs: Signal Forms, `httpResource`, `@Service()`.
+<Accordion title="What changed in Angular v22 that affects existing code the most?">
+OnPush by default (mutation-based updates stop refreshing), `strictTemplates` on by default, HttpClient on fetch, TypeScript 6 required, webpack builder deprecated. Plus new stable APIs: Signal Forms, `httpResource`, `@Service()`.
+</Accordion>
 
-> [!question]- `input()` vs `@Input()`?
-> `input()` returns a read-only signal, so you can derive with `computed` and react with `effect` instead of `ngOnChanges`; `input.required` is type-safe without `!`. `model()` adds two-way binding as a writable signal.
+<Accordion title="`input()` vs `@Input()`?">
+`input()` returns a read-only signal, so you can derive with `computed` and react with `effect` instead of `ngOnChanges`; `input.required` is type-safe without `!`. `model()` adds two-way binding as a writable signal.
+</Accordion>
 
 ## Related
-- [[Angular Index]]
-- [[Angular Fundamentals]]
-- [[Angular Change Detection, Zones & Signals]]
-- [[Angular Interview Q&A]]
-- [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[What's New in Frontend 2025-2026]]
-- [[Frontend Testing]]
+- [Angular Index](/Software%20Engineering/Frontend/08%20Angular/Angular%20Index)
+- [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals)
+- [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals)
+- [Angular Interview Q&A](/Software%20Engineering/Frontend/08%20Angular/Angular%20Interview%20Q%26A)
+- [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
 
 ## Sources
 - https://angular.dev/guide/templates/control-flow

@@ -1,16 +1,20 @@
 ---
+title: "Modules (ESM)"
 tags: [frontend, frontend/javascript]
 aliases: [ESM, ES Modules, CommonJS vs ESM, Dynamic import, Import maps]
 updated: 2026-09-27
 ---
 # Modules (ESM)
 
-> [!tldr] TL;DR
-> **ES modules** (`import`/`export`) are JavaScript's standard module system: statically analysable (enables tree shaking), always strict mode, loaded asynchronously, with **live bindings** and support for **top-level await**. **CommonJS** (`require`/`module.exports`) is Node's legacy, synchronous, dynamic system. In 2026 the ecosystem is ESM-first: bundlers, Vite 7+ and many libraries are ESM-only, and Node can now `require()` ESM.
+<Note>
+**TL;DR**
+
+**ES modules** (`import`/`export`) are JavaScript's standard module system: statically analysable (enables tree shaking), always strict mode, loaded asynchronously, with **live bindings** and support for **top-level await**. **CommonJS** (`require`/`module.exports`) is Node's legacy, synchronous, dynamic system. In 2026 the ecosystem is ESM-first: bundlers, Vite 7+ and many libraries are ESM-only, and Node can now `require()` ESM.
+</Note>
 
 ## Why modules
 
-Before modules, scripts shared one global scope (name collisions, implicit ordering). Patterns like the IIFE / revealing module pattern used [[Closures & Memory Model|closures]] to hide state. Modules give each file its own scope, explicit dependencies and a dependency graph tools can optimise.
+Before modules, scripts shared one global scope (name collisions, implicit ordering). Patterns like the IIFE / revealing module pattern used [closures](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) to hide state. Modules give each file its own scope, explicit dependencies and a dependency graph tools can optimise.
 
 ## ESM syntax cheat sheet
 
@@ -54,30 +58,33 @@ flowchart LR
 
 Imports are not copies; they are read-only **views** of the exporting module's variable.
 
-> [!example] Live binding vs CommonJS copy
-> ```js
-> // counter.mjs
-> export let count = 0;
-> export function inc() { count++; }
->
-> // main.mjs
-> import { count, inc } from './counter.mjs';
-> console.log(count); // 0
-> inc();
-> console.log(count); // 1  (live!)
-> count = 5;          // TypeError: assignment to constant variable (imports are read-only)
-> ```
-> ```js
-> // counter.cjs
-> let count = 0;
-> module.exports = { count, inc() { count++; } };
-> // main.cjs
-> const c = require('./counter.cjs');
-> c.inc();
-> console.log(c.count); // 0  (a copied primitive)
-> ```
+<Info>
+**Live binding vs CommonJS copy**
 
-Live bindings are also why **circular imports** partly work in ESM: bindings exist after linking, even before the other module has finished evaluating (accessing a `let`/`const` too early throws a TDZ `ReferenceError`, see [[Hoisting, TDZ & var-let-const]]).
+```js
+// counter.mjs
+export let count = 0;
+export function inc() { count++; }
+
+// main.mjs
+import { count, inc } from './counter.mjs';
+console.log(count); // 0
+inc();
+console.log(count); // 1  (live!)
+count = 5;          // TypeError: assignment to constant variable (imports are read-only)
+```
+```js
+// counter.cjs
+let count = 0;
+module.exports = { count, inc() { count++; } };
+// main.cjs
+const c = require('./counter.cjs');
+c.inc();
+console.log(c.count); // 0  (a copied primitive)
+```
+</Info>
+
+Live bindings are also why **circular imports** partly work in ESM: bindings exist after linking, even before the other module has finished evaluating (accessing a `let`/`const` too early throws a TDZ `ReferenceError`, see [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const)).
 
 ## Dynamic `import()`
 
@@ -96,7 +103,7 @@ const Checkout = lazy(() => import('./Checkout'));
 const locale = await import(`./locales/${lang}.js`);
 ```
 
-See [[Performance Optimization Playbook]] and [[Build Tools & Bundlers]].
+See [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook) and [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
 
 ## Top-level await (ES2022)
 
@@ -108,8 +115,11 @@ const res = await fetch('/config.json');
 export const config = await res.json();
 ```
 
-> [!warning] TLA blocks the importing graph
-> Everything that depends on `config.js` waits for the network. Use it for genuinely required setup, not for things that could be lazy.
+<Warning>
+**TLA blocks the importing graph**
+
+Everything that depends on `config.js` waits for the network. Use it for genuinely required setup, not for things that could be lazy.
+</Warning>
 
 ## Import attributes and JSON modules (ES2025)
 
@@ -141,7 +151,7 @@ A browser feature that maps **bare specifiers** to URLs, so native ESM can use p
 ```
 
 - Must appear before any module script that uses it. Also supports `scopes` and `integrity`.
-- Used by micro-frontend setups and no-build apps. See [[Micro-frontends & Module Federation]].
+- Used by micro-frontend setups and no-build apps. See [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation).
 
 ## `import.meta`
 
@@ -187,46 +197,58 @@ button.onclick = () => heavy.run();
 - Stage 3 since January 2025. Supported by **TypeScript 5.9** and **Rspack 2.0**; whether it ships unflagged in any browser is not confirmed, so treat it as a tooling feature for now.
 - Only the namespace form (`* as ns`) is allowed. It targets startup cost from evaluating big modules that aren't needed immediately.
 
-> [!info]+ 🆕 2025–2026
-> - **JSON modules + import attributes** are part of ES2025, Baseline Newly available **2025-04-29** (Firefox 138).
-> - **`require(esm)`** is unflagged in Node 22.12+/20.19+.
-> - **`import defer`** is Stage 3 (TS 5.9, Rspack 2.0).
-> - **Vite 7** (June 2025) and **Vite 8** (March 2026) are ESM-only; TypeScript 6.0 removed AMD/UMD/SystemJS output and `moduleResolution: node`. See [[TypeScript 5.8 to 7.0]] and [[Build Tools & Bundlers]].
-> - **Safari 27** (Sept 2026) shipped a rewritten ES module loader.
+<Info>
+**🆕 2025–2026**
 
-> [!warning] Common pitfalls
-> - Browser ESM needs full relative paths with extensions (`./utils.js`), not `./utils`.
-> - Opening an HTML file via `file://` with module scripts fails (CORS); serve it over HTTP.
-> - Default exports make renames and tree shaking harder; many teams prefer named exports.
-> - Mutating an imported binding throws; mutating an imported *object's properties* doesn't (it's shared).
+- **JSON modules + import attributes** are part of ES2025, Baseline Newly available **2025-04-29** (Firefox 138).
+- **`require(esm)`** is unflagged in Node 22.12+/20.19+.
+- **`import defer`** is Stage 3 (TS 5.9, Rspack 2.0).
+- **Vite 7** (June 2025) and **Vite 8** (March 2026) are ESM-only; TypeScript 6.0 removed AMD/UMD/SystemJS output and `moduleResolution: node`. See [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0) and [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
+- **Safari 27** (Sept 2026) shipped a rewritten ES module loader.
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- Browser ESM needs full relative paths with extensions (`./utils.js`), not `./utils`.
+- Opening an HTML file via `file://` with module scripts fails (CORS); serve it over HTTP.
+- Default exports make renames and tree shaking harder; many teams prefer named exports.
+- Mutating an imported binding throws; mutating an imported *object's properties* doesn't (it's shared).
+</Warning>
 
 ## Interview questions
 
-> [!question]- What are the differences between ES modules and CommonJS?
-> ESM is static (imports resolved before execution), async, strict by default, supports top-level await and tree shaking, and exposes live bindings. CJS is dynamic and synchronous (`require` at runtime), exports a value copy of `module.exports`, and was designed for Node's file system.
+<Accordion title="What are the differences between ES modules and CommonJS?">
+ESM is static (imports resolved before execution), async, strict by default, supports top-level await and tree shaking, and exposes live bindings. CJS is dynamic and synchronous (`require` at runtime), exports a value copy of `module.exports`, and was designed for Node's file system.
+</Accordion>
 
-> [!question]- What are live bindings?
-> An imported name is a read-only reference to the exporting module's variable, not a copy. If the exporter changes the variable, importers see the new value. Importers can't reassign it.
+<Accordion title="What are live bindings?">
+An imported name is a read-only reference to the exporting module's variable, not a copy. If the exporter changes the variable, importers see the new value. Importers can't reassign it.
+</Accordion>
 
-> [!question]- What does dynamic `import()` do and why is it useful?
-> It loads a module at runtime and returns a promise of its namespace. Bundlers split it into its own chunk, enabling lazy loading and route-level code splitting (e.g. `React.lazy`).
+<Accordion title="What does dynamic `import()` do and why is it useful?">
+It loads a module at runtime and returns a promise of its namespace. Bundlers split it into its own chunk, enabling lazy loading and route-level code splitting (e.g. `React.lazy`).
+</Accordion>
 
-> [!question]- What is tree shaking and why does it need ESM?
-> Removing unused exports from the bundle. It relies on ESM's static import/export structure so the bundler can know at build time which exports are used; CJS's dynamic `require` makes this unreliable.
+<Accordion title="What is tree shaking and why does it need ESM?">
+Removing unused exports from the bundle. It relies on ESM's static import/export structure so the bundler can know at build time which exports are used; CJS's dynamic `require` makes this unreliable.
+</Accordion>
 
-> [!question]- What are import maps?
-> A `<script type="importmap">` JSON that maps bare specifiers (like `react`) to URLs so native browser ESM can resolve package names without a bundler.
+<Accordion title="What are import maps?">
+A `<script type="importmap">` JSON that maps bare specifiers (like `react`) to URLs so native browser ESM can resolve package names without a bundler.
+</Accordion>
 
-> [!question]- Can CommonJS load an ES module?
-> Historically only via async `import()`. Since Node 22.12 / 20.19, `require(esm)` works synchronously as long as the ES module graph has no top-level await.
+<Accordion title="Can CommonJS load an ES module?">
+Historically only via async `import()`. Since Node 22.12 / 20.19, `require(esm)` works synchronously as long as the ES module graph has no top-level await.
+</Accordion>
 
 ## Related
-- [[Build Tools & Bundlers]]
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[Micro-frontends & Module Federation]]
-- [[Performance Optimization Playbook]]
-- [[TypeScript 5.8 to 7.0]]
-- [[Modern JavaScript ES2022-ES2027]]
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
 
 ## Sources
 - MDN: [JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules), [import()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import), [Import attributes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with), [importmap](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap), [import.meta](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta)

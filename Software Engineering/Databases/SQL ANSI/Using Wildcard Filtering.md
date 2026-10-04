@@ -1,14 +1,18 @@
 ---
+title: "Using Wildcard Filtering"
 tags: [databases, databases/sql]
 aliases: [LIKE, Wildcards, ILIKE, pg_trgm, Pattern Matching]
 updated: 2026-09-27
 ---
 # Using Wildcard Filtering
 
-> [!tldr] TL;DR
-> `LIKE` matches text against a pattern: `%` = any number of characters (including none), `_` = exactly one character. `[...]` sets are SQL Server-only. A pattern that **starts** with a wildcard (`'%bag'`) can't use a normal B-tree index, so it scans the table; for "contains" search on big tables use PostgreSQL's `pg_trgm` GIN index or full-text search.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 6 · Prev: [[Advanced Filtering Data]] · Next: [[Creating Calculated Fields]]
+`LIKE` matches text against a pattern: `%` = any number of characters (including none), `_` = exactly one character. `[...]` sets are SQL Server-only. A pattern that **starts** with a wildcard (`'%bag'`) can't use a normal B-tree index, so it scans the table; for "contains" search on big tables use PostgreSQL's `pg_trgm` GIN index or full-text search.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 6 · Prev: [Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data) · Next: [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields)
 
 ## Using the `LIKE` operator (predicate)
 
@@ -24,11 +28,14 @@ updated: 2026-09-27
 
 `%` means *match any number of occurrences of any character*, including zero.
 
-> [!note] Notes on `%`
-> - **Case sensitivity** depends on the DBMS and collation. PostgreSQL `LIKE` is case-sensitive, so `'fish%'` won't match `Fish bean bag toy` (use `ILIKE` or `lower(col) LIKE`). MySQL and SQL Server with default case-insensitive collations match either case.
-> - `%` also matches zero characters: `'Fish%'` matches `Fish`.
-> - `%` does **not** match `NULL`. Even `WHERE prod_name LIKE '%'` skips rows where `prod_name` is `NULL`.
-> - Trailing spaces: in `CHAR` columns values are space-padded, so `'%toy'` might not match `'Fish bean bag toy     '`. Use `RTRIM()` or `VARCHAR`.
+<Note>
+**Notes on `%`**
+
+- **Case sensitivity** depends on the DBMS and collation. PostgreSQL `LIKE` is case-sensitive, so `'fish%'` won't match `Fish bean bag toy` (use `ILIKE` or `lower(col) LIKE`). MySQL and SQL Server with default case-insensitive collations match either case.
+- `%` also matches zero characters: `'Fish%'` matches `Fish`.
+- `%` does **not** match `NULL`. Even `WHERE prod_name LIKE '%'` skips rows where `prod_name` is `NULL`.
+- Trailing spaces: in `CHAR` columns values are space-padded, so `'%toy'` might not match `'Fish bean bag toy     '`. Use `RTRIM()` or `VARCHAR`.
+</Note>
 
 ### Example 1: starts with
 
@@ -74,8 +81,11 @@ WHERE prod_name LIKE '% inch teddy bear';
 
 Brackets specify a **set** of characters, one of which must match at that position.
 
-> [!note] Support
-> Only SQL Server (and MS Access) support `[]` in `LIKE`. MySQL, PostgreSQL, Oracle and SQLite do not. In PostgreSQL use `SIMILAR TO '[JM]%'` or a regex `~ '^[JM]'`; in MySQL `REGEXP '^[JM]'`.
+<Note>
+**Support**
+
+Only SQL Server (and MS Access) support `[]` in `LIKE`. MySQL, PostgreSQL, Oracle and SQLite do not. In PostgreSQL use `SIMILAR TO '[JM]%'` or a regex `~ '^[JM]'`; in MySQL `REGEXP '^[JM]'`.
+</Note>
 
 ### Example 4 (SQL Server)
 
@@ -142,25 +152,29 @@ For word-based search (stemming, ranking), use full-text search (`tsvector`, `to
 - **User-supplied patterns** need escaping of `%` and `_`, and are still passed as parameters: `WHERE name LIKE $1` with `'%' || escaped || '%'` built in code.
 - `ILIKE` is PostgreSQL-only. Portable case-insensitive search is `LOWER(col) LIKE LOWER($1)`, which needs an expression index on `LOWER(col)` to be fast.
 - A "search box" with `LIKE '%term%'` on a large table is a classic production incident. Budget for trigram/FTS indexes early.
-- SOUNDEX-style matching (see [[Using Data Manipulation Functions]]) and trigram similarity are better than `LIKE` for fuzzy name search.
+- SOUNDEX-style matching (see [Using Data Manipulation Functions](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Data%20Manipulation%20Functions)) and trigram similarity are better than `LIKE` for fuzzy name search.
 
 ## Interview questions
 
-> [!question]- What's the difference between % and _ in LIKE?
-> `%` matches zero or more characters; `_` matches exactly one.
+<Accordion title="What's the difference between % and _ in LIKE?">
+`%` matches zero or more characters; `_` matches exactly one.
+</Accordion>
 
-> [!question]- Why can't `LIKE '%abc'` use a B-tree index?
-> The index is ordered by the value's leading characters. Without a fixed prefix there's no range to seek to, so the database must check every row (or every index entry).
+<Accordion title="Why can't `LIKE '%abc'` use a B-tree index?">
+The index is ordered by the value's leading characters. Without a fixed prefix there's no range to seek to, so the database must check every row (or every index entry).
+</Accordion>
 
-> [!question]- How would you make substring search fast in PostgreSQL?
-> A GIN (or GiST) index with `pg_trgm`'s `gin_trgm_ops`, which supports `LIKE`/`ILIKE` with leading wildcards and similarity search. For word search, full-text search with a `tsvector` GIN index.
+<Accordion title="How would you make substring search fast in PostgreSQL?">
+A GIN (or GiST) index with `pg_trgm`'s `gin_trgm_ops`, which supports `LIKE`/`ILIKE` with leading wildcards and similarity search. For word search, full-text search with a `tsvector` GIN index.
+</Accordion>
 
-> [!question]- Does `LIKE '%'` match NULL?
-> No. `NULL LIKE '%'` is UNKNOWN, so the row is filtered out.
+<Accordion title="Does `LIKE '%'` match NULL?">
+No. `NULL LIKE '%'` is UNKNOWN, so the row is filtered out.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Filtering Data]] · [[Advanced Filtering Data]] · [[SQL Indexes Deep Dive]] · [[Query Optimization & EXPLAIN]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Filtering%20Data) · [Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 6 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

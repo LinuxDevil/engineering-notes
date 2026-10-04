@@ -1,14 +1,18 @@
 ---
+title: "Rails Project Structure"
 tags: [devops, backend, backend/rails]
 aliases: [Rails Directory Structure, Rails File Structure, rails new structure]
 updated: 2026-09-27
 ---
 # Rails Project Structure
 
-> [!tldr] TL;DR
-> `rails new` generates a conventional layout: application code in `app/` (models, views, controllers, jobs, mailers), configuration in `config/`, database schema and migrations in `db/`, executables in `bin/`, and dependencies in `Gemfile`/`Gemfile.lock`. "Convention over configuration" means Rails finds things by where they live and what they are named. Since Rails 7.1/8, new apps also ship a production `Dockerfile`, and Rails 8 adds Kamal deployment config and the Solid Queue/Cache/Cable defaults.
+<Note>
+**TL;DR**
 
-This note came from the second half of the original "Unix Commands And Rails Structure" note (the Unix half is now [[Linux & Shell Essentials]]). Architecture patterns for Rails apps are in [[Rails Clean Architecture]].
+`rails new` generates a conventional layout: application code in `app/` (models, views, controllers, jobs, mailers), configuration in `config/`, database schema and migrations in `db/`, executables in `bin/`, and dependencies in `Gemfile`/`Gemfile.lock`. "Convention over configuration" means Rails finds things by where they live and what they are named. Since Rails 7.1/8, new apps also ship a production `Dockerfile`, and Rails 8 adds Kamal deployment config and the Solid Queue/Cache/Cable defaults.
+</Note>
+
+This note came from the second half of the original "Unix Commands And Rails Structure" note (the Unix half is now [Linux & Shell Essentials](/Software%20Engineering/DevOps/Linux%20%26%20Shell%20Essentials)). Architecture patterns for Rails apps are in [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture).
 
 ## Directory reference
 
@@ -85,34 +89,41 @@ bin/rails credentials:edit
 
 ## DevOps angle
 
-- **Containers**: the generated multi-stage `Dockerfile` precompiles assets and bootsnap, runs as a non-root `rails` user, and uses jemalloc. See [[Dockerfile Best Practices & Image Security]].
+- **Containers**: the generated multi-stage `Dockerfile` precompiles assets and bootsnap, runs as a non-root `rails` user, and uses jemalloc. See [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security).
 - **Deploy**: Kamal deploys containers to plain servers over SSH with zero-downtime proxying (kamal-proxy); alternatives are Kubernetes, Heroku-style PaaS, or Render/Fly.
 - **Background jobs**: Solid Queue (DB-backed, default in Rails 8) or Sidekiq (Redis).
-- **Logs**: log to stdout in containers (`RAILS_LOG_TO_STDOUT`), structured if possible ([[Observability - Logs, Metrics & Traces]]).
-- **Migrations in pipelines**: run `db:migrate` as a release step before new code takes traffic; keep migrations backward compatible (expand/contract, see [[CI-CD Pipelines]]).
+- **Logs**: log to stdout in containers (`RAILS_LOG_TO_STDOUT`), structured if possible ([Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)).
+- **Migrations in pipelines**: run `db:migrate` as a release step before new code takes traffic; keep migrations backward compatible (expand/contract, see [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)).
 
-> [!info]+ 🆕 2025–2026
-> - **Rails 8.0 (2024-11-07)** made deployment self-contained: Kamal 2 + kamal-proxy, **Solid Queue, Solid Cache, Solid Cable** (database-backed, no Redis needed), Propshaft, and a built-in authentication generator.
-> - **Rails 8.1 (2025-10-22)**: **Active Job continuations** (long jobs resume from the last completed step, handy during deploys), a **structured Event Reporter**, **local CI** declared in `config/ci.rb`, Markdown rendering, deprecated associations, and Kamal 2.8 support for **registry-free deploys**. Latest patch: 8.1.4 (2026-09-24).
+<Info>
+**🆕 2025–2026**
+
+- **Rails 8.0 (2024-11-07)** made deployment self-contained: Kamal 2 + kamal-proxy, **Solid Queue, Solid Cache, Solid Cable** (database-backed, no Redis needed), Propshaft, and a built-in authentication generator.
+- **Rails 8.1 (2025-10-22)**: **Active Job continuations** (long jobs resume from the last completed step, handy during deploys), a **structured Event Reporter**, **local CI** declared in `config/ci.rb`, Markdown rendering, deprecated associations, and Kamal 2.8 support for **registry-free deploys**. Latest patch: 8.1.4 (2026-09-24).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is `Gemfile.lock` and should it be committed?
-> It records the exact versions of every gem resolved from the `Gemfile`, so all environments install identical dependencies. Commit it for applications (libraries often do not).
+<Accordion title="What is `Gemfile.lock` and should it be committed?">
+It records the exact versions of every gem resolved from the `Gemfile`, so all environments install identical dependencies. Commit it for applications (libraries often do not).
+</Accordion>
 
-> [!question]- What does `config.ru` do?
-> It is the Rack configuration file that tells a Rack-compatible server (Puma) how to boot and run the Rails application.
+<Accordion title="What does `config.ru` do?">
+It is the Rack configuration file that tells a Rack-compatible server (Puma) how to boot and run the Rails application.
+</Accordion>
 
-> [!question]- Where would you put business logic that does not fit a model or controller?
-> Common conventions: `app/services` (service objects / use cases), `app/queries`, `app/forms`, or domain modules in `app/models` or `lib`. See [[Rails Clean Architecture]].
+<Accordion title="Where would you put business logic that does not fit a model or controller?">
+Common conventions: `app/services` (service objects / use cases), `app/queries`, `app/forms`, or domain modules in `app/models` or `lib`. See [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture).
+</Accordion>
 
-> [!question]- How are secrets handled in Rails?
-> Encrypted credentials (`config/credentials.yml.enc`, per-environment files) decrypted with a master key supplied via `RAILS_MASTER_KEY` or `config/master.key` (not committed), or environment variables from a secret manager.
+<Accordion title="How are secrets handled in Rails?">
+Encrypted credentials (`config/credentials.yml.enc`, per-environment files) decrypted with a master key supplied via `RAILS_MASTER_KEY` or `config/master.key` (not committed), or environment variables from a secret manager.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Linux & Shell Essentials]] · [[Rails Clean Architecture]] · [[MVC]] · [[SOLID Principles with Ruby]]
-- [[Docker Basics]] · [[CI-CD Pipelines]]
-- Original note: [[Unix Commands And Rails Structure (original)]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Linux & Shell Essentials](/Software%20Engineering/DevOps/Linux%20%26%20Shell%20Essentials) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture) · [MVC](/Software%20Engineering/Principles/MVC) · [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby)
+- [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)
+- Original note: [Unix Commands And Rails Structure (original)](/Software%20Engineering/DevOps/_Archive/Unix%20Commands%20And%20Rails%20Structure%20(original))
 
 ## Sources
 - [Rails Guides: Getting Started (directory structure)](https://guides.rubyonrails.org/getting_started.html)

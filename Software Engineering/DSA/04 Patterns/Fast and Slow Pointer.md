@@ -1,12 +1,16 @@
 ---
+title: "Fast and Slow Pointer"
 tags: [dsa, dsa/patterns]
 aliases: [Fast and Slow Pointers, Tortoise and Hare, Floyd's Cycle Detection, Floyd's Algorithm, Runner Technique]
 updated: 2026-09-27
 ---
 # Fast and Slow Pointer
 
-> [!tldr] TL;DR
-> Two pointers walk the same structure at **different speeds**: the slow one moves 1 step, the fast one moves 2. When the fast one reaches the end, the slow one is at the **middle**. If there is a **cycle**, the fast one laps the slow one and they meet (Floyd's algorithm), and a second phase finds **where the cycle starts**. All in O(n) time and O(1) space, which is why it beats a hash set of visited nodes.
+<Note>
+**TL;DR**
+
+Two pointers walk the same structure at **different speeds**: the slow one moves 1 step, the fast one moves 2. When the fast one reaches the end, the slow one is at the **middle**. If there is a **cycle**, the fast one laps the slow one and they meet (Floyd's algorithm), and a second phase finds **where the cycle starts**. All in O(n) time and O(1) space, which is why it beats a hash set of visited nodes.
+</Note>
 
 ## The idea
 
@@ -82,8 +86,11 @@ head ──a──► start ──b──► meet
 | Cycle start / length | O(n) | O(1) |
 | Hash-set alternative | O(n) | O(n) |
 
-> [!note] About "O(N + N/2)"
-> My original note wrote **O(N + N/2)** for the middle-of-list loop: fast touches about N nodes and slow about N/2. That's O(1.5·N), and Big-O drops constant factors, so it is simply **O(N)**. The loop itself only runs about N/2 iterations. See [[Big-O & Complexity Analysis]].
+<Note>
+**About "O(N + N/2)"**
+
+My original note wrote **O(N + N/2)** for the middle-of-list loop: fast touches about N nodes and slow about N/2. That's O(1.5·N), and Big-O drops constant factors, so it is simply **O(N)**. The loop itself only runs about N/2 iterations. See [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis).
+</Note>
 
 ## Template
 
@@ -214,27 +221,30 @@ Node findKthFromEnd(int k) {
 }
 ```
 
-> [!note]- Original version (length-based, with an off-by-one bug)
-> ```java
-> Node findKthFromEnd(int k) {
->     if (head == null) {
->         return null;
->     }
->     int length = 0;
->     Node temp = head;
->     while (temp != null && temp.next != null) {
->         temp = temp.next;
->         length++;
->     }
->     if (k > length) return null;
->     temp = head;
->     for (int i = 0; i < length - k + 1; i++)  {
->         temp = temp.next;
->     }
->     return temp;
-> }
-> ```
-> **Bug:** the first loop stops at the last node, so `length` counts the **links** (`n - 1`), not the nodes (`n`). The `+ 1` in the second loop happens to cancel that for `1 <= k < n`, but the guard `k > length` then rejects `k == n` (the head, a valid answer) and returns `null`. `k <= 0` isn't guarded either (a negative `k` walks off the list and throws). Fix: count with `while (temp != null)` so `length == n`, guard `k < 1 || k > length`, and move `length - k` steps. It also needs two passes; the gap method above needs one.
+<Note>
+**Original version (length-based, with an off-by-one bug)**
+
+```java
+Node findKthFromEnd(int k) {
+    if (head == null) {
+        return null;
+    }
+    int length = 0;
+    Node temp = head;
+    while (temp != null && temp.next != null) {
+        temp = temp.next;
+        length++;
+    }
+    if (k > length) return null;
+    temp = head;
+    for (int i = 0; i < length - k + 1; i++)  {
+        temp = temp.next;
+    }
+    return temp;
+}
+```
+**Bug:** the first loop stops at the last node, so `length` counts the **links** (`n - 1`), not the nodes (`n`). The `+ 1` in the second loop happens to cancel that for `1 <= k < n`, but the guard `k > length` then rejects `k == n` (the head, a valid answer) and returns `null`. `k <= 0` isn't guarded either (a negative `k` walks off the list and throws). Fix: count with `while (temp != null)` so `length == n`, guard `k < 1 || k > length`, and move `length - k` steps. It also needs two passes; the gap method above needs one.
+</Note>
 
 ## Worked example
 
@@ -417,8 +427,11 @@ Not a fast/slow technique, but it lives here because it's a common linked-list p
 
 The idea: a dummy node before `head`, walk `prev` to the node just **before** the sublist, then repeatedly move the node after `current` to the front of the sublist ("head insertion"), `n - m` times.
 
-> [!warning] Indexing
-> My original loop `for (int i = 0; i < m; i++)` assumes **0-indexed** `m` (positions start at 0). LC 92 uses **1-indexed** positions (`left`, `right` start at 1), so to stop just before position `m` you need **`m - 1`** iterations. The version below is the 1-indexed one.
+<Warning>
+**Indexing**
+
+My original loop `for (int i = 0; i < m; i++)` assumes **0-indexed** `m` (positions start at 0). LC 92 uses **1-indexed** positions (`left`, `right` start at 1), so to stop just before position `m` you need **`m - 1`** iterations. The version below is the 1-indexed one.
+</Warning>
 
 ```java
 public void reverseBetween(int m, int n) {   // m, n are 1-indexed (LC 92)
@@ -509,7 +522,7 @@ def reverse_between(head: ListNode | None, left: int, right: int) -> ListNode | 
 - **Floyd vs hash set**: both O(n) time, but Floyd is O(1) memory. That matters on huge or implicit sequences where you can't store every visited state.
 - **Brent's algorithm** is an alternative cycle finder that usually does fewer function evaluations (teleporting the tortoise at powers of two). Both appear in **Pollard's rho** integer factorisation, which detects a cycle in `x → x² + c mod n`.
 - **Implicit graphs**: detecting that a state machine, PRNG, or iterative process has entered a loop (e.g. a retry/redirect loop, a cyclic `parent` pointer in a corrupted tree) is the same problem.
-- Real systems often prefer **visited sets or depth limits** for clarity (e.g. detecting cycles in dependency graphs uses DFS colouring, see [[Graphs]]); Floyd shines only when each node has exactly one successor.
+- Real systems often prefer **visited sets or depth limits** for clarity (e.g. detecting cycles in dependency graphs uses DFS colouring, see [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)); Floyd shines only when each node has exactly one successor.
 - In review: check null-safety of `fast.next.next`, whether the function mutates the input list, and whether node equality is by reference.
 
 ## Classic LeetCode problems
@@ -527,29 +540,35 @@ Also related: [19. Remove Nth Node From End of List](https://leetcode.com/proble
 
 ## Interview questions
 
-> [!question]- Why are the fast and slow pointers guaranteed to meet if there's a cycle?
-> Once both are in the cycle, the gap between them shrinks by exactly 1 each step (fast +2, slow +1). A gap that decreases by 1 must hit 0, so they meet within one lap of the cycle, before slow finishes its first lap.
+<Accordion title="Why are the fast and slow pointers guaranteed to meet if there's a cycle?">
+Once both are in the cycle, the gap between them shrinks by exactly 1 each step (fast +2, slow +1). A gap that decreases by 1 must hit 0, so they meet within one lap of the cycle, before slow finishes its first lap.
+</Accordion>
 
-> [!question]- How do you find where the cycle starts, and why does it work?
-> After meeting, put one pointer at the head and move both 1 step at a time; they meet at the start. From `2(a + b) = a + b + k·c` you get `a = (k - 1)·c + (c - b)`: the distance from head to the start equals the distance from the meeting point forward to the start, modulo full laps.
+<Accordion title="How do you find where the cycle starts, and why does it work?">
+After meeting, put one pointer at the head and move both 1 step at a time; they meet at the start. From `2(a + b) = a + b + k·c` you get `a = (k - 1)·c + (c - b)`: the distance from head to the start equals the distance from the meeting point forward to the start, modulo full laps.
+</Accordion>
 
-> [!question]- What would go wrong if fast moved 3 steps instead of 2?
-> The gap (mod cycle length `c`) would shrink by 2 per step instead of 1, so it can jump over 0. If `c` is even and the gap is odd when both enter the cycle, the gap stays odd forever and they **never** meet at the same node. A speed difference of 1 always works, which is why 1 and 2 are the standard choice (and the cycle-start math relies on it).
+<Accordion title="What would go wrong if fast moved 3 steps instead of 2?">
+The gap (mod cycle length `c`) would shrink by 2 per step instead of 1, so it can jump over 0. If `c` is even and the gap is odd when both enter the cycle, the gap stays odd forever and they **never** meet at the same node. A speed difference of 1 always works, which is why 1 and 2 are the standard choice (and the cycle-start math relies on it).
+</Accordion>
 
-> [!question]- Find the duplicate in [1..n] with n + 1 numbers, O(1) space, without modifying the array.
-> Treat it as a linked list `i → nums[i]` starting at index 0. The duplicate value has two incoming edges, so it's the cycle's entrance. Run Floyd phase 1 and phase 2 (LC 287). O(n) time, O(1) space.
+<Accordion title="Find the duplicate in [1..n] with n + 1 numbers, O(1) space, without modifying the array.">
+Treat it as a linked list `i → nums[i]` starting at index 0. The duplicate value has two incoming edges, so it's the cycle's entrance. Run Floyd phase 1 and phase 2 (LC 287). O(n) time, O(1) space.
+</Accordion>
 
-> [!question]- How do you find the k-th node from the end in one pass?
-> Gap method: move a leader `k` nodes ahead, then move leader and trailer together until the leader is `null`. The trailer is the k-th from the end. Guard `k <= 0` and lists shorter than `k`.
+<Accordion title="How do you find the k-th node from the end in one pass?">
+Gap method: move a leader `k` nodes ahead, then move leader and trailer together until the leader is `null`. The trailer is the k-th from the end. Guard `k <= 0` and lists shorter than `k`.
+</Accordion>
 
-> [!question]- Fast/slow or a hash set for cycle detection?
-> Hash set: simple, also gives the first repeated node directly, but O(n) memory. Floyd: O(1) memory, slightly trickier. Use Floyd when memory matters or the sequence is implicit/huge; use a set when clarity matters and n is small.
+<Accordion title="Fast/slow or a hash set for cycle detection?">
+Hash set: simple, also gives the first repeated node directly, but O(n) memory. Floyd: O(1) memory, slightly trickier. Use Floyd when memory matters or the sequence is implicit/huge; use a set when clarity matters and n is small.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Linked Lists]] · [[Two Pointers]] · [[Hash Tables]] · [[Graphs]]
-- [[Big-O & Complexity Analysis]]
-- Course: [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Course: [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - [cp-algorithms: Floyd's Linked List Cycle Finding Algorithm](https://cp-algorithms.com/others/tortoise_and_hare.html)

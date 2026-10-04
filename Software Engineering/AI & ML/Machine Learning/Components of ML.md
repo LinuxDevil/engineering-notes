@@ -1,12 +1,16 @@
 ---
+title: "Components of ML"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [ML Components, Model Training Inference]
 updated: 2026-09-27
 ---
 # Components of ML
 
-> [!tldr] TL;DR
-> Nearly every ML task has three parts: a **model** (a generic, adjustable program), a **model training algorithm** (repeatedly nudges the model's parameters to fit the data) and a **model inference algorithm** (uses the trained model to make predictions). Think of a lump of clay (model), the potter shaping it (training), and using the finished teapot (inference).
+<Note>
+**TL;DR**
+
+Nearly every ML task has three parts: a **model** (a generic, adjustable program), a **model training algorithm** (repeatedly nudges the model's parameters to fit the data) and a **model inference algorithm** (uses the trained model to make predictions). Think of a lump of clay (model), the potter shaping it (training), and using the finished teapot (inference).
+</Note>
 
 ## The three components
 
@@ -34,7 +38,7 @@ flowchart LR
 
 ## The teapot analogy
 
-![[Untitled 1.png]]
+![Untitled 1](/Attachments/Untitled%201.png)
 
 1. You start with a block of **raw clay** (the untrained model). It could become many things; you decide to make a teapot (define the problem).
 2. You **inspect and analyse** the clay and decide how to change it to look more like the teapot you have in mind (compute the loss, decide the update).
@@ -67,16 +71,18 @@ model.predict([[100]])             # ≈ 300,000
 
 ## Interview questions
 
-> [!question]- What's the difference between training and inference?
-> Training adjusts the model's parameters using data and a loss function; it is expensive and done up front (or periodically). Inference runs the trained model on new inputs to get predictions; it's cheaper per call but happens constantly in production, so latency and cost matter there.
+<Accordion title="What's the difference between training and inference?">
+Training adjusts the model's parameters using data and a loss function; it is expensive and done up front (or periodically). Inference runs the trained model on new inputs to get predictions; it's cheaper per call but happens constantly in production, so latency and cost matter there.
+</Accordion>
 
-> [!question]- Parameter vs hyperparameter?
-> Parameters are learned during training (weights, biases). Hyperparameters are chosen before training and control how training happens (learning rate, epochs, tree depth, number of clusters).
+<Accordion title="Parameter vs hyperparameter?">
+Parameters are learned during training (weights, biases). Hyperparameters are chosen before training and control how training happens (learning rate, epochs, tree depth, number of clusters).
+</Accordion>
 
 ## Related
-- [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Introduction to Machine Learning]] · Next: [[Major steps in ML]]
-- [[Step 3 Train the model]] · [[Step 5 Use the model]]
+- [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Introduction to Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Introduction%20to%20Machine%20Learning) · Next: [Major steps in ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Major%20steps%20in%20ML)
+- [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model) · [Step 5 Use the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%205%20Use%20the%20model)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

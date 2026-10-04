@@ -1,12 +1,16 @@
 ---
+title: "Background Jobs & Task Queues"
 tags: [backend, backend/jobs]
 aliases: [Background Jobs, Task Queues, Job Queue, Sidekiq, BullMQ, Celery, Solid Queue, Retries with Backoff, Dead Letter Queue, Durable Execution]
 updated: 2026-09-27
 ---
 # Background Jobs & Task Queues
 
-> [!tldr] TL;DR
-> Anything slow, unreliable or not needed for the HTTP response (emails, webhooks, image processing, reports, third-party calls) should be **enqueued** and run by **workers** outside the request. A job system gives you **retries with exponential backoff and jitter**, **concurrency control**, **scheduling**, **dead-letter queues** and dashboards. Delivery is almost always **at-least-once**, so every job must be **idempotent**. Classic stacks: **Sidekiq** (Ruby/Redis), **Solid Queue** (Rails 8 default, database-backed), **BullMQ** (Node/Redis), **Celery** (Python), with **Temporal**-style durable execution for long multi-step workflows.
+<Note>
+**TL;DR**
+
+Anything slow, unreliable or not needed for the HTTP response (emails, webhooks, image processing, reports, third-party calls) should be **enqueued** and run by **workers** outside the request. A job system gives you **retries with exponential backoff and jitter**, **concurrency control**, **scheduling**, **dead-letter queues** and dashboards. Delivery is almost always **at-least-once**, so every job must be **idempotent**. Classic stacks: **Sidekiq** (Ruby/Redis), **Solid Queue** (Rails 8 default, database-backed), **BullMQ** (Node/Redis), **Celery** (Python), with **Temporal**-style durable execution for long multi-step workflows.
+</Note>
 
 ## Why
 
@@ -33,7 +37,7 @@ sequenceDiagram
 - **Latency**: respond in 50 ms instead of 3 s.
 - **Reliability**: provider down? The job retries for hours; the user's request doesn't fail.
 - **Load levelling**: a spike of 100k jobs is drained at the rate workers can handle.
-- **Scheduling**: run later (`perform_in(1.hour)`) or periodically (see [[Cron Jobs]]).
+- **Scheduling**: run later (`perform_in(1.hour)`) or periodically (see [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs)).
 
 ## Core concepts
 
@@ -67,7 +71,7 @@ function backoff(attempt: number, baseMs = 1000, capMs = 60 * 60 * 1000) {
 
 - **Jitter** prevents thousands of failed jobs retrying at the same instant (thundering herd).
 - Distinguish **retryable** errors (timeouts, 429, 503) from **permanent** ones (validation error, 404, 400): don't retry permanent failures; send them to the DLQ or discard with a log.
-- Honour `Retry-After` from rate-limited APIs ([[Rate Limiting & Throttling]]).
+- Honour `Retry-After` from rate-limited APIs ([Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling)).
 - Sidekiq's default is 25 retries over about 20 days with a polynomial backoff; BullMQ and Celery require you to configure attempts/backoff explicitly.
 
 ## Idempotency: the golden rule
@@ -92,7 +96,7 @@ class ChargeInvoiceJob
 end
 ```
 
-Techniques: state checks, unique constraints, conditional updates, provider idempotency keys, a processed-jobs table. See [[API Versioning, Idempotency & Backward Compatibility]].
+Techniques: state checks, unique constraints, conditional updates, provider idempotency keys, a processed-jobs table. See [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility).
 
 Also: pass **IDs, not objects** (`perform(user_id)` not a serialized user), so the job reads current data and payloads stay small.
 
@@ -179,7 +183,7 @@ app.conf.beat_schedule = {                            # Celery beat = the schedu
 | Retries, visibility | ❌ | ✅ (via the queue) | ✅ with full history |
 | Multi-step with state | ❌ | limited (batches, continuations) | ✅ durable execution |
 
-Rule: **the scheduler enqueues; the queue executes**. See [[Cron Jobs]].
+Rule: **the scheduler enqueues; the queue executes**. See [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs).
 
 ## Durable execution (long, multi-step work)
 
@@ -195,23 +199,29 @@ export async function orderWorkflow(orderId: string) {
 }
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **2025-03-05:** **Sidekiq 8.0** released: redesigned, lighter Web UI, a **job profiler** tab, **job iteration** (split long jobs into resumable chunks), shorter default thread timeslice.
-> - **2025-10-22:** **Rails 8.1** adds **Active Job Continuations**: jobs declare steps and resume from the last completed step after a restart or deploy (supported by Solid Queue from v1.2.0 and the Sidekiq adapter). Rails 8 (Nov 2024) made **Solid Queue** (database-backed, `FOR UPDATE SKIP LOCKED`, no Redis) the default Active Job backend, with **Mission Control – Jobs** as the dashboard.
-> - **BullMQ 5.16+:** **Job Schedulers** (`upsertJobScheduler`) replace "repeatable jobs" for cron/interval work.
-> - **Durable execution goes mainstream for AI agents:** Temporal raised a $146M Series C (2025-03-31) and a $300M Series D (2026-02-17), positioning durable workflows as the backbone for long-running agent tasks.
+<Info>
+**🆕 2025–2026**
+
+- **2025-03-05:** **Sidekiq 8.0** released: redesigned, lighter Web UI, a **job profiler** tab, **job iteration** (split long jobs into resumable chunks), shorter default thread timeslice.
+- **2025-10-22:** **Rails 8.1** adds **Active Job Continuations**: jobs declare steps and resume from the last completed step after a restart or deploy (supported by Solid Queue from v1.2.0 and the Sidekiq adapter). Rails 8 (Nov 2024) made **Solid Queue** (database-backed, `FOR UPDATE SKIP LOCKED`, no Redis) the default Active Job backend, with **Mission Control – Jobs** as the dashboard.
+- **BullMQ 5.16+:** **Job Schedulers** (`upsertJobScheduler`) replace "repeatable jobs" for cron/interval work.
+- **Durable execution goes mainstream for AI agents:** Temporal raised a $146M Series C (2025-03-31) and a $300M Series D (2026-02-17), positioning durable workflows as the backbone for long-running agent tasks.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Non-idempotent jobs + at-least-once delivery = duplicate emails and charges.
-> - Enqueuing inside a DB transaction (job runs before commit or after rollback).
-> - Huge payloads in the queue (store in DB/S3, pass an ID).
-> - One queue for everything: a burst of slow report jobs delays password-reset emails.
-> - Infinite retries of permanent errors; no DLQ; no alert on DLQ growth.
-> - Redis as the queue store without persistence/eviction set correctly (`maxmemory-policy noeviction`), losing jobs.
-> - Workers killed on deploy without graceful shutdown (SIGTERM → finish or re-enqueue current jobs).
-> - No monitoring of **queue latency** (time from enqueue to start), which is what users feel.
+<Warning>
+**Common mistakes**
+
+- Non-idempotent jobs + at-least-once delivery = duplicate emails and charges.
+- Enqueuing inside a DB transaction (job runs before commit or after rollback).
+- Huge payloads in the queue (store in DB/S3, pass an ID).
+- One queue for everything: a burst of slow report jobs delays password-reset emails.
+- Infinite retries of permanent errors; no DLQ; no alert on DLQ growth.
+- Redis as the queue store without persistence/eviction set correctly (`maxmemory-policy noeviction`), losing jobs.
+- Workers killed on deploy without graceful shutdown (SIGTERM → finish or re-enqueue current jobs).
+- No monitoring of **queue latency** (time from enqueue to start), which is what users feel.
+</Warning>
 
 ## Senior perspective
 
@@ -223,30 +233,36 @@ export async function orderWorkflow(orderId: string) {
 
 ## Interview questions
 
-> [!question]- Why use background jobs instead of doing work in the request?
-> To keep responses fast, isolate users from slow or failing dependencies with retries, smooth traffic spikes, and run scheduled or long tasks. The request enqueues a job and returns (often 202 Accepted with a status URL).
+<Accordion title="Why use background jobs instead of doing work in the request?">
+To keep responses fast, isolate users from slow or failing dependencies with retries, smooth traffic spikes, and run scheduled or long tasks. The request enqueues a job and returns (often 202 Accepted with a status URL).
+</Accordion>
 
-> [!question]- What delivery guarantee do most job queues give and what does that imply?
-> At-least-once: a job is acknowledged only after it finishes, so a crash can cause re-execution. Jobs must be idempotent (state checks, unique constraints, idempotency keys).
+<Accordion title="What delivery guarantee do most job queues give and what does that imply?">
+At-least-once: a job is acknowledged only after it finishes, so a crash can cause re-execution. Jobs must be idempotent (state checks, unique constraints, idempotency keys).
+</Accordion>
 
-> [!question]- How do you design retries?
-> Retry only transient errors, with exponential backoff capped at a maximum, plus jitter to avoid synchronized retries; honour Retry-After; limit attempts; send exhausted jobs to a dead-letter queue with alerting and a replay tool.
+<Accordion title="How do you design retries?">
+Retry only transient errors, with exponential backoff capped at a maximum, plus jitter to avoid synchronized retries; honour Retry-After; limit attempts; send exhausted jobs to a dead-letter queue with alerting and a replay tool.
+</Accordion>
 
-> [!question]- What's the problem with enqueuing a job inside a database transaction?
-> The worker may pick up the job before the transaction commits (data not visible) or the transaction may roll back after the job was sent. Enqueue after commit, use a DB-backed queue in the same transaction, or a transactional outbox.
+<Accordion title="What's the problem with enqueuing a job inside a database transaction?">
+The worker may pick up the job before the transaction commits (data not visible) or the transaction may roll back after the job was sent. Enqueue after commit, use a DB-backed queue in the same transaction, or a transactional outbox.
+</Accordion>
 
-> [!question]- Cron vs job scheduler vs workflow engine?
-> Cron triggers commands on one host with no retries. A job framework's scheduler enqueues a single job across a fleet, gaining retries and visibility. A workflow engine (Temporal, Step Functions) manages multi-step, long-running processes with persisted state, timers and compensation.
+<Accordion title="Cron vs job scheduler vs workflow engine?">
+Cron triggers commands on one host with no retries. A job framework's scheduler enqueues a single job across a fleet, gaining retries and visibility. A workflow engine (Temporal, Step Functions) manages multi-step, long-running processes with persisted state, timers and compensation.
+</Accordion>
 
-> [!question]- Redis-backed vs database-backed queues?
-> Redis (Sidekiq, BullMQ): very fast, high throughput, but a separate system and enqueue isn't transactional with your DB. DB-backed (Solid Queue, GoodJob, Oban): transactional enqueue, simpler ops, good enough for most apps; heavy load can stress the primary database.
+<Accordion title="Redis-backed vs database-backed queues?">
+Redis (Sidekiq, BullMQ): very fast, high throughput, but a separate system and enqueue isn't transactional with your DB. DB-backed (Solid Queue, GoodJob, Oban): transactional enqueue, simpler ops, good enough for most apps; heavy load can stress the primary database.
+</Accordion>
 
 ## Related
-- Scheduled jobs deep dive: [[Scheduled Jobs Index]] · [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Kubernetes CronJobs in Practice]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]]
-- [[Backend Index]] · [[APIs & Auth Index]]
-- [[Cron Jobs]] · [[Webhooks, Polling, SSE & WebSockets]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[Rate Limiting & Throttling]] · [[Rails Clean Architecture]]
-- [[Node.js Index]] · [[Java & Spring Index]] · [[Microservices Architecture]]
-- Other domains: [[Message Queues & Event Streaming]] · [[Distributed Systems Patterns]] · [[System Design Index]]
+- Scheduled jobs deep dive: [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)
+- [Backend Index](/Software%20Engineering/Backend/Backend%20Index) · [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index)
+- [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Webhooks, Polling, SSE & WebSockets](/Software%20Engineering/APIs%20%26%20Auth/Webhooks%2C%20Polling%2C%20SSE%20%26%20WebSockets) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture)
+- Other domains: [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
 
 ## Sources
 - [Sidekiq wiki: Best practices](https://github.com/sidekiq/sidekiq/wiki/Best-Practices) · [Error handling and retries](https://github.com/sidekiq/sidekiq/wiki/Error-Handling)

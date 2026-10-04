@@ -1,16 +1,20 @@
 ---
+title: "Abstract Class and Interface"
 tags: [principles, principles/oop]
 aliases: [Abstract Class vs Interface, Interface vs Abstract Class, Abstract Class, Interface, Concrete Class]
 updated: 2026-09-27
 ---
 # Abstract Class and Interface
 
-> [!tldr] TL;DR
-> **Abstract classes are about generalisation; interfaces are about standardisation.** An abstract class is a partial implementation that related subclasses share (state, constructors, protected helpers). An interface is a **contract** any unrelated class can sign. Since Java 8 interfaces can carry `default`/`static` methods, so the real differences today are **state, constructors, access modifiers and single vs multiple inheritance**. Default to interfaces; reach for an abstract class when related types genuinely share state and code.
+<Note>
+**TL;DR**
+
+**Abstract classes are about generalisation; interfaces are about standardisation.** An abstract class is a partial implementation that related subclasses share (state, constructors, protected helpers). An interface is a **contract** any unrelated class can sign. Since Java 8 interfaces can carry `default`/`static` methods, so the real differences today are **state, constructors, access modifiers and single vs multiple inheritance**. Default to interfaces; reach for an abstract class when related types genuinely share state and code.
+</Note>
 
 ## The idea
 
-Abstraction means hiding the internal implementation of a feature and showing only the functionality: *what* it does is visible, *how* it does it is hidden (see [[OOP]]).
+Abstraction means hiding the internal implementation of a feature and showing only the functionality: *what* it does is visible, *how* it does it is hidden (see [OOP](/Software%20Engineering/Principles/OOP)).
 
 - An **abstract class** is a class that cannot be instantiated. It hides shared implementation and leaves some methods (`abstract`) for subclasses to fill in.
 - An **interface** is a contract: a set of method signatures a class promises to implement. It says nothing about how.
@@ -47,7 +51,7 @@ public final class BankTransfer implements PaymentMethod {   // unrelated class,
 }
 ```
 
-The abstract class above is the [[Behavioral Patterns#Template Method|Template Method]] pattern: the skeleton is fixed (`final charge`), one step varies.
+The abstract class above is the [Template Method](/Software%20Engineering/Principles/Behavioral%20Patterns#template-method) pattern: the skeleton is fixed (`final charge`), one step varies.
 
 ## Abstract class vs interface (Java, current rules)
 
@@ -63,8 +67,11 @@ The abstract class above is the [[Behavioral Patterns#Template Method|Template M
 | Can implement the other? | An abstract class can implement an interface (and leave methods unimplemented) | An interface cannot extend a class |
 | Sealed (Java 17+) | `sealed abstract class ... permits ...` | `sealed interface ... permits ...` |
 
-> [!note] Correction to an old rule of thumb
-> "An interface can have only abstract methods" was true before Java 8. Since Java 8 interfaces can have `default` and `static` methods, and since Java 9 `private` methods. What interfaces still cannot have is **instance state** and **constructors**.
+<Note>
+**Correction to an old rule of thumb**
+
+"An interface can have only abstract methods" was true before Java 8. Since Java 8 interfaces can have `default` and `static` methods, and since Java 9 `private` methods. What interfaces still cannot have is **instance state** and **constructors**.
+</Note>
 
 ## When to use which
 
@@ -78,10 +85,13 @@ The abstract class above is the [[Behavioral Patterns#Template Method|Template M
 - You want to specify a behaviour but don't care who implements it or how.
 - Unrelated classes should share a capability (`Comparable`, `Closeable`, `Serializable`).
 - A class needs several capabilities (multiple inheritance of type).
-- You want to depend on an abstraction for testing and swapping (the D in [[SOLID]], see [[Dependency Injection & Inversion of Control]]).
+- You want to depend on an abstraction for testing and swapping (the D in [SOLID](/Software%20Engineering/Principles/SOLID), see [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control)).
 
-> [!tip] A common combination
-> Publish an **interface** as the public type, and optionally ship an **abstract skeletal implementation** (`AbstractList`, `AbstractMap` in the JDK) that implementers may extend for convenience. Callers depend only on the interface.
+<Tip>
+**A common combination**
+
+Publish an **interface** as the public type, and optionally ship an **abstract skeletal implementation** (`AbstractList`, `AbstractMap` in the JDK) that implementers may extend for convenience. Callers depend only on the interface.
+</Tip>
 
 ## Abstract class vs concrete class
 
@@ -103,7 +113,7 @@ The abstract class above is the [[Behavioral Patterns#Template Method|Template M
 | **TypeScript** | `abstract class` (exists at runtime as a class) | `interface` / `type` (erased at compile time, **structural**) | any object with the right shape satisfies an interface; no `implements` needed |
 | **Dart** | `abstract class` | Every class is an implicit interface (`implements`); Dart 3 `interface class`, `base class`, `final class`, `sealed class`, `mixin` | |
 | **Python** | `abc.ABC` + `@abstractmethod` | `typing.Protocol` (structural) | |
-| **Ruby** | No keyword; raise `NotImplementedError` in the base | Duck typing, modules as mixins | see [[SOLID Principles with Ruby]] |
+| **Ruby** | No keyword; raise `NotImplementedError` in the base | Duck typing, modules as mixins | see [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby) |
 | **Go** | none | `interface` (implicit, structural) | "accept interfaces, return structs" |
 
 ```ts
@@ -120,41 +130,49 @@ abstract class Job {
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **Abstract class as a dumping ground** for helpers "every subclass might need". It grows into a god base class that every subclass is coupled to.
-> - **Fat interfaces** that force implementers to stub methods (`throw new UnsupportedOperationException()`): split them (Interface Segregation, [[SOLID]]).
-> - **Header interfaces**: one interface per class, mirroring every public method, with a single implementation. Adds indirection without value unless you need a seam for testing or plugins.
-> - **Adding an abstract method to a published interface** breaks every implementer. Add a `default` method instead, or version the interface.
-> - Conflicting `default` methods from two interfaces force the class to override and choose (`A.super.m()`).
+<Warning>
+**Common mistakes**
+
+- **Abstract class as a dumping ground** for helpers "every subclass might need". It grows into a god base class that every subclass is coupled to.
+- **Fat interfaces** that force implementers to stub methods (`throw new UnsupportedOperationException()`): split them (Interface Segregation, [SOLID](/Software%20Engineering/Principles/SOLID)).
+- **Header interfaces**: one interface per class, mirroring every public method, with a single implementation. Adds indirection without value unless you need a seam for testing or plugins.
+- **Adding an abstract method to a published interface** breaks every implementer. Add a `default` method instead, or version the interface.
+- Conflicting `default` methods from two interfaces force the class to override and choose (`A.super.m()`).
+</Warning>
 
 ## Senior perspective
 
-- Interfaces are **seams**: places where behaviour can be swapped (tests, plugins, adapters). Put them where variation actually exists or where you cross a boundary (I/O, third-party APIs), not everywhere. See [[Coupling, Cohesion & Modularity]].
-- **Who owns the interface?** In clean/hexagonal architecture the *consumer* (domain) defines the port, and infrastructure implements it. See [[Software Architecture Styles]].
+- Interfaces are **seams**: places where behaviour can be swapped (tests, plugins, adapters). Put them where variation actually exists or where you cross a boundary (I/O, third-party APIs), not everywhere. See [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity).
+- **Who owns the interface?** In clean/hexagonal architecture the *consumer* (domain) defines the port, and infrastructure implements it. See [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
 - For public libraries, interfaces are harder to evolve than abstract classes were pre-Java 8; default methods changed that but can surprise implementers. Design for evolution.
 - Consider `sealed` when the set of implementations is closed; you get exhaustive `switch` and a clearer model.
 
 ## Interview questions
 
-> [!question]- What is the difference between an abstract class and an interface?
-> An abstract class can hold instance state, constructors, and members of any visibility, and a class can extend only one. An interface defines a contract with no instance state; since Java 8 it may have default and static methods (Java 9: private); a class can implement many. Abstract class = shared implementation in a family (is-a). Interface = capability across unrelated types (can-do).
+<Accordion title="What is the difference between an abstract class and an interface?">
+An abstract class can hold instance state, constructors, and members of any visibility, and a class can extend only one. An interface defines a contract with no instance state; since Java 8 it may have default and static methods (Java 9: private); a class can implement many. Abstract class = shared implementation in a family (is-a). Interface = capability across unrelated types (can-do).
+</Accordion>
 
-> [!question]- Can an abstract class have a constructor? Why?
-> Yes. It can't be instantiated directly, but subclasses call it via `super(...)` to initialise the shared state and enforce invariants.
+<Accordion title="Can an abstract class have a constructor? Why?">
+Yes. It can't be instantiated directly, but subclasses call it via `super(...)` to initialise the shared state and enforce invariants.
+</Accordion>
 
-> [!question]- Can an interface have method implementations?
-> Yes, since Java 8 via `default` and `static` methods, and since Java 9 `private` methods. It still can't have instance fields or constructors.
+<Accordion title="Can an interface have method implementations?">
+Yes, since Java 8 via `default` and `static` methods, and since Java 9 `private` methods. It still can't have instance fields or constructors.
+</Accordion>
 
-> [!question]- Two interfaces have the same default method. What happens?
-> Compile error in the implementing class unless it overrides the method; inside, it can delegate explicitly with `InterfaceA.super.method()`.
+<Accordion title="Two interfaces have the same default method. What happens?">
+Compile error in the implementing class unless it overrides the method; inside, it can delegate explicitly with `InterfaceA.super.method()`.
+</Accordion>
 
-> [!question]- When would you choose an abstract class over an interface?
-> When related subclasses need shared mutable state, a constructor enforcing setup, protected helpers, or a fixed algorithm skeleton (Template Method). Otherwise, prefer an interface for flexibility and multiple inheritance of type.
+<Accordion title="When would you choose an abstract class over an interface?">
+When related subclasses need shared mutable state, a constructor enforcing setup, protected helpers, or a fixed algorithm skeleton (Template Method). Otherwise, prefer an interface for flexibility and multiple inheritance of type.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[OOP]] · [[SOLID]] · [[Behavioral Patterns]] · [[Dependency Injection & Inversion of Control]]
-- [[SOLID Principles with Ruby]] · [[TypeScript Essentials]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [OOP](/Software%20Engineering/Principles/OOP) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns) · [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control)
+- [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby) · [TypeScript Essentials](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%20Essentials)
 
 ## Sources
 - [Oracle Java Tutorials: Abstract Methods and Classes](https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html)

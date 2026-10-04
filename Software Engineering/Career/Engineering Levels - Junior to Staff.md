@@ -1,12 +1,16 @@
 ---
+title: "Engineering Levels - Junior to Staff"
 tags: [career, career/levels]
 aliases: [Engineering Levels, Career Ladder, Junior vs Senior, Staff Engineer, Senior Engineer Expectations]
 updated: 2026-09-27
 ---
 # Engineering Levels - Junior to Staff
 
-> [!tldr] TL;DR
-> Engineering levels differ less by coding skill than by **scope** (task → feature → project → multiple teams), **autonomy** (told how → told what → told why → finds the why), and **influence** (self → team → group → organisation). A senior engineer reliably delivers ambiguous projects and makes the people around them better; a staff engineer sets technical direction across teams and does the work that nobody else sees. Public career ladders and the books by Tanya Reilly and Will Larson describe this in detail.
+<Note>
+**TL;DR**
+
+Engineering levels differ less by coding skill than by **scope** (task → feature → project → multiple teams), **autonomy** (told how → told what → told why → finds the why), and **influence** (self → team → group → organisation). A senior engineer reliably delivers ambiguous projects and makes the people around them better; a staff engineer sets technical direction across teams and does the work that nobody else sees. Public career ladders and the books by Tanya Reilly and Will Larson describe this in detail.
+</Note>
 
 ## The idea
 - Levels are a company's way to describe **expected impact**, and they drive pay, scope and who gets which problems.
@@ -71,35 +75,42 @@ Tanya Reilly's three pillars of staff work: **big-picture thinking** (strategy, 
 5. Get feedback specifically on the gap: "What would I need to show to be clearly at the next level?"
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Believing seniority = years or = knowing more frameworks.
-> - Doing more of the same work faster instead of bigger-scope work.
-> - Invisible glue work with no recognition; tie it to outcomes and discuss it with your manager.
-> - Chasing the staff title by writing architecture docs nobody asked for.
-> - Title-shopping at small companies without the matching scope; it can hurt later interviews.
+<Warning>
+**Common mistakes**
+
+- Believing seniority = years or = knowing more frameworks.
+- Doing more of the same work faster instead of bigger-scope work.
+- Invisible glue work with no recognition; tie it to outcomes and discuss it with your manager.
+- Chasing the staff title by writing architecture docs nobody asked for.
+- Title-shopping at small companies without the matching scope; it can hurt later interviews.
+</Warning>
 
 ## Senior perspective
 - Level expectations are the lens for performance reviews, interviews and promotion packets. Write your packet in terms of **scope, impact, and influence**, with evidence.
 - A senior engineer's biggest lever is judgment: what to build, what not to build, where quality matters and where it doesn't.
-- AI tools raise the floor for code output, which shifts differentiation further toward design, review, communication and ownership ([[Senior Engineer in the AI Era]]).
+- AI tools raise the floor for code output, which shifts differentiation further toward design, review, communication and ownership ([Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era)).
 
 ## Interview questions
-> [!question]- What is the difference between a mid-level and a senior engineer?
-> A mid-level engineer delivers well-defined features independently. A senior engineer takes an ambiguous problem, defines the solution, leads others to deliver it, owns the result in production, and makes the team better through reviews, mentoring and process improvements.
+<Accordion title="What is the difference between a mid-level and a senior engineer?">
+A mid-level engineer delivers well-defined features independently. A senior engineer takes an ambiguous problem, defines the solution, leads others to deliver it, owns the result in production, and makes the team better through reviews, mentoring and process improvements.
+</Accordion>
 
-> [!question]- What does a staff engineer do that a senior doesn't?
-> Works on problems spanning several teams or the whole org: technical strategy, cross-team projects, standards, and unblocking big initiatives, mostly by influence rather than authority. Less of their impact is their own code.
+<Accordion title="What does a staff engineer do that a senior doesn't?">
+Works on problems spanning several teams or the whole org: technical strategy, cross-team projects, standards, and unblocking big initiatives, mostly by influence rather than authority. Less of their impact is their own code.
+</Accordion>
 
-> [!question]- How do you demonstrate senior-level impact in an interview?
-> Stories where you owned an ambiguous project, made explicit trade-offs, influenced others, handled failure, and multiplied the team, with measurable results. See [[Behavioral Interviews & STAR Method]].
+<Accordion title="How do you demonstrate senior-level impact in an interview?">
+Stories where you owned an ambiguous project, made explicit trade-offs, influenced others, handled failure, and multiplied the team, with measurable results. See [Behavioral Interviews & STAR Method](/Software%20Engineering/Interviews/Behavioral%20Interviews%20%26%20STAR%20Method).
+</Accordion>
 
-> [!question]- IC track or management track?
-> Management is a different job focused on people, hiring and team health. The staff+ IC track focuses on technical direction and complex execution. Choose by what energises you; many engineers swing between them (the "engineer/manager pendulum").
+<Accordion title="IC track or management track?">
+Management is a different job focused on people, hiring and team health. The staff+ IC track focuses on technical direction and complex execution. Choose by what energises you; many engineers swing between them (the "engineer/manager pendulum").
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Communication & Influence for Engineers]] · [[Mentoring & Leading Without Authority]] · [[Technical Design Docs & RFCs]]
-- [[Senior Engineer in the AI Era]] · [[Behavioral Interviews & STAR Method]] · [[Interview Process & Preparation Plan]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Communication & Influence for Engineers](/Software%20Engineering/Career/Communication%20%26%20Influence%20for%20Engineers) · [Mentoring & Leading Without Authority](/Software%20Engineering/Career/Mentoring%20%26%20Leading%20Without%20Authority) · [Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs)
+- [Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era) · [Behavioral Interviews & STAR Method](/Software%20Engineering/Interviews/Behavioral%20Interviews%20%26%20STAR%20Method) · [Interview Process & Preparation Plan](/Software%20Engineering/Interviews/Interview%20Process%20%26%20Preparation%20Plan)
 
 ## Sources
 - Tanya Reilly, *The Staff Engineer's Path* (O'Reilly, 2022)

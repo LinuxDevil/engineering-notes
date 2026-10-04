@@ -1,12 +1,16 @@
 ---
+title: "Cron Jobs"
 tags: [backend, backend/jobs]
 aliases: [Cron, Crontab, Cron Expression, Scheduled Tasks, Kubernetes CronJob, whenever gem, systemd timers]
 updated: 2026-09-27
 ---
 # Cron Jobs
 
-> [!tldr] TL;DR
-> **Cron** is the Unix scheduler that runs commands at fixed times defined by a five-field **cron expression** (`minute hour day-of-month month day-of-week`). It is perfect for "run this script nightly" on one machine, but on a fleet of servers or containers you must handle **duplicates, overlaps, missed runs, time zones and observability**, which is why production systems move to Kubernetes CronJobs, systemd timers, or a job framework's scheduler that enqueues work into a queue ([[Background Jobs & Task Queues]]). Same idea as scheduled tasks in Spring Boot (`@Scheduled`).
+<Note>
+**TL;DR**
+
+**Cron** is the Unix scheduler that runs commands at fixed times defined by a five-field **cron expression** (`minute hour day-of-month month day-of-week`). It is perfect for "run this script nightly" on one machine, but on a fleet of servers or containers you must handle **duplicates, overlaps, missed runs, time zones and observability**, which is why production systems move to Kubernetes CronJobs, systemd timers, or a job framework's scheduler that enqueues work into a queue ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)). Same idea as scheduled tasks in Spring Boot (`@Scheduled`).
+</Note>
 
 ## What is a cron job?
 
@@ -111,7 +115,7 @@ namespace :reports do
 end
 ```
 
-Modern Rails (8.x) apps often skip system cron altogether and use **Solid Queue recurring tasks** (`config/recurring.yml`), or `sidekiq-cron`: see [[Background Jobs & Task Queues]].
+Modern Rails (8.x) apps often skip system cron altogether and use **Solid Queue recurring tasks** (`config/recurring.yml`), or `sidekiq-cron`: see [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues).
 
 ## Other schedulers
 
@@ -119,7 +123,7 @@ Modern Rails (8.x) apps often skip system cron altogether and use **Solid Queue 
 |---|---|---|
 | **systemd timers** | Linux hosts | logs in journald, `Persistent=true` runs missed jobs after downtime, dependencies, resource limits |
 | **Kubernetes CronJob** | K8s | runs a pod per schedule; `concurrencyPolicy`, `startingDeadlineSeconds`, `timeZone` |
-| **Spring `@Scheduled`** | Java apps | in-process; add **ShedLock** so only one instance runs it ([[Java & Spring Index]]) |
+| **Spring `@Scheduled`** | Java apps | in-process; add **ShedLock** so only one instance runs it ([Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)) |
 | **Job framework schedulers** | Sidekiq-cron, Solid Queue recurring, BullMQ job schedulers, Celery beat | enqueue into the job system; retries and dashboards for free |
 | **Cloud schedulers** | EventBridge Scheduler, Cloud Scheduler | call an HTTP endpoint or queue on a schedule, managed |
 
@@ -154,13 +158,16 @@ Running `cron` inside an app container is usually an anti-pattern: one process p
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **Same crontab on every server** → the job runs N times. Run it on one designated node, use a distributed lock, or move scheduling into a central scheduler that enqueues one job.
-> - **Overlapping runs** when a job takes longer than its interval.
-> - **Missed runs** during downtime or deploys go unnoticed.
-> - Non-idempotent jobs (a retry or double-run sends the newsletter twice). Make jobs idempotent ([[API Versioning, Idempotency & Backward Compatibility]]).
-> - No monitoring: nobody knows the backup job has failed for 3 weeks. Use a "dead man's switch" (Healthchecks.io, Cronitor, Sentry Crons) that alerts when a ping *doesn't* arrive.
-> - Local time zone + DST.
+<Warning>
+**Common mistakes**
+
+- **Same crontab on every server** → the job runs N times. Run it on one designated node, use a distributed lock, or move scheduling into a central scheduler that enqueues one job.
+- **Overlapping runs** when a job takes longer than its interval.
+- **Missed runs** during downtime or deploys go unnoticed.
+- Non-idempotent jobs (a retry or double-run sends the newsletter twice). Make jobs idempotent ([API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)).
+- No monitoring: nobody knows the backup job has failed for 3 weeks. Use a "dead man's switch" (Healthchecks.io, Cronitor, Sentry Crons) that alerts when a ping *doesn't* arrive.
+- Local time zone + DST.
+</Warning>
 
 ## Senior perspective
 
@@ -171,26 +178,31 @@ Running `cron` inside an app container is usually an anti-pattern: one process p
 
 ## Interview questions
 
-> [!question]- Explain the cron expression `0 9 * * 1-5`.
-> Minute 0, hour 9, any day of month, any month, Monday to Friday: 09:00 on weekdays.
+<Accordion title="Explain the cron expression `0 9 * * 1-5`.">
+Minute 0, hour 9, any day of month, any month, Monday to Friday: 09:00 on weekdays.
+</Accordion>
 
-> [!question]- How do you avoid a cron job running on every instance of a horizontally scaled app?
-> Don't schedule it in every instance. Use a single scheduler (Kubernetes CronJob with concurrencyPolicy Forbid, a cloud scheduler, or the job framework's scheduler that enqueues one job), or a distributed lock (ShedLock, Redis lock, DB advisory lock) so only one instance executes.
+<Accordion title="How do you avoid a cron job running on every instance of a horizontally scaled app?">
+Don't schedule it in every instance. Use a single scheduler (Kubernetes CronJob with concurrencyPolicy Forbid, a cloud scheduler, or the job framework's scheduler that enqueues one job), or a distributed lock (ShedLock, Redis lock, DB advisory lock) so only one instance executes.
+</Accordion>
 
-> [!question]- Cron vs a background job queue?
-> Cron decides *when* something runs; a queue decides *how* it runs reliably (workers, retries with backoff, concurrency, visibility). Best practice is cron/scheduler enqueuing a job into the queue.
+<Accordion title="Cron vs a background job queue?">
+Cron decides *when* something runs; a queue decides *how* it runs reliably (workers, retries with backoff, concurrency, visibility). Best practice is cron/scheduler enqueuing a job into the queue.
+</Accordion>
 
-> [!question]- How do you monitor scheduled jobs?
-> Log start/finish with duration and outcome, emit metrics, and use a heartbeat/dead man's switch that alerts when the expected success ping doesn't arrive; alert on failures and on runs exceeding expected duration.
+<Accordion title="How do you monitor scheduled jobs?">
+Log start/finish with duration and outcome, emit metrics, and use a heartbeat/dead man's switch that alerts when the expected success ping doesn't arrive; alert on failures and on runs exceeding expected duration.
+</Accordion>
 
-> [!question]- Why is running cron inside an application container discouraged?
-> It breaks one-process-per-container, loses environment variables and stdout logs, complicates health checks, and every replica runs the jobs. Use a separate CronJob or scheduler that runs the image with a command.
+<Accordion title="Why is running cron inside an application container discouraged?">
+It breaks one-process-per-container, loses environment variables and stdout logs, complicates health checks, and every replica runs the jobs. Use a separate CronJob or scheduler that runs the image with a command.
+</Accordion>
 
 ## Related
-- Scheduled jobs deep dive: [[Scheduled Jobs Index]] · [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Kubernetes CronJobs in Practice]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]]
-- [[Backend Index]]
-- [[Background Jobs & Task Queues]] · [[Rails Clean Architecture]] · [[API Versioning, Idempotency & Backward Compatibility]]
-- [[Java & Spring Index]] (Spring `@Scheduled`) · [[Node.js Index]]
+- Scheduled jobs deep dive: [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)
+- [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index) (Spring `@Scheduled`) · [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
 
 ## Sources
 - [Hivelocity: What is a cron job](https://www.hivelocity.net/kb/what-is-cron-job/)

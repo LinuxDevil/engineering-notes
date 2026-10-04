@@ -1,16 +1,20 @@
 ---
+title: "Spring Boot Essentials"
 tags: [backend, backend/java]
 aliases: [Spring Boot, Spring, Spring DI, IoC, Spring Data JPA, Transactional, Spring profiles, Spring testing, Auto-configuration]
 updated: 2026-09-27
 ---
 # Spring Boot Essentials
 
-> [!tldr] TL;DR
-> **Spring** is an **IoC container**: you declare beans (classes annotated `@Component`/`@Service`/`@Repository`/`@Controller` or `@Bean` methods) and Spring creates them and **injects** their dependencies. **Spring Boot** adds **auto-configuration** (beans created automatically when a library is on the classpath and you haven't defined your own), **starters** (curated dependency sets), externalised **configuration and profiles**, an embedded server, **Actuator** for health/metrics, and test support. On top you typically use **Spring MVC** (or WebFlux), **Spring Data JPA**, **`@Transactional`** and **Spring Security**.
+<Note>
+**TL;DR**
+
+**Spring** is an **IoC container**: you declare beans (classes annotated `@Component`/`@Service`/`@Repository`/`@Controller` or `@Bean` methods) and Spring creates them and **injects** their dependencies. **Spring Boot** adds **auto-configuration** (beans created automatically when a library is on the classpath and you haven't defined your own), **starters** (curated dependency sets), externalised **configuration and profiles**, an embedded server, **Actuator** for health/metrics, and test support. On top you typically use **Spring MVC** (or WebFlux), **Spring Data JPA**, **`@Transactional`** and **Spring Security**.
+</Note>
 
 ## IoC and dependency injection
 
-Instead of objects creating their collaborators (`new`), the container creates everything and wires it. That's **Inversion of Control**; supplying collaborators via constructors is **Dependency Injection**. Background from the book: [[Reactive Spring - Ch 3 Spring Fundamentals]].
+Instead of objects creating their collaborators (`new`), the container creates everything and wires it. That's **Inversion of Control**; supplying collaborators via constructors is **Dependency Injection**. Background from the book: [Reactive Spring - Ch 3 Spring Fundamentals](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%203%20Spring%20Fundamentals).
 
 ```java
 @Service
@@ -62,7 +66,7 @@ public class ShopApplication {
 - Your own bean always wins: auto-configs are `@ConditionalOnMissingBean`.
 - See why something was (not) configured: run with `--debug` (condition evaluation report) or Actuator's `/actuator/conditions`.
 
-Common starters (Boot 4 names): `spring-boot-starter-webmvc`, `-webflux`, `-data-jpa`, `-jdbc`, `-validation`, `-security`, `-actuator`, `-test` (plus per-module test starters in Boot 4). See [[Spring Boot 3 to 4 - What's New]].
+Common starters (Boot 4 names): `spring-boot-starter-webmvc`, `-webflux`, `-data-jpa`, `-jdbc`, `-validation`, `-security`, `-actuator`, `-test` (plus per-module test starters in Boot 4). See [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New).
 
 ## Configuration and profiles
 
@@ -124,7 +128,7 @@ class ErrorHandler {
 }
 ```
 
-Outbound HTTP: use `RestClient` (sync) or `WebClient` (reactive), or declarative **HTTP interface clients** (`@HttpExchange`). `RestTemplate` is being deprecated (see [[Spring Boot 3 to 4 - What's New]]).
+Outbound HTTP: use `RestClient` (sync) or `WebClient` (reactive), or declarative **HTTP interface clients** (`@HttpExchange`). `RestTemplate` is being deprecated (see [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New)).
 
 ## Spring Data JPA
 
@@ -150,7 +154,7 @@ interface OrderRepository extends JpaRepository<Order, Long> {
 }
 ```
 
-Deep dive (entities, N+1, fetch strategies, jOOQ alternative): [[JPA, Hibernate & jOOQ - Data Access in Java]].
+Deep dive (entities, N+1, fetch strategies, jOOQ alternative): [JPA, Hibernate & jOOQ - Data Access in Java](/Software%20Engineering/Backend/Java/JPA%2C%20Hibernate%20%26%20jOOQ%20-%20Data%20Access%20in%20Java).
 
 ## Transactions
 
@@ -228,38 +232,48 @@ class ShopIT { ... }
 - Production readiness checklist: health probes, graceful shutdown (`server.shutdown=graceful`, default since Boot 3.4), timeouts on every client, metrics/tracing, structured logging (built-in since Boot 3.4), DB migrations (Flyway/Liquibase), virtual threads on.
 - Review questions: are transactions on the right layer? Any N+1? DTO boundaries? Error contract (ProblemDetail)? Tests at the right level?
 
-> [!info]+ 🆕 2025–2026
-> - **Spring Boot 4.0.0 (2025-11-20)** on **Spring Framework 7.0 (2025-11-13)**: modularised starters, Jakarta EE 11, JSpecify null safety, API versioning, HTTP service client auto-config, `@MockBean` removed in favour of `@MockitoBean`, Jackson 3. **Boot 4.1 (2026-06-10)** added Spring gRPC support and SSRF mitigation for HTTP clients.
-> - Full details: [[Spring Boot 3 to 4 - What's New]].
+<Info>
+**🆕 2025–2026**
+
+- **Spring Boot 4.0.0 (2025-11-20)** on **Spring Framework 7.0 (2025-11-13)**: modularised starters, Jakarta EE 11, JSpecify null safety, API versioning, HTTP service client auto-config, `@MockBean` removed in favour of `@MockitoBean`, Jackson 3. **Boot 4.1 (2026-06-10)** added Spring gRPC support and SSRF mitigation for HTTP clients.
+- Full details: [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is IoC and DI in Spring?
-> IoC: the container, not your code, creates and manages objects. DI: dependencies are supplied to a bean (preferably via its constructor) instead of the bean creating them. It decouples components and makes them easy to test with fakes.
+<Accordion title="What is IoC and DI in Spring?">
+IoC: the container, not your code, creates and manages objects. DI: dependencies are supplied to a bean (preferably via its constructor) instead of the bean creating them. It decouples components and makes them easy to test with fakes.
+</Accordion>
 
-> [!question]- How does Spring Boot auto-configuration work?
-> `@EnableAutoConfiguration` loads auto-configuration classes listed in `META-INF/spring/...AutoConfiguration.imports`. Each is guarded by conditions (`@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@ConditionalOnProperty`), so beans are created only when the library is present and you haven't defined your own.
+<Accordion title="How does Spring Boot auto-configuration work?">
+`@EnableAutoConfiguration` loads auto-configuration classes listed in `META-INF/spring/...AutoConfiguration.imports`. Each is guarded by conditions (`@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@ConditionalOnProperty`), so beans are created only when the library is present and you haven't defined your own.
+</Accordion>
 
-> [!question]- Why doesn't `@Transactional` work when calling a method from the same class?
-> Transactions are applied by a proxy around the bean. A call via `this` bypasses the proxy, so no transaction advice runs. Move the method to another bean, inject self, or use `TransactionTemplate`.
+<Accordion title="Why doesn't `@Transactional` work when calling a method from the same class?">
+Transactions are applied by a proxy around the bean. A call via `this` bypasses the proxy, so no transaction advice runs. Move the method to another bean, inject self, or use `TransactionTemplate`.
+</Accordion>
 
-> [!question]- When does `@Transactional` roll back?
-> By default on unchecked exceptions (`RuntimeException`) and `Error`s, not on checked exceptions. Configure with `rollbackFor`/`noRollbackFor`.
+<Accordion title="When does `@Transactional` roll back?">
+By default on unchecked exceptions (`RuntimeException`) and `Error`s, not on checked exceptions. Configure with `rollbackFor`/`noRollbackFor`.
+</Accordion>
 
-> [!question]- Constructor vs field injection?
-> Constructor injection makes dependencies explicit and final, allows creating the object in tests without Spring, and fails at startup if something's missing. Field injection hides dependencies and needs reflection.
+<Accordion title="Constructor vs field injection?">
+Constructor injection makes dependencies explicit and final, allows creating the object in tests without Spring, and fails at startup if something's missing. Field injection hides dependencies and needs reflection.
+</Accordion>
 
-> [!question]- How do you test a Spring Boot app efficiently?
-> Mostly plain unit tests; slice tests (`@WebMvcTest`, `@DataJpaTest`) for framework integration with Testcontainers for real databases; a few `@SpringBootTest` end-to-end tests. Reuse application contexts and avoid unnecessary mocks.
+<Accordion title="How do you test a Spring Boot app efficiently?">
+Mostly plain unit tests; slice tests (`@WebMvcTest`, `@DataJpaTest`) for framework integration with Testcontainers for real databases; a few `@SpringBootTest` end-to-end tests. Reuse application contexts and avoid unnecessary mocks.
+</Accordion>
 
-> [!question]- What are Spring profiles?
-> Named sets of configuration and beans (`dev`, `test`, `prod`) activated via `spring.profiles.active`. Profile-specific property documents and `@Profile` beans let one artifact run in different environments.
+<Accordion title="What are Spring profiles?">
+Named sets of configuration and beans (`dev`, `test`, `prod`) activated via `spring.profiles.active`. Profile-specific property documents and `@Profile` beans let one artifact run in different environments.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Spring Boot 3 to 4 - What's New]] · [[JPA, Hibernate & jOOQ - Data Access in Java]] · [[Java Concurrency & Virtual Threads]]
-- [[Reactive Spring - Ch 3 Spring Fundamentals]] · [[Reactive Spring Book]]
-- [[Design Patterns]] · [[SOLID]] · [[Microservices Architecture]] · Node comparison: [[Building HTTP Servers - Express, Fastify & Hono]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New) · [JPA, Hibernate & jOOQ - Data Access in Java](/Software%20Engineering/Backend/Java/JPA%2C%20Hibernate%20%26%20jOOQ%20-%20Data%20Access%20in%20Java) · [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads)
+- [Reactive Spring - Ch 3 Spring Fundamentals](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%203%20Spring%20Fundamentals) · [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book)
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · Node comparison: [Building HTTP Servers - Express, Fastify & Hono](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Building%20HTTP%20Servers%20-%20Express%2C%20Fastify%20%26%20Hono)
 
 ## Sources
 - [Spring Boot reference documentation](https://docs.spring.io/spring-boot/reference/)

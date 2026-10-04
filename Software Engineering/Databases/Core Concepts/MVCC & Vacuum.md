@@ -1,12 +1,16 @@
 ---
+title: "MVCC & Vacuum"
 tags: [databases, databases/internals, databases/postgres]
 aliases: [MVCC, Multi-Version Concurrency Control, Vacuum, VACUUM, Autovacuum, Bloat, Vacuuming in SQL, Dead Tuples, Buffer Pool, XID Wraparound]
 updated: 2026-09-27
 ---
 # MVCC & Vacuum
 
-> [!tldr] TL;DR
-> **MVCC** keeps several versions of each row so readers see a consistent snapshot while writers create new versions: readers never block writers and writers never block readers. PostgreSQL stores old versions **in the table itself** (an `UPDATE` writes a new tuple and marks the old one dead), so something must clean up: **VACUUM** marks dead tuples' space reusable, updates the visibility map and **freezes** old rows to prevent transaction-ID wraparound. **Autovacuum** does this automatically; when it can't keep up (long transactions, bad settings, huge tables) you get **bloat**. `VACUUM FULL` reclaims disk space but locks the table; `pg_repack` (and `REPACK` in PG 19 beta) do it online.
+<Note>
+**TL;DR**
+
+**MVCC** keeps several versions of each row so readers see a consistent snapshot while writers create new versions: readers never block writers and writers never block readers. PostgreSQL stores old versions **in the table itself** (an `UPDATE` writes a new tuple and marks the old one dead), so something must clean up: **VACUUM** marks dead tuples' space reusable, updates the visibility map and **freezes** old rows to prevent transaction-ID wraparound. **Autovacuum** does this automatically; when it can't keep up (long transactions, bad settings, huge tables) you get **bloat**. `VACUUM FULL` reclaims disk space but locks the table; `pg_repack` (and `REPACK` in PG 19 beta) do it online.
+</Note>
 
 ## The idea
 
@@ -47,7 +51,7 @@ SELECT ctid, xmin, xmax, * FROM products WHERE id = 1;
 --  (0,2) |  751 |    0 |  1 | Cupcake    -- new tuple; (0,1) now has xmax = 751 and is dead once 751 commits
 ```
 
-(The screenshots of this experiment are in [[Database Internals]].)
+(The screenshots of this experiment are in [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals).)
 
 A **snapshot** records which transactions had committed when it was taken. A tuple is visible if its `xmin` committed before the snapshot and its `xmax` is empty, aborted, or not yet committed in that snapshot.
 
@@ -60,7 +64,7 @@ Consequences:
 
 ### HOT (heap-only tuple) updates
 
-If the update changes **no indexed column** and the new version **fits in the same page**, Postgres chains the old item pointer to the new tuple and skips index updates. Leaving free space per page (`ALTER TABLE t SET (fillfactor = 80)`) raises the HOT rate for update-heavy tables. Check `n_tup_hot_upd` vs `n_tup_upd` in `pg_stat_user_tables`. Page layout details: [[Database Pages]].
+If the update changes **no indexed column** and the new version **fits in the same page**, Postgres chains the old item pointer to the new tuple and skips index updates. Leaving free space per page (`ALTER TABLE t SET (fillfactor = 80)`) raises the HOT rate for update-heavy tables. Check `n_tup_hot_upd` vs `n_tup_upd` in `pg_stat_user_tables`. Page layout details: [Database Pages](/Software%20Engineering/Databases/Database%20Round/Database%20Pages).
 
 ## VACUUM
 
@@ -133,22 +137,25 @@ SELECT pid, state, xact_start, backend_xmin, left(query, 50)
 FROM pg_stat_activity WHERE backend_xmin IS NOT NULL ORDER BY age(backend_xmin) DESC;
 ```
 
-Fixes: kill/avoid long transactions (`idle_in_transaction_session_timeout`), drop unused replication slots, tune autovacuum per table, batch big deletes, use **partitioning** and drop old partitions instead of deleting ([[SQL Table Partitioning]]), `REINDEX CONCURRENTLY` for index bloat, `pg_repack` for table bloat.
+Fixes: kill/avoid long transactions (`idle_in_transaction_session_timeout`), drop unused replication slots, tune autovacuum per table, batch big deletes, use **partitioning** and drop old partitions instead of deleting ([SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning)), `REINDEX CONCURRENTLY` for index bloat, `pg_repack` for table bloat.
 
 ## Buffer pool vs cache (from the original notes)
 
 - **Buffer pool** (Postgres `shared_buffers`): the DB's own memory area that holds **pages** read from disk. Buffer management moves pages between disk and memory and decides which to evict. It's the low-level mechanism for reading and writing data efficiently.
 - **Cache**: focuses on keeping **frequently accessed** data in RAM after it has been read, so repeated requests skip disk. In practice, the buffer pool *is* the database's page cache; Postgres also relies on the **OS page cache** (double buffering), which is why `shared_buffers` is typically ~25% of RAM and `effective_cache_size` tells the planner about the rest.
-- Dirty pages in the buffer pool are written back by the **checkpointer** and **background writer**; durability comes from the WAL, not from these writes. See [[Database Pages]] and [[Transactions & ACID]].
+- Dirty pages in the buffer pool are written back by the **checkpointer** and **background writer**; durability comes from the WAL, not from these writes. See [Database Pages](/Software%20Engineering/Databases/Database%20Round/Database%20Pages) and [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID).
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Disabling autovacuum** "for performance". You trade a small steady cost for bloat and an eventual forced anti-wraparound vacuum at the worst time.
-> - **Running `VACUUM FULL` in production** during traffic: it's an outage for that table.
-> - **Long transactions and abandoned replication slots** silently stop cleanup for the whole cluster.
-> - **Assuming `DELETE` frees disk space.** It doesn't, until VACUUM makes space reusable, and only `VACUUM FULL`/repack returns it to the OS.
-> - **Mass updates** double table size temporarily (every row gets a new version). Batch them.
+<Warning>
+**Common pitfalls**
+
+- **Disabling autovacuum** "for performance". You trade a small steady cost for bloat and an eventual forced anti-wraparound vacuum at the worst time.
+- **Running `VACUUM FULL` in production** during traffic: it's an outage for that table.
+- **Long transactions and abandoned replication slots** silently stop cleanup for the whole cluster.
+- **Assuming `DELETE` frees disk space.** It doesn't, until VACUUM makes space reusable, and only `VACUUM FULL`/repack returns it to the OS.
+- **Mass updates** double table size temporarily (every row gets a new version). Batch them.
+</Warning>
 
 ## Senior perspective
 
@@ -157,40 +164,49 @@ Fixes: kill/avoid long transactions (`idle_in_transaction_session_timeout`), dro
 - Prefer partition drops over deletes for retention; they create no dead tuples.
 - Upgrades matter: PG 17 cut vacuum memory use dramatically, PG 18 added eager freezing and a max dead-tuple threshold, PG 19 adds parallel autovacuum and REPACK.
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)**: a new internal memory structure for dead-tuple tracking cuts VACUUM memory use by up to 20x and removes the old 1 GB limit, so big tables need fewer index passes.
-> - **PostgreSQL 18 (2025-09-25)**:
->   - `autovacuum_vacuum_max_threshold`: a fixed cap on dead tuples that triggers autovacuum, so huge tables are no longer stuck waiting for the 20% scale factor.
->   - `autovacuum_worker_slots`: `autovacuum_max_workers` can be changed without a restart (up to this many slots).
->   - Eager freezing during normal vacuums (`vacuum_max_eager_freeze_failure_rate`) spreads out freeze work and reduces expensive aggressive vacuums.
->   - `vacuum_truncate` as a server-level setting; vacuum timing columns in `pg_stat_all_tables`; asynchronous I/O can speed up vacuum reads.
-> - **PostgreSQL 19 (beta; Beta 4 on 2026-09-24, GA expected ~October 2026)**: parallel autovacuum workers (`autovacuum_max_parallel_workers`), a new autovacuum scoring/prioritisation system, and a core **`REPACK`** command with a **`CONCURRENTLY`** option that rewrites a table to remove bloat without blocking reads and writes, the built-in answer to `pg_repack`.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)**: a new internal memory structure for dead-tuple tracking cuts VACUUM memory use by up to 20x and removes the old 1 GB limit, so big tables need fewer index passes.
+- **PostgreSQL 18 (2025-09-25)**:
+  - `autovacuum_vacuum_max_threshold`: a fixed cap on dead tuples that triggers autovacuum, so huge tables are no longer stuck waiting for the 20% scale factor.
+  - `autovacuum_worker_slots`: `autovacuum_max_workers` can be changed without a restart (up to this many slots).
+  - Eager freezing during normal vacuums (`vacuum_max_eager_freeze_failure_rate`) spreads out freeze work and reduces expensive aggressive vacuums.
+  - `vacuum_truncate` as a server-level setting; vacuum timing columns in `pg_stat_all_tables`; asynchronous I/O can speed up vacuum reads.
+- **PostgreSQL 19 (beta; Beta 4 on 2026-09-24, GA expected ~October 2026)**: parallel autovacuum workers (`autovacuum_max_parallel_workers`), a new autovacuum scoring/prioritisation system, and a core **`REPACK`** command with a **`CONCURRENTLY`** option that rewrites a table to remove bloat without blocking reads and writes, the built-in answer to `pg_repack`.
+</Info>
 
 ## Interview questions
 
-> [!question]- What is MVCC and what problem does it solve?
-> Multi-version concurrency control keeps multiple versions of rows so each transaction reads a consistent snapshot. Readers don't block writers and writers don't block readers, which greatly improves concurrency compared with lock-based reads.
+<Accordion title="What is MVCC and what problem does it solve?">
+Multi-version concurrency control keeps multiple versions of rows so each transaction reads a consistent snapshot. Readers don't block writers and writers don't block readers, which greatly improves concurrency compared with lock-based reads.
+</Accordion>
 
-> [!question]- What happens physically when you UPDATE a row in PostgreSQL?
-> A new tuple version is written (possibly on another page) with a new `xmin`; the old tuple gets `xmax` set to the updating transaction. Indexes get new entries unless it's a HOT update. The old version becomes dead once no snapshot needs it and VACUUM later reclaims its space.
+<Accordion title="What happens physically when you UPDATE a row in PostgreSQL?">
+A new tuple version is written (possibly on another page) with a new `xmin`; the old tuple gets `xmax` set to the updating transaction. Indexes get new entries unless it's a HOT update. The old version becomes dead once no snapshot needs it and VACUUM later reclaims its space.
+</Accordion>
 
-> [!question]- VACUUM vs VACUUM FULL?
-> VACUUM marks dead-tuple space reusable, updates the visibility and free space maps and freezes old rows, without blocking reads/writes; it rarely shrinks files. VACUUM FULL rewrites the table into a compact new file, returns space to the OS, but needs an ACCESS EXCLUSIVE lock and extra disk space.
+<Accordion title="VACUUM vs VACUUM FULL?">
+VACUUM marks dead-tuple space reusable, updates the visibility and free space maps and freezes old rows, without blocking reads/writes; it rarely shrinks files. VACUUM FULL rewrites the table into a compact new file, returns space to the OS, but needs an ACCESS EXCLUSIVE lock and extra disk space.
+</Accordion>
 
-> [!question]- What causes table bloat and how do you fix it?
-> Dead tuples accumulating faster than vacuum reclaims them, usually due to update-heavy workloads with default thresholds or something holding back the xmin horizon (long transactions, stale replication slots). Fix the root cause, tune autovacuum per table, then compact with pg_repack/REPACK CONCURRENTLY or VACUUM FULL in a maintenance window.
+<Accordion title="What causes table bloat and how do you fix it?">
+Dead tuples accumulating faster than vacuum reclaims them, usually due to update-heavy workloads with default thresholds or something holding back the xmin horizon (long transactions, stale replication slots). Fix the root cause, tune autovacuum per table, then compact with pg_repack/REPACK CONCURRENTLY or VACUUM FULL in a maintenance window.
+</Accordion>
 
-> [!question]- What is transaction ID wraparound?
-> Postgres XIDs are 32-bit and compared circularly. Rows must be frozen before their XID is about 2 billion transactions old, otherwise they'd appear to be in the future and vanish. Autovacuum forces anti-wraparound vacuums; if it falls too far behind, Postgres stops accepting writes.
+<Accordion title="What is transaction ID wraparound?">
+Postgres XIDs are 32-bit and compared circularly. Rows must be frozen before their XID is about 2 billion transactions old, otherwise they'd appear to be in the future and vanish. Autovacuum forces anti-wraparound vacuums; if it falls too far behind, Postgres stops accepting writes.
+</Accordion>
 
-> [!question]- How is InnoDB's MVCC different from Postgres's?
-> InnoDB updates rows in place and keeps previous versions in undo logs; readers reconstruct old versions from undo and a purge thread cleans up. Postgres writes new versions into the heap and relies on VACUUM. InnoDB has no heap bloat from updates but can suffer long undo history ("history list length") with long transactions.
+<Accordion title="How is InnoDB's MVCC different from Postgres's?">
+InnoDB updates rows in place and keeps previous versions in undo logs; readers reconstruct old versions from undo and a purge thread cleans up. Postgres writes new versions into the heap and relies on VACUUM. InnoDB has no heap bloat from updates but can suffer long undo history ("history list length") with long transactions.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Transactions & ACID]] · [[Isolation Levels & Read Phenomena]] · [[Locking & Concurrency Control]]
-- [[Database Internals]] · [[Database Pages]] · [[Query Optimization & EXPLAIN]] · [[SQL Table Partitioning]]
-- [[PostgreSQL 17 to 18 - What's New]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) · [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control)
+- [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals) · [Database Pages](/Software%20Engineering/Databases/Database%20Round/Database%20Pages) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning)
+- [PostgreSQL 17 to 18 - What's New](/Software%20Engineering/Databases/Core%20Concepts/PostgreSQL%2017%20to%2018%20-%20What's%20New)
 
 ## Sources
 - PostgreSQL docs, Concurrency Control / MVCC: https://www.postgresql.org/docs/current/mvcc-intro.html

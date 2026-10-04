@@ -1,12 +1,16 @@
 ---
+title: "Transformers & How LLMs Work"
 tags: [ai-ml, ai-ml/llm]
 aliases: [How LLMs Work, Transformers, Attention, Tokens, LLM Basics, Reasoning Models, Temperature]
 updated: 2026-09-27
 ---
 # Transformers & How LLMs Work
 
-> [!tldr] TL;DR
-> An LLM is a **transformer** trained to **predict the next token**. Text is split into **tokens**, each token becomes an **embedding** vector, and stacked layers of **self-attention** let every token gather information from earlier tokens. **Pretraining** on trillions of tokens gives broad knowledge; **fine-tuning** (SFT) and **preference training** (RLHF/DPO) turn it into a helpful assistant; **reinforcement learning on verifiable tasks** produced 2025's **reasoning models** that "think" before answering. At inference the model outputs a probability distribution and **sampling parameters** (temperature, top-p) choose the next token, one at a time, within a finite **context window**.
+<Note>
+**TL;DR**
+
+An LLM is a **transformer** trained to **predict the next token**. Text is split into **tokens**, each token becomes an **embedding** vector, and stacked layers of **self-attention** let every token gather information from earlier tokens. **Pretraining** on trillions of tokens gives broad knowledge; **fine-tuning** (SFT) and **preference training** (RLHF/DPO) turn it into a helpful assistant; **reinforcement learning on verifiable tasks** produced 2025's **reasoning models** that "think" before answering. At inference the model outputs a probability distribution and **sampling parameters** (temperature, top-p) choose the next token, one at a time, within a finite **context window**.
+</Note>
 
 ## The one-sentence version
 
@@ -33,7 +37,7 @@ Models don't see characters or words; they see **tokens**, chunks from a fixed v
 
 ## 2. Embeddings and positions
 
-Each token ID maps to a learned vector (an **embedding**, e.g. 4,096+ numbers). Similar tokens end up near each other. Because attention itself has no sense of order, the model adds **positional information** (modern LLMs mostly use **rotary position embeddings, RoPE**). See [[Embeddings & Semantic Search]] for embeddings used in search.
+Each token ID maps to a learned vector (an **embedding**, e.g. 4,096+ numbers). Similar tokens end up near each other. Because attention itself has no sense of order, the model adds **positional information** (modern LLMs mostly use **rotary position embeddings, RoPE**). See [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search) for embeddings used in search.
 
 ## 3. Attention: the core idea
 
@@ -70,7 +74,7 @@ flowchart TB
 The **feed-forward** layers hold much of the model's "knowledge". **Mixture-of-Experts (MoE)** models replace one big feed-forward layer with many "experts" and a router that activates only a few per token, so a model can have huge total parameters but modest compute per token. Example: DeepSeek V4-Pro is reported as 1.6T total / 49B active parameters, and Mistral Large 3 as 675B total / 41B active.
 
 ### KV cache
-During generation the keys and values of previous tokens are cached so each new token only computes its own. The KV cache grows with context length and is a major memory cost when serving long conversations. (It's also the mechanism behind **prompt caching**; see [[Prompt & Context Engineering]].)
+During generation the keys and values of previous tokens are cached so each new token only computes its own. The KV cache grows with context length and is a major memory cost when serving long conversations. (It's also the mechanism behind **prompt caching**; see [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering).)
 
 ## 4. How an LLM is trained
 
@@ -90,19 +94,22 @@ flowchart LR
 | **DPO** (2023) | the same preference pairs, optimised directly with a classification-style loss | RLHF-like results without a separate reward model or RL loop |
 | **RL with verifiable rewards** | problems with checkable answers (unit tests, math) | long chains of reasoning, self-correction: **reasoning models** |
 
-**Fine-tuning** in the application sense (adapting a model to your data, e.g. with LoRA) is covered in [[Fine-tuning vs RAG vs Prompting]].
+**Fine-tuning** in the application sense (adapting a model to your data, e.g. with LoRA) is covered in [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting).
 
 ## 5. Reasoning models
 
 A reasoning model generates a (often hidden or summarised) chain of thought before its final answer, trading more output tokens and latency for accuracy on math, code, planning and agentic tasks.
 
-> [!info]+ 🆕 2025–2026
-> - **DeepSeek-R1** (2025-01-20, open weights, MIT licence) showed that large-scale RL can produce strong reasoning, and published how.
-> - **Claude 3.7 Sonnet** (2025-02-24) introduced *hybrid* reasoning: one model with an optional extended-thinking mode and a budget you control.
-> - **o3 and o4-mini** (2025-04-16), **Gemini 2.5 Pro** (2025-03-25) and **GPT-5** (2025-08-07) made thinking modes standard; by 2026 most frontier models expose a reasoning effort or thinking budget setting.
-> - **DeepSeek V3.1** (2025-08-21) combined thinking and non-thinking modes in one open model.
-> - **1M-token context windows** became common on frontier models (e.g. Claude Opus 4.6 in beta, 2026-02-05; DeepSeek V4, 2026-04-24).
-> Full timeline: [[LLM Landscape 2025-2026]].
+<Info>
+**🆕 2025–2026**
+
+- **DeepSeek-R1** (2025-01-20, open weights, MIT licence) showed that large-scale RL can produce strong reasoning, and published how.
+- **Claude 3.7 Sonnet** (2025-02-24) introduced *hybrid* reasoning: one model with an optional extended-thinking mode and a budget you control.
+- **o3 and o4-mini** (2025-04-16), **Gemini 2.5 Pro** (2025-03-25) and **GPT-5** (2025-08-07) made thinking modes standard; by 2026 most frontier models expose a reasoning effort or thinking budget setting.
+- **DeepSeek V3.1** (2025-08-21) combined thinking and non-thinking modes in one open model.
+- **1M-token context windows** became common on frontier models (e.g. Claude Opus 4.6 in beta, 2026-02-05; DeepSeek V4, 2026-04-24).
+Full timeline: [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026).
+</Info>
 
 Practical notes:
 - Give reasoning models the **goal and constraints**, not step-by-step instructions on how to think.
@@ -115,7 +122,7 @@ The **context window** is the maximum number of tokens (input + output) the mode
 
 - Everything the model "knows" about your task must be in the context or in its weights. It has **no memory between API calls**; the app resends history each time.
 - Bigger isn't automatically better: quality drops for information buried in the **middle** of long contexts ("Lost in the Middle", 2023) and generally degrades as context fills ("context rot"). Cost and latency grow with length.
-- The model's **knowledge cutoff** means recent facts must come from retrieval or tools ([[Retrieval-Augmented Generation (RAG)]]).
+- The model's **knowledge cutoff** means recent facts must come from retrieval or tools ([Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG))).
 
 ## 7. Sampling parameters
 
@@ -123,7 +130,7 @@ After the forward pass the model has scores (**logits**) for every vocabulary to
 
 | Parameter | What it does | Typical use |
 |---|---|---|
-| **temperature** | divides logits before softmax. <1 sharpens (more deterministic), >1 flattens (more random). 0 ≈ always pick the top token (greedy) | 0–0.3 for extraction/classification/code; 0.7–1.0 for creative writing |
+| **temperature** | divides logits before softmax. &lt;1 sharpens (more deterministic), &gt;1 flattens (more random). 0 ≈ always pick the top token (greedy) | 0–0.3 for extraction/classification/code; 0.7–1.0 for creative writing |
 | **top_p** (nucleus) | sample only from the smallest set of tokens whose probabilities add up to p | 0.9–1.0; usually tune temperature *or* top_p, not both |
 | **top_k** | sample only from the k most likely tokens | some APIs only |
 | **max tokens** | hard cap on output length | always set it |
@@ -140,7 +147,7 @@ T = 2.0  → logits/2 = 2.5, 1.5, 0.5 → Paris 0.67, Lyon 0.24, Rome 0.09
 Caveats: temperature 0 is **not guaranteed deterministic** (batching and floating-point effects on GPUs), and many reasoning models restrict or ignore sampling parameters. Check your provider's docs.
 
 ## Why LLMs hallucinate
-The model is trained to produce **plausible** continuations, not to look facts up. When the answer isn't well represented in its weights or context, a fluent but wrong answer can still be the most probable one. Mitigations: ground answers in retrieved sources, allow "I don't know", ask for citations, verify with tools, and evaluate ([[LLM Evaluation & Observability]]).
+The model is trained to produce **plausible** continuations, not to look facts up. When the answer isn't well represented in its weights or context, a fluent but wrong answer can still be the most probable one. Mitigations: ground answers in retrieved sources, allow "I don't know", ask for citations, verify with tools, and evaluate ([LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability)).
 
 ## Senior perspective
 - Think in **tokens**: cost = (input + output tokens) × price; latency ≈ time-to-first-token + output tokens × per-token time. Long prompts and verbose outputs are the usual cost bugs.
@@ -151,32 +158,39 @@ The model is trained to produce **plausible** continuations, not to look facts u
 
 ## Interview questions
 
-> [!question]- Explain self-attention simply.
-> Each token creates a query, key and value. It compares its query with every other token's key to score relevance, turns the scores into weights with softmax, and takes a weighted sum of the values. The result is a context-aware representation of the token.
+<Accordion title="Explain self-attention simply.">
+Each token creates a query, key and value. It compares its query with every other token's key to score relevance, turns the scores into weights with softmax, and takes a weighted sum of the values. The result is a context-aware representation of the token.
+</Accordion>
 
-> [!question]- Why did transformers beat RNNs?
-> Attention connects any two positions directly (no long-range forgetting) and processes all tokens in parallel during training, which uses GPUs efficiently and let models scale to huge data and parameter counts.
+<Accordion title="Why did transformers beat RNNs?">
+Attention connects any two positions directly (no long-range forgetting) and processes all tokens in parallel during training, which uses GPUs efficiently and let models scale to huge data and parameter counts.
+</Accordion>
 
-> [!question]- What's the difference between pretraining, fine-tuning and RLHF?
-> Pretraining learns language and knowledge by predicting the next token on huge unlabelled corpora. Supervised fine-tuning teaches the format and instruction following from curated examples. RLHF (or DPO) aligns behaviour to human preferences using ranked outputs.
+<Accordion title="What's the difference between pretraining, fine-tuning and RLHF?">
+Pretraining learns language and knowledge by predicting the next token on huge unlabelled corpora. Supervised fine-tuning teaches the format and instruction following from curated examples. RLHF (or DPO) aligns behaviour to human preferences using ranked outputs.
+</Accordion>
 
-> [!question]- What does temperature do? What would you use for a JSON extraction task?
-> It scales the logits before softmax: low temperature concentrates probability on the top tokens (more deterministic), high temperature spreads it out (more varied). For extraction use a low temperature (0–0.2) plus structured outputs.
+<Accordion title="What does temperature do? What would you use for a JSON extraction task?">
+It scales the logits before softmax: low temperature concentrates probability on the top tokens (more deterministic), high temperature spreads it out (more varied). For extraction use a low temperature (0–0.2) plus structured outputs.
+</Accordion>
 
-> [!question]- What is a reasoning model and when would you not use one?
-> A model trained (largely with RL on verifiable tasks) to produce an internal chain of thought before answering, improving hard math, code and planning. Avoid it for simple, latency-sensitive or high-volume tasks where the extra thinking tokens add cost and delay without improving quality.
+<Accordion title="What is a reasoning model and when would you not use one?">
+A model trained (largely with RL on verifiable tasks) to produce an internal chain of thought before answering, improving hard math, code and planning. Avoid it for simple, latency-sensitive or high-volume tasks where the extra thinking tokens add cost and delay without improving quality.
+</Accordion>
 
-> [!question]- Why does a longer context window not solve everything?
-> Cost and latency grow with tokens, attention quality degrades for information in the middle and as context fills, and irrelevant context distracts the model. Retrieval and careful context curation often beat stuffing everything in.
+<Accordion title="Why does a longer context window not solve everything?">
+Cost and latency grow with tokens, attention quality degrades for information in the middle and as context fills, and irrelevant context distracts the model. Retrieval and careful context curation often beat stuffing everything in.
+</Accordion>
 
-> [!question]- What is Mixture-of-Experts?
-> A transformer whose feed-forward layers are split into many experts, with a router activating only a few per token. Total parameters (knowledge capacity) can be very large while compute per token stays close to a much smaller dense model; the trade-off is memory to hold all experts and more complex serving.
+<Accordion title="What is Mixture-of-Experts?">
+A transformer whose feed-forward layers are split into many experts, with a router activating only a few per token. Total parameters (knowledge capacity) can be very large while compute per token stays close to a much smaller dense model; the trade-off is memory to hold all experts and more complex serving.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- Previous: [[Neural Networks & Deep Learning Basics]] · [[ML Core Concepts]]
-- Next: [[Prompt & Context Engineering]] · [[Embeddings & Semantic Search]]
-- [[Fine-tuning vs RAG vs Prompting]] · [[LLM Landscape 2025-2026]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics) · [ML Core Concepts](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/ML%20Core%20Concepts)
+- Next: [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering) · [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search)
+- [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting) · [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026)
 
 ## Sources
 - Vaswani et al. (2017), [Attention Is All You Need](https://arxiv.org/abs/1706.03762)

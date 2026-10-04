@@ -1,12 +1,16 @@
 ---
+title: "GitOps - Argo CD & Flux"
 tags: [devops, devops/cicd, devops/kubernetes]
 aliases: [GitOps, Argo CD, ArgoCD, Flux, FluxCD]
 updated: 2026-09-27
 ---
 # GitOps - Argo CD & Flux
 
-> [!tldr] TL;DR
-> **GitOps** means the desired state of your systems is **declared in Git**, and an agent **inside the cluster pulls** that state and **continuously reconciles** the cluster to match it. Deploying becomes "merge a pull request", rollback becomes "revert a commit", and drift is detected automatically. **Argo CD** and **Flux** (both CNCF graduated) are the standard tools. CI builds and tests images; GitOps delivers them.
+<Note>
+**TL;DR**
+
+**GitOps** means the desired state of your systems is **declared in Git**, and an agent **inside the cluster pulls** that state and **continuously reconciles** the cluster to match it. Deploying becomes "merge a pull request", rollback becomes "revert a commit", and drift is detected automatically. **Argo CD** and **Flux** (both CNCF graduated) are the standard tools. CI builds and tests images; GitOps delivers them.
+</Note>
 
 ## The idea
 
@@ -82,17 +86,23 @@ spec:
 - **Promotion** = PR that copies an image digest from staging values to prod values, automated by CI or tools like Kargo, gated by checks and approvals.
 - **Secrets**: never plain in Git. Use External Secrets Operator, Sealed Secrets or SOPS.
 
-> [!info]+ 🆕 2025–2026
-> - **Argo CD 3.0 GA (2025-05-06)**: a "small but mighty" major release: better secure defaults, fine-grained RBAC down to individual resources in an Application, and clarified secrets guidance. The 3.x line continues (3.5.x in September 2026, 3.6 in release-candidate).
-> - GitOps is the default delivery model on most internal developer platforms: see [[Platform Engineering & Internal Developer Platforms]].
+<Info>
+**🆕 2025–2026**
+
+- **Argo CD 3.0 GA (2025-05-06)**: a "small but mighty" major release: better secure defaults, fine-grained RBAC down to individual resources in an Application, and clarified secrets guidance. The 3.x line continues (3.5.x in September 2026, 3.6 in release-candidate).
+- GitOps is the default delivery model on most internal developer platforms: see [Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Auto-sync with `prune: true` pointed at the wrong path can delete production resources. Use projects, sync windows and review.
-> - Humans running `kubectl edit` in prod: self-heal reverts it (good) but the incident fix vanishes (bad) unless it also lands in Git.
-> - Mutable tags (`latest`) in Git: Git says nothing changed, but the cluster runs new code.
-> - Giant monorepo of manifests with slow reconciliation; shard by team or cluster.
+<Warning>
+**Common pitfalls**
+
+- Auto-sync with `prune: true` pointed at the wrong path can delete production resources. Use projects, sync windows and review.
+- Humans running `kubectl edit` in prod: self-heal reverts it (good) but the incident fix vanishes (bad) unless it also lands in Git.
+- Mutable tags (`latest`) in Git: Git says nothing changed, but the cluster runs new code.
+- Giant monorepo of manifests with slow reconciliation; shard by team or cluster.
+</Warning>
 
 ## Senior perspective
 
@@ -102,22 +112,26 @@ spec:
 
 ## Interview questions
 
-> [!question]- What is GitOps?
-> An operating model where desired state is declared in Git and an in-cluster agent continuously pulls and reconciles it. Changes happen via pull requests; rollback is a revert; drift is detected and optionally corrected.
+<Accordion title="What is GitOps?">
+An operating model where desired state is declared in Git and an in-cluster agent continuously pulls and reconciles it. Changes happen via pull requests; rollback is a revert; drift is detected and optionally corrected.
+</Accordion>
 
-> [!question]- Argo CD vs Flux?
-> Both are CNCF-graduated GitOps controllers supporting Helm and Kustomize. Argo CD has a rich UI, Applications/ApplicationSets and strong multi-tenant RBAC. Flux is a toolkit of composable controllers configured purely via CRDs, with built-in image automation. Choice is mostly about UX and team preference.
+<Accordion title="Argo CD vs Flux?">
+Both are CNCF-graduated GitOps controllers supporting Helm and Kustomize. Argo CD has a rich UI, Applications/ApplicationSets and strong multi-tenant RBAC. Flux is a toolkit of composable controllers configured purely via CRDs, with built-in image automation. Choice is mostly about UX and team preference.
+</Accordion>
 
-> [!question]- Where does CI end and GitOps begin?
-> CI tests, builds, scans, signs and pushes the image, then updates the config repo (image tag/digest). The GitOps agent deploys what is in the config repo. CI never needs cluster credentials.
+<Accordion title="Where does CI end and GitOps begin?">
+CI tests, builds, scans, signs and pushes the image, then updates the config repo (image tag/digest). The GitOps agent deploys what is in the config repo. CI never needs cluster credentials.
+</Accordion>
 
-> [!question]- How do you promote a release from staging to prod with GitOps?
-> Open a PR that changes the prod overlay to the digest already validated in staging; required checks and approvals gate the merge; the prod cluster's agent syncs it. Automate with CI or a promotion tool.
+<Accordion title="How do you promote a release from staging to prod with GitOps?">
+Open a PR that changes the prod overlay to the digest already validated in staging; required checks and approvals gate the merge; the prod cluster's agent syncs it. Automate with CI or a promotion tool.
+</Accordion>
 
 ## Related
-- [[CI-CD Pipelines]] · [[Helm & Kustomize]] · [[Kubernetes]] · [[Infrastructure as Code]] · [[DevOps Index]]
-- [[Git Essentials & Workflows]] · [[Platform Engineering & Internal Developer Platforms]]
-- Deep dives: [[Argo CD in Practice]] · [[Argo Rollouts - Canary & Blue-Green]] · [[Kubernetes Delivery Platform - End to End]]
+- [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize) · [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) · [Infrastructure as Code](/Software%20Engineering/DevOps/Infrastructure%20as%20Code) · [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index)
+- [Git Essentials & Workflows](/Software%20Engineering/DevOps/Git%20Essentials%20%26%20Workflows) · [Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms)
+- Deep dives: [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End)
 
 ## Sources
 - [OpenGitOps principles](https://opengitops.dev/)

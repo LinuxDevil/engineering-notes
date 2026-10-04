@@ -1,12 +1,16 @@
 ---
+title: "Dockerfile Best Practices & Image Security"
 tags: [devops, devops/docker, devops/security]
 aliases: [Dockerfile Best Practices, Multi-stage Builds, Container Image Security, Image Scanning, dockerignore]
 updated: 2026-09-27
 ---
 # Dockerfile Best Practices & Image Security
 
-> [!tldr] TL;DR
-> A production image should be **small, reproducible, non-root and scanned**. Use **multi-stage builds** so compilers and dev dependencies never reach the runtime image, order instructions for **layer caching**, keep the context lean with **`.dockerignore`**, pin base images, add a **HEALTHCHECK** (for plain Docker/Compose), and scan images plus generate an **SBOM** and signed **provenance** in CI. Start from minimal, maintained base images (distroless, Chainguard, Docker Hardened Images).
+<Note>
+**TL;DR**
+
+A production image should be **small, reproducible, non-root and scanned**. Use **multi-stage builds** so compilers and dev dependencies never reach the runtime image, order instructions for **layer caching**, keep the context lean with **`.dockerignore`**, pin base images, add a **HEALTHCHECK** (for plain Docker/Compose), and scan images plus generate an **SBOM** and signed **provenance** in CI. Start from minimal, maintained base images (distroless, Chainguard, Docker Hardened Images).
+</Note>
 
 ## The idea
 
@@ -43,7 +47,7 @@ RUN --mount=type=secret,id=npm_token \
 docker build --secret id=npm_token,env=NPM_TOKEN .
 ```
 
-In CI, persist cache across runners with `--cache-to/--cache-from` (e.g. `type=gha` for GitHub Actions or `type=registry`). See [[CI-CD Pipelines]].
+In CI, persist cache across runners with `--cache-to/--cache-from` (e.g. `type=gha` for GitHub Actions or `type=registry`). See [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines).
 
 ## 2. Multi-stage builds
 
@@ -125,7 +129,7 @@ USER app
 USER node
 ```
 
-Also: `COPY --chown=app:app`, listen on ports above 1024, drop capabilities at runtime (`--cap-drop=ALL`), use `--read-only` root filesystems with a `tmpfs` for scratch space, and in Kubernetes set `runAsNonRoot: true` in the `securityContext` (see [[Kubernetes Workloads in Production]]).
+Also: `COPY --chown=app:app`, listen on ports above 1024, drop capabilities at runtime (`--cap-drop=ALL`), use `--read-only` root filesystems with a `tmpfs` for scratch space, and in Kubernetes set `runAsNonRoot: true` in the `securityContext` (see [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)).
 
 ## 5. Healthchecks
 
@@ -179,19 +183,25 @@ cosign verify ghcr.io/acme/api@sha256:<digest> \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Docker Hardened Images (DHI)** launched commercially in May 2025 and on **2025-12-17** Docker made the catalog (1,000+ images on Debian and Alpine) **free and open source under Apache 2.0**. They are minimal, run as non-root by default, and ship SBOMs and SLSA Build Level 3 provenance.
-> - **Bitnami catalog change (Broadcom)**: from **2025-08-28** the free public Bitnami images were reduced to a small set of hardened `latest`-only images; versioned tags were moved to the unmaintained `bitnamilegacy` repository, with the full catalog deletion postponed to **2025-09-29**. Helm charts that pulled `docker.io/bitnami/*` images stopped working out of the box. Lesson: mirror critical images into your own registry.
-> - **Docker Engine 29 (2025-11-10)** made the containerd image store the default for new installs, which natively supports multi-platform images and attestations.
+<Info>
+**🆕 2025–2026**
+
+- **Docker Hardened Images (DHI)** launched commercially in May 2025 and on **2025-12-17** Docker made the catalog (1,000+ images on Debian and Alpine) **free and open source under Apache 2.0**. They are minimal, run as non-root by default, and ship SBOMs and SLSA Build Level 3 provenance.
+- **Bitnami catalog change (Broadcom)**: from **2025-08-28** the free public Bitnami images were reduced to a small set of hardened `latest`-only images; versioned tags were moved to the unmaintained `bitnamilegacy` repository, with the full catalog deletion postponed to **2025-09-29**. Helm charts that pulled `docker.io/bitnami/*` images stopped working out of the box. Lesson: mirror critical images into your own registry.
+- **Docker Engine 29 (2025-11-10)** made the containerd image store the default for new installs, which natively supports multi-platform images and attestations.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - `ARG TOKEN` then `RUN npm ci`: the token ends up in image history. Use `--mount=type=secret`.
-> - Deleting files in a later layer does not shrink the image; the bytes are still in the earlier layer.
-> - Alpine + native Node/Python modules: musl vs glibc incompatibilities and slow builds. Use `-slim` if it hurts.
-> - Scanning only at build time: yesterday's clean image has CVEs today.
-> - Distroless images without a debugging plan: learn `kubectl debug` / `docker debug` first.
+<Warning>
+**Common pitfalls**
+
+- `ARG TOKEN` then `RUN npm ci`: the token ends up in image history. Use `--mount=type=secret`.
+- Deleting files in a later layer does not shrink the image; the bytes are still in the earlier layer.
+- Alpine + native Node/Python modules: musl vs glibc incompatibilities and slow builds. Use `-slim` if it hurts.
+- Scanning only at build time: yesterday's clean image has CVEs today.
+- Distroless images without a debugging plan: learn `kubectl debug` / `docker debug` first.
+</Warning>
 
 ## Senior perspective
 
@@ -203,28 +213,34 @@ cosign verify ghcr.io/acme/api@sha256:<digest> \
 
 ## Interview questions
 
-> [!question]- What is a multi-stage build and why use it?
-> A Dockerfile with several `FROM` stages where later stages copy artifacts from earlier ones with `COPY --from`. Build tools, compilers and dev dependencies stay in the build stage, so the final image is smaller, has fewer CVEs and a smaller attack surface.
+<Accordion title="What is a multi-stage build and why use it?">
+A Dockerfile with several `FROM` stages where later stages copy artifacts from earlier ones with `COPY --from`. Build tools, compilers and dev dependencies stay in the build stage, so the final image is smaller, has fewer CVEs and a smaller attack surface.
+</Accordion>
 
-> [!question]- How do you pass a secret to a build without leaking it?
-> Use BuildKit secret mounts (`RUN --mount=type=secret,id=x` with `docker build --secret id=x,...`). The secret exists only during that `RUN` and is never stored in a layer. `ARG`/`ENV` values are visible in image history.
+<Accordion title="How do you pass a secret to a build without leaking it?">
+Use BuildKit secret mounts (`RUN --mount=type=secret,id=x` with `docker build --secret id=x,...`). The secret exists only during that `RUN` and is never stored in a layer. `ARG`/`ENV` values are visible in image history.
+</Accordion>
 
-> [!question]- Why should containers not run as root?
-> Root in the container is UID 0 on the host kernel. Combined with a kernel bug, a privileged flag, a host mount or the Docker socket, it leads to host compromise. Non-root plus dropped capabilities and read-only filesystems limit the damage of an app compromise.
+<Accordion title="Why should containers not run as root?">
+Root in the container is UID 0 on the host kernel. Combined with a kernel bug, a privileged flag, a host mount or the Docker socket, it leads to host compromise. Non-root plus dropped capabilities and read-only filesystems limit the damage of an app compromise.
+</Accordion>
 
-> [!question]- Does Kubernetes use the Dockerfile HEALTHCHECK?
-> No. Kubernetes uses its own liveness, readiness and startup probes defined in the Pod spec. `HEALTHCHECK` is used by Docker Engine, Compose and Swarm.
+<Accordion title="Does Kubernetes use the Dockerfile HEALTHCHECK?">
+No. Kubernetes uses its own liveness, readiness and startup probes defined in the Pod spec. `HEALTHCHECK` is used by Docker Engine, Compose and Swarm.
+</Accordion>
 
-> [!question]- What is an SBOM and why does it matter?
-> A machine-readable inventory of all components in an artifact (SPDX/CycloneDX). It lets you answer "are we affected by CVE-X?" in minutes, supports licence compliance and is increasingly required by regulation and customers.
+<Accordion title="What is an SBOM and why does it matter?">
+A machine-readable inventory of all components in an artifact (SPDX/CycloneDX). It lets you answer "are we affected by CVE-X?" in minutes, supports licence compliance and is increasingly required by regulation and customers.
+</Accordion>
 
-> [!question]- Your image is 1.2 GB. How do you shrink it?
-> Multi-stage build; slim or distroless base; `.dockerignore`; install only production dependencies; clean package manager caches in the same `RUN`; avoid copying build outputs twice; check with `docker history` or `dive` which layers are large.
+<Accordion title="Your image is 1.2 GB. How do you shrink it?">
+Multi-stage build; slim or distroless base; `.dockerignore`; install only production dependencies; clean package manager caches in the same `RUN`; avoid copying build outputs twice; check with `docker history` or `dive` which layers are large.
+</Accordion>
 
 ## Related
-- [[Docker]] · [[Docker Basics]] · [[Docker Compose]] · [[DevOps Index]]
-- [[CI-CD Pipelines]] · [[Kubernetes Workloads in Production]]
-- [[Supply Chain Security]] (npm/JS side of the same problem)
+- [Docker](/Software%20Engineering/DevOps/Docker/Docker) · [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) · [Docker Compose](/Software%20Engineering/DevOps/Docker/Docker%20Compose) · [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index)
+- [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) (npm/JS side of the same problem)
 
 ## Sources
 - [Docker docs: Building best practices](https://docs.docker.com/build/building/best-practices/)

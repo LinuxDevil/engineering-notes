@@ -1,12 +1,16 @@
 ---
+title: "Recursion & Backtracking"
 tags: [dsa, dsa/algorithms]
 aliases: [Recursion, Recursive Functions, Tail Recursion, Recursion Tree, Backtracking Intro]
 updated: 2026-09-27
 ---
 # Recursion & Backtracking
 
-> [!tldr] TL;DR
-> **Recursion** solves a problem by solving smaller copies of the same problem: every recursive function needs a **base case** (stop) and a **recursive case** (shrink the input and call yourself). Each call gets its own frame on the [[Execution Context & Call Stack|call stack]], so depth costs memory and can overflow. **Backtracking** is recursion that builds a candidate step by step and **undoes** each choice after exploring it; memoizing repeated calls turns recursion into [[Dynamic Programming]].
+<Note>
+**TL;DR**
+
+**Recursion** solves a problem by solving smaller copies of the same problem: every recursive function needs a **base case** (stop) and a **recursive case** (shrink the input and call yourself). Each call gets its own frame on the [call stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack), so depth costs memory and can overflow. **Backtracking** is recursion that builds a candidate step by step and **undoes** each choice after exploring it; memoizing repeated calls turns recursion into [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
+</Note>
 
 ## The idea
 
@@ -16,7 +20,7 @@ Think of Russian dolls: to count the dolls, open one, then count the dolls insid
 - **Recursive case**: reduce the problem, call yourself, combine the result.
 - **Leap of faith**: when writing the recursive case, *assume* the recursive call already works for the smaller input. You only have to get the combine step and the base case right.
 
-[[Grokking Algorithms]] (chapter 3) frames it the same way: every recursive function has a base case and a recursive case, and the call stack is how the computer keeps track of the unfinished calls.
+[Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (chapter 3) frames it the same way: every recursive function has a base case and a recursive case, and the call stack is how the computer keeps track of the unfinished calls.
 
 ```ts
 function sum(arr: number[], i = 0): number {
@@ -34,7 +38,7 @@ def total(arr: list[int], i: int = 0) -> int:
 
 ### The call stack
 
-Every call pushes a **frame** (arguments, locals, return address) onto the [[Execution Context & Call Stack|call stack]]. A frame is popped when the call returns. For `fact(3)`:
+Every call pushes a **frame** (arguments, locals, return address) onto the [call stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack). A frame is popped when the call returns. For `fact(3)`:
 
 ```text
 push fact(3)        waits on fact(2)
@@ -104,10 +108,13 @@ def fact_tail(n: int, acc: int = 1) -> int:
     return acc if n <= 1 else fact_tail(n - 1, acc * n)
 ```
 
-> [!warning] Do not rely on TCO in JavaScript or Python
-> - ES2015 specifies **proper tail calls** in strict mode, but **V8 (Chrome, Node.js) does not implement them**. V8 experimented with it behind a flag and removed it. Only Safari's JavaScriptCore ships it. So `factTail(100_000)` still overflows in Node.
-> - **CPython has no TCO by design** (Guido van Rossum argued it would destroy useful tracebacks). The default recursion limit is **1000** frames: read it with `sys.getrecursionlimit()`, raise it with `sys.setrecursionlimit(10_000)`. Raising it too far can crash the interpreter with a real C stack overflow, so prefer iteration for deep inputs.
-> - Node's stack size can be raised with `node --stack-size=...`, but that is a hack, not a fix.
+<Warning>
+**Do not rely on TCO in JavaScript or Python**
+
+- ES2015 specifies **proper tail calls** in strict mode, but **V8 (Chrome, Node.js) does not implement them**. V8 experimented with it behind a flag and removed it. Only Safari's JavaScriptCore ships it. So `factTail(100_000)` still overflows in Node.
+- **CPython has no TCO by design** (Guido van Rossum argued it would destroy useful tracebacks). The default recursion limit is **1000** frames: read it with `sys.getrecursionlimit()`, raise it with `sys.setrecursionlimit(10_000)`. Raising it too far can crash the interpreter with a real C stack overflow, so prefer iteration for deep inputs.
+- Node's stack size can be raised with `node --stack-size=...`, but that is a hack, not a fix.
+</Warning>
 
 ### Converting recursion to iteration (explicit stack)
 
@@ -124,7 +131,7 @@ Any recursion can be rewritten with your own stack: push what the call stack wou
 | Same with memo | `O(n)` | `O(n)` |
 | Backtracking: subsets / permutations | `O(n · 2^n)` / `O(n · n!)` | `O(n)` besides output |
 
-Rule of thumb: time = (number of calls) × (work per call, excluding sub-calls). Master theorem for `T(n) = aT(n/b) + f(n)`: see [[Big-O & Complexity Analysis]].
+Rule of thumb: time = (number of calls) × (work per call, excluding sub-calls). Master theorem for `T(n) = aT(n/b) + f(n)`: see [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis).
 
 ## Implementation
 
@@ -185,7 +192,7 @@ def flatten_iter(a: list) -> list[int]:
     return out
 ```
 
-When the recursion does work **after** the child returns (postorder), push a marker or a `(node, visited)` pair so you know when to "combine". See [[Tree Traversal - DFS & BFS]] for iterative postorder.
+When the recursion does work **after** the child returns (postorder), push a marker or a `(node, visited)` pair so you know when to "combine". See [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) for iterative postorder.
 
 ### Memoization: the bridge to Dynamic Programming
 
@@ -209,7 +216,7 @@ def fib(n: int) -> int:
     return n if n < 2 else fib(n - 1) + fib(n - 2)
 ```
 
-This is **top-down DP**. The bottom-up version fills a table in a loop and avoids recursion depth entirely. Full treatment in [[Dynamic Programming]]. Closure-based `memoize` helpers are covered in [[Closures & Memory Model]].
+This is **top-down DP**. The bottom-up version fills a table in a loop and avoids recursion depth entirely. Full treatment in [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming). Closure-based `memoize` helpers are covered in [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model).
 
 ## Backtracking
 
@@ -273,7 +280,7 @@ def subsets(nums: list[int]) -> list[list[int]]:
     return res
 ```
 
-Templates for permutations, combinations, combination sum, N-Queens, word search and duplicate handling live in the [[Backtracking]] pattern note.
+Templates for permutations, combinations, combination sum, N-Queens, word search and duplicate handling live in the [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) pattern note.
 
 ## Trade-offs & pitfalls
 
@@ -292,7 +299,7 @@ Templates for permutations, combinations, combination sum, N-Queens, word search
 - **Untrusted depth is a security issue**: a deeply nested JSON payload or regex can crash a recursive parser (stack exhaustion DoS). Production parsers cap depth or use explicit stacks. Ask "what is the maximum depth and who controls it?" in review.
 - **Stack vs heap**: each JS/Python frame is much heavier than a C frame; an explicit stack array of small tuples is cheaper and cannot overflow the native stack.
 - **Readability wins for bounded depth**: balanced trees (depth `O(log n)`), divide and conquer, and grammar-driven code are clearer recursive. Do not iterate-ify code whose depth is 30.
-- **Generators** (`function*` / `yield from`) make recursive traversals lazy and composable; see [[Iterators, Generators & Iterator Helpers]]. `yield from` in Python still uses recursion depth, though.
+- **Generators** (`function*` / `yield from`) make recursive traversals lazy and composable; see [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers). `yield from` in Python still uses recursion depth, though.
 - **In interviews**: state the recursion explicitly ("`dfs(i)` returns the number of ways from index `i`"), give time as nodes × work and space as depth, and mention the overflow risk plus the iterative alternative. That shows seniority.
 
 ## Classic LeetCode problems
@@ -310,33 +317,40 @@ Templates for permutations, combinations, combination sum, N-Queens, word search
 
 ## Interview questions
 
-> [!question]- What are the two parts of every recursive function?
-> A **base case** that answers the smallest input directly and a **recursive case** that reduces the input and calls the function again. Every recursive path must eventually reach a base case, or you get infinite recursion and a stack overflow.
+<Accordion title="What are the two parts of every recursive function?">
+A **base case** that answers the smallest input directly and a **recursive case** that reduces the input and calls the function again. Every recursive path must eventually reach a base case, or you get infinite recursion and a stack overflow.
+</Accordion>
 
-> [!question]- How do you analyze time and space of a recursive function?
-> Draw the recursion tree. Time = number of nodes × non-recursive work per node (or solve the recurrence, e.g. with the master theorem). Space = maximum depth of the tree (frames alive at once) plus any auxiliary data such as memo tables.
+<Accordion title="How do you analyze time and space of a recursive function?">
+Draw the recursion tree. Time = number of nodes × non-recursive work per node (or solve the recurrence, e.g. with the master theorem). Space = maximum depth of the tree (frames alive at once) plus any auxiliary data such as memo tables.
+</Accordion>
 
-> [!question]- What is tail recursion, and does Node.js or Python optimize it?
-> A call is tail recursive when the recursive call is the last operation and its result is returned directly, so the frame could be reused. ES2015 specifies proper tail calls, but V8 (Node, Chrome) does not implement them; only Safari does. CPython deliberately has no TCO and caps depth at 1000 by default (`sys.setrecursionlimit` changes it). Convert deep recursion to a loop.
+<Accordion title="What is tail recursion, and does Node.js or Python optimize it?">
+A call is tail recursive when the recursive call is the last operation and its result is returned directly, so the frame could be reused. ES2015 specifies proper tail calls, but V8 (Node, Chrome) does not implement them; only Safari does. CPython deliberately has no TCO and caps depth at 1000 by default (`sys.setrecursionlimit` changes it). Convert deep recursion to a loop.
+</Accordion>
 
-> [!question]- How do you convert a recursive DFS to an iterative one?
-> Replace the call stack with an explicit stack: push the start state, loop while the stack is non-empty, pop a state, process it, push its children (reversed if order matters). For postorder-style work, push a `(node, visited)` flag or use two stacks.
+<Accordion title="How do you convert a recursive DFS to an iterative one?">
+Replace the call stack with an explicit stack: push the start state, loop while the stack is non-empty, pop a state, process it, push its children (reversed if order matters). For postorder-style work, push a `(node, visited)` flag or use two stacks.
+</Accordion>
 
-> [!question]- What is the difference between recursion, memoization, and DP?
-> Recursion expresses the problem in terms of smaller subproblems. If subproblems repeat, memoization caches each result (top-down DP). Bottom-up DP computes the same table iteratively in dependency order, avoiding recursion depth and often allowing space optimization.
+<Accordion title="What is the difference between recursion, memoization, and DP?">
+Recursion expresses the problem in terms of smaller subproblems. If subproblems repeat, memoization caches each result (top-down DP). Bottom-up DP computes the same table iteratively in dependency order, avoiding recursion depth and often allowing space optimization.
+</Accordion>
 
-> [!question]- What is backtracking and how does it differ from plain DFS?
-> Backtracking is DFS over a tree of partial solutions: make a choice, recurse, undo the choice. It adds pruning (skip choices that violate constraints) and explicit state restoration so one mutable path can be reused across branches.
+<Accordion title="What is backtracking and how does it differ from plain DFS?">
+Backtracking is DFS over a tree of partial solutions: make a choice, recurse, undo the choice. It adds pruning (skip choices that violate constraints) and explicit state restoration so one mutable path can be reused across branches.
+</Accordion>
 
-> [!question]- Why does `res.push(path)` give wrong answers in a backtracking solution?
-> It stores a reference to the same mutable array, which is later emptied by the `pop` calls. You must store a snapshot: `[...path]` in JS or `path[:]` in Python.
+<Accordion title="Why does `res.push(path)` give wrong answers in a backtracking solution?">
+It stores a reference to the same mutable array, which is later emptied by the `pop` calls. You must store a snapshot: `[...path]` in JS or `path[:]` in Python.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Backtracking]] (templates) · [[Dynamic Programming]] · [[Tree Traversal - DFS & BFS]] · [[Sorting Algorithms]] (merge and quick sort are divide and conquer)
-- [[Big-O & Complexity Analysis]] · [[Stacks & Queues]] · [[Trees & Binary Search Trees]] · [[Linked Lists]]
-- [[Execution Context & Call Stack]] · [[Closures & Memory Model]] · [[Iterators, Generators & Iterator Helpers]]
-- [[Grokking Algorithms]] (chapter 3: recursion)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) (templates) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) · [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) (merge and quick sort are divide and conquer)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) · [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers)
+- [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (chapter 3: recursion)
 
 ## Sources
 - Aditya Bhargava, *Grokking Algorithms*, ch. 3 "Recursion" (Manning)

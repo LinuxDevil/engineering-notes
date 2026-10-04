@@ -1,12 +1,16 @@
 ---
+title: "Node.js Concurrency - Worker Threads, Cluster & Child Processes"
 tags: [backend, backend/node]
 aliases: [Worker Threads, worker_threads, Node cluster, child_process, Node multithreading, Piscina]
 updated: 2026-09-27
 ---
 # Node.js Concurrency - Worker Threads, Cluster & Child Processes
 
-> [!tldr] TL;DR
-> Node handles **I/O concurrency** on one thread with the event loop. For **CPU parallelism** you have three tools: **`worker_threads`** (threads in the same process, each with its own V8 isolate and event loop; for CPU-heavy JS), **`cluster`** or multiple processes (one Node process per core sharing a port; for scaling stateless HTTP), and **`child_process`** (run other programs or isolated Node scripts). In containers the usual answer for scaling HTTP is "one process per container, more replicas", with workers for CPU hotspots.
+<Note>
+**TL;DR**
+
+Node handles **I/O concurrency** on one thread with the event loop. For **CPU parallelism** you have three tools: **`worker_threads`** (threads in the same process, each with its own V8 isolate and event loop; for CPU-heavy JS), **`cluster`** or multiple processes (one Node process per core sharing a port; for scaling stateless HTTP), and **`child_process`** (run other programs or isolated Node scripts). In containers the usual answer for scaling HTTP is "one process per container, more replicas", with workers for CPU hotspots.
+</Note>
 
 ## Concurrency vs parallelism in Node
 
@@ -17,7 +21,7 @@ updated: 2026-09-27
 | Use all cores for an HTTP server | `cluster`, PM2, or N container replicas behind a load balancer |
 | Run another program (ffmpeg, git, python) | `child_process.spawn` / `execFile` |
 
-See [[Concurrency And Parallelism]] for the general concepts.
+See [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism) for the general concepts.
 
 ## Worker threads
 
@@ -126,7 +130,7 @@ ff.on('close', code => console.log('ffmpeg exited', code));
 - Using workers for I/O: no benefit, only overhead. The event loop already does I/O concurrently.
 - Posting huge objects to workers: structured clone cost can exceed the work saved. Transfer buffers instead.
 - Unbounded `Promise.all(items.map(callApi))`: that's concurrency too, and it can overwhelm downstreams. Limit it (e.g. `p-limit`, or a simple semaphore).
-- `exec` with interpolated user input = command injection. See [[Node.js Security Best Practices]].
+- `exec` with interpolated user input = command injection. See [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices).
 - Cluster + WebSockets/sticky sessions: without sticky routing, a client's reconnection may land on another worker.
 
 ```js
@@ -145,32 +149,40 @@ async function mapLimit(items, limit, fn) {
 - Size worker pools to cores **minus** the main thread, and remember the libuv pool (4) also competes for CPU.
 - Observability: each worker has its own event loop; measure utilisation per worker (`performance.eventLoopUtilization` works in workers too).
 
-> [!info]+ 🆕 2025–2026
-> - The permission model's `--allow-worker` and `--allow-child-process` flags gate these APIs when running with `--permission` (stable since Node 23.5 / 22.13). See [[Node.js Security Best Practices]].
-> - Node 24.0.0 (2025-05-06) runtime-deprecated passing `args` to `spawn`/`execFile` together with `shell: true` (the args were concatenated unescaped). Pass a single command string or avoid the shell.
+<Info>
+**🆕 2025–2026**
+
+- The permission model's `--allow-worker` and `--allow-child-process` flags gate these APIs when running with `--permission` (stable since Node 23.5 / 22.13). See [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices).
+- Node 24.0.0 (2025-05-06) runtime-deprecated passing `args` to `spawn`/`execFile` together with `shell: true` (the args were concatenated unescaped). Pass a single command string or avoid the shell.
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you use multiple cores in Node?
-> For HTTP scaling run several processes (cluster, PM2, or more container replicas) behind a load balancer. For CPU-bound tasks inside one service, use worker threads via a pool.
+<Accordion title="How do you use multiple cores in Node?">
+For HTTP scaling run several processes (cluster, PM2, or more container replicas) behind a load balancer. For CPU-bound tasks inside one service, use worker threads via a pool.
+</Accordion>
 
-> [!question]- Worker threads vs cluster?
-> Workers are threads in one process with separate V8 isolates; they can share memory and are for CPU-heavy computation. Cluster forks whole processes that share a listening port; nothing is shared, and it's for scaling request handling.
+<Accordion title="Worker threads vs cluster?">
+Workers are threads in one process with separate V8 isolates; they can share memory and are for CPU-heavy computation. Cluster forks whole processes that share a listening port; nothing is shared, and it's for scaling request handling.
+</Accordion>
 
-> [!question]- How do worker threads communicate?
-> `postMessage` with structured cloning (copy), transferable objects (move `ArrayBuffer`s/`MessagePort`s), or `SharedArrayBuffer` with `Atomics` for shared memory.
+<Accordion title="How do worker threads communicate?">
+`postMessage` with structured cloning (copy), transferable objects (move `ArrayBuffer`s/`MessagePort`s), or `SharedArrayBuffer` with `Atomics` for shared memory.
+</Accordion>
 
-> [!question]- `spawn` vs `exec`?
-> `spawn` runs a program directly with an args array and streams output; `exec` runs a command string in a shell and buffers output (with a max buffer). `exec` with user input risks shell injection; prefer `spawn`/`execFile`.
+<Accordion title="`spawn` vs `exec`?">
+`spawn` runs a program directly with an args array and streams output; `exec` runs a command string in a shell and buffers output (with a max buffer). `exec` with user input risks shell injection; prefer `spawn`/`execFile`.
+</Accordion>
 
-> [!question]- Would workers speed up an API that calls three databases?
-> No. That's I/O-bound; `Promise.all` on the event loop already runs them concurrently. Workers help only when the JS itself burns CPU.
+<Accordion title="Would workers speed up an API that calls three databases?">
+No. That's I/O-bound; `Promise.all` on the event loop already runs them concurrently. Workers help only when the JS itself burns CPU.
+</Accordion>
 
 ## Related
-- [[Node.js Index]]
-- [[Node.js Event Loop & libuv]] · [[Node.js Performance & Debugging]] · [[Node.js Security Best Practices]]
-- [[Concurrency And Parallelism]] · [[Web Workers, Service Workers & PWAs]] (browser equivalent)
-- Java comparison: [[Java Concurrency & Virtual Threads]]
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Node.js Event Loop & libuv](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Event%20Loop%20%26%20libuv) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging) · [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices)
+- [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism) · [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs) (browser equivalent)
+- Java comparison: [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads)
 
 ## Sources
 - [Node.js docs: Worker threads](https://nodejs.org/api/worker_threads.html)

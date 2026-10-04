@@ -1,12 +1,16 @@
 ---
+title: "Web Workers, Service Workers & PWAs"
 tags: [frontend, frontend/browser, frontend/pwa, frontend/performance]
 aliases: [Web Workers, Service Workers, PWA, Progressive Web Apps, Workers]
 updated: 2026-09-27
 ---
 # Web Workers, Service Workers & PWAs
 
-> [!tldr] TL;DR
-> JavaScript on a page runs on **one main thread** shared with rendering and input. **Web Workers** run scripts on background threads for CPU-heavy work and talk to the page via `postMessage`. **Service Workers** are a special kind of worker that sits between your app and the network as a programmable **proxy**, which enables offline support, caching strategies, push and background sync. **PWAs** combine a service worker, a web app manifest and HTTPS to give installable, offline-capable, app-like experiences.
+<Note>
+**TL;DR**
+
+JavaScript on a page runs on **one main thread** shared with rendering and input. **Web Workers** run scripts on background threads for CPU-heavy work and talk to the page via `postMessage`. **Service Workers** are a special kind of worker that sits between your app and the network as a programmable **proxy**, which enables offline support, caching strategies, push and background sync. **PWAs** combine a service worker, a web app manifest and HTTPS to give installable, offline-capable, app-like experiences.
+</Note>
 
 ```mermaid
 flowchart LR
@@ -35,25 +39,28 @@ The owner's note described two ways code runs:
 
 Workers add true **parallelism**: a separate thread with its own event loop. Use them when you have CPU-bound work: parsing large JSON, filtering/sorting 50k flight results, image processing, crypto, diffing, syntax highlighting, search indexing.
 
-> [!example] Dedicated worker: filter a big result set off the main thread
-> ```js
-> // filter.worker.js
-> self.onmessage = (e) => {
->   const { flights, maxPrice, airlines } = e.data;
->   const result = flights
->     .filter(f => f.price <= maxPrice && airlines.includes(f.airline))
->     .sort((a, b) => a.price - b.price);
->   self.postMessage(result);
-> };
-> ```
-> ```js
-> // main.js (Vite / webpack 5 / Next.js understand this pattern natively)
-> const worker = new Worker(new URL('./filter.worker.js', import.meta.url), { type: 'module' });
-> worker.onmessage = (e) => renderResults(e.data);
-> worker.onerror = (e) => console.error(e.message);
-> worker.postMessage({ flights, maxPrice: 900, airlines: ['EK', 'QR'] });
-> // worker.terminate() when done
-> ```
+<Info>
+**Dedicated worker: filter a big result set off the main thread**
+
+```js
+// filter.worker.js
+self.onmessage = (e) => {
+  const { flights, maxPrice, airlines } = e.data;
+  const result = flights
+    .filter(f => f.price <= maxPrice && airlines.includes(f.airline))
+    .sort((a, b) => a.price - b.price);
+  self.postMessage(result);
+};
+```
+```js
+// main.js (Vite / webpack 5 / Next.js understand this pattern natively)
+const worker = new Worker(new URL('./filter.worker.js', import.meta.url), { type: 'module' });
+worker.onmessage = (e) => renderResults(e.data);
+worker.onerror = (e) => console.error(e.message);
+worker.postMessage({ flights, maxPrice: 900, airlines: ['EK', 'QR'] });
+// worker.terminate() when done
+```
+</Info>
 
 ### Dedicated vs shared workers
 
@@ -96,29 +103,32 @@ buffer.byteLength; // 0 → detached in the sender
 ### Comlink: RPC instead of messages
 The owner's note: "in React add `comlink` and `worker-plugin`". Today `worker-plugin` (a webpack 4 plugin) isn't needed: Vite, webpack 5 and Next.js bundle `new Worker(new URL(...), import.meta.url)` natively. **Comlink** (Google Chrome Labs) is still great: it wraps `postMessage` in a Proxy so a worker looks like an async object.
 
-> [!example] Comlink + React hook
-> ```js
-> // search.worker.js
-> import * as Comlink from 'comlink';
-> const api = {
->   buildIndex(items) { /* heavy work */ this.index = items; },
->   search(q) { return this.index.filter(i => i.name.toLowerCase().includes(q.toLowerCase())); },
-> };
-> Comlink.expose(api);
-> ```
-> ```jsx
-> // useSearchWorker.js
-> import * as Comlink from 'comlink';
-> export function useSearchWorker() {
->   const ref = useRef(null);
->   useEffect(() => {
->     const worker = new Worker(new URL('./search.worker.js', import.meta.url), { type: 'module' });
->     ref.current = Comlink.wrap(worker);
->     return () => worker.terminate();
->   }, []);
->   return ref; // await ref.current.search('dub')
-> }
-> ```
+<Info>
+**Comlink + React hook**
+
+```js
+// search.worker.js
+import * as Comlink from 'comlink';
+const api = {
+  buildIndex(items) { /* heavy work */ this.index = items; },
+  search(q) { return this.index.filter(i => i.name.toLowerCase().includes(q.toLowerCase())); },
+};
+Comlink.expose(api);
+```
+```jsx
+// useSearchWorker.js
+import * as Comlink from 'comlink';
+export function useSearchWorker() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const worker = new Worker(new URL('./search.worker.js', import.meta.url), { type: 'module' });
+    ref.current = Comlink.wrap(worker);
+    return () => worker.terminate();
+  }, []);
+  return ref; // await ref.current.search('dub')
+}
+```
+</Info>
 
 ### SharedArrayBuffer, Atomics and cross-origin isolation
 - `SharedArrayBuffer` lets threads share **the same memory** (no copy, no transfer). Coordinate with `Atomics` (`Atomics.add`, `Atomics.wait`, `Atomics.notify`) to avoid race conditions. This is the "Atomics & Shared Memory" item in the owner's JS checklist.
@@ -134,7 +144,7 @@ Cross-Origin-Embedder-Policy: require-corp    # or: credentialless
 ### Other worker-ish tools
 - **Worklets** (`CSS.paintWorklet`, `audioWorklet`): tiny scripts hooked into rendering/audio pipelines.
 - **OffscreenCanvas**: move canvas/WebGL rendering into a worker.
-- `scheduler.yield()` / chunking is often simpler than a worker for "long but not huge" main-thread tasks ([[Modern Web Platform APIs 2025-2026]]).
+- `scheduler.yield()` / chunking is often simpler than a worker for "long but not huge" main-thread tasks ([Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026)).
 
 ## 2. Service Workers
 
@@ -174,44 +184,47 @@ stateDiagram-v2
 
 Update check: the browser re-checks `sw.js` on navigations into scope, on functional events (if the last check was over 24 h ago) and on `registration.update()`. By default (`updateViaCache: 'imports'`) the SW script itself bypasses the HTTP cache. A **byte-different** file starts a new install.
 
-> [!example] A minimal, versioned service worker
-> ```js
-> // main.js
-> if ('serviceWorker' in navigator) {
->   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-> }
-> ```
-> ```js
-> // sw.js
-> const VERSION = 'v3';
-> const STATIC = `static-${VERSION}`;
-> const PRECACHE = ['/', '/offline.html', '/app.css', '/app.js', '/icons/192.png'];
->
-> self.addEventListener('install', (event) => {
->   event.waitUntil(caches.open(STATIC).then((c) => c.addAll(PRECACHE)));
-> });
->
-> self.addEventListener('activate', (event) => {
->   event.waitUntil((async () => {
->     const keys = await caches.keys();
->     await Promise.all(keys.filter(k => k !== STATIC).map(k => caches.delete(k)));
->     await self.clients.claim();
->   })());
-> });
->
-> self.addEventListener('fetch', (event) => {
->   const { request } = event;
->   if (request.method !== 'GET') return;                     // let the browser handle it
->
->   if (request.mode === 'navigate') {                        // HTML pages: network-first
->     event.respondWith(fetch(request).catch(() => caches.match('/offline.html')));
->     return;
->   }
->   event.respondWith(                                        // assets: cache-first
->     caches.match(request).then((hit) => hit || fetch(request))
->   );
-> });
-> ```
+<Info>
+**A minimal, versioned service worker**
+
+```js
+// main.js
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+```
+```js
+// sw.js
+const VERSION = 'v3';
+const STATIC = `static-${VERSION}`;
+const PRECACHE = ['/', '/offline.html', '/app.css', '/app.js', '/icons/192.png'];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(STATIC).then((c) => c.addAll(PRECACHE)));
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== STATIC).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;                     // let the browser handle it
+
+  if (request.mode === 'navigate') {                        // HTML pages: network-first
+    event.respondWith(fetch(request).catch(() => caches.match('/offline.html')));
+    return;
+  }
+  event.respondWith(                                        // assets: cache-first
+    caches.match(request).then((hit) => hit || fetch(request))
+  );
+});
+```
+</Info>
 
 ### Caching strategies
 
@@ -223,29 +236,35 @@ Update check: the browser re-checks `sw.js` on navigations into scope, on functi
 | **Network only** | Always network | Payments, analytics POSTs, auth |
 | **Cache only** | Only cache (precached) | App shell parts guaranteed by install |
 
-> [!example] Stale-while-revalidate
-> ```js
-> async function staleWhileRevalidate(event, cacheName) {
->   const cache = await caches.open(cacheName);
->   const cached = await cache.match(event.request);
->   const network = fetch(event.request).then((res) => {
->     if (res.ok) cache.put(event.request, res.clone()); // a Response body can be read once → clone
->     return res;
->   });
->   event.waitUntil(network.catch(() => {}));          // keep SW alive for the update
->   return cached || network;
-> }
-> ```
+<Info>
+**Stale-while-revalidate**
+
+```js
+async function staleWhileRevalidate(event, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(event.request);
+  const network = fetch(event.request).then((res) => {
+    if (res.ok) cache.put(event.request, res.clone()); // a Response body can be read once → clone
+    return res;
+  });
+  event.waitUntil(network.catch(() => {}));          // keep SW alive for the update
+  return cached || network;
+}
+```
+</Info>
 
 In real projects use **Workbox** (`workbox-strategies`, `workbox-precaching`, or the `vite-plugin-pwa` / `@serwist/next` integrations) rather than hand-writing strategies, versioning and cache expiry.
 
-> [!warning] Common pitfalls
-> - Never cache `sw.js` itself with a long `Cache-Control` max-age (browsers cap it, but keep it `no-cache`).
-> - Cache-first on **un-hashed** URLs serves stale code forever. Precache with revision hashes.
-> - Forgetting to delete old caches fills the quota.
-> - Opaque responses (cross-origin without CORS) have status 0 and count heavily against quota.
-> - Users with a broken SW can be stuck; ship a "kill switch" SW that unregisters itself if needed.
-> - A SW doesn't intercept the first page load that registered it until `clients.claim()`.
+<Warning>
+**Common pitfalls**
+
+- Never cache `sw.js` itself with a long `Cache-Control` max-age (browsers cap it, but keep it `no-cache`).
+- Cache-first on **un-hashed** URLs serves stale code forever. Precache with revision hashes.
+- Forgetting to delete old caches fills the quota.
+- Opaque responses (cross-origin without CORS) have status 0 and count heavily against quota.
+- Users with a broken SW can be stuck; ship a "kill switch" SW that unregisters itself if needed.
+- A SW doesn't intercept the first page load that registered it until `clients.claim()`.
+</Warning>
 
 ## 3. Progressive Web Apps (PWAs)
 
@@ -312,43 +331,53 @@ self.addEventListener('sync', (event) => {
 - **Push API + Notifications**: server sends via a push service; the SW's `push` event shows a notification. Supported in all major browsers; on iOS/iPadOS (16.4+) only for web apps added to the Home Screen.
 - **Background Fetch** (large downloads that survive closing the tab) is Chromium-only.
 
-> [!info]+ 🆕 2025–2026
-> - **Next.js 16.3** added experimental `experimental.useOffline` with a `useOffline()` hook (see [[Next.js 15 to 16.3]]).
-> - **Storage Buckets** (Chromium only, Chrome 122) help PWAs separate must-keep offline data from evictable caches ([[Browser Storage - Cookies, Web Storage & IndexedDB]]).
-> - **Web Locks** (Baseline Widely) coordinate sync jobs between tabs and workers: `await navigator.locks.request('sync', async () => {...})`.
-> - **Cross-document View Transitions** make multi-page PWAs feel app-like (Limited: Chrome 126, Safari 18.2), see [[Modern Web Platform APIs 2025-2026]].
+<Info>
+**🆕 2025–2026**
+
+- **Next.js 16.3** added experimental `experimental.useOffline` with a `useOffline()` hook (see [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)).
+- **Storage Buckets** (Chromium only, Chrome 122) help PWAs separate must-keep offline data from evictable caches ([Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB)).
+- **Web Locks** (Baseline Widely) coordinate sync jobs between tabs and workers: `await navigator.locks.request('sync', async () => {...})`.
+- **Cross-document View Transitions** make multi-page PWAs feel app-like (Limited: Chrome 126, Safari 18.2), see [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026).
+</Info>
 
 ## Interview questions
 
-> [!question]- What's the difference between a Web Worker and a Service Worker?
-> A Web Worker is a background thread owned by one page (or shared by many for SharedWorker) for CPU work; it lives as long as the page keeps it. A Service Worker is an event-driven network proxy for an origin/scope; it outlives pages, is terminated when idle, intercepts fetches, and powers offline, push and sync. Neither can access the DOM.
+<Accordion title="What's the difference between a Web Worker and a Service Worker?">
+A Web Worker is a background thread owned by one page (or shared by many for SharedWorker) for CPU work; it lives as long as the page keeps it. A Service Worker is an event-driven network proxy for an origin/scope; it outlives pages, is terminated when idle, intercepts fetches, and powers offline, push and sync. Neither can access the DOM.
+</Accordion>
 
-> [!question]- How do workers communicate with the main thread? What's copied?
-> Via `postMessage` / `message` events. Data is structured-cloned (deep copy). ArrayBuffers, MessagePorts, streams, ImageBitmaps and OffscreenCanvas can be transferred (zero-copy, sender loses access). SharedArrayBuffer is truly shared but needs cross-origin isolation (COOP + COEP).
+<Accordion title="How do workers communicate with the main thread? What's copied?">
+Via `postMessage` / `message` events. Data is structured-cloned (deep copy). ArrayBuffers, MessagePorts, streams, ImageBitmaps and OffscreenCanvas can be transferred (zero-copy, sender loses access). SharedArrayBuffer is truly shared but needs cross-origin isolation (COOP + COEP).
+</Accordion>
 
-> [!question]- Walk through the service worker lifecycle. Why does a new SW "wait"?
-> register → install (precache) → waiting → activate (clean caches) → idle/handle events → terminate. It waits so pages opened with the old version aren't suddenly served by new code with a different cache layout. `skipWaiting()` + `clients.claim()` force the takeover.
+<Accordion title="Walk through the service worker lifecycle. Why does a new SW &quot;wait&quot;?">
+register → install (precache) → waiting → activate (clean caches) → idle/handle events → terminate. It waits so pages opened with the old version aren't suddenly served by new code with a different cache layout. `skipWaiting()` + `clients.claim()` force the takeover.
+</Accordion>
 
-> [!question]- Which caching strategy would you use for HTML, hashed JS, and an API?
-> HTML: network-first with offline fallback. Hashed JS/CSS: cache-first (immutable). API: network-first or stale-while-revalidate, depending on freshness needs; never cache sensitive or POST responses.
+<Accordion title="Which caching strategy would you use for HTML, hashed JS, and an API?">
+HTML: network-first with offline fallback. Hashed JS/CSS: cache-first (immutable). API: network-first or stale-while-revalidate, depending on freshness needs; never cache sensitive or POST responses.
+</Accordion>
 
-> [!question]- How would you make a booking form work offline?
-> Save the submission in IndexedDB, register a Background Sync (Chromium) or retry on `online` / next app start, show an "offline, will send" state, make the server endpoint idempotent (client-generated id) so replays don't double-book.
+<Accordion title="How would you make a booking form work offline?">
+Save the submission in IndexedDB, register a Background Sync (Chromium) or retry on `online` / next app start, show an "offline, will send" state, make the server endpoint idempotent (client-generated id) so replays don't double-book.
+</Accordion>
 
-> [!question]- What makes a web app installable?
-> HTTPS, a web app manifest (name, icons, start_url, display) and, in older Chromium, a SW with a fetch handler. Chromium fires `beforeinstallprompt`; Safari uses Add to Home Screen.
+<Accordion title="What makes a web app installable?">
+HTTPS, a web app manifest (name, icons, start_url, display) and, in older Chromium, a SW with a fetch handler. Chromium fires `beforeinstallprompt`; Safari uses Add to Home Screen.
+</Accordion>
 
-> [!question]- When is a worker NOT worth it?
-> When the work is I/O-bound (already async), small, or needs the DOM; when transferring data costs more than computing it. Chunking with `scheduler.yield()` may be simpler.
+<Accordion title="When is a worker NOT worth it?">
+When the work is I/O-bound (already async), small, or needs the DOM; when transferring data costs more than computing it. Chunking with `scheduler.yield()` may be simpler.
+</Accordion>
 
 ## Related
-- [[Browser Storage - Cookies, Web Storage & IndexedDB]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[Event Loop - Microtasks & Macrotasks]]
-- [[Performance Optimization Playbook]]
-- [[Modern Web Platform APIs 2025-2026]]
-- [[Next.js 15 to 16.3]]
-- [[Frontend System Design Index]]
+- [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
 
 ## Sources
 - MDN: [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API), [Using Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers), [SharedWorker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker), [Transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects), [SharedArrayBuffer security requirements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements), [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API), [Progressive web apps](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps), [Background Synchronization API](https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API)

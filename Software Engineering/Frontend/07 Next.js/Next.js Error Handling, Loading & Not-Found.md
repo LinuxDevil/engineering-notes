@@ -1,12 +1,16 @@
 ---
+title: "Next.js Error Handling, Loading & Not-Found"
 tags: [frontend, frontend/nextjs, frontend/error-handling]
 aliases: [Next.js error.tsx, global-error, loading.tsx, not-found.tsx, notFound, Next.js redirect, onRequestError, catchError, Next.js error boundaries]
 updated: 2026-09-27
 ---
 # Next.js Error Handling, Loading & Not-Found
 
-> [!tldr] TL;DR
-> Split failures into **expected errors** (validation, "not found", upstream 4xx), which you **return as values** or handle with `notFound()`/`redirect()`, and **uncaught exceptions** (bugs, outages), which you **throw** and let an `error.tsx` boundary catch. `loading.tsx` is an automatic `<Suspense>` boundary for a segment; `not-found.tsx` renders for `notFound()` and unmatched URLs; `global-error.tsx` replaces the root layout when it fails. Since **16.3** the error boundary's recovery function is **`retry()`** (re-fetch and re-render; `reset()` only clears state) and **`catchError()`** from `next/error` makes component-level boundaries. Report server errors centrally with `onRequestError` in `instrumentation.ts` (Sentry, OpenTelemetry).
+<Note>
+**TL;DR**
+
+Split failures into **expected errors** (validation, "not found", upstream 4xx), which you **return as values** or handle with `notFound()`/`redirect()`, and **uncaught exceptions** (bugs, outages), which you **throw** and let an `error.tsx` boundary catch. `loading.tsx` is an automatic `<Suspense>` boundary for a segment; `not-found.tsx` renders for `notFound()` and unmatched URLs; `global-error.tsx` replaces the root layout when it fails. Since **16.3** the error boundary's recovery function is **`retry()`** (re-fetch and re-render; `reset()` only clears state) and **`catchError()`** from `next/error` makes component-level boundaries. Report server errors centrally with `onRequestError` in `instrumentation.ts` (Sentry, OpenTelemetry).
+</Note>
 
 ## The boundary hierarchy
 
@@ -235,7 +239,7 @@ export default function InvoiceNotFound() {
 }
 ```
 
-Related: `forbidden()` / `unauthorized()` with `forbidden.tsx` / `unauthorized.tsx` (experimental `authInterrupts`), covered in [[Next.js Authentication & Authorization]].
+Related: `forbidden()` / `unauthorized()` with `forbidden.tsx` / `unauthorized.tsx` (experimental `authInterrupts`), covered in [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization).
 
 ## Redirects
 
@@ -337,7 +341,7 @@ Plus `Sentry.captureException(error)` in `global-error.tsx` (and optionally in `
 
 ### With OpenTelemetry
 
-`register()` starts the OTel SDK (e.g. `registerOTel('ops-console')` from `@vercel/otel`, or `@opentelemetry/sdk-node` directly). Next emits spans for requests, rendering, route handlers and fetches. In `onRequestError`, record the exception on the active span (`span.recordException(e); span.setStatus({ code: SpanStatusCode.ERROR })`) or emit a log with the trace ID so logs, traces and the user-visible digest line up. See [[Observability - Logs, Metrics & Traces]].
+`register()` starts the OTel SDK (e.g. `registerOTel('ops-console')` from `@vercel/otel`, or `@opentelemetry/sdk-node` directly). Next emits spans for requests, rendering, route handlers and fetches. In `onRequestError`, record the exception on the active span (`span.recordException(e); span.setStatus({ code: SpanStatusCode.ERROR })`) or emit a log with the trace ID so logs, traces and the user-visible digest line up. See [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces).
 
 ## Worked example: an invoice page, end to end
 
@@ -383,66 +387,79 @@ What happens in each failure (assuming **no** `loading.tsx` or Suspense boundary
 
 ## Common pitfalls
 
-> [!warning] Pitfalls
-> - Expecting `error.tsx` to catch errors from the layout in the same folder.
-> - Forgetting `'use client'` in `error.tsx` / `global-error.tsx`.
-> - Using `reset()` for Server Component errors (nothing is re-fetched). Use `retry()` on 16.3+.
-> - `redirect()` / `notFound()` inside a catch-all `try/catch`.
-> - Throwing for validation errors: the form loses state and the user sees a generic error page.
-> - Showing `error.message` from Server Components to users and expecting detail (production gives a generic message; use the `digest`).
-> - `notFound()` deep inside Suspense on SEO-critical pages, returning 200 with a 404 UI (soft 404).
-> - `global-error.tsx` without `<html>`/`<body>` or without its CSS.
-> - Logging full request headers (cookies, tokens) to your error tracker.
-> - Skeletons that don't match final layout, causing CLS.
+<Warning>
+**Pitfalls**
+
+- Expecting `error.tsx` to catch errors from the layout in the same folder.
+- Forgetting `'use client'` in `error.tsx` / `global-error.tsx`.
+- Using `reset()` for Server Component errors (nothing is re-fetched). Use `retry()` on 16.3+.
+- `redirect()` / `notFound()` inside a catch-all `try/catch`.
+- Throwing for validation errors: the form loses state and the user sees a generic error page.
+- Showing `error.message` from Server Components to users and expecting detail (production gives a generic message; use the `digest`).
+- `notFound()` deep inside Suspense on SEO-critical pages, returning 200 with a 404 UI (soft 404).
+- `global-error.tsx` without `<html>`/`<body>` or without its CSS.
+- Logging full request headers (cookies, tokens) to your error tracker.
+- Skeletons that don't match final layout, causing CLS.
+</Warning>
 
 ## Senior perspective
 
 - **Error budget thinking:** decide which parts of a page are critical (fail the page) and which are optional (isolate with `catchError` + Suspense). A product page without reviews is fine; without a price it isn't.
-- **Correlate everything:** the `digest` users report, the trace ID in logs and the Sentry event should all link. Add a support-friendly "Reference: <digest>" line in error UIs.
+- **Correlate everything:** the `digest` users report, the trace ID in logs and the Sentry event should all link. Add a support-friendly "Reference: &lt;digest&gt;" line in error UIs.
 - **Status codes are an SEO and monitoring contract.** Soft 404s and 200-with-error pages hide problems from crawlers and uptime checks. Resolve existence/auth before streaming for pages where the status matters.
 - **Retries:** `retry()` is user-initiated; for transient upstream failures also consider server-side retries with backoff and timeouts in the DAL, and circuit breakers for flaky dependencies.
 - **Alerting:** alert on error *rates* per `routePath`/`routeType`, not on individual errors; include deploy markers to spot bad releases. Version skew after a deploy ("Failed to find Server Action") should be a known, handled category.
 - **Don't leak:** production already hides Server Component messages; make sure Route Handlers and action return values don't echo internal errors either.
 - In review ask: "Is this error expected? Then why is it thrown?", "What does the user see and what status do crawlers get?", "Where will this show up in our dashboards?"
 
-> [!info]+ 🆕 2025–2026
-> - **15.0 (Oct 2024)**: `onRequestError` in `instrumentation.ts`; instrumentation stable.
-> - **15.1 (Dec 2024)**: experimental `forbidden()`/`unauthorized()` (still experimental in 16.3.6).
-> - **15.2 (Feb 26, 2025)**: `global-error` also displayed in development.
-> - **15.3 (Apr 9, 2025)**: `instrumentation-client.ts` (client monitoring init, `onRouterTransitionStart`).
-> - **15.4 (Jul 14, 2025)**: experimental `global-not-found.js`.
-> - **16.2 (Mar 18, 2026)**: experimental `unstable_catchError()` and the `unstable_retry` prop on error boundaries; error `cause` chains in the dev overlay.
-> - **16.3 (Aug 3, 2026)**: **`catchError` and `retry` stable**; docs now recommend `retry()` over `reset()`.
-> Details: [[Next.js 15 to 16.3]].
+<Info>
+**🆕 2025–2026**
+
+- **15.0 (Oct 2024)**: `onRequestError` in `instrumentation.ts`; instrumentation stable.
+- **15.1 (Dec 2024)**: experimental `forbidden()`/`unauthorized()` (still experimental in 16.3.6).
+- **15.2 (Feb 26, 2025)**: `global-error` also displayed in development.
+- **15.3 (Apr 9, 2025)**: `instrumentation-client.ts` (client monitoring init, `onRouterTransitionStart`).
+- **15.4 (Jul 14, 2025)**: experimental `global-not-found.js`.
+- **16.2 (Mar 18, 2026)**: experimental `unstable_catchError()` and the `unstable_retry` prop on error boundaries; error `cause` chains in the dev overlay.
+- **16.3 (Aug 3, 2026)**: **`catchError` and `retry` stable**; docs now recommend `retry()` over `reset()`.
+Details: [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+</Info>
 
 ## Interview questions
 
-> [!question]- What's the difference between expected errors and uncaught exceptions in Next.js?
-> Expected errors are part of normal operation (validation, not found, permission denied); return them as values (e.g. to `useActionState`) or use `notFound()`/`redirect()`. Uncaught exceptions are bugs or outages; throw them so the nearest `error.tsx` boundary renders a fallback and `onRequestError` reports them.
+<Accordion title="What's the difference between expected errors and uncaught exceptions in Next.js?">
+Expected errors are part of normal operation (validation, not found, permission denied); return them as values (e.g. to `useActionState`) or use `notFound()`/`redirect()`. Uncaught exceptions are bugs or outages; throw them so the nearest `error.tsx` boundary renders a fallback and `onRequestError` reports them.
+</Accordion>
 
-> [!question]- Why doesn't `error.tsx` catch errors thrown in the same segment's layout?
-> Because in the component hierarchy the error boundary is rendered inside that layout. An error in the layout propagates to the parent segment's `error.tsx`, or to `global-error.tsx` for the root layout.
+<Accordion title="Why doesn't `error.tsx` catch errors thrown in the same segment's layout?">
+Because in the component hierarchy the error boundary is rendered inside that layout. An error in the layout propagates to the parent segment's `error.tsx`, or to `global-error.tsx` for the root layout.
+</Accordion>
 
-> [!question]- `retry()` vs `reset()`?
-> `retry()` (stable 16.3) re-fetches and re-renders the boundary's children in a transition, so it can recover from transient Server Component errors. `reset()` only clears the error state and re-renders the same content without re-fetching, useful for client-only errors.
+<Accordion title="`retry()` vs `reset()`?">
+`retry()` (stable 16.3) re-fetches and re-renders the boundary's children in a transition, so it can recover from transient Server Component errors. `reset()` only clears the error state and re-renders the same content without re-fetching, useful for client-only errors.
+</Accordion>
 
-> [!question]- Why is the HTTP status sometimes 200 when `notFound()` is called?
-> If the response has already started streaming (the call happened inside a Suspense boundary after the shell was sent), headers can't change. Next renders the not-found UI and adds `noindex`, but the status stays 200. Resolve existence before the first Suspense boundary for a real 404.
+<Accordion title="Why is the HTTP status sometimes 200 when `notFound()` is called?">
+If the response has already started streaming (the call happened inside a Suspense boundary after the shell was sent), headers can't change. Next renders the not-found UI and adds `noindex`, but the status stays 200. Resolve existence before the first Suspense boundary for a real 404.
+</Accordion>
 
-> [!question]- Why must `redirect()` not be inside a try/catch?
-> It throws a special `NEXT_REDIRECT` error that Next catches to perform the redirect. A generic catch swallows it. Call it after the try/catch or use `unstable_rethrow` in the catch.
+<Accordion title="Why must `redirect()` not be inside a try/catch?">
+It throws a special `NEXT_REDIRECT` error that Next catches to perform the redirect. A generic catch swallows it. Call it after the try/catch or use `unstable_rethrow` in the catch.
+</Accordion>
 
-> [!question]- How do you report server errors to Sentry or OpenTelemetry?
-> Export `onRequestError` from `instrumentation.ts` (Sentry provides `Sentry.captureRequestError`); it receives the error, request info and context (`routePath`, `routeType`: render/route/action/proxy). Initialize SDKs in `register()` by runtime, and use `instrumentation-client.ts` plus `global-error.tsx` for client-side errors.
+<Accordion title="How do you report server errors to Sentry or OpenTelemetry?">
+Export `onRequestError` from `instrumentation.ts` (Sentry provides `Sentry.captureRequestError`); it receives the error, request info and context (`routePath`, `routeType`: render/route/action/proxy). Initialize SDKs in `register()` by runtime, and use `instrumentation-client.ts` plus `global-error.tsx` for client-side errors.
+</Accordion>
 
-> [!question]- Why do production errors from Server Components show a generic message?
-> To avoid leaking sensitive details (queries, secrets) to the browser. Next forwards a generic message and a `digest`, which matches the server-side log entry.
+<Accordion title="Why do production errors from Server Components show a generic message?">
+To avoid leaking sensitive details (queries, secrets) to the browser. Next forwards a generic message and a `digest`, which matches the server-side log entry.
+</Accordion>
 
 ## Related
-- [[Next.js Index]]
-- [[Next.js App Router Fundamentals]] · [[Next.js Data Fetching & Mutations Patterns]] · [[Next.js Authentication & Authorization]] · [[Next.js Route Handlers & Backend-for-Frontend]]
-- [[Next.js Rendering & Caching]] · [[Next.js Internationalization, Metadata & SEO]] · [[Next.js Testing - Unit, Integration & E2E]]
-- [[Error Handling]] (JavaScript) · [[Forms & Actions in React]] · [[Observability - Logs, Metrics & Traces]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals) · [Next.js Data Fetching & Mutations Patterns](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Data%20Fetching%20%26%20Mutations%20Patterns) · [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization) · [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)
+- [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching) · [Next.js Internationalization, Metadata & SEO](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Internationalization%2C%20Metadata%20%26%20SEO) · [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E)
+- [Error Handling](/Software%20Engineering/Frontend/01%20JavaScript/Error%20Handling) (JavaScript) · [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
 
 ## Sources
 - [Next.js docs: Error Handling](https://nextjs.org/docs/app/getting-started/error-handling) (v16.3.6)

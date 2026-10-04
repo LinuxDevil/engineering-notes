@@ -1,14 +1,18 @@
 ---
+title: "Playwright Automation as a Cron Job"
 tags: [backend, backend/jobs, testing, devops/kubernetes]
 aliases: [Synthetic Monitoring with Playwright, Scheduled Playwright, playwright-checkout-smoke, Playwright CronJob, Browser Synthetic Checks]
 updated: 2026-09-27
 ---
 # Playwright Automation as a Cron Job
 
-> [!tldr] TL;DR
-> Running Playwright on a schedule turns E2E tests into **synthetic monitoring** ("can a user still check out, right now, on prod?"), and the same machinery runs **nightly regression suites** and **browser automation of your own sites**. Package the tests in an image built on `mcr.microsoft.com/playwright:v<version>-noble` with the **same pinned version** as `@playwright/test`, run as non-root, give Chromium a memory-backed `/dev/shm`, and schedule it as a Kubernetes CronJob with `concurrencyPolicy: Forbid` and a deadline shorter than the interval. Configure for diagnosis, not for green builds: one retry, `trace: 'on-first-retry'`, video and screenshots on failure, JUnit + HTML + a metrics reporter. Ship reports and traces to S3, push pass/fail and per-step durations as metrics, page after **2 consecutive failures**, and post the trace link to Slack. Only automate sites you own or have permission to automate.
+<Note>
+**TL;DR**
 
-This note uses the Acme Ops job `playwright-checkout-smoke` (every 10 minutes, Kubernetes CronJob). The generic CronJob mechanics are in [[Kubernetes CronJobs in Practice]], the control plane that lists and triggers it in [[Job Control API - Pause, Resume, Run Now & Stop]] and [[Job Scheduler Dashboard with Next.js]]. Playwright basics (locators, fixtures, auto-waiting) are in [[Frontend Testing]] and [[Next.js Testing - Unit, Integration & E2E]].
+Running Playwright on a schedule turns E2E tests into **synthetic monitoring** ("can a user still check out, right now, on prod?"), and the same machinery runs **nightly regression suites** and **browser automation of your own sites**. Package the tests in an image built on `mcr.microsoft.com/playwright:v<version>-noble` with the **same pinned version** as `@playwright/test`, run as non-root, give Chromium a memory-backed `/dev/shm`, and schedule it as a Kubernetes CronJob with `concurrencyPolicy: Forbid` and a deadline shorter than the interval. Configure for diagnosis, not for green builds: one retry, `trace: 'on-first-retry'`, video and screenshots on failure, JUnit + HTML + a metrics reporter. Ship reports and traces to S3, push pass/fail and per-step durations as metrics, page after **2 consecutive failures**, and post the trace link to Slack. Only automate sites you own or have permission to automate.
+</Note>
+
+This note uses the Acme Ops job `playwright-checkout-smoke` (every 10 minutes, Kubernetes CronJob). The generic CronJob mechanics are in [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice), the control plane that lists and triggers it in [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) and [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js). Playwright basics (locators, fixtures, auto-waiting) are in [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing) and [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E).
 
 ## 1. Three reasons to run Playwright on a schedule
 
@@ -271,7 +275,7 @@ export default class MetricsReporter implements Reporter {
 
 Why a Pushgateway: a 1–2 minute Pod can't be scraped reliably. The Pushgateway keeps the **last pushed value** per group until overwritten; that's exactly the semantics needed for "what did the last run say". Its drawbacks (a single point of failure, no automatic staleness, values never expire) are why the reporter also pushes a `last_run_timestamp` and the alerts check freshness.
 
-OTLP instead: pushing with the OpenTelemetry metrics SDK to Alloy's OTLP receiver (then to Prometheus/Mimir) avoids running a Pushgateway, but short-lived processes emitting counters are awkward (every run is a new process whose counters start at zero). Emit gauges, or let a long-lived component count runs: `jobs-api` already exposes `jobs_runs_total{job,status}` and `jobs_run_duration_seconds` for every job it controls ([[Cron with Message Queues - Architecture]]).
+OTLP instead: pushing with the OpenTelemetry metrics SDK to Alloy's OTLP receiver (then to Prometheus/Mimir) avoids running a Pushgateway, but short-lived processes emitting counters are awkward (every run is a new process whose counters start at zero). Emit gauges, or let a long-lived component count runs: `jobs-api` already exposes `jobs_runs_total{job,status}` and `jobs_run_duration_seconds` for every job it controls ([Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture)).
 
 ## 5. Packaging: the Docker image
 
@@ -537,7 +541,7 @@ new Worker("synthetics", (job, _token, signal) => checkout(job, signal), {
 process.on("SIGTERM", async () => { await browser?.close(); process.exit(0); });
 ```
 
-BullMQ passes an `AbortSignal` as the processor's third argument; `worker.cancelJob(id)` aborts it, and throwing `UnrecoverableError` stops retries. How a Stop from the dashboard reaches the right worker process is covered in [[BullMQ Job Schedulers in Practice]] and [[Job Control API - Pause, Resume, Run Now & Stop]].
+BullMQ passes an `AbortSignal` as the processor's third argument; `worker.cancelJob(id)` aborts it, and throwing `UnrecoverableError` stops retries. How a Stop from the dashboard reaches the right worker process is covered in [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) and [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop).
 
 Two ways to avoid maintaining the checkout flow twice (spec file and worker script):
 - Share page objects/step functions in a package used by both.
@@ -627,7 +631,7 @@ pipeline {
 }
 ```
 
-Jenkins' `H` hashes the start minute per job, which avoids every job starting at :00. JUnit trends and archived traces come for free. See [[Jenkins - Pipelines as Code]].
+Jenkins' `H` hashes the start minute per job, which avoids every job starting at :00. JUnit trends and archived traces come for free. See [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code).
 
 ### Comparison
 
@@ -687,7 +691,7 @@ spec:
           labels: { severity: ticket, team: checkout }
 ```
 
-The same rules can be Grafana-managed alerts; either way the Slack/PagerDuty routing is in Alertmanager or Grafana notification policies ([[Grafana & the LGTM Stack]]). The job posts its own low-noise Slack message with the trace for **every** failure to `#synthetics`; the alert pages only on the second consecutive failure. Also watch the Kubernetes side (`CronJobNoRecentSuccess` from [[Kubernetes CronJobs in Practice]]) so a check that never starts isn't mistaken for a healthy one.
+The same rules can be Grafana-managed alerts; either way the Slack/PagerDuty routing is in Alertmanager or Grafana notification policies ([Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)). The job posts its own low-noise Slack message with the trace for **every** failure to `#synthetics`; the alert pages only on the second consecutive failure. Also watch the Kubernetes side (`CronJobNoRecentSuccess` from [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice)) so a check that never starts isn't mistaken for a healthy one.
 
 Handling flaky tests:
 - **Retry once, report flakes separately.** A pass on retry is `flaky`: counted, trended, ticketed when frequent, never paged. Don't set `--fail-on-flaky-tests` on monitors (do set it in PR CI).
@@ -722,18 +726,21 @@ Operators use Pause during a planned checkout maintenance window (so the check d
 
 ## Common pitfalls
 
-> [!warning] Pitfalls
-> - **Version drift** between the image tag and `@playwright/test`: "Executable doesn't exist at /ms-playwright/...". Pin both, check in the build.
-> - **Default `/dev/shm`** in containers: random Chromium crashes ("Target page, context or browser has been closed"). Memory-backed `emptyDir` or `--disable-dev-shm-usage`.
-> - **No PID 1 init**: zombie Chromium processes pile up in long-lived workers; signals don't reach Node. Use tini.
-> - **`backoffLimit` > 0 plus Playwright retries**: a failing check runs 3–6 times, spams Slack and overlaps the next tick.
-> - **Deadline longer than the interval** with `Forbid`: one hung browser silently skips the next runs. Add the staleness alert.
-> - **Paging on the first failure**: on-call learns to ignore it. Two consecutive failures (or failures from two locations) before paging.
-> - **Treating flaky as passed** forever: flakes hide real intermittent bugs. Trend and ticket them.
-> - **Uploading `storageState`, traces with prod sessions, or public report buckets.**
-> - **Synthetic traffic polluting analytics, fraud models or stock**, or synthetic orders being shipped.
-> - **Monitoring from inside the cluster only**: DNS or CDN problems that users see may not show up. Add at least one external vantage point (a managed service, or a runner in another cloud/region).
-> - **Scraping third-party sites** without permission.
+<Warning>
+**Pitfalls**
+
+- **Version drift** between the image tag and `@playwright/test`: "Executable doesn't exist at /ms-playwright/...". Pin both, check in the build.
+- **Default `/dev/shm`** in containers: random Chromium crashes ("Target page, context or browser has been closed"). Memory-backed `emptyDir` or `--disable-dev-shm-usage`.
+- **No PID 1 init**: zombie Chromium processes pile up in long-lived workers; signals don't reach Node. Use tini.
+- **`backoffLimit` > 0 plus Playwright retries**: a failing check runs 3–6 times, spams Slack and overlaps the next tick.
+- **Deadline longer than the interval** with `Forbid`: one hung browser silently skips the next runs. Add the staleness alert.
+- **Paging on the first failure**: on-call learns to ignore it. Two consecutive failures (or failures from two locations) before paging.
+- **Treating flaky as passed** forever: flakes hide real intermittent bugs. Trend and ticket them.
+- **Uploading `storageState`, traces with prod sessions, or public report buckets.**
+- **Synthetic traffic polluting analytics, fraud models or stock**, or synthetic orders being shipped.
+- **Monitoring from inside the cluster only**: DNS or CDN problems that users see may not show up. Add at least one external vantage point (a managed service, or a runner in another cloud/region).
+- **Scraping third-party sites** without permission.
+</Warning>
 
 ## Senior perspective
 
@@ -744,42 +751,52 @@ Operators use Pause during a planned checkout maintenance window (so the check d
 - **Keep checks few and stable**: 3–5 critical journeys as synthetics; the full suite belongs in nightly regression. A monitor that changes weekly is a monitor nobody trusts.
 - **Review questions**: What does this check buy, cancel or email? What happens if it runs twice at once? Where do its traces go and who can read them? Who is paged, after how many failures, and what's the runbook? How do we pause it during maintenance?
 
-> [!info]+ 🆕 2025–2026
-> - **2025-01-23 · Playwright 1.50**: per-step `timeout` in `test.step()` (used for step budgets above).
-> - **2025-05 · Grafana Cloud**: **k6 browser checks** in Synthetic Monitoring became generally available.
-> - **2025-10-06 · Playwright 1.56**: **Playwright Test Agents** (planner, generator, healer agent definitions) for LLM-assisted test creation and repair.
-> - **2025-11-25 · Playwright 1.57**: Chromium runs switched to **Chrome for Testing** builds (headed and headless; Arm64 Linux stays on Chromium).
-> - **2026-03 · GitHub Actions**: scheduled workflows accept a **`timezone`** (IANA name) next to `cron` (changelog 2026-03-19).
-> - **2026-09-04 · Playwright 1.63**: current release at the time of writing; images `v1.63.0-noble`, `-jammy` and `-resolute` (Ubuntu 26.04). 1.63 also added test locks, so tests sharing a lock name never run concurrently.
+<Info>
+**🆕 2025–2026**
+
+- **2025-01-23 · Playwright 1.50**: per-step `timeout` in `test.step()` (used for step budgets above).
+- **2025-05 · Grafana Cloud**: **k6 browser checks** in Synthetic Monitoring became generally available.
+- **2025-10-06 · Playwright 1.56**: **Playwright Test Agents** (planner, generator, healer agent definitions) for LLM-assisted test creation and repair.
+- **2025-11-25 · Playwright 1.57**: Chromium runs switched to **Chrome for Testing** builds (headed and headless; Arm64 Linux stays on Chromium).
+- **2026-03 · GitHub Actions**: scheduled workflows accept a **`timezone`** (IANA name) next to `cron` (changelog 2026-03-19).
+- **2026-09-04 · Playwright 1.63**: current release at the time of writing; images `v1.63.0-noble`, `-jammy` and `-resolute` (Ubuntu 26.04). 1.63 also added test locks, so tests sharing a lock name never run concurrently.
+</Info>
 
 ## Interview questions
 
-> [!question]- How is a synthetic check different from an E2E test in CI?
-> CI E2E tests verify a build before release against a test environment and should fail on any regression. A synthetic check runs continuously against production to answer "does this journey work now", uses dedicated test accounts and data, must avoid side effects, is tuned for signal (retries, consecutive-failure alerts, per-step timings) and feeds monitoring and SLOs rather than a merge gate.
+<Accordion title="How is a synthetic check different from an E2E test in CI?">
+CI E2E tests verify a build before release against a test environment and should fail on any regression. A synthetic check runs continuously against production to answer "does this journey work now", uses dedicated test accounts and data, must avoid side effects, is tuned for signal (retries, consecutive-failure alerts, per-step timings) and feeds monitoring and SLOs rather than a merge gate.
+</Accordion>
 
-> [!question]- What goes wrong when you run Playwright in a container, and how do you fix it?
-> Chromium crashes because Docker's `/dev/shm` is 64 MB (use `--ipc=host`, or in Kubernetes a memory-backed emptyDir at `/dev/shm`); zombie processes and lost signals without an init (use `--init`/tini); browser/library version mismatch (pin the image tag to the exact `@playwright/test` version); root user (run as `pwuser`); and read-only filesystems (give it writable emptyDirs for output and HOME).
+<Accordion title="What goes wrong when you run Playwright in a container, and how do you fix it?">
+Chromium crashes because Docker's `/dev/shm` is 64 MB (use `--ipc=host`, or in Kubernetes a memory-backed emptyDir at `/dev/shm`); zombie processes and lost signals without an init (use `--init`/tini); browser/library version mismatch (pin the image tag to the exact `@playwright/test` version); root user (run as `pwuser`); and read-only filesystems (give it writable emptyDirs for output and HOME).
+</Accordion>
 
-> [!question]- Why `retries: 1` with `trace: 'on-first-retry'` for a monitor?
-> One retry separates a transient flake from a real outage without hiding persistent failures, and the trace is recorded exactly when it's useful: on the retry of a failed attempt. Traces on every run would cost storage and time; no retries would page on every network blip.
+<Accordion title="Why `retries: 1` with `trace: 'on-first-retry'` for a monitor?">
+One retry separates a transient flake from a real outage without hiding persistent failures, and the trace is recorded exactly when it's useful: on the retry of a failed attempt. Traces on every run would cost storage and time; no retries would page on every network blip.
+</Accordion>
 
-> [!question]- How do you alert on "two consecutive failures" with Prometheus?
-> Push the last result as a gauge (0/1) after every run; the Pushgateway keeps it until the next push. With a 10-minute schedule, `success == 0` with `for: 11m` only fires if the value stayed 0 across the next push, i.e. the following run failed too. A window function like `max_over_time(...[15m])` is fragile here because, depending on timing, the window covers two or three results. Add a freshness alert on the last-run timestamp so a check that stops running isn't read as healthy.
+<Accordion title="How do you alert on &quot;two consecutive failures&quot; with Prometheus?">
+Push the last result as a gauge (0/1) after every run; the Pushgateway keeps it until the next push. With a 10-minute schedule, `success == 0` with `for: 11m` only fires if the value stayed 0 across the next push, i.e. the following run failed too. A window function like `max_over_time(...[15m])` is fragile here because, depending on timing, the window covers two or three results. Add a freshness alert on the last-run timestamp so a check that stops running isn't read as healthy.
+</Accordion>
 
-> [!question]- Kubernetes CronJob vs GitHub Actions schedule vs a queue worker for synthetics?
-> CronJob: reliable timing, isolated Pod per run, integrates with the cluster's secrets, metrics and your job control plane; start latency is the Pod start. GitHub Actions: zero infrastructure but delays, a 5-minute minimum and dropped runs under load: fine for nightly suites. A queue worker with a warm browser starts instantly and supports "run now" and cancellation well, but shares a browser process between runs and needs care with leaks.
+<Accordion title="Kubernetes CronJob vs GitHub Actions schedule vs a queue worker for synthetics?">
+CronJob: reliable timing, isolated Pod per run, integrates with the cluster's secrets, metrics and your job control plane; start latency is the Pod start. GitHub Actions: zero infrastructure but delays, a 5-minute minimum and dropped runs under load: fine for nightly suites. A queue worker with a warm browser starts instantly and supports "run now" and cancellation well, but shares a browser process between runs and needs care with leaks.
+</Accordion>
 
-> [!question]- What are the security concerns with scheduled browser automation against production?
-> Test credentials (vault, least privilege, rotation), session state in `storageState` files and traces (never public, encrypted, short retention), side effects (payments, emails, stock), traffic identification and rate limits (don't trip your own WAF or skew analytics), and legal/ethical limits when touching third-party sites (permission, ToS, robots.txt, rate limits).
+<Accordion title="What are the security concerns with scheduled browser automation against production?">
+Test credentials (vault, least privilege, rotation), session state in `storageState` files and traces (never public, encrypted, short retention), side effects (payments, emails, stock), traffic identification and rate limits (don't trip your own WAF or skew analytics), and legal/ethical limits when touching third-party sites (permission, ToS, robots.txt, rate limits).
+</Accordion>
 
-> [!question]- How would the dashboard stop a running Playwright CronJob run cleanly?
-> `jobs-api` deletes the Job with foreground propagation. The Pod gets SIGTERM; tini forwards it to the wrapper, which sends SIGINT to the Playwright runner so reporters finish with status `interrupted`, the report is uploaded, and metrics are skipped (an operator stop isn't an outage). All of this must fit in `terminationGracePeriodSeconds`, after which Kubernetes sends SIGKILL.
+<Accordion title="How would the dashboard stop a running Playwright CronJob run cleanly?">
+`jobs-api` deletes the Job with foreground propagation. The Pod gets SIGTERM; tini forwards it to the wrapper, which sends SIGINT to the Playwright runner so reporters finish with status `interrupted`, the report is uploaded, and metrics are skipped (an operator stop isn't an outage). All of this must fit in `terminationGracePeriodSeconds`, after which Kubernetes sends SIGKILL.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]]
-- [[Kubernetes CronJobs in Practice]] · [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]]
-- [[Frontend Testing]] · [[Next.js Testing - Unit, Integration & E2E]] · [[Cron Jobs]] · [[Background Jobs & Task Queues]]
-- [[Grafana & the LGTM Stack]] · [[Jenkins - Pipelines as Code]] · [[Argo CD in Practice]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]] · [[Supply Chain Security]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing) · [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E) · [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)
+- [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) · [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
 
 ## Sources
 - Playwright docs: [Docker](https://playwright.dev/docs/docker) · [Continuous Integration](https://playwright.dev/docs/ci) · [Test configuration](https://playwright.dev/docs/test-configuration) · [Retries](https://playwright.dev/docs/test-retries) · [Trace viewer](https://playwright.dev/docs/trace-viewer) · [Reporters](https://playwright.dev/docs/test-reporters) · [Reporter API](https://playwright.dev/docs/api/class-reporter) · [Authentication / storageState](https://playwright.dev/docs/auth) · [Annotations and tags](https://playwright.dev/docs/test-annotations) · [test.step](https://playwright.dev/docs/api/class-test#test-step) · [Library API](https://playwright.dev/docs/library) · [Release notes](https://playwright.dev/docs/release-notes) · [GitHub releases](https://github.com/microsoft/playwright/releases) · [Official Dockerfile (noble)](https://github.com/microsoft/playwright/blob/main/utils/docker/Dockerfile.noble)

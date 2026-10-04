@@ -1,12 +1,16 @@
 ---
+title: "Sorting Algorithms"
 tags: [dsa, dsa/algorithms]
 aliases: [Sorting, Sort Algorithms, Merge Sort, Quick Sort, Quicksort, Heap Sort, Insertion Sort, Counting Sort, Radix Sort, TimSort, Stable Sort]
 updated: 2026-09-27
 ---
 # Sorting Algorithms
 
-> [!tldr] TL;DR
-> Comparison sorts cannot beat `O(n log n)` in the worst case; **merge sort** (stable, `O(n)` extra space), **quick sort** (fast in practice, `O(n^2)` worst case without a good pivot) and **heap sort** (in-place, not stable) all hit it. The simple `O(n^2)` sorts (bubble, selection, insertion) matter for teaching and for tiny or nearly sorted inputs. Non-comparison sorts (counting, radix, bucket) run in linear time when keys are small integers or uniformly spread. In real code use the built-in: both V8 and CPython use **TimSort**, which is stable and adaptive.
+<Note>
+**TL;DR**
+
+Comparison sorts cannot beat `O(n log n)` in the worst case; **merge sort** (stable, `O(n)` extra space), **quick sort** (fast in practice, `O(n^2)` worst case without a good pivot) and **heap sort** (in-place, not stable) all hit it. The simple `O(n^2)` sorts (bubble, selection, insertion) matter for teaching and for tiny or nearly sorted inputs. Non-comparison sorts (counting, radix, bucket) run in linear time when keys are small integers or uniformly spread. In real code use the built-in: both V8 and CPython use **TimSort**, which is stable and adaptive.
+</Note>
 
 ## The idea
 
@@ -31,7 +35,7 @@ flowchart TD
 ### Basic sorts (`O(n^2)`)
 
 - **Bubble sort**: repeatedly swap adjacent out-of-order pairs; the largest "bubbles" to the end each pass. Stop early if a pass makes no swaps (then best case is `O(n)`). Stable, in-place. Almost never the right choice.
-- **Selection sort**: find the minimum of the unsorted part, swap it to the front. Always `O(n^2)` comparisons but only `O(n)` swaps (useful when writes are expensive). Not stable (the long-distance swap breaks ties). [[Grokking Algorithms]] ch. 2 uses it to introduce arrays vs linked lists.
+- **Selection sort**: find the minimum of the unsorted part, swap it to the front. Always `O(n^2)` comparisons but only `O(n)` swaps (useful when writes are expensive). Not stable (the long-distance swap breaks ties). [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) ch. 2 uses it to introduce arrays vs linked lists.
 - **Insertion sort**: grow a sorted prefix; insert each new element by shifting larger ones right. Stable, in-place, **adaptive**: `O(n + inversions)`, so `O(n)` on nearly sorted data. That is why TimSort and introsort use it for small runs.
 
 ### Merge sort (divide and conquer)
@@ -49,7 +53,7 @@ merge  -> [3 9 10 27 38 43 82]
 
 ### Quick sort
 
-Pick a **pivot**, **partition** so smaller items go left and larger go right, then recurse on each side. No merge step; work happens in the partition. [[Grokking Algorithms]] ch. 4 covers it as the showcase of divide and conquer.
+Pick a **pivot**, **partition** so smaller items go left and larger go right, then recurse on each side. No merge step; work happens in the partition. [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) ch. 4 covers it as the showcase of divide and conquer.
 
 - **Lomuto partition**: pivot = last element; one index `i` marks the end of the "< pivot" region. Simple, more swaps, degrades to `O(n^2)` when many keys are equal.
 - **Hoare partition**: two indices move inward from both ends and swap pairs that are on the wrong side. About 3× fewer swaps than Lomuto on average, handles duplicates better; the pivot does not necessarily end in its final position.
@@ -59,7 +63,7 @@ Pick a **pivot**, **partition** so smaller items go left and larger go right, th
 
 ### Heap sort
 
-Build a max-heap in `O(n)` (heapify from the last parent down), then repeatedly swap the root (max) to the end and sift down. `O(n log n)` worst case, `O(1)` extra space, **not stable**, poor cache locality (jumps between `i` and `2i+1`), so slower than quicksort in practice. See [[Heaps & Priority Queues]].
+Build a max-heap in `O(n)` (heapify from the last parent down), then repeatedly swap the root (max) to the end and sift down. `O(n log n)` worst case, `O(1)` extra space, **not stable**, poor cache locality (jumps between `i` and `2i+1`), so slower than quicksort in practice. See [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues).
 
 ### Non-comparison sorts
 
@@ -367,7 +371,7 @@ largest = sorted(["3", "30", "34"], key=cmp_to_key(lambda a, b: (a + b < b + a) 
 ## Senior perspective
 
 - **Use the library sort** unless you have a measured reason. It is stable, adaptive, battle-tested and implemented in native code. Custom sorts belong in interviews, embedded systems, GPUs, or specialized data.
-- **Sort less**: often you need the top k (heap or quickselect, `O(n log k)` / `O(n)` average; see [[Top-K & Heaps pattern]]), a single order statistic, or grouping (hash map), not a full sort.
+- **Sort less**: often you need the top k (heap or quickselect, `O(n log k)` / `O(n)` average; see [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern)), a single order statistic, or grouping (hash map), not a full sort.
 - **Databases** sort with external merge sort when the data does not fit in `work_mem`, and avoid sorting entirely when a B-tree index already provides the order. Ask for the `EXPLAIN` plan.
 - **Cache locality**: quicksort and merge sort scan memory sequentially; heap sort jumps around. That is why heap sort loses in practice despite the same Big-O.
 - **Stability and determinism** matter in distributed systems and UI: pagination with a non-unique sort key produces duplicates or missing rows between pages. Always add a unique tiebreaker (e.g. `id`).
@@ -390,32 +394,39 @@ largest = sorted(["3", "30", "34"], key=cmp_to_key(lambda a, b: (a + b < b + a) 
 
 ## Interview questions
 
-> [!question]- What does it mean for a sort to be stable, and when does it matter?
-> Equal keys keep their original relative order. It matters for multi-pass multi-key sorting (sort by secondary key, then stable-sort by primary), for radix sort, and for UIs where rows with equal values should not jump around. Merge sort, insertion sort and TimSort are stable; quick sort, heap sort and selection sort are not.
+<Accordion title="What does it mean for a sort to be stable, and when does it matter?">
+Equal keys keep their original relative order. It matters for multi-pass multi-key sorting (sort by secondary key, then stable-sort by primary), for radix sort, and for UIs where rows with equal values should not jump around. Merge sort, insertion sort and TimSort are stable; quick sort, heap sort and selection sort are not.
+</Accordion>
 
-> [!question]- Why is quicksort often faster than merge sort even though its worst case is worse?
-> It sorts in place (no `O(n)` buffer), scans memory sequentially (cache friendly), and has a tight inner loop with few moves. With a random pivot the `O(n^2)` case has negligible probability, and introsort removes it entirely.
+<Accordion title="Why is quicksort often faster than merge sort even though its worst case is worse?">
+It sorts in place (no `O(n)` buffer), scans memory sequentially (cache friendly), and has a tight inner loop with few moves. With a random pivot the `O(n^2)` case has negligible probability, and introsort removes it entirely.
+</Accordion>
 
-> [!question]- When does quicksort hit O(n^2) and how do you prevent it?
-> When partitions are maximally unbalanced: a fixed first/last pivot on sorted or reverse-sorted input, or Lomuto on many equal keys. Prevent with a random pivot or median-of-three, 3-way partitioning for duplicates, and an introsort fallback to heap sort past a depth limit.
+<Accordion title="When does quicksort hit O(n^2) and how do you prevent it?">
+When partitions are maximally unbalanced: a fixed first/last pivot on sorted or reverse-sorted input, or Lomuto on many equal keys. Prevent with a random pivot or median-of-three, 3-way partitioning for duplicates, and an introsort fallback to heap sort past a depth limit.
+</Accordion>
 
-> [!question]- Can you sort faster than O(n log n)?
-> Not with comparisons alone (decision tree lower bound `log2(n!)`). With extra structure yes: counting sort `O(n + k)` for small integer keys, radix sort `O(d(n + b))` for fixed-width keys, bucket sort expected `O(n)` for uniform data.
+<Accordion title="Can you sort faster than O(n log n)?">
+Not with comparisons alone (decision tree lower bound `log2(n!)`). With extra structure yes: counting sort `O(n + k)` for small integer keys, radix sort `O(d(n + b))` for fixed-width keys, bucket sort expected `O(n)` for uniform data.
+</Accordion>
 
-> [!question]- What sorting algorithm does JavaScript's Array.prototype.sort use? And Python's?
-> V8 has used TimSort since V8 7.0 / Chrome 70 (2018), and ES2019 requires `Array.prototype.sort` to be stable. CPython has used Timsort since 2.3; since 3.11 its merge policy is Powersort. Both are stable, adaptive hybrids of merge sort and binary insertion sort.
+<Accordion title="What sorting algorithm does JavaScript's Array.prototype.sort use? And Python's?">
+V8 has used TimSort since V8 7.0 / Chrome 70 (2018), and ES2019 requires `Array.prototype.sort` to be stable. CPython has used Timsort since 2.3; since 3.11 its merge policy is Powersort. Both are stable, adaptive hybrids of merge sort and binary insertion sort.
+</Accordion>
 
-> [!question]- Why does `[10, 9, 1].sort()` return `[1, 10, 9]` in JavaScript?
-> Without a comparator, elements are converted to strings and compared by UTF-16 code units, so `"10" < "9"`. Pass `(a, b) => a - b`.
+<Accordion title="Why does `[10, 9, 1].sort()` return `[1, 10, 9]` in JavaScript?">
+Without a comparator, elements are converted to strings and compared by UTF-16 code units, so `"10" < "9"`. Pass `(a, b) => a - b`.
+</Accordion>
 
-> [!question]- Which sort would you use for a linked list, and why?
-> Merge sort: it needs only sequential access, splits with fast/slow pointers, and merges by relinking nodes, giving `O(n log n)` time and `O(1)` extra space (bottom-up) or `O(log n)` (recursive). Quicksort and heap sort rely on random access.
+<Accordion title="Which sort would you use for a linked list, and why?">
+Merge sort: it needs only sequential access, splits with fast/slow pointers, and merges by relinking nodes, giving `O(n log n)` time and `O(1)` extra space (bottom-up) or `O(log n)` (recursive). Quicksort and heap sort rely on random access.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Arrays & Strings]] · [[Linked Lists]] · [[Heaps & Priority Queues]]
-- [[Recursion & Backtracking]] (divide and conquer) · [[Binary Search]] (needs sorted input) · [[Two Pointers]] · [[Intervals]] · [[Top-K & Heaps pattern]] · [[Greedy]]
-- [[Grokking Algorithms]] (ch. 2 selection sort, ch. 4 quicksort)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) · [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues)
+- [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) (divide and conquer) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) (needs sorted input) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals) · [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) · [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy)
+- [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (ch. 2 selection sort, ch. 4 quicksort)
 
 ## Sources
 - Cormen et al., *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 2, 6, 7, 8)

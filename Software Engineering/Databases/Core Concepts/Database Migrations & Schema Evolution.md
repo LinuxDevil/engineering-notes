@@ -1,12 +1,16 @@
 ---
+title: "Database Migrations & Schema Evolution"
 tags: [databases, databases/operations]
 aliases: [Database Migrations, Schema Migrations, Schema Evolution, Zero-Downtime Migrations, Expand and Contract, Parallel Change, Online Schema Change]
 updated: 2026-09-27
 ---
 # Database Migrations & Schema Evolution
 
-> [!tldr] TL;DR
-> A **migration** is a versioned, reviewed script that changes the schema (and sometimes data) so every environment evolves the same way. In production the hard part is not the SQL but **doing it without downtime**: avoid long exclusive locks, keep old and new app versions compatible, and split breaking changes into **expand → migrate → contract** steps. Set `lock_timeout`, backfill in batches, build indexes concurrently, and test on production-sized data before you ship.
+<Note>
+**TL;DR**
+
+A **migration** is a versioned, reviewed script that changes the schema (and sometimes data) so every environment evolves the same way. In production the hard part is not the SQL but **doing it without downtime**: avoid long exclusive locks, keep old and new app versions compatible, and split breaking changes into **expand → migrate → contract** steps. Set `lock_timeout`, backfill in batches, build indexes concurrently, and test on production-sized data before you ship.
+</Note>
 
 ## The idea
 
@@ -133,7 +137,7 @@ ALTER TABLE users ADD COLUMN display_name text;
 -- on "canceling statement due to lock timeout": sleep with backoff, retry N times
 ```
 
-Most migration frameworks let you set these per migration; `strong_migrations`, `django-pg-zero-downtime-migrations` and similar libraries add them automatically. Also kill or avoid long transactions during migration windows (`idle_in_transaction_session_timeout`). See [[Locking & Concurrency Control]].
+Most migration frameworks let you set these per migration; `strong_migrations`, `django-pg-zero-downtime-migrations` and similar libraries add them automatically. Also kill or avoid long transactions during migration windows (`idle_in_transaction_session_timeout`). See [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control).
 
 ### Batched backfills
 
@@ -201,15 +205,18 @@ Use `$jsonSchema` validators with `validationLevel: "moderate"` so existing non-
 - **Forward compatible** code: new code tolerates the old schema (needed if you might roll the code back).
 - **Feature flags** decouple deploy from release: ship dual-write code behind a flag, flip reads to the new column gradually, and switch back instantly if something is wrong.
 
-> [!warning] Common pitfalls
-> - Running migrations automatically on app startup across many pods: races, and a failure blocks every instance from booting. Run them as a single deploy step/job with a lock.
-> - `CREATE INDEX CONCURRENTLY` inside a transaction-wrapped migration (it errors); many tools need a "no transaction" flag.
-> - A failed concurrent index build leaves an `INVALID` index that still slows writes. Check `pg_index.indisvalid`.
-> - ORM default values or "change column" helpers that silently trigger table rewrites.
-> - Backfilling in one statement and taking down replicas with WAL lag.
-> - Dropping a column while an old version (or a cron job, BI tool, other service) still selects it. `SELECT *` in prepared statements can also break.
-> - Editing a migration that already ran somewhere. Checksums fail (Flyway) or environments drift. Always add a new migration.
-> - Testing only on an empty dev database where every ALTER is instant.
+<Warning>
+**Common pitfalls**
+
+- Running migrations automatically on app startup across many pods: races, and a failure blocks every instance from booting. Run them as a single deploy step/job with a lock.
+- `CREATE INDEX CONCURRENTLY` inside a transaction-wrapped migration (it errors); many tools need a "no transaction" flag.
+- A failed concurrent index build leaves an `INVALID` index that still slows writes. Check `pg_index.indisvalid`.
+- ORM default values or "change column" helpers that silently trigger table rewrites.
+- Backfilling in one statement and taking down replicas with WAL lag.
+- Dropping a column while an old version (or a cron job, BI tool, other service) still selects it. `SELECT *` in prepared statements can also break.
+- Editing a migration that already ran somewhere. Checksums fail (Flyway) or environments drift. Always add a new migration.
+- Testing only on an empty dev database where every ALTER is instant.
+</Warning>
 
 ## Testing and CI
 
@@ -222,7 +229,7 @@ Use `$jsonSchema` validators with `validationLevel: "moderate"` so existing non-
 ## Rollback strategy
 
 - Prefer **roll forward**: a new migration or a code revert, both of which are safe when changes are backward compatible.
-- Destructive steps (`DROP`, type changes that lose precision) are the point of no return. Delay them days after the expand step, and take a backup or keep the data in a renamed/archived table first ([[Database Backup]]).
+- Destructive steps (`DROP`, type changes that lose precision) are the point of no return. Delay them days after the expand step, and take a backup or keep the data in a renamed/archived table first ([Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup)).
 - For large data transformations, write to a new table/column and keep the old one until verified.
 - Know your restore time. If a bad migration corrupts data, point-in-time recovery (PITR) to a new instance and copying rows back is often the real rollback.
 
@@ -235,42 +242,52 @@ Use `$jsonSchema` validators with `validationLevel: "moderate"` so existing non-
 - **Replicas and CDC consumers** see DDL too. Logical replication does not replicate DDL in Postgres; Debezium and downstream warehouses must handle the new columns.
 - **Upgrades are migrations too**: major-version upgrades (pg_upgrade, blue/green, logical replication) need rehearsals, post-upgrade `ANALYZE`, and extension compatibility checks.
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 18** (released 2025-09-25):
->   - `pg_upgrade` now **preserves optimizer statistics** across major-version upgrades (extended statistics excepted; `--no-statistics` disables it), so the painful post-upgrade window of bad plans before `ANALYZE` finishes is largely gone.
->   - New `pg_upgrade --swap` mode swaps data directories instead of copying, cloning or linking files; the docs call it potentially the fastest mode.
->   - `ALTER TABLE` can set **`NOT VALID` on `NOT NULL` constraints**, so a NOT NULL can be added without an immediate full-table scan and validated later (verified in the PG 18 release notes).
->   - **Virtual generated columns** (now the default kind) can be added without rewriting the table.
-> - **MySQL 8.0 reached end of life on 2026-04-30.** Upgrade to **8.4 LTS**, or to **9.7 LTS** (released 2026-04-21). Rehearse the upgrade like any other migration.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 18** (released 2025-09-25):
+  - `pg_upgrade` now **preserves optimizer statistics** across major-version upgrades (extended statistics excepted; `--no-statistics` disables it), so the painful post-upgrade window of bad plans before `ANALYZE` finishes is largely gone.
+  - New `pg_upgrade --swap` mode swaps data directories instead of copying, cloning or linking files; the docs call it potentially the fastest mode.
+  - `ALTER TABLE` can set **`NOT VALID` on `NOT NULL` constraints**, so a NOT NULL can be added without an immediate full-table scan and validated later (verified in the PG 18 release notes).
+  - **Virtual generated columns** (now the default kind) can be added without rewriting the table.
+- **MySQL 8.0 reached end of life on 2026-04-30.** Upgrade to **8.4 LTS**, or to **9.7 LTS** (released 2026-04-21). Rehearse the upgrade like any other migration.
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you rename a column with zero downtime?
-> Expand/contract: add the new column, deploy code that writes both, backfill in batches, deploy code that reads the new column, deploy code that writes only the new column, then drop the old column. A plain RENAME is instant in Postgres but breaks the old app version still running during the deploy.
+<Accordion title="How do you rename a column with zero downtime?">
+Expand/contract: add the new column, deploy code that writes both, backfill in batches, deploy code that reads the new column, deploy code that writes only the new column, then drop the old column. A plain RENAME is instant in Postgres but breaks the old app version still running during the deploy.
+</Accordion>
 
-> [!question]- Why can a 1 ms ALTER TABLE cause an outage?
-> It needs an ACCESS EXCLUSIVE lock. If a long query holds a conflicting lock, the ALTER waits, and all new queries on the table queue behind it. Set `lock_timeout` (a few seconds), retry with backoff, and avoid long transactions during migrations.
+<Accordion title="Why can a 1 ms ALTER TABLE cause an outage?">
+It needs an ACCESS EXCLUSIVE lock. If a long query holds a conflicting lock, the ALTER waits, and all new queries on the table queue behind it. Set `lock_timeout` (a few seconds), retry with backoff, and avoid long transactions during migrations.
+</Accordion>
 
-> [!question]- How do you add a NOT NULL constraint or foreign key to a large Postgres table safely?
-> Add the FK or a `CHECK (col IS NOT NULL)` with `NOT VALID` (fast, brief lock), then `VALIDATE CONSTRAINT` which scans without blocking writes. For NOT NULL, PG 12+ then lets `SET NOT NULL` use the validated CHECK and skip the scan; drop the CHECK afterwards. PG 18 also allows NOT NULL itself to be NOT VALID.
+<Accordion title="How do you add a NOT NULL constraint or foreign key to a large Postgres table safely?">
+Add the FK or a `CHECK (col IS NOT NULL)` with `NOT VALID` (fast, brief lock), then `VALIDATE CONSTRAINT` which scans without blocking writes. For NOT NULL, PG 12+ then lets `SET NOT NULL` use the validated CHECK and skip the scan; drop the CHECK afterwards. PG 18 also allows NOT NULL itself to be NOT VALID.
+</Accordion>
 
-> [!question]- Versioned vs declarative migrations?
-> Versioned: you write ordered change scripts; explicit and reviewable for locks. Declarative: you declare the desired schema and a tool generates the diff; less boilerplate, but generated plans must be reviewed (renames can become drop + add).
+<Accordion title="Versioned vs declarative migrations?">
+Versioned: you write ordered change scripts; explicit and reviewable for locks. Declarative: you declare the desired schema and a tool generates the diff; less boilerplate, but generated plans must be reviewed (renames can become drop + add).
+</Accordion>
 
-> [!question]- Do you write down migrations?
-> Often not for production. After new data is written, a down migration can lose it, and they are rarely tested. Prefer backward-compatible changes and roll forward; delay destructive steps and keep backups.
+<Accordion title="Do you write down migrations?">
+Often not for production. After new data is written, a down migration can lose it, and they are rarely tested. Prefer backward-compatible changes and roll forward; delay destructive steps and keep backups.
+</Accordion>
 
-> [!question]- How do gh-ost and pt-online-schema-change work?
-> Both build a shadow copy of the table with the new schema, copy rows in chunks, keep it in sync with ongoing writes (gh-ost by tailing the binlog, pt-osc via triggers), then atomically swap table names. They can throttle on load or replica lag.
+<Accordion title="How do gh-ost and pt-online-schema-change work?">
+Both build a shadow copy of the table with the new schema, copy rows in chunks, keep it in sync with ongoing writes (gh-ost by tailing the binlog, pt-osc via triggers), then atomically swap table names. They can throttle on load or replica lag.
+</Accordion>
 
-> [!question]- Should the app run migrations on startup?
-> Usually not in multi-instance deployments: instances race, a slow migration delays every boot, and failures take down all pods. Run migrations as a dedicated deploy step with a single runner and a lock, before (for additive changes) or after (for removals) the code rollout.
+<Accordion title="Should the app run migrations on startup?">
+Usually not in multi-instance deployments: instances race, a slow migration delays every boot, and failures take down all pods. Run migrations as a dedicated deploy step with a single runner and a lock, before (for additive changes) or after (for removals) the code rollout.
+</Accordion>
 
 ## Related
-- [[Databases Index]]
-- [[Data Modeling & Normalization]] · [[Creating and Manipulating Tables]]
-- [[Locking & Concurrency Control]] · [[Database Backup]]
-- [[Vector Databases & pgvector]] (re-embedding is a migration too) · [[MongoDB]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables)
+- [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) · [Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup)
+- [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector) (re-embedding is a migration too) · [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB)
 
 ## Sources
 - [PostgreSQL docs: ALTER TABLE](https://www.postgresql.org/docs/current/sql-altertable.html)

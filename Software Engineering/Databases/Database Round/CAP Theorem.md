@@ -1,12 +1,16 @@
 ---
+title: "CAP Theorem"
 tags: [databases, databases/distributed]
 aliases: [CAP, PACELC, Brewer's Theorem, Eventual Consistency, Linearizability, Consistency Models]
 updated: 2026-09-27
 ---
 # CAP Theorem
 
-> [!tldr] TL;DR
-> CAP says that when a **network partition** happens, a replicated data store must choose between **Consistency** (every read sees the latest write, i.e. linearizability) and **Availability** (every request to a working node gets a non-error answer). Partitions can't be ruled out, so the real choice is **CP or AP during a partition**. **PACELC** adds the everyday case: **E**lse (no partition) you trade **L**atency against **C**onsistency. Most systems are tunable (quorums, read concerns), so ask "which guarantee, for which operation, at what latency?"
+<Note>
+**TL;DR**
+
+CAP says that when a **network partition** happens, a replicated data store must choose between **Consistency** (every read sees the latest write, i.e. linearizability) and **Availability** (every request to a working node gets a non-error answer). Partitions can't be ruled out, so the real choice is **CP or AP during a partition**. **PACELC** adds the everyday case: **E**lse (no partition) you trade **L**atency against **C**onsistency. Most systems are tunable (quorums, read concerns), so ask "which guarantee, for which operation, at what latency?"
+</Note>
 
 ## The idea
 
@@ -76,11 +80,14 @@ A bank balance in a CP store: during the partition, the minority side refuses wr
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - "Pick two of three" is misleading: you can't drop P in a distributed system, and when there's no partition you can have both C and A.
-> - Confusing CAP consistency (linearizability) with ACID consistency (constraints). See [[Transactions & ACID]].
-> - Calling a database "CP" or "AP" as a whole: guarantees vary per operation and configuration (MongoDB read preference, Cassandra consistency levels).
-> - Relying on wall-clock timestamps for ordering across nodes (clock skew).
+<Warning>
+**Common pitfalls**
+
+- "Pick two of three" is misleading: you can't drop P in a distributed system, and when there's no partition you can have both C and A.
+- Confusing CAP consistency (linearizability) with ACID consistency (constraints). See [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID).
+- Calling a database "CP" or "AP" as a whole: guarantees vary per operation and configuration (MongoDB read preference, Cassandra consistency levels).
+- Relying on wall-clock timestamps for ordering across nodes (clock skew).
+</Warning>
 
 ## Senior perspective
 
@@ -91,25 +98,30 @@ A bank balance in a CP store: during the partition, the minority side refuses wr
 
 ## Interview questions
 
-> [!question]- State the CAP theorem precisely.
-> In an asynchronous network where partitions can occur, a replicated read/write register can't provide both linearizability and availability (every non-failed node responds) during a partition. So under partition you choose consistency (some requests fail) or availability (some reads are stale).
+<Accordion title="State the CAP theorem precisely.">
+In an asynchronous network where partitions can occur, a replicated read/write register can't provide both linearizability and availability (every non-failed node responds) during a partition. So under partition you choose consistency (some requests fail) or availability (some reads are stale).
+</Accordion>
 
-> [!question]- What does PACELC add?
-> That without partitions there's still a trade-off between latency and consistency, because consistent operations need coordination round trips. Systems are classified like PA/EL (Cassandra) or PC/EC (Spanner).
+<Accordion title="What does PACELC add?">
+That without partitions there's still a trade-off between latency and consistency, because consistent operations need coordination round trips. Systems are classified like PA/EL (Cassandra) or PC/EC (Spanner).
+</Accordion>
 
-> [!question]- Is MongoDB CP or AP?
-> With default settings (majority writes, reads from the primary) it behaves CP: during a partition the side without a majority has no primary and rejects writes. Reading from secondaries or using `w:1` gives up consistency for availability/latency.
+<Accordion title="Is MongoDB CP or AP?">
+With default settings (majority writes, reads from the primary) it behaves CP: during a partition the side without a majority has no primary and rejects writes. Reading from secondaries or using `w:1` gives up consistency for availability/latency.
+</Accordion>
 
-> [!question]- How do quorums give consistency in leaderless systems?
-> With N replicas, writes wait for W acknowledgements and reads query R replicas; if R + W > N the read and write sets overlap, so a read sees at least one up-to-date copy (with version comparison and read repair). Sloppy quorums and concurrent writes can still cause anomalies.
+<Accordion title="How do quorums give consistency in leaderless systems?">
+With N replicas, writes wait for W acknowledgements and reads query R replicas; if R + W > N the read and write sets overlap, so a read sees at least one up-to-date copy (with version comparison and read repair). Sloppy quorums and concurrent writes can still cause anomalies.
+</Accordion>
 
-> [!question]- How do AP systems resolve conflicting writes?
-> Last-write-wins by timestamp, version vectors that surface siblings for application merge, or CRDTs that merge automatically. Anti-entropy with read repair and Merkle trees converges replicas.
+<Accordion title="How do AP systems resolve conflicting writes?">
+Last-write-wins by timestamp, version vectors that surface siblings for application merge, or CRDTs that merge automatically. Anti-entropy with read repair and Merkle trees converges replicas.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Replication & 2PC 3PC]] · [[Sharding & Partitioning]] · [[Clustering and Scaling]]
-- [[NoSQL Database Types]] · [[Transactions & ACID]] · [[Isolation Levels & Read Phenomena]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling)
+- [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena)
 
 ## Sources
 - Gilbert & Lynch, *Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services* (2002): https://users.ece.cmu.edu/~adrian/731-sp04/readings/GL-cap.pdf

@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Rate Limiter"
 tags: [system-design, system-design/case-study]
 aliases: [Rate Limiter Design, Distributed Rate Limiter, Token Bucket Design]
 updated: 2026-09-27
 ---
 # Case Study - Rate Limiter
 
-> [!tldr] TL;DR
-> A distributed rate limiter caps how many requests a client (user, API key, IP, tenant) can make in a time window, protecting services from abuse and overload. Pick an algorithm (**token bucket** for bursts, **sliding window counter** for accuracy at low memory), keep counters in a **shared low-latency store** (Redis/Valkey) updated **atomically** with a Lua script, enforce at the **gateway**, return **429** with `Retry-After` and rate-limit headers, and decide whether to **fail open or closed** when the store is down. Algorithms themselves are covered in [[Rate Limiting & Throttling]].
+<Note>
+**TL;DR**
+
+A distributed rate limiter caps how many requests a client (user, API key, IP, tenant) can make in a time window, protecting services from abuse and overload. Pick an algorithm (**token bucket** for bursts, **sliding window counter** for accuracy at low memory), keep counters in a **shared low-latency store** (Redis/Valkey) updated **atomically** with a Lua script, enforce at the **gateway**, return **429** with `Retry-After` and rate-limit headers, and decide whether to **fail open or closed** when the store is down. Algorithms themselves are covered in [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling).
+</Note>
 
 ## 1. Requirements
 **Functional**: limit by key (API key, user, IP, endpoint) with configurable rules (e.g. 100 req/min per key, 10 login attempts/15 min per IP); return 429 when exceeded; expose remaining quota.
@@ -83,12 +87,12 @@ e.g. limit 100/min, prev=80, curr=30, 25% into current → 30 + 80×0.75 = 90 �
 
 ### Where to enforce
 - **Edge/CDN/WAF**: per-IP floods, cheap.
-- **API gateway**: per key/tenant/plan ([[API Gateways & Reverse Proxies]]).
+- **API gateway**: per key/tenant/plan ([API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies)).
 - **Service level**: protect specific expensive operations or downstreams (concurrency limits).
-- Client side: SDKs honour `Retry-After` with backoff ([[Distributed Systems Patterns]]).
+- Client side: SDKs honour `Retry-After` with backoff ([Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)).
 
 ### Scaling and latency
-- Shard keys across Redis cluster slots ([[Consistent Hashing]]); one key's operations stay on one shard.
+- Shard keys across Redis cluster slots ([Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing)); one key's operations stay on one shard.
 - **Local + global hybrid**: each node keeps a local token bucket and periodically syncs/borrows quota from the global store; trades accuracy for fewer round trips at very high QPS.
 - Hot key (one huge tenant): split its quota across N sub-keys.
 
@@ -108,21 +112,25 @@ e.g. limit 100/min, prev=80, curr=30, 25% into current → 30 + 80×0.75 = 90 �
 - Test with a replay of production traffic before tightening limits.
 
 ## Interview questions
-> [!question]- How do you rate limit across 50 gateway nodes?
-> Keep counters in a shared store like Redis, keyed by client and rule, updated atomically with a Lua script (or `INCR` + `EXPIRE` for fixed windows). Optionally add local buckets synced periodically to cut latency.
+<Accordion title="How do you rate limit across 50 gateway nodes?">
+Keep counters in a shared store like Redis, keyed by client and rule, updated atomically with a Lua script (or `INCR` + `EXPIRE` for fixed windows). Optionally add local buckets synced periodically to cut latency.
+</Accordion>
 
-> [!question]- Token bucket vs sliding window?
-> Token bucket permits controlled bursts up to the bucket size while enforcing an average rate; great for APIs. Sliding window counters enforce "N per window" smoothly without edge bursts. Choose by whether bursts are acceptable.
+<Accordion title="Token bucket vs sliding window?">
+Token bucket permits controlled bursts up to the bucket size while enforcing an average rate; great for APIs. Sliding window counters enforce "N per window" smoothly without edge bursts. Choose by whether bursts are acceptable.
+</Accordion>
 
-> [!question]- What happens if Redis goes down?
-> Decide per rule: fail open for general API limits (availability over strictness), backed by a coarse in-memory limiter; fail closed for abuse-sensitive endpoints like login. Keep the limiter call on a short timeout.
+<Accordion title="What happens if Redis goes down?">
+Decide per rule: fail open for general API limits (availability over strictness), backed by a coarse in-memory limiter; fail closed for abuse-sensitive endpoints like login. Keep the limiter call on a short timeout.
+</Accordion>
 
-> [!question]- What should the response look like?
-> HTTP 429 with `Retry-After` and quota headers (limit, remaining, reset), and a clear error body. Clients should back off with jitter.
+<Accordion title="What should the response look like?">
+HTTP 429 with `Retry-After` and quota headers (limit, remaining, reset), and a clear error body. Clients should back off with jitter.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[Rate Limiting & Throttling]] · [[API Gateways & Reverse Proxies]] · [[Caching Strategies]] · [[Distributed Systems Patterns]] · [[Case Study - Distributed Cache]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [Case Study - Distributed Cache](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Distributed%20Cache)
 
 ## Sources
 - Alex Xu, *System Design Interview*, vol. 1, ch. 4 "Design a Rate Limiter"

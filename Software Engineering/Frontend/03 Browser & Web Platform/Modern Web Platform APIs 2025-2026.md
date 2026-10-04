@@ -1,12 +1,16 @@
 ---
+title: "Modern Web Platform APIs 2025-2026"
 tags: [frontend, frontend/browser, frontend/whats-new]
 aliases: [Modern Web APIs, New Web APIs, Web Platform 2026, Popover API, View Transitions, Navigation API, Interop 2026]
 updated: 2026-09-27
 ---
 # Modern Web Platform APIs 2025-2026
 
-> [!tldr] TL;DR
-> The platform now ships many things we used to build with JS libraries: **popovers, dialogs and invoker buttons** in plain HTML, **view transitions** for animated navigations, the **Navigation API** for SPA routing, **URLPattern** for route matching, **`scheduler.yield()`** for responsive long work, **Speculation Rules** for instant page loads, plus **Trusted Types / Sanitizer**, **ariaNotify**, **WebGPU** and more. This note lists each with its **Baseline status as of 2026-09-27** and a snippet. Rule of thumb: *Newly/Widely* = use it (maybe with a fallback for old browsers); *Limited* = progressive enhancement only, feature-detect.
+<Note>
+**TL;DR**
+
+The platform now ships many things we used to build with JS libraries: **popovers, dialogs and invoker buttons** in plain HTML, **view transitions** for animated navigations, the **Navigation API** for SPA routing, **URLPattern** for route matching, **`scheduler.yield()`** for responsive long work, **Speculation Rules** for instant page loads, plus **Trusted Types / Sanitizer**, **ariaNotify**, **WebGPU** and more. This note lists each with its **Baseline status as of 2026-09-27** and a snippet. Rule of thumb: *Newly/Widely* = use it (maybe with a fallback for old browsers); *Limited* = progressive enhancement only, feature-detect.
+</Note>
 
 **Baseline reminder**: *Widely* = in all core browsers for 30+ months; *Newly* = in all core browsers since the date shown; *Limited* = at least one core browser missing. Status data is from webstatus.dev / web-features as of 2026-09-27.
 
@@ -62,7 +66,7 @@ Top-layer UI (menus, toasts, pickers) with **no JS**: it renders above everythin
 ```
 
 - JS: `showPopover()`, `hidePopover()`, `togglePopover()`, `beforetoggle`/`toggle` events, `:popover-open`.
-- Pair with **CSS anchor positioning** to place it next to its button (see [[Modern CSS 2025-2026]]).
+- Pair with **CSS anchor positioning** to place it next to its button (see [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)).
 - **Status**: Baseline **Newly** (date re-set to 2025-01-27).
 - **`popover="hint"`**: a third type for tooltips. Opening a hint doesn't close open `auto` popovers (e.g. a tooltip inside an open menu). **Limited**: Chrome 151, Firefox 153; no Safari. Part of Interop 2026.
 
@@ -111,7 +115,7 @@ d.requestClose('user-dismissed'); // like pressing Esc: fires "cancel" first, un
 - `closedby`: **Limited** (Chrome 134, Firefox 141). Interop 2026 focus area (with `:open` and `hint`).
 - `requestClose()`: Baseline **Newly (2025-05-27)**.
 - `:open` pseudo-class (`details:open`, `dialog:open`): Baseline **Newly (2026-05-11)**.
-- Always prefer `showModal()` for modals: it adds the backdrop, makes the rest of the page inert and traps focus. See [[Accessibility Essentials]].
+- Always prefer `showModal()` for modals: it adds the backdrop, makes the rest of the page inert and traps focus. See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
 
 ## 4. Customizable `<select>`
 
@@ -152,7 +156,7 @@ navigation.entries();      // this app's history entries
 navigation.back();
 ```
 
-Why it's better than `pushState` + `popstate`: catches all navigation types in one place, built-in abort signal, `finished` promise, access to the entry list, proper accessibility (focus reset, loading indicators). **Status**: Baseline **Newly (2026-01-13)** (Firefox 147, Safari 26.2); Interop 2026 focus area. Framework routers wrap this for you ([[React Router]], [[Next.js App Router Fundamentals]]).
+Why it's better than `pushState` + `popstate`: catches all navigation types in one place, built-in abort signal, `finished` promise, access to the entry list, proper accessibility (focus reset, loading indicators). **Status**: Baseline **Newly (2026-01-13)** (Firefox 147, Safari 26.2); Interop 2026 focus area. Framework routers wrap this for you ([React Router](/Software%20Engineering/Frontend/05%20React/React%20Router), [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)).
 
 ## 6. View Transitions (same-document and cross-document)
 
@@ -182,7 +186,7 @@ function selectFlight(id) {
 
 - **Same-document**: Baseline **Newly (2025-10-14)** with Firefox 144; `view-transition-class` also Newly.
 - **Cross-document**: **Limited** (Chrome 126, Safari 18.2; no Firefox). Interop 2026 includes view transitions including cross-document.
-- React 19.3 made **`<ViewTransition>` stable**; Next.js 16.2 added `<Link transitionTypes>`; see [[React 19 to 19.3 & React Compiler]].
+- React 19.3 made **`<ViewTransition>` stable**; Next.js 16.2 added `<Link transitionTypes>`; see [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler).
 
 ## 7. URLPattern
 
@@ -200,7 +204,7 @@ Uses path-to-regexp-style syntax (`:param`, `*`, `?` optional, `(regex)`). **Sta
 
 ## 8. Scheduler API: `scheduler.postTask()` and `scheduler.yield()`
 
-Break up long tasks so input and rendering can happen in between, improving **INP** ([[Core Web Vitals]]).
+Break up long tasks so input and rendering can happen in between, improving **INP** ([Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)).
 
 ```js
 async function processResults(rows) {
@@ -219,7 +223,7 @@ scheduler.postTask(() => sendAnalytics(), { priority: 'background' }); // 'user-
 const ctl = new TaskController({ priority: 'user-visible' });
 scheduler.postTask(work, { signal: ctl.signal }); ctl.abort();
 ```
-**Status**: **Limited** (Chrome 129, Firefox 142; no Safari), so keep the `setTimeout` fallback. See [[Event Loop - Microtasks & Macrotasks]].
+**Status**: **Limited** (Chrome 129, Firefox 142; no Safari), so keep the `setTimeout` fallback. See [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks).
 
 ## 9. Speculation Rules (prefetch / prerender)
 
@@ -273,7 +277,7 @@ button.when('click')
   .takeUntil(document.when('keydown'))
   .subscribe({ next: console.log });
 ```
-**Status**: **Limited**, Chrome 135 only. Keep using RxJS in Angular apps ([[Angular Change Detection, Zones & Signals]]).
+**Status**: **Limited**, Chrome 135 only. Keep using RxJS in Angular apps ([Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals)).
 
 ## 13. Document Picture-in-Picture
 
@@ -316,7 +320,7 @@ trustedTypes.createPolicy('default', { createHTML: (s) => DOMPurify.sanitize(s) 
 - **Trusted Types**: Baseline **Newly (2026-02-24)**, after Firefox 148. React 19.3 added Trusted Types support in React DOM.
 - **Sanitizer API `setHTML()`**: **Limited** (Firefox 148, Chrome 146; no Safari), so keep DOMPurify as a fallback.
 - `Document.parseHTMLUnsafe()`: Baseline (2025-09) (the name signals it does **not** sanitize).
-- Full treatment: [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- Full treatment: [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## 16. `ariaNotify()`
 
@@ -326,15 +330,15 @@ Announce messages to screen readers without a hidden `aria-live` region.
 document.ariaNotify('Flight added to your trip');
 button.ariaNotify('3 results', { priority: 'high' });
 ```
-**Status**: Baseline **Newly (2026-09-14)**. Keep live regions as fallback for older browsers. See [[Accessibility Essentials]].
+**Status**: Baseline **Newly (2026-09-14)**. Keep live regions as fallback for older browsers. See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
 
 ## 17. Other recent APIs worth a line
 
-- **Storage Buckets** (Limited, Chrome 122) and **Web Locks** (Widely): [[Browser Storage - Cookies, Web Storage & IndexedDB]].
-- **Long Animation Frames** (Chromium 123) and **Soft Navigations** (Chrome 151): [[Observer APIs]].
+- **Storage Buckets** (Limited, Chrome 122) and **Web Locks** (Widely): [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB).
+- **Long Animation Frames** (Chromium 123) and **Soft Navigations** (Chrome 151): [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs).
 - **`<usermedia>` element**: a declarative camera/mic permission element, in Chrome 151.
-- **Built-in AI APIs** (Chrome: Translator, Language Detector, Summarizer stable in 138; Prompt API for the web in 148) and **WebMCP** (origin trial from Chrome 149): [[AI in Frontend - MCP, WebMCP & Built-in AI]].
-- New CSS (anchor positioning, `@scope`, container style queries, scroll-driven animations…): [[Modern CSS 2025-2026]].
+- **Built-in AI APIs** (Chrome: Translator, Language Detector, Summarizer stable in 138; Prompt API for the web in 148) and **WebMCP** (origin trial from Chrome 149): [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
+- New CSS (anchor positioning, `@scope`, container style queries, scroll-driven animations…): [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026).
 
 ## Interop 2026
 
@@ -353,12 +357,12 @@ Interop 2026 (announced **2026-02-12**) is the cross-browser effort (Apple, Goog
 11. JSPI (JavaScript Promise Integration for WebAssembly)
 12. Media pseudo-classes
 13. Navigation API
-14. Scoped custom element registries ([[Web Components & Shadow DOM]])
+14. Scoped custom element registries ([Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM))
 15. Scroll snap
 16. `shape()`
 17. Web compat
 18. WebRTC
-19. WebTransport ([[Networking - HTTP, Caching & Real-time]])
+19. WebTransport ([Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time))
 20. `zoom`
 
 ## Classic Web APIs quick reference (from the owner's checklist)
@@ -368,7 +372,7 @@ Interop 2026 (announced **2026-02-12**) is the cross-browser effort (Apple, Goog
 | Console API | `console.table`, `console.time/timeEnd`, `console.group`, `console.assert`, `console.trace` for debugging. |
 | Geolocation API | `navigator.geolocation.getCurrentPosition(ok, err, { enableHighAccuracy })`; permission prompt, HTTPS only. |
 | History API | `history.pushState/replaceState` + `popstate`; being superseded by the Navigation API (above). |
-| URL API | `new URL(href)`, `url.searchParams.get('q')`, `URLSearchParams`, `URL.canParse()`. See [[URL as State]]. |
+| URL API | `new URL(href)`, `url.searchParams.get('q')`, `URLSearchParams`, `URL.canParse()`. See [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State). |
 | Drag & Drop API | `draggable="true"`, `dragstart`/`dragover` (`preventDefault` to allow drop)/`drop`, `dataTransfer`. Poor on touch; many use pointer-event libraries. |
 | Canvas API / WebGL | Immediate-mode 2D (`getContext('2d')`) and 3D (`'webgl2'`) drawing; `OffscreenCanvas` in workers; WebGPU is the successor. |
 | Notifications API | `Notification.requestPermission()`, `new Notification(title)`; with a service worker + Push API for background notifications. |
@@ -378,54 +382,61 @@ Interop 2026 (announced **2026-02-12**) is the cross-browser effort (Apple, Goog
 | Channel Messaging | `new MessageChannel()`: two linked `MessagePort`s for private 1:1 messaging (iframes, workers). |
 | Fullscreen API | `el.requestFullscreen()`, `document.exitFullscreen()`, `:fullscreen`. |
 | Page Visibility | `document.visibilityState`, `visibilitychange`: pause polling/video, flush analytics. |
-| Periodic Background Sync | Chromium-only, installed PWAs: `registration.periodicSync.register('refresh', { minInterval })`. See [[Web Workers, Service Workers & PWAs]]. |
+| Periodic Background Sync | Chromium-only, installed PWAs: `registration.periodicSync.register('refresh', { minInterval })`. See [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs). |
 | Picture-in-Picture (video) | `video.requestPictureInPicture()`; for arbitrary HTML see Document PiP above. |
 | Pointer events & Pointer Lock | Unified mouse/touch/pen (`pointerdown`, `setPointerCapture`); `el.requestPointerLock()` for games/3D. |
 | Screen Wake Lock | `await navigator.wakeLock.request('screen')`: keep the screen on (boarding pass, recipe). |
 | Sensor APIs | Generic Sensor API (`Accelerometer`, `Gyroscope`, Chromium) and `DeviceOrientationEvent`. |
 | Vibration API | `navigator.vibrate([100, 50, 100])` (not supported on iOS). |
 | Web Animations API | `el.animate(keyframes, { duration, easing })` returns an `Animation` (pause, reverse, `finished`). |
-| Credential Management | `navigator.credentials.get/create` for passwords, federated login and **passkeys (WebAuthn)**. See [[Authentication & Token Storage]]. |
+| Credential Management | `navigator.credentials.get/create` for passwords, federated login and **passkeys (WebAuthn)**. See [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage). |
 | WebVTT | Text tracks for video captions: `<track kind="captions" src="en.vtt">`. |
 | Media Capabilities | `navigator.mediaCapabilities.decodingInfo(config)`: will this codec play smoothly and power-efficiently? |
-| Long Tasks / Navigation Timing | `PerformanceObserver` entry types `longtask` and `navigation`. See [[Observer APIs]]. |
-| Storage API | `navigator.storage.estimate()` / `persist()`. See [[Browser Storage - Cookies, Web Storage & IndexedDB]]. |
+| Long Tasks / Navigation Timing | `PerformanceObserver` entry types `longtask` and `navigation`. See [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs). |
+| Storage API | `navigator.storage.estimate()` / `persist()`. See [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB). |
 | IndexedDB, Web Storage, Service Worker, Web Workers, WebSocket, Fetch, XHR, Server-sent events, Intersection/Resize Observer, Web Components, Event phases, Attributes vs properties, DOM/BOM | Covered in the other notes of this folder. |
 
 ## Interview questions
 
-> [!question]- How would you build an accessible dropdown menu today with minimal JS?
-> `<button popovertarget="menu">` + `<div popover id="menu">` for top-layer rendering and light dismiss, CSS anchor positioning to place it, proper roles/keyboard handling for menu items. Add `interestfor`/`hint` for tooltips as enhancement.
+<Accordion title="How would you build an accessible dropdown menu today with minimal JS?">
+`<button popovertarget="menu">` + `<div popover id="menu">` for top-layer rendering and light dismiss, CSS anchor positioning to place it, proper roles/keyboard handling for menu items. Add `interestfor`/`hint` for tooltips as enhancement.
+</Accordion>
 
-> [!question]- What does the Navigation API give you over pushState/popstate?
-> A single `navigate` event for all navigation types, `intercept()` with async handlers and abort signals, `finished`/`committed` promises, access to history entries and state, and built-in focus/scroll handling. Baseline since Jan 2026.
+<Accordion title="What does the Navigation API give you over pushState/popstate?">
+A single `navigate` event for all navigation types, `intercept()` with async handlers and abort signals, `finished`/`committed` promises, access to history entries and state, and built-in focus/scroll handling. Baseline since Jan 2026.
+</Accordion>
 
-> [!question]- How do View Transitions work?
-> The browser captures a snapshot of the old state, runs your DOM update, captures the new state, and animates between them using `::view-transition-*` pseudo-elements. `view-transition-name` pairs elements across states for shared-element morphs. Same-document is Baseline (Oct 2025); cross-document is Chromium + Safari.
+<Accordion title="How do View Transitions work?">
+The browser captures a snapshot of the old state, runs your DOM update, captures the new state, and animates between them using `::view-transition-*` pseudo-elements. `view-transition-name` pairs elements across states for shared-element morphs. Same-document is Baseline (Oct 2025); cross-document is Chromium + Safari.
+</Accordion>
 
-> [!question]- How do you keep a long JS task from hurting INP?
-> Split the work and yield between chunks: `await scheduler.yield()` where available (it keeps the continuation's priority), with a `setTimeout(0)` fallback; move heavy work to a worker; avoid layout thrashing.
+<Accordion title="How do you keep a long JS task from hurting INP?">
+Split the work and yield between chunks: `await scheduler.yield()` where available (it keeps the continuation's priority), with a `setTimeout(0)` fallback; move heavy work to a worker; avoid layout thrashing.
+</Accordion>
 
-> [!question]- What are Speculation Rules and what are the risks?
-> A JSON script declaring URLs to prefetch or prerender based on eagerness. Risks: wasted bandwidth, server load, analytics/side effects running on prerendered pages (check `document.prerendering`), and prerendering state-changing URLs. Chromium-only, safe to add as enhancement.
+<Accordion title="What are Speculation Rules and what are the risks?">
+A JSON script declaring URLs to prefetch or prerender based on eagerness. Risks: wasted bandwidth, server load, analytics/side effects running on prerendered pages (check `document.prerendering`), and prerendering state-changing URLs. Chromium-only, safe to add as enhancement.
+</Accordion>
 
-> [!question]- How does the platform help with XSS now?
-> Trusted Types (Baseline Feb 2026) block string assignments to dangerous sinks unless they pass through a policy; `setHTML()` sanitizes by default (Firefox/Chrome); CSP limits script sources.
+<Accordion title="How does the platform help with XSS now?">
+Trusted Types (Baseline Feb 2026) block string assignments to dangerous sinks unless they pass through a policy; `setHTML()` sanitizes by default (Firefox/Chrome); CSP limits script sources.
+</Accordion>
 
-> [!question]- What is Interop and why should a front end engineer care?
-> A yearly cross-browser commitment to fix/implement selected features consistently. It predicts which Limited features will become safe to use soon (e.g. Navigation API, scoped registries, anchor positioning in Interop 2026).
+<Accordion title="What is Interop and why should a front end engineer care?">
+A yearly cross-browser commitment to fix/implement selected features consistently. It predicts which Limited features will become safe to use soon (e.g. Navigation API, scoped registries, anchor positioning in Interop 2026).
+</Accordion>
 
 ## Related
-- [[What's New in Frontend 2025-2026]]
-- [[Modern CSS 2025-2026]]
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Observer APIs]]
-- [[Web Components & Shadow DOM]]
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Accessibility Essentials]]
-- [[Core Web Vitals]]
-- [[React 19 to 19.3 & React Compiler]]
-- [[AI in Frontend - MCP, WebMCP & Built-in AI]]
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)
+- [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
+- [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)
+- [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
 
 ## Sources
 - Baseline data: [webstatus.dev](https://webstatus.dev/), [web-features explorer: newly available](https://web-platform-dx.github.io/web-features-explorer/newly-available/)

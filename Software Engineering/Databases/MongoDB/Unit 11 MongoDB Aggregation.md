@@ -1,14 +1,18 @@
 ---
+title: "Unit 11 MongoDB Aggregation"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB Aggregation Pipeline, aggregate, $group, $lookup, MongoDB Unit 11]
 updated: 2026-09-27
 ---
 # Unit 11 MongoDB Aggregation
 
-> [!tldr] TL;DR
-> **Aggregation** analyzes and summarizes data. An **aggregation pipeline** is an array of **stages** run in order, each transforming the stream of documents: filter (`$match`), reshape (`$project`, `$set`), group (`$group`), sort, limit, unwind arrays, join (`$lookup`), and write results (`$out`, `$merge`). Put `$match` and `$sort` early so they can use indexes. Each stage can use up to **100 MB** of RAM before it must spill to disk (`allowDiskUse`, on by default since 6.0).
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 11 · Prev: [[Unit 10 MongoDB CRUD Operations in Node.js]] · Next: [[Unit 12 MongoDB Indexes]]
+**Aggregation** analyzes and summarizes data. An **aggregation pipeline** is an array of **stages** run in order, each transforming the stream of documents: filter (`$match`), reshape (`$project`, `$set`), group (`$group`), sort, limit, unwind arrays, join (`$lookup`), and write results (`$out`, `$merge`). Put `$match` and `$sort` early so they can use indexes. Each stage can use up to **100 MB** of RAM before it must spill to disk (`allowDiskUse`, on by default since 6.0).
+</Note>
+
+> Course: MongoDB University, Unit 11 · Prev: [Unit 10 MongoDB CRUD Operations in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2010%20MongoDB%20CRUD%20Operations%20in%20Node.js) · Next: [Unit 12 MongoDB Indexes](/Software%20Engineering/Databases/MongoDB/Unit%2012%20MongoDB%20Indexes)
 
 ## Terms
 - **Aggregation**: analysis and summary of data.
@@ -128,36 +132,44 @@ db.sightings.aggregate([
 - `$lookup` without an index on `foreignField` does a scan of the foreign collection per input document.
 - `$group` on a high-cardinality key holds all groups in memory.
 
-> [!info]+ 🆕 2025–2026
-> **MongoDB 8.3 (May 2026)** adds aggregation expressions: `arrayIndexAs` and the `$$IDX` variable in `$map`/`$filter`/`$reduce` (access the element's index), `$serializeEJSON`/`$deserializeEJSON`, `$createObjectId`, `$hash`/`$hexHash` (MD5, SHA-256, XXH64) and `$subtype`. `$scoreFusion` (hybrid search ranking) is GA; see [[Unit 13 MongoDB Atlas Search]]. ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
+<Info>
+**🆕 2025–2026**
+
+**MongoDB 8.3 (May 2026)** adds aggregation expressions: `arrayIndexAs` and the `$$IDX` variable in `$map`/`$filter`/`$reduce` (access the element's index), `$serializeEJSON`/`$deserializeEJSON`, `$createObjectId`, `$hash`/`$hexHash` (MD5, SHA-256, XXH64) and `$subtype`. `$scoreFusion` (hybrid search ranking) is GA; see [Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search). ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
+</Info>
 
 ## Senior perspective
 - **Memory**: each stage is limited to **100 MB** of RAM. Since MongoDB 6.0 the `allowDiskUseByDefault` parameter is `true`, so blocking stages (`$sort`, `$group`) spill to disk instead of failing, but spilling is slow. Watch for `usedDisk: true` in explain output.
 - **Output size**: results are returned through a cursor, but each document must still fit in 16 MB; `$push`-ing a large group into one array can exceed it.
 - **Optimizer**: MongoDB reorders and coalesces some stages (e.g. moves `$match` before `$project`, merges `$sort` + `$limit` into a top-k sort). Check `explain()` to see what really runs.
-- **`$lookup` cost**: it's a nested-loop join. Fine for small, indexed lookups; for hot paths, prefer embedding or extended references ([[Unit 04 MongoDB Data Modeling Intro]]). In sharded clusters, `$lookup` into a sharded collection is supported since 5.1 but costs scatter-gather.
+- **`$lookup` cost**: it's a nested-loop join. Fine for small, indexed lookups; for hot paths, prefer embedding or extended references ([Unit 04 MongoDB Data Modeling Intro](/Software%20Engineering/Databases/MongoDB/Unit%2004%20MongoDB%20Data%20Modeling%20Intro)). In sharded clusters, `$lookup` into a sharded collection is supported since 5.1 but costs scatter-gather.
 - **Analytics isolation**: run heavy pipelines on analytics secondaries (Atlas analytics nodes, `readPreference=secondary`) or precompute with `$merge` (on-demand materialized views) so they don't hurt OLTP traffic.
 - Pipelines are data (arrays), so build them in code but never splice untrusted objects into them.
 
 ## Interview questions
-> [!question]- What is an aggregation pipeline?
-> An ordered list of stages; each receives the documents output by the previous stage, transforms them (filter, reshape, group, join, sort) and passes them on. The final stage's output is the result or is written to a collection.
+<Accordion title="What is an aggregation pipeline?">
+An ordered list of stages; each receives the documents output by the previous stage, transforms them (filter, reshape, group, join, sort) and passes them on. The final stage's output is the result or is written to a collection.
+</Accordion>
 
-> [!question]- How do you make an aggregation fast?
-> Filter early with `$match` and sort early with `$sort` on indexed fields so the first stages use indexes; project away unneeded fields; avoid large `$unwind`s; index `$lookup` foreign fields; check `explain("executionStats")`.
+<Accordion title="How do you make an aggregation fast?">
+Filter early with `$match` and sort early with `$sort` on indexed fields so the first stages use indexes; project away unneeded fields; avoid large `$unwind`s; index `$lookup` foreign fields; check `explain("executionStats")`.
+</Accordion>
 
-> [!question]- What's the memory limit of a pipeline stage and what is allowDiskUse?
-> 100 MB per stage. `allowDiskUse` lets blocking stages write temporary files to disk instead of erroring; since MongoDB 6.0 it's enabled by default via `allowDiskUseByDefault`.
+<Accordion title="What's the memory limit of a pipeline stage and what is allowDiskUse?">
+100 MB per stage. `allowDiskUse` lets blocking stages write temporary files to disk instead of erroring; since MongoDB 6.0 it's enabled by default via `allowDiskUseByDefault`.
+</Accordion>
 
-> [!question]- How does $lookup work and what does it cost?
-> It's a left outer join: for each input document it finds matching documents in another collection and adds them as an array. It's effectively a nested loop, so it needs an index on the foreign field and gets expensive with many input docs or across shards.
+<Accordion title="How does $lookup work and what does it cost?">
+It's a left outer join: for each input document it finds matching documents in another collection and adds them as an array. It's effectively a nested loop, so it needs an index on the foreign field and gets expensive with many input docs or across shards.
+</Accordion>
 
-> [!question]- Difference between $out and $merge?
-> `$out` replaces the target collection entirely with the results. `$merge` inserts/updates/merges into an existing collection with configurable matching behaviour, enabling incremental materialized views.
+<Accordion title="Difference between $out and $merge?">
+`$out` replaces the target collection entirely with the results. `$merge` inserts/updates/merges into an existing collection with configurable matching behaviour, enabling incremental materialized views.
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Query Optimization & EXPLAIN]] · [[Database Indexes]] · [[Data Modeling & Normalization]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization)
 
 ## Sources
 - [MongoDB Manual: Aggregation Pipeline](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/)

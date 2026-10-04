@@ -1,12 +1,16 @@
 ---
+title: "Next.js Self-Hosting & Deployment Options"
 tags: [frontend, frontend/nextjs, devops, devops/deployment]
 aliases: [Deploying Next.js, Next.js Self-Hosting, Next.js Docker, output standalone, Next.js Adapters API, OpenNext]
 updated: 2026-09-27
 ---
 # Next.js Self-Hosting & Deployment Options
 
-> [!tldr] TL;DR
-> A Next.js app needs **one thing to run every feature: a Node.js server** (`next start` or the `output: 'standalone'` `server.js` in Docker). Vercel adds managed extras (global CDN, shared cache, skew protection, image optimization, observability). Static export (`output: 'export'`) runs anywhere but drops everything that needs a server. Other platforms plug in through the **Deployment Adapters API** (alpha in 16.0, **stable in 16.2**, Mar 2026), which OpenNext (AWS, Cloudflare, Netlify) is moving onto. When you run **more than one instance** yourself, you own: a shared cache handler with tag coordination, a shared Server Actions encryption key, `deploymentId` for version skew, runtime vs build-time env vars, CDN rules that respect RSC headers, non-buffering proxies for streaming, and graceful shutdown.
+<Note>
+**TL;DR**
+
+A Next.js app needs **one thing to run every feature: a Node.js server** (`next start` or the `output: 'standalone'` `server.js` in Docker). Vercel adds managed extras (global CDN, shared cache, skew protection, image optimization, observability). Static export (`output: 'export'`) runs anywhere but drops everything that needs a server. Other platforms plug in through the **Deployment Adapters API** (alpha in 16.0, **stable in 16.2**, Mar 2026), which OpenNext (AWS, Cloudflare, Netlify) is moving onto. When you run **more than one instance** yourself, you own: a shared cache handler with tag coordination, a shared Server Actions encryption key, `deploymentId` for version skew, runtime vs build-time env vars, CDN rules that respect RSC headers, non-buffering proxies for streaming, and graceful shutdown.
+</Note>
 
 ## 1. The options at a glance
 
@@ -106,7 +110,7 @@ openssl rand -base64 32 > sa_key   # store in your secret manager, not in git
 docker build --secret id=sa_key,src=sa_key --build-arg DEPLOYMENT_ID=$(git rev-parse --short HEAD) -t acme/shop-web:$(git rev-parse --short HEAD) .
 ```
 
-Kubernetes specifics (Deployment, HPA, PDB, probes, Gateway routes, Argo CD, Multi-Zones) are in [[Deploying Next.js Micro-frontends to Kubernetes]] and [[Deploying Node.js Apps to Kubernetes]]; image hardening in [[Dockerfile Best Practices & Image Security]].
+Kubernetes specifics (Deployment, HPA, PDB, probes, Gateway routes, Argo CD, Multi-Zones) are in [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) and [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes); image hardening in [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security).
 
 ## 5. Static export and its limits
 
@@ -312,8 +316,8 @@ spec:
 
 ### 7.10 Everything else
 - `proxy.ts` runs on Node in the same process (16.0+); keep it cheap or it adds to every request's TTFB.
-- Observability: OpenTelemetry via `instrumentation.ts`, structured logs with the deployment ID, RUM ([[Next.js Performance Optimization]]).
-- Security: keep Next/React patched (Dec 2025 RSC RCE, Sept 2026 `ImageResponse` RCE fixed in 16.3.6), limit request body sizes at the proxy, and never trust `proxy.ts` alone for auth ([[Next.js 15 to 16.3]]).
+- Observability: OpenTelemetry via `instrumentation.ts`, structured logs with the deployment ID, RUM ([Next.js Performance Optimization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Performance%20Optimization)).
+- Security: keep Next/React patched (Dec 2025 RSC RCE, Sept 2026 `ImageResponse` RCE fixed in 16.3.6), limit request body sizes at the proxy, and never trust `proxy.ts` alone for auth ([Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)).
 
 ## 8. Decision table
 
@@ -338,52 +342,63 @@ spec:
 - **Portability is improving**: the stable Adapter API and verified adapters (2026) reduce lock-in, but "passes the test suite" (functional fidelity) is not the same as Vercel-level edge performance. Measure on your target.
 - **Security posture**: expose Next only behind a proxy; patch within days of advisories; restrict `images.remotePatterns`; keep secrets out of `NEXT_PUBLIC_*` and out of prerendered HTML.
 
-> [!info]+ 🆕 2025–2026
-> - **16.0 (2025-10-21)**: Build Adapters API **alpha** (`experimental.adapterPath`); `cacheHandlers` for `'use cache'`; `proxy.ts` on Node; `serverRuntimeConfig`/`publicRuntimeConfig` removed; image optimizer blocks local IPs, `maximumRedirects: 3`.
-> - **16.1.x (Dec 2025–Mar 2026)**: `images.maximumResponseBody` (16.1.2), `images.maximumDiskCacheSize` (16.1.7).
-> - **16.2 (2026-03-18)**: **Adapters stable** (`adapterPath`, `NEXT_ADAPTER_PATH`); constant build ID when `deploymentId` is set; `next start --inspect`.
-> - **Mar 2026**: OpenNext joins the Next.js Ecosystem Working Group; AWS, Cloudflare and Netlify adapters being rebuilt on the Adapter API. Docs list **Vercel and Bun** as verified adapters; Cloudflare and Netlify are working toward verified status.
-> - **16.3 (2026-08-03)**: native Node streams (up to 22% more req/s); build filesystem cache on by default; immutable static assets reusable across deployments (`supportsImmutableAssets`).
-> - **16.3.6 (2026-09-22)**: fix for a critical RCE in Node `ImageResponse` (`>=16.2.0 <16.3.6`); patch self-hosted apps.
+<Info>
+**🆕 2025–2026**
+
+- **16.0 (2025-10-21)**: Build Adapters API **alpha** (`experimental.adapterPath`); `cacheHandlers` for `'use cache'`; `proxy.ts` on Node; `serverRuntimeConfig`/`publicRuntimeConfig` removed; image optimizer blocks local IPs, `maximumRedirects: 3`.
+- **16.1.x (Dec 2025–Mar 2026)**: `images.maximumResponseBody` (16.1.2), `images.maximumDiskCacheSize` (16.1.7).
+- **16.2 (2026-03-18)**: **Adapters stable** (`adapterPath`, `NEXT_ADAPTER_PATH`); constant build ID when `deploymentId` is set; `next start --inspect`.
+- **Mar 2026**: OpenNext joins the Next.js Ecosystem Working Group; AWS, Cloudflare and Netlify adapters being rebuilt on the Adapter API. Docs list **Vercel and Bun** as verified adapters; Cloudflare and Netlify are working toward verified status.
+- **16.3 (2026-08-03)**: native Node streams (up to 22% more req/s); build filesystem cache on by default; immutable static assets reusable across deployments (`supportsImmutableAssets`).
+- **16.3.6 (2026-09-22)**: fix for a critical RCE in Node `ImageResponse` (`>=16.2.0 <16.3.6`); patch self-hosted apps.
+</Info>
 
 ## Interview questions
 
-> [!question]- What does `output: 'standalone'` do and what does it leave out?
-> It traces the server's imports and writes `.next/standalone` with a minimal `server.js` plus only the needed `node_modules`, so the Docker runtime stage doesn't need `npm install`. It doesn't include `public/` or `.next/static`; copy them into the image or serve them from a CDN.
+<Accordion title="What does `output: 'standalone'` do and what does it leave out?">
+It traces the server's imports and writes `.next/standalone` with a minimal `server.js` plus only the needed `node_modules`, so the Docker runtime stage doesn't need `npm install`. It doesn't include `public/` or `.next/static`; copy them into the image or serve them from a CDN.
+</Accordion>
 
-> [!question]- You run three replicas of a Next.js app on Kubernetes. What breaks by default?
-> Each pod has its own ISR/data cache, so `revalidateTag` on one pod leaves others stale (fix: shared `cacheHandler`/`cacheHandlers` with `refreshTags`, `cacheMaxMemorySize: 0`). Server Actions fail across pods if builds used different encryption keys (fix: `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`). Rolling deploys cause version skew (fix: `deploymentId`, keep old assets). The image cache is per pod.
+<Accordion title="You run three replicas of a Next.js app on Kubernetes. What breaks by default?">
+Each pod has its own ISR/data cache, so `revalidateTag` on one pod leaves others stale (fix: shared `cacheHandler`/`cacheHandlers` with `refreshTags`, `cacheMaxMemorySize: 0`). Server Actions fail across pods if builds used different encryption keys (fix: `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`). Rolling deploys cause version skew (fix: `deploymentId`, keep old assets). The image cache is per pod.
+</Accordion>
 
-> [!question]- What can't you use with `output: 'export'`?
-> Anything needing a server at request time: dynamic routes without `generateStaticParams` or with `dynamicParams: true`, request-reading Route Handlers, `cookies()`, Server Actions, Draft Mode, `rewrites`/`redirects`/`headers`, `proxy.ts`, ISR, intercepting routes, and default image optimization (use a custom loader).
+<Accordion title="What can't you use with `output: 'export'`?">
+Anything needing a server at request time: dynamic routes without `generateStaticParams` or with `dynamicParams: true`, request-reading Route Handlers, `cookies()`, Server Actions, Draft Mode, `rewrites`/`redirects`/`headers`, `proxy.ts`, ISR, intercepting routes, and default image optimization (use a custom loader).
+</Accordion>
 
-> [!question]- What is the Deployment Adapters API?
-> A public build-time API (alpha in 16.0, stable in 16.2 as `adapterPath` / `NEXT_ADAPTER_PATH`) that lets platforms modify the Next config and receive the full build output to package for their infrastructure. Verified adapters are open source and run the official compatibility test suite; Vercel's own adapter uses the same API. Runtime caching is configured separately through `cacheHandler`/`cacheHandlers`.
+<Accordion title="What is the Deployment Adapters API?">
+A public build-time API (alpha in 16.0, stable in 16.2 as `adapterPath` / `NEXT_ADAPTER_PATH`) that lets platforms modify the Next config and receive the full build output to package for their infrastructure. Verified adapters are open source and run the official compatibility test suite; Vercel's own adapter uses the same API. Runtime caching is configured separately through `cacheHandler`/`cacheHandlers`.
+</Accordion>
 
-> [!question]- Why does changing `NEXT_PUBLIC_API_URL` in the container not change the app?
-> `NEXT_PUBLIC_*` values are inlined into client bundles at build time. Either rebuild per environment or, better, keep one image and pass runtime config from the server (read `process.env` in dynamic code after `connection()`, then pass to client components or expose via a config endpoint).
+<Accordion title="Why does changing `NEXT_PUBLIC_API_URL` in the container not change the app?">
+`NEXT_PUBLIC_*` values are inlined into client bundles at build time. Either rebuild per environment or, better, keep one image and pass runtime config from the server (read `process.env` in dynamic code after `connection()`, then pass to client components or expose via a config endpoint).
+</Accordion>
 
-> [!question]- How does Next.js handle version skew during a rolling deploy?
-> With `deploymentId` set, asset URLs get `?dpl=<id>` and client navigations send `x-deployment-id`. If the server's ID differs, the client does a hard navigation to reload with consistent assets. You should also keep old static assets available until old clients are gone.
+<Accordion title="How does Next.js handle version skew during a rolling deploy?">
+With `deploymentId` set, asset URLs get `?dpl=<id>` and client navigations send `x-deployment-id`. If the server's ID differs, the client does a hard navigation to reload with consistent assets. You should also keep old static assets available until old clients are gone.
+</Accordion>
 
-> [!question]- Streaming works locally but not in production behind nginx. Why?
-> nginx (or a load balancer) buffers the response, so the shell and Suspense content arrive together at the end. Disable buffering (`X-Accel-Buffering: no` or `proxy_buffering off`) and make every hop support chunked/HTTP2 streaming.
+<Accordion title="Streaming works locally but not in production behind nginx. Why?">
+nginx (or a load balancer) buffers the response, so the shell and Suspense content arrive together at the end. Disable buffering (`X-Accel-Buffering: no` or `proxy_buffering off`) and make every hop support chunked/HTTP2 streaming.
+</Accordion>
 
-> [!question]- How do you shut down a Next.js pod gracefully?
-> Make Node PID 1 (exec-form CMD or an init), add a preStop sleep so the pod leaves the endpoints first, and give `terminationGracePeriodSeconds` enough time; Next handles SIGTERM by finishing in-flight requests and `after()` callbacks.
+<Accordion title="How do you shut down a Next.js pod gracefully?">
+Make Node PID 1 (exec-form CMD or an init), add a preStop sleep so the pod leaves the endpoints first, and give `terminationGracePeriodSeconds` enough time; Next handles SIGTERM by finishing in-flight requests and `after()` callbacks.
+</Accordion>
 
 ## Related
-- [[Next.js Index]]
-- [[Deploying Next.js Micro-frontends to Kubernetes]]
-- [[Deploying Node.js Apps to Kubernetes]]
-- [[Dockerfile Best Practices & Image Security]]
-- [[Next.js Rendering & Caching]]
-- [[Next.js Performance Optimization]]
-- [[Next.js Route Handlers & Backend-for-Frontend]]
-- [[Next.js 15 to 16.3]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[CI-CD Pipelines]]
-- [[Frontend Home]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index)
+- [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes)
+- [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security)
+- [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)
+- [Next.js Performance Optimization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Performance%20Optimization)
+- [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)
+- [Frontend Home](/Software%20Engineering/Frontend/Frontend%20Home)
 
 ## Sources
 - Next.js docs: [Deploying](https://nextjs.org/docs/app/getting-started/deploying), [Self-hosting](https://nextjs.org/docs/app/guides/self-hosting), [Deploying to platforms](https://nextjs.org/docs/app/guides/deploying-to-platforms), [CDN caching](https://nextjs.org/docs/app/guides/cdn-caching), [Static exports](https://nextjs.org/docs/app/guides/static-exports), [adapterPath](https://nextjs.org/docs/app/api-reference/config/next-config-js/adapterPath), [Immutable static assets](https://nextjs.org/docs/app/api-reference/adapters/immutable-static-assets), [cacheHandlers](https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheHandlers), [deploymentId](https://nextjs.org/docs/app/api-reference/config/next-config-js/deploymentId), [output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output), [Upgrading to 16](https://nextjs.org/docs/app/guides/upgrading/version-16), [Image component](https://nextjs.org/docs/app/api-reference/components/image)

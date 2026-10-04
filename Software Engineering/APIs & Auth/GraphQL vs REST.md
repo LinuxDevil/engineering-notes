@@ -1,12 +1,16 @@
 ---
+title: "GraphQL vs REST"
 tags: [apis, apis/graphql]
 aliases: [GraphQL, REST vs GraphQL, GraphQL Federation, N+1 in GraphQL, DataLoader]
 updated: 2026-09-27
 ---
 # GraphQL vs REST
 
-> [!tldr] TL;DR
-> **REST** is an architectural style: many resource URLs, HTTP methods and status codes, and free HTTP caching. **GraphQL** is a typed query language and runtime: one endpoint, a schema, and clients ask for exactly the fields they need. GraphQL wins when many clients need different shapes of deeply related data; REST wins for simple CRUD, public APIs, caching and file-heavy workloads. They coexist happily, and GraphQL is **not** a database technology.
+<Note>
+**TL;DR**
+
+**REST** is an architectural style: many resource URLs, HTTP methods and status codes, and free HTTP caching. **GraphQL** is a typed query language and runtime: one endpoint, a schema, and clients ask for exactly the fields they need. GraphQL wins when many clients need different shapes of deeply related data; REST wins for simple CRUD, public APIs, caching and file-heavy workloads. They coexist happily, and GraphQL is **not** a database technology.
+</Note>
 
 ## What is REST
 
@@ -19,7 +23,7 @@ REST (Representational State Transfer) is a **software architectural style** def
 5. **Uniform interface**: resources are identified in requests (URIs), manipulated through representations, messages are self-descriptive, and hypermedia drives state (HATEOAS).
 6. **Code on demand** (optional): the server can send executable code (e.g. JavaScript).
 
-Design details (URLs, status codes, pagination, errors): [[REST API Design]].
+Design details (URLs, status codes, pagination, errors): [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design).
 
 ## What is GraphQL
 
@@ -132,9 +136,12 @@ flowchart LR
 - **Field-level authorization** in resolvers (or via directives), not just at the endpoint.
 - **Batching attacks**: limit aliases and batched operations (brute-forcing login via 1,000 aliased mutations in one request).
 
-> [!info]+ 🆕 2025–2026
-> - **2025-09-08:** the **September 2025 edition of the GraphQL specification** was published, the first new edition since October 2021. It adds **OneOf input objects** (`@oneOf`, exactly one field must be set), **schema coordinates** (canonical addresses like `User.name`), **descriptions on executable documents** (operations can carry docs, useful for tooling and LLM/MCP tools), full Unicode support, and clarifications on deprecation and execution.
-> - GraphQL APIs are increasingly exposed to AI agents as **MCP tools** (persisted operations with descriptions become tool definitions). See [[AI in Frontend - MCP, WebMCP & Built-in AI]].
+<Info>
+**🆕 2025–2026**
+
+- **2025-09-08:** the **September 2025 edition of the GraphQL specification** was published, the first new edition since October 2021. It adds **OneOf input objects** (`@oneOf`, exactly one field must be set), **schema coordinates** (canonical addresses like `User.name`), **descriptions on executable documents** (operations can carry docs, useful for tooling and LLM/MCP tools), full Unicode support, and clarifications on deprecation and execution.
+- GraphQL APIs are increasingly exposed to AI agents as **MCP tools** (persisted operations with descriptions become tool definitions). See [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
+</Info>
 
 ```graphql
 # OneOf input (Sept 2025 spec): exactly one of these must be provided
@@ -150,7 +157,7 @@ type Query { user(by: UserBy!): User }
 | Screens aggregate data from several services | Public API for third parties (simpler, cacheable, familiar) |
 | Product iterates fast and the frontend team should not wait for new endpoints | Heavy use of HTTP caching / CDN |
 | You want a typed contract and codegen end to end | File upload/download, streaming large payloads |
-| | Simple service-to-service calls (or use [[gRPC vs REST|gRPC]]) |
+| | Simple service-to-service calls (or use [gRPC](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST)) |
 
 ## Senior perspective
 
@@ -162,29 +169,35 @@ type Query { user(by: UserBy!): User }
 
 ## Interview questions
 
-> [!question]- What problems does GraphQL solve compared to REST?
-> Over-fetching and under-fetching: clients request exactly the fields they need in one round trip, across related entities. It also gives a strongly typed, introspectable schema that enables codegen and tooling, and lets the API evolve by adding fields and deprecating old ones without URL versions.
+<Accordion title="What problems does GraphQL solve compared to REST?">
+Over-fetching and under-fetching: clients request exactly the fields they need in one round trip, across related entities. It also gives a strongly typed, introspectable schema that enables codegen and tooling, and lets the API evolve by adding fields and deprecating old ones without URL versions.
+</Accordion>
 
-> [!question]- What is the N+1 problem in GraphQL and how do you fix it?
-> A list resolver returns N items and a field resolver then runs one query per item, giving N+1 queries. Fix with DataLoader-style batching and per-request caching, or by resolving joins in the parent resolver / using a query planner.
+<Accordion title="What is the N+1 problem in GraphQL and how do you fix it?">
+A list resolver returns N items and a field resolver then runs one query per item, giving N+1 queries. Fix with DataLoader-style batching and per-request caching, or by resolving joins in the parent resolver / using a query planner.
+</Accordion>
 
-> [!question]- Why is caching harder in GraphQL?
-> Most requests are POSTs to one URL, so HTTP caches and CDNs can't key them. Solutions: persisted queries sent via GET with a hash, response caching at the gateway by operation + variables, and normalised client caches (Apollo, Relay, urql) keyed by type + id.
+<Accordion title="Why is caching harder in GraphQL?">
+Most requests are POSTs to one URL, so HTTP caches and CDNs can't key them. Solutions: persisted queries sent via GET with a hash, response caching at the gateway by operation + variables, and normalised client caches (Apollo, Relay, urql) keyed by type + id.
+</Accordion>
 
-> [!question]- How do you protect a GraphQL API from abusive queries?
-> Depth and complexity/cost limits, timeouts, pagination limits, alias and batch limits, persisted/trusted documents, rate limiting by cost rather than by request, and field-level authorization.
+<Accordion title="How do you protect a GraphQL API from abusive queries?">
+Depth and complexity/cost limits, timeouts, pagination limits, alias and batch limits, persisted/trusted documents, rate limiting by cost rather than by request, and field-level authorization.
+</Accordion>
 
-> [!question]- How does error handling differ?
-> REST uses HTTP status codes per request. GraphQL typically returns 200 with a `data` object and an `errors` array, allowing partial success; many teams model expected business errors as union result types (`CreateUserResult = User | EmailTaken`).
+<Accordion title="How does error handling differ?">
+REST uses HTTP status codes per request. GraphQL typically returns 200 with a `data` object and an `errors` array, allowing partial success; many teams model expected business errors as union result types (`CreateUserResult = User | EmailTaken`).
+</Accordion>
 
-> [!question]- What changed in the September 2025 GraphQL spec?
-> First edition since 2021: OneOf input objects, schema coordinates, descriptions on operations and fragments, full Unicode support, and clarifications on deprecation and execution semantics.
+<Accordion title="What changed in the September 2025 GraphQL spec?">
+First edition since 2021: OneOf input objects, schema coordinates, descriptions on operations and fragments, full Unicode support, and clarifications on deprecation and execution semantics.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[REST API Design]] · [[gRPC vs REST]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[Rate Limiting & Throttling]] · [[API Gateways & Reverse Proxies]]
-- Frontend: [[Networking - HTTP, Caching & Real-time]] · [[Server State - TanStack Query & RTK Query]] · [[Frontend System Design Index]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]]
-- Other domains: [[System Design Index]] · [[API Security]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies)
+- Frontend: [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
+- Other domains: [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [API Security](/Software%20Engineering/Security/API%20Security)
 
 ## Sources
 - [GraphQL specification, September 2025 edition](https://spec.graphql.org/September2025/)

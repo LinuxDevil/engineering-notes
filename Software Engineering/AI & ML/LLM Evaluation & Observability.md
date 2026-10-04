@@ -1,12 +1,16 @@
 ---
+title: "LLM Evaluation & Observability"
 tags: [ai-ml, ai-ml/llmops]
 aliases: [LLM Evals, Evals, LLM-as-a-Judge, Golden Dataset, LLM Tracing, LLMOps, LLM Observability]
 updated: 2026-09-27
 ---
 # LLM Evaluation & Observability
 
-> [!tldr] TL;DR
-> LLM outputs are non-deterministic free text, so you can't unit-test them with `assertEquals` alone. **Evals** are the test suite: a **golden dataset** of representative inputs, plus **graders** (code checks, **LLM-as-judge** with a rubric, and human review) that score each output. Run them offline on every prompt, model or retrieval change, and online on sampled production traffic. **Observability** means **tracing** every request (prompts, retrieved docs, tool calls, tokens, latency, cost) so failures can be found, replayed and turned into new eval cases.
+<Note>
+**TL;DR**
+
+LLM outputs are non-deterministic free text, so you can't unit-test them with `assertEquals` alone. **Evals** are the test suite: a **golden dataset** of representative inputs, plus **graders** (code checks, **LLM-as-judge** with a rubric, and human review) that score each output. Run them offline on every prompt, model or retrieval change, and online on sampled production traffic. **Observability** means **tracing** every request (prompts, retrieved docs, tool calls, tokens, latency, cost) so failures can be found, replayed and turned into new eval cases.
+</Note>
 
 ## Why evals are different
 - Many valid answers exist; exact-match rarely works.
@@ -93,7 +97,7 @@ Mitigations:
 | System | Metrics |
 |---|---|
 | Classification / extraction | accuracy, precision/recall/F1 per class, schema validity, field-level exact match |
-| RAG | recall@k, MRR, faithfulness, answer relevance, citation accuracy ([[Retrieval-Augmented Generation (RAG)]]) |
+| RAG | recall@k, MRR, faithfulness, answer relevance, citation accuracy ([Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG))) |
 | Chat assistant | rubric scores (helpful, correct, safe, on-tone), refusal rate, escalation rate |
 | Agents | task success on verifiable outcomes, pass^k, steps and tokens per task, tool-error rate, cost per success |
 | Code generation | tests passing, compile rate, review acceptance |
@@ -144,26 +148,31 @@ Log per span: model and version, prompt template version, full inputs and output
 
 ## Interview questions
 
-> [!question]- How do you evaluate an LLM feature before shipping?
-> Define success criteria, build a golden dataset from real and edge cases, run multiple trials, grade with code checks where possible and a calibrated LLM judge with a rubric elsewhere, compare against the baseline on quality, cost and latency, and look at slices, not just averages.
+<Accordion title="How do you evaluate an LLM feature before shipping?">
+Define success criteria, build a golden dataset from real and edge cases, run multiple trials, grade with code checks where possible and a calibrated LLM judge with a rubric elsewhere, compare against the baseline on quality, cost and latency, and look at slices, not just averages.
+</Accordion>
 
-> [!question]- What are the weaknesses of LLM-as-a-judge and how do you mitigate them?
-> Position, verbosity and self-preference biases and weak grading of math/reasoning. Mitigate with specific binary rubrics, evidence-before-verdict, swapping order in pairwise comparisons, using a different strong model, and measuring agreement with human labels.
+<Accordion title="What are the weaknesses of LLM-as-a-judge and how do you mitigate them?">
+Position, verbosity and self-preference biases and weak grading of math/reasoning. Mitigate with specific binary rubrics, evidence-before-verdict, swapping order in pairwise comparisons, using a different strong model, and measuring agreement with human labels.
+</Accordion>
 
-> [!question]- pass@k vs pass^k?
-> pass@k is the chance at least one of k attempts succeeds (useful when you can pick the best, e.g. with tests). pass^k is the chance all k succeed, which reflects the reliability users experience on repeated use; it drops fast if per-trial success isn't very high.
+<Accordion title="pass@k vs pass^k?">
+pass@k is the chance at least one of k attempts succeeds (useful when you can pick the best, e.g. with tests). pass^k is the chance all k succeed, which reflects the reliability users experience on repeated use; it drops fast if per-trial success isn't very high.
+</Accordion>
 
-> [!question]- What would you put in a trace for an LLM request?
-> The whole chain: prompt template version, model and parameters, inputs and outputs (redacted), retrieved documents and scores, each tool call with arguments and results, token counts including cached tokens, latency per step, cost, errors, and user feedback linked to the trace ID.
+<Accordion title="What would you put in a trace for an LLM request?">
+The whole chain: prompt template version, model and parameters, inputs and outputs (redacted), retrieved documents and scores, each tool call with arguments and results, token counts including cached tokens, latency per step, cost, errors, and user feedback linked to the trace ID.
+</Accordion>
 
-> [!question]- How do production failures feed back into development?
-> Sample and review traces (plus automated online judges and user feedback), confirm failures, add them to the golden dataset with expected behaviour, fix, and verify the eval passes before release so the issue can't silently regress.
+<Accordion title="How do production failures feed back into development?">
+Sample and review traces (plus automated online judges and user feedback), confirm failures, add them to the golden dataset with expected behaviour, fix, and verify the eval passes before release so the issue can't silently regress.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[Step 4 Evaluate the model]] (classic ML metrics)
-- [[Retrieval-Augmented Generation (RAG)]] · [[AI Agents & Agentic Patterns]] · [[Prompt & Context Engineering]]
-- [[AI Safety, Security & Guardrails for Apps]] · [[Fine-tuning vs RAG vs Prompting]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model) (classic ML metrics)
+- [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG)) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering)
+- [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps) · [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting)
 
 ## Sources
 - Anthropic, [Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) (2026-01-09)

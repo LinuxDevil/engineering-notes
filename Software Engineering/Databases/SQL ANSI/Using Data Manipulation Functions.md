@@ -1,14 +1,18 @@
 ---
+title: "Using Data Manipulation Functions"
 tags: [databases, databases/sql]
 aliases: [SQL Functions, Text Functions, Date Functions, EXTRACT, CAST, SOUNDEX]
 updated: 2026-09-27
 ---
 # Using Data Manipulation Functions
 
-> [!tldr] TL;DR
-> SQL functions transform values: text (`UPPER`, `SUBSTRING`, `TRIM`), numbers (`ABS`, `ROUND`), dates (`EXTRACT`, `CURRENT_DATE`), conversion (`CAST`) and system info. Unlike core statements, **function names differ a lot between DBMSs**, so prefer standard ones (`CAST`, `EXTRACT`, `SUBSTRING`, `COALESCE`, `CURRENT_DATE`). Wrapping a column in a function inside `WHERE` usually stops index use; filter on ranges instead.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 8 · Prev: [[Creating Calculated Fields]] · Next: [[Summarizing Data]]
+SQL functions transform values: text (`UPPER`, `SUBSTRING`, `TRIM`), numbers (`ABS`, `ROUND`), dates (`EXTRACT`, `CURRENT_DATE`), conversion (`CAST`) and system info. Unlike core statements, **function names differ a lot between DBMSs**, so prefer standard ones (`CAST`, `EXTRACT`, `SUBSTRING`, `COALESCE`, `CURRENT_DATE`). Wrapping a column in a function inside `WHERE` usually stops index use; filter on ranges instead.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 8 · Prev: [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields) · Next: [Summarizing Data](/Software%20Engineering/Databases/SQL%20ANSI/Summarizing%20Data)
 
 ## Understanding functions
 
@@ -61,8 +65,11 @@ Commonly used text functions:
 | `UPPER()` | Converts to uppercase |
 | `REPLACE()` | Replaces all occurrences of a substring |
 
-> [!note] Bytes vs characters
-> MySQL `LENGTH()` returns **bytes**, `CHAR_LENGTH()` returns characters; with UTF-8, `'é'` is 2 bytes. PostgreSQL `LENGTH()` returns characters, `OCTET_LENGTH()` bytes.
+<Note>
+**Bytes vs characters**
+
+MySQL `LENGTH()` returns **bytes**, `CHAR_LENGTH()` returns characters; with UTF-8, `'é'` is 2 bytes. PostgreSQL `LENGTH()` returns characters, `OCTET_LENGTH()` bytes.
+</Note>
 
 **SOUNDEX** is an algorithm that converts a string into an alphanumeric code describing how it sounds, so similar-sounding words can be compared (`Michelle` and `Michael` share a code). It's not a SQL concept, but most DBMSs support it (PostgreSQL through the `fuzzystrmatch` extension).
 
@@ -123,14 +130,17 @@ WHERE strftime('%Y', order_date) = '2020';
 
 To filter by month, add a second condition on the month in the same way.
 
-> [!tip] The sargable way (works everywhere, uses indexes)
-> ```sql
-> SELECT order_num
-> FROM Orders
-> WHERE order_date >= DATE '2020-01-01'
->   AND order_date <  DATE '2021-01-01';
-> ```
-> `YEAR(order_date) = 2020` or `EXTRACT(...)` must compute the function for every row, so an index on `order_date` can't be used. The half-open range leaves the column bare and also handles timestamps with a time part correctly.
+<Tip>
+**The sargable way (works everywhere, uses indexes)**
+
+```sql
+SELECT order_num
+FROM Orders
+WHERE order_date >= DATE '2020-01-01'
+  AND order_date <  DATE '2021-01-01';
+```
+`YEAR(order_date) = 2020` or `EXTRACT(...)` must compute the function for every row, so an index on `order_date` can't be used. The half-open range leaves the column bare and also handles timestamps with a time part correctly.
+</Tip>
 
 ## Numeric manipulation functions
 
@@ -149,27 +159,31 @@ To filter by month, add a second condition on the month in the same way.
 
 - **Time zones.** Store instants as `timestamptz` (PostgreSQL) / `DATETIME2` + offset or UTC (SQL Server) / `TIMESTAMP` in UTC (MySQL). `timestamp without time zone` is a wall-clock value with no zone, a common source of bugs around DST.
 - **Date truncation for reports:** `date_trunc('month', order_date)` (PostgreSQL), `DATE_FORMAT` (MySQL), `DATETRUNC` (SQL Server 2022+). Group by the truncated value.
-- **Expression indexes** make function-based filters fast when you can't rewrite them: `CREATE INDEX ON customers (lower(email));` then `WHERE lower(email) = lower($1)`. See [[SQL Indexes Deep Dive]].
+- **Expression indexes** make function-based filters fast when you can't rewrite them: `CREATE INDEX ON customers (lower(email));` then `WHERE lower(email) = lower($1)`. See [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive).
 - **Volatile functions** like `now()`/`random()` in PostgreSQL: `now()` is fixed for the whole transaction; `clock_timestamp()` changes per call.
 - **Portability vs power:** most teams pick one DBMS and use its functions fully. Portability matters mainly for libraries and products that ship on several databases.
 
 ## Interview questions
 
-> [!question]- Why is `WHERE YEAR(order_date) = 2020` slow on a big table?
-> The function must be evaluated for every row, so a B-tree index on `order_date` can't be used (non-sargable). Rewrite as `order_date >= '2020-01-01' AND order_date < '2021-01-01'`, or create an expression index.
+<Accordion title="Why is `WHERE YEAR(order_date) = 2020` slow on a big table?">
+The function must be evaluated for every row, so a B-tree index on `order_date` can't be used (non-sargable). Rewrite as `order_date >= '2020-01-01' AND order_date < '2021-01-01'`, or create an expression index.
+</Accordion>
 
-> [!question]- `CAST` vs `CONVERT` vs `::`?
-> `CAST(x AS type)` is standard and portable. `CONVERT` is SQL Server/MySQL-specific (SQL Server's version also takes a style for date formatting). `::` is PostgreSQL shorthand.
+<Accordion title="`CAST` vs `CONVERT` vs `::`?">
+`CAST(x AS type)` is standard and portable. `CONVERT` is SQL Server/MySQL-specific (SQL Server's version also takes a style for date formatting). `::` is PostgreSQL shorthand.
+</Accordion>
 
-> [!question]- `timestamp` vs `timestamptz` in PostgreSQL?
-> `timestamptz` stores an absolute instant (normalized to UTC) and converts to the session time zone on output. `timestamp` stores a zone-less wall-clock value. Use `timestamptz` for events.
+<Accordion title="`timestamp` vs `timestamptz` in PostgreSQL?">
+`timestamptz` stores an absolute instant (normalized to UTC) and converts to the session time zone on output. `timestamp` stores a zone-less wall-clock value. Use `timestamptz` for events.
+</Accordion>
 
-> [!question]- What does SOUNDEX do?
-> Encodes a string by its pronunciation (a letter plus three digits), so similar-sounding names compare equal. Useful for fuzzy name matching; trigram similarity is often better.
+<Accordion title="What does SOUNDEX do?">
+Encodes a string by its pronunciation (a letter plus three digits), so similar-sounding names compare equal. Useful for fuzzy name matching; trigram similarity is often better.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Creating Calculated Fields]] · [[Summarizing Data]] · [[Filtering Data]] · [[SQL Indexes Deep Dive]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields) · [Summarizing Data](/Software%20Engineering/Databases/SQL%20ANSI/Summarizing%20Data) · [Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Filtering%20Data) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 8 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

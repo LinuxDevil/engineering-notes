@@ -1,12 +1,16 @@
 ---
+title: "Prefix Sum"
 tags: [dsa, dsa/patterns]
 aliases: [Prefix Sums, Cumulative Sum, Running Sum, 2D Prefix Sum, Summed-Area Table, Prefix Sum + Hash Map]
 updated: 2026-09-27
 ---
 # Prefix Sum
 
-> [!tldr] TL;DR
-> A **prefix sum** array stores, at each position, the sum of everything before it. After an O(n) precomputation, the sum of **any** subarray is one subtraction: `prefix[r + 1] - prefix[l]`, O(1). The same idea extends to 2D grids (summed-area tables) and, combined with a **hash map of prefix sums seen so far**, counts subarrays with a target sum in O(n) even with negative numbers.
+<Note>
+**TL;DR**
+
+A **prefix sum** array stores, at each position, the sum of everything before it. After an O(n) precomputation, the sum of **any** subarray is one subtraction: `prefix[r + 1] - prefix[l]`, O(1). The same idea extends to 2D grids (summed-area tables) and, combined with a **hash map of prefix sums seen so far**, counts subarrays with a target sum in O(n) even with negative numbers.
+</Note>
 
 ## The idea
 
@@ -61,7 +65,7 @@ sum = P[r2+1][c2+1] - P[r1][c2+1] - P[r2+1][c1] + P[r1][c1]
 
 `sum(nums[l..r]) = k` ⇔ `prefix[r + 1] - prefix[l] = k` ⇔ `prefix[l] = prefix[r + 1] - k`.
 
-So while scanning, keep a map `count[prefixValue] = how many times seen`. At each position with running sum `s`, the number of subarrays ending here with sum `k` is `count[s - k]`. Seed the map with `{0: 1}` for subarrays that start at index 0. This works with **negative numbers**, unlike [[Sliding Window]].
+So while scanning, keep a map `count[prefixValue] = how many times seen`. At each position with running sum `s`, the number of subarrays ending here with sum `k` is `count[s - k]`. Seed the map with `{0: 1}` for subarrays that start at index 0. This works with **negative numbers**, unlike [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window).
 
 ## Complexity
 
@@ -147,11 +151,11 @@ Start with `count = {0: 1}`, `s = 0`, `ans = 0`.
 
 | i | nums[i] | s (running) | need `s - k` | count[need] | ans | map after adding s |
 |---|---|---|---|---|---|---|
-| 0 | 1 | 1 | -2 | 0 | 0 | {0:1, 1:1} |
-| 1 | 2 | 3 | 0 | 1 → `[1,2]` | 1 | {0:1, 1:1, 3:1} |
-| 2 | 3 | 6 | 3 | 1 → `[3]` | 2 | {…, 6:1} |
-| 3 | -2 | 4 | 1 | 1 → `[2,3,-2]` | 3 | {…, 4:1} |
-| 4 | 2 | 6 | 3 | 1 → `[3,-2,2]` | 4 | {…, 6:2} |
+| 0 | 1 | 1 | -2 | 0 | 0 | \{0:1, 1:1\} |
+| 1 | 2 | 3 | 0 | 1 → `[1,2]` | 1 | \{0:1, 1:1, 3:1\} |
+| 2 | 3 | 6 | 3 | 1 → `[3]` | 2 | \{…, 6:1\} |
+| 3 | -2 | 4 | 1 | 1 → `[2,3,-2]` | 3 | \{…, 4:1\} |
+| 4 | 2 | 6 | 3 | 1 → `[3,-2,2]` | 4 | \{…, 6:2\} |
 
 Note the lookup happens **before** inserting the current `s`, otherwise with `k = 0` you'd count an empty subarray.
 
@@ -224,26 +228,31 @@ Variations of the same trick: store the **first index** of each prefix value to 
 
 ## Interview questions
 
-> [!question]- How do you answer many range-sum queries on a static array?
-> Build `prefix` of length n + 1 once in O(n). Each query `[l, r]` is `prefix[r + 1] - prefix[l]` in O(1). Total O(n + q) instead of O(n·q).
+<Accordion title="How do you answer many range-sum queries on a static array?">
+Build `prefix` of length n + 1 once in O(n). Each query `[l, r]` is `prefix[r + 1] - prefix[l]` in O(1). Total O(n + q) instead of O(n·q).
+</Accordion>
 
-> [!question]- Why does "subarray sum equals k" need a hash map and not a sliding window?
-> With negative numbers the window constraint isn't monotonic. Instead, a subarray `(l, r]` sums to k exactly when `prefix[r] - prefix[l] = k`, so for each `r` you count earlier prefixes equal to `prefix[r] - k` in a hash map. O(n) time, O(n) space.
+<Accordion title="Why does &quot;subarray sum equals k&quot; need a hash map and not a sliding window?">
+With negative numbers the window constraint isn't monotonic. Instead, a subarray `(l, r]` sums to k exactly when `prefix[r] - prefix[l] = k`, so for each `r` you count earlier prefixes equal to `prefix[r] - k` in a hash map. O(n) time, O(n) space.
+</Accordion>
 
-> [!question]- Derive the 2D rectangle query formula.
-> Take the big rectangle to `(r2, c2)`, subtract the strip above `r1` and the strip left of `c1`. The top-left corner block was subtracted twice, so add `P[r1][c1]` back once.
+<Accordion title="Derive the 2D rectangle query formula.">
+Take the big rectangle to `(r2, c2)`, subtract the strip above `r1` and the strip left of `c1`. The top-left corner block was subtracted twice, so add `P[r1][c1]` back once.
+</Accordion>
 
-> [!question]- What if the array is updated between queries?
-> A prefix array needs O(n) to update. Use a Fenwick tree (O(log n) update and prefix query, small constant) or a segment tree (also supports range max/min and lazy range updates).
+<Accordion title="What if the array is updated between queries?">
+A prefix array needs O(n) to update. Use a Fenwick tree (O(log n) update and prefix query, small constant) or a segment tree (also supports range max/min and lazy range updates).
+</Accordion>
 
-> [!question]- What is a difference array?
-> The inverse of a prefix sum. To add `v` to every element in `[l, r]`, do `diff[l] += v; diff[r + 1] -= v`. After all updates, one prefix-sum pass over `diff` gives the final array. Many range updates become O(1) each.
+<Accordion title="What is a difference array?">
+The inverse of a prefix sum. To add `v` to every element in `[l, r]`, do `diff[l] += v; diff[r + 1] -= v`. After all updates, one prefix-sum pass over `diff` gives the final array. Many range updates become O(1) each.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Sliding Window]] · [[Hash Tables]] · [[Arrays & Strings]] · [[Dynamic Programming]] · [[Two Pointers]]
-- [[Big-O & Complexity Analysis]]
-- Course: [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Course: [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - [LeetCode's Interview Crash Course: Data Structures and Algorithms](https://leetcode.com/explore/interview/card/leetcodes-interview-crash-course-data-structures-and-algorithms/) (Arrays and strings, prefix sum)

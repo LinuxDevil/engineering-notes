@@ -1,12 +1,16 @@
 ---
+title: "ML Core Concepts"
 tags: [ai-ml, ai-ml/machine-learning]
 aliases: [Concepts, ML Concepts, Vectors and Neural Networks, One Hot Encoding]
 updated: 2026-09-27
 ---
 # ML Core Concepts
 
-> [!tldr] TL;DR
-> The small vocabulary you need before anything else in ML: a **vector** is a list of numbers that places an item in a space; **embeddings** are vectors produced by a neural network so that similar things land close together; a **neural network** is layers of weighted nodes with activation functions; **transformers** are the neural network design behind today's LLMs; **one-hot encoding** turns categories into numbers a model can use. Each concept has its own deeper note, linked below.
+<Note>
+**TL;DR**
+
+The small vocabulary you need before anything else in ML: a **vector** is a list of numbers that places an item in a space; **embeddings** are vectors produced by a neural network so that similar things land close together; a **neural network** is layers of weighted nodes with activation functions; **transformers** are the neural network design behind today's LLMs; **one-hot encoding** turns categories into numbers a model can use. Each concept has its own deeper note, linked below.
+</Note>
 
 ## What is a vector?
 
@@ -30,10 +34,13 @@ Each vector in a vector database stands for one item: a word, a document chunk, 
 Uses:
 - **Similarity and semantic search**: image search, "more like this", product, song or show recommendations.
 - **Machine learning and deep learning**: connecting related items lets models do more complex tasks.
-- **LLM apps**: vector search is how [[Retrieval-Augmented Generation (RAG)]] finds relevant text to put into a prompt.
+- **LLM apps**: vector search is how [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG)) finds relevant text to put into a prompt.
 
-> [!note] Correction to the original note
-> The original said LLMs like ChatGPT "rely on vector databases" to understand language. That's not quite right: an LLM's understanding lives in its own weights and internal embeddings. Vector databases are an **external** tool that apps put *around* an LLM (for search, memory and RAG). See [[Embeddings & Semantic Search]] and [[Vector Databases & pgvector]].
+<Note>
+**Correction to the original note**
+
+The original said LLMs like ChatGPT "rely on vector databases" to understand language. That's not quite right: an LLM's understanding lives in its own weights and internal embeddings. Vector databases are an **external** tool that apps put *around* an LLM (for search, memory and RAG). See [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search) and [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector).
+</Note>
 
 ## What are embeddings?
 
@@ -45,7 +52,7 @@ embed("How do I reset my password?")   # -> [0.012, -0.093, ..., 0.044]  (e.g. 1
 embed("I forgot my login credentials")  # -> a nearby vector, even with no shared words
 ```
 
-Deep dive: [[Embeddings & Semantic Search]].
+Deep dive: [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search).
 
 ## What is a neural network?
 
@@ -53,7 +60,7 @@ A neural network (artificial neural network) is a computing architecture loosely
 
 Neural networks are the engine of **deep learning**, the branch of ML that uses networks with many layers. With enough data, a deep network can, for example, recognise objects in photos it has never seen. (Deep learning can learn from labelled *or* unlabelled data; the original note implied it only uses unlabelled data.)
 
-![[image.png]]
+![image](/Attachments/image.png)
 
 ## How do neural networks work?
 
@@ -69,10 +76,13 @@ Each node computes a **weighted sum** of its inputs plus a **bias**, then applie
 output = activation(w1*x1 + w2*x2 + ... + wn*xn + b)
 ```
 
-The original note described this as "if the result exceeds a threshold, pass data on, otherwise pass nothing". That's exactly how the classic **perceptron** (step activation) works. Modern networks use smooth activations like ReLU or sigmoid, so every node always outputs a number and the network can be trained with gradients. See [[Neural Networks & Deep Learning Basics]].
+The original note described this as "if the result exceeds a threshold, pass data on, otherwise pass nothing". That's exactly how the classic **perceptron** (step activation) works. Modern networks use smooth activations like ReLU or sigmoid, so every node always outputs a number and the network can be trained with gradients. See [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics).
 
-> [!example] Analogy: the Acme accounting department
-> Managers approve expenses below $1,000, directors below $10,000, and the CFO anything above. An expense report enters at the bottom (input layer), each manager or director is a node that decides whether to pass it up (activation), and the final approval is the output. Just as a manager can consult a peer before escalating, networks can be wired in many ways, including connections that go sideways or backwards.
+<Info>
+**Analogy: the Acme accounting department**
+
+Managers approve expenses below $1,000, directors below $10,000, and the CFO anything above. An expense report enters at the bottom (input layer), each manager or director is a node that decides whether to pass it up (activation), and the final approval is the output. Just as a manager can consult a peer before escalating, networks can be wired in many ways, including connections that go sideways or backwards.
+</Info>
 
 ## Types of neural networks
 
@@ -88,43 +98,43 @@ A non-exhaustive list:
 
 **Perceptron**: the simplest network, inputs connected straight to an output node.
 
-![[Perceptron.png]]
+![Perceptron](/Attachments/Perceptron.png)
 
 **Multilayer perceptron (MLP)**: adds one or more hidden layers to the perceptron.
 
-![[multilayer-perceptron-neural-network.png]]
+![multilayer-perceptron-neural-network](/Attachments/multilayer-perceptron-neural-network.png)
 
 **Feed-forward**: information only flows forward, input to output, no loops.
 
-![[feed-forward-neural-network-diagram.png]]
+![feed-forward-neural-network-diagram](/Attachments/feed-forward-neural-network-diagram.png)
 
 **Recurrent (RNN)**: outputs can loop back and affect earlier nodes, giving the network a memory of previous steps. Used for sequences before transformers took over.
 
-![[recurrent-neural-network-diagram.png]]
+![recurrent-neural-network-diagram](/Attachments/recurrent-neural-network-diagram.png)
 
 **Modular**: two or more networks combined to produce the output.
 
-![[modular-neural-network.png]]
+![modular-neural-network](/Attachments/modular-neural-network.png)
 
 **Radial basis function (RBF)**: nodes use a radial basis function (output depends on distance from a centre point).
 
-![[radial-basis-function-neural-network.png]]
+![radial-basis-function-neural-network](/Attachments/radial-basis-function-neural-network.png)
 
 **Liquid state machine**: nodes are randomly connected to each other (a form of reservoir computing).
 
-![[liquid-state-machine-neural-network-diagram.png]]
+![liquid-state-machine-neural-network-diagram](/Attachments/liquid-state-machine-neural-network-diagram.png)
 
 **Residual (ResNet)**: "skip connections" let data jump ahead (identity mapping), adding early-layer output to later-layer output. This is what made very deep networks trainable, and transformers use the same trick.
 
-![[residual-neural-network-diagram.png]]
+![residual-neural-network-diagram](/Attachments/residual-neural-network-diagram.png)
 
-Also important but not pictured: **convolutional networks (CNNs)** for images; see [[Neural Networks & Deep Learning Basics]].
+Also important but not pictured: **convolutional networks (CNNs)** for images; see [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics).
 
 ## What is a transformer?
 
 Transformers deserve their own mention because nearly every modern LLM is one. Introduced by Google researchers in 2017 ("Attention Is All You Need"), they use **self-attention**: every token in a sequence looks at every other token and decides how much each one matters for its own meaning.
 
-Earlier text models (RNNs) processed words one at a time and tended to "forget" the start of a long sentence by the time they reached the end. Attention looks at the whole sequence at once, so transformers capture long-range relationships and can be trained in parallel on huge datasets. They are the core of generative AI and LLMs. Deep dive: [[Transformers & How LLMs Work]].
+Earlier text models (RNNs) processed words one at a time and tended to "forget" the start of a long sentence by the time they reached the end. Attention looks at the whole sequence at once, so transformers capture long-range relationships and can be trained in parallel on huge datasets. They are the core of generative AI and LLMs. Deep dive: [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work).
 
 ## What is one-hot encoding?
 
@@ -146,23 +156,27 @@ Why not just use `red=1, green=2, blue=3`? Because the model would assume an ord
 
 ## Interview questions
 
-> [!question]- What is the difference between a vector and an embedding?
-> A vector is any list of numbers. An embedding is a vector *learned* by a model so that distance in the space reflects similarity in meaning. All embeddings are vectors; not all vectors are embeddings (a one-hot vector isn't).
+<Accordion title="What is the difference between a vector and an embedding?">
+A vector is any list of numbers. An embedding is a vector *learned* by a model so that distance in the space reflects similarity in meaning. All embeddings are vectors; not all vectors are embeddings (a one-hot vector isn't).
+</Accordion>
 
-> [!question]- Why do neural networks need activation functions?
-> Without a non-linear activation, stacking layers just produces another linear function, so the network could only learn straight-line relationships. Non-linear activations (ReLU, sigmoid, tanh) let it approximate complex functions.
+<Accordion title="Why do neural networks need activation functions?">
+Without a non-linear activation, stacking layers just produces another linear function, so the network could only learn straight-line relationships. Non-linear activations (ReLU, sigmoid, tanh) let it approximate complex functions.
+</Accordion>
 
-> [!question]- Why did transformers replace RNNs for language?
-> Attention sees the whole sequence at once, captures long-range dependencies without the vanishing-gradient "forgetting" of RNNs, and can be trained in parallel on GPUs, which made scaling to huge datasets practical.
+<Accordion title="Why did transformers replace RNNs for language?">
+Attention sees the whole sequence at once, captures long-range dependencies without the vanishing-gradient "forgetting" of RNNs, and can be trained in parallel on GPUs, which made scaling to huge datasets practical.
+</Accordion>
 
-> [!question]- When would you use one-hot encoding and when not?
-> Use it for nominal categories with a small number of values. Avoid it for high-cardinality features (thousands of IDs), where it creates huge sparse matrices; use embeddings, hashing or target encoding instead.
+<Accordion title="When would you use one-hot encoding and when not?">
+Use it for nominal categories with a small number of values. Avoid it for high-cardinality features (thousands of IDs), where it creates huge sparse matrices; use embeddings, hashing or target encoding instead.
+</Accordion>
 
 ## Related
-- [[Machine Learning]] (course index) · [[AI & ML Index]]
-- [[Neural Networks & Deep Learning Basics]] · [[Transformers & How LLMs Work]]
-- [[Embeddings & Semantic Search]] · [[Vector Databases & pgvector]] · [[Retrieval-Augmented Generation (RAG)]]
-- [[Supervised vs Unsupervised Machine learning]]
+- [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics) · [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work)
+- [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search) · [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector) · [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG))
+- [Supervised vs Unsupervised Machine learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Supervised%20vs%20Unsupervised%20Machine%20learning)
 
 ## Sources
 - Cloudflare Learning Center: [What is a vector database?](https://www.cloudflare.com/learning/ai/what-is-vector-database/) · [What is a neural network?](https://www.cloudflare.com/learning/ai/what-is-neural-network/) · [What are embeddings?](https://www.cloudflare.com/learning/ai/what-are-embeddings/)

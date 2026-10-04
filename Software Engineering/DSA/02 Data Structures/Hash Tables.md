@@ -1,12 +1,16 @@
 ---
+title: "Hash Tables"
 tags: [dsa, dsa/data-structures]
 aliases: [Hash Table, Hash Map, HashMap, Hashing, Dictionary, Hash Set, Sets]
 updated: 2026-09-27
 ---
 # Hash Tables
 
-> [!tldr] TL;DR
-> A **hash table** maps keys to values by running each key through a **hash function** that picks an array slot, giving **O(1) average** insert, lookup and delete. Different keys can land in the same slot (**collisions**), handled by **chaining** (a small list per slot) or **open addressing** (probe for another free slot). Keeping the **load factor** low by **resizing** keeps it fast; a bad hash or an attacker who forces collisions (**hash flooding**) degrades it to **O(n)**. In JS use `Map`/`Set` (not plain objects) for dynamic keys; in Python use `dict`/`set`, which are insertion-ordered since 3.7.
+<Note>
+**TL;DR**
+
+A **hash table** maps keys to values by running each key through a **hash function** that picks an array slot, giving **O(1) average** insert, lookup and delete. Different keys can land in the same slot (**collisions**), handled by **chaining** (a small list per slot) or **open addressing** (probe for another free slot). Keeping the **load factor** low by **resizing** keeps it fast; a bad hash or an attacker who forces collisions (**hash flooding**) degrades it to **O(n)**. In JS use `Map`/`Set` (not plain objects) for dynamic keys; in Python use `dict`/`set`, which are insertion-ordered since 3.7.
+</Note>
 
 ## The idea
 
@@ -60,7 +64,7 @@ flowchart LR
 
 **Load factor** `α = n / capacity`. Expected chain length (or probe count) grows with `α`; for linear probing it blows up as `α → 1`.
 
-When `α` passes a threshold, the table allocates a bigger array (usually 2x) and **rehashes** every entry into it, because `hash mod capacity` changes. One resize is O(n), but doubling makes insert **amortized O(1)**, exactly like dynamic arrays ([[Arrays & Strings]]).
+When `α` passes a threshold, the table allocates a bigger array (usually 2x) and **rehashes** every entry into it, because `hash mod capacity` changes. One resize is O(n), but doubling makes insert **amortized O(1)**, exactly like dynamic arrays ([Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)).
 
 | Runtime | Strategy | Resize threshold |
 |---|---|---|
@@ -90,20 +94,23 @@ String and bytes hashes are **randomized per process** (hash randomization, defa
 | JSON | native | needs conversion (`Object.fromEntries`) |
 | Best for | fixed-shape records | dynamic keyed collections, counters, caches |
 
-`Set` stores unique values with the same identity semantics (`SameValueZero`: `NaN` equals `NaN`; two different objects with equal contents are different keys). Details and `WeakMap`/`WeakRef`: [[Collections - Map, Set, WeakMap & WeakRef]].
+`Set` stores unique values with the same identity semantics (`SameValueZero`: `NaN` equals `NaN`; two different objects with equal contents are different keys). Details and `WeakMap`/`WeakRef`: [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef).
 
-> [!info]+ 🆕 2025–2026
-> **ES2025** (ratified June 2025) added set algebra to `Set.prototype`: `union`, `intersection`, `difference`, `symmetricDifference`, `isSubsetOf`, `isSupersetOf`, `isDisjointFrom`. They return new `Set`s (or booleans) and accept any "set-like" argument (has `size`, `has`, `keys`), including a `Map`.
-> ```ts
-> const a = new Set([1, 2, 3]);
-> const b = new Set([2, 3, 4]);
-> a.intersection(b);        // Set {2, 3}
-> a.union(b);               // Set {1, 2, 3, 4}
-> a.difference(b);          // Set {1}
-> a.symmetricDifference(b); // Set {1, 4}
-> a.isDisjointFrom(new Set([9])); // true
-> ```
-> Python has had these forever: `a & b`, `a | b`, `a - b`, `a ^ b`, `a <= b`, `a.isdisjoint(b)`.
+<Info>
+**🆕 2025–2026**
+
+**ES2025** (ratified June 2025) added set algebra to `Set.prototype`: `union`, `intersection`, `difference`, `symmetricDifference`, `isSubsetOf`, `isSupersetOf`, `isDisjointFrom`. They return new `Set`s (or booleans) and accept any "set-like" argument (has `size`, `has`, `keys`), including a `Map`.
+```ts
+const a = new Set([1, 2, 3]);
+const b = new Set([2, 3, 4]);
+a.intersection(b);        // Set {2, 3}
+a.union(b);               // Set {1, 2, 3, 4}
+a.difference(b);          // Set {1}
+a.symmetricDifference(b); // Set {1, 4}
+a.isDisjointFrom(new Set([9])); // true
+```
+Python has had these forever: `a & b`, `a | b`, `a - b`, `a ^ b`, `a <= b`, `a.isdisjoint(b)`.
+</Info>
 
 ## Complexity
 
@@ -180,7 +187,7 @@ def group_anagrams(strs: list[str]) -> list[list[str]]:
 
 ### Prefix sum + hash map (LeetCode 560)
 
-Count subarrays summing to `k`: store how many times each running sum was seen. See [[Prefix Sum]].
+Count subarrays summing to `k`: store how many times each running sum was seen. See [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum).
 
 ```ts
 function subarraySum(nums: number[], k: number): number {
@@ -342,8 +349,8 @@ Why tombstones: if you delete `'bee'` (which probed from slot 0 to 1) by marking
 - **Iteration order**: Python `dict` and JS `Map`/`Set` preserve insertion order; Python `set`, Java `HashMap` and Go maps do not (Go deliberately randomizes).
 - **Modifying while iterating**: Python raises `RuntimeError: dictionary changed size during iteration`; iterate over `list(d)` instead.
 - **Floating-point keys**: `0.1 + 0.2` is not `0.3`. Round or use integers.
-- **Memory**: hash tables trade space for speed. A Python dict entry costs tens of bytes plus the key and value objects. For millions of small ints, a sorted array plus [[Binary Search]] or a bitset may be far smaller.
-- **Not sorted**: if you need ordered keys or range queries ("all keys between a and b"), use a balanced BST / sorted container ([[Trees & Binary Search Trees]]), not a hash table.
+- **Memory**: hash tables trade space for speed. A Python dict entry costs tens of bytes plus the key and value objects. For millions of small ints, a sorted array plus [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) or a bitset may be far smaller.
+- **Not sorted**: if you need ordered keys or range queries ("all keys between a and b"), use a balanced BST / sorted container ([Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees)), not a hash table.
 
 ## Senior perspective
 
@@ -354,7 +361,7 @@ Why tombstones: if you delete `'bee'` (which probed from slot 0 to 1) by marking
 - **Swiss tables** (Abseil `flat_hash_map`, Rust `hashbrown`) use open addressing with a separate array of 1-byte metadata tags scanned with SIMD, which is very cache friendly. They show why "same Big-O" hash tables can differ several-fold in speed.
 - **Probabilistic cousins**: Bloom filters (set membership with false positives, tiny memory) and HyperLogLog (count distinct). Useful when an exact set won't fit in memory.
 - **V8 and CPython details**: V8 objects with a stable shape use hidden classes (not hash tables) for fast property access; adding/deleting many keys pushes them into dictionary mode. `Map` is implemented as a deterministic (insertion-ordered) hash table. CPython dicts are also the backbone of the language: module globals, class attributes and instance `__dict__` (with key-sharing dicts for instances).
-- **In review, ask**: are keys attacker-controlled (flooding, unbounded growth)? Is there eviction or a size cap (a cache without eviction is a leak; see [[Linked Lists]] for LRU)? Is `Object` being used where `Map` belongs? Is a composite key built safely (`${a},${b}` is ambiguous if `a` can contain commas)?
+- **In review, ask**: are keys attacker-controlled (flooding, unbounded growth)? Is there eviction or a size cap (a cache without eviction is a leak; see [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) for LRU)? Is `Object` being used where `Map` belongs? Is a composite key built safely (`${a},${b}` is ambiguous if `a` can contain commas)?
 - **In interviews**: "hash map" is the answer to "can we trade space for time?" Say the average vs worst case explicitly, and mention that string keys cost O(k) to hash.
 
 ## Classic LeetCode problems
@@ -372,36 +379,44 @@ Why tombstones: if you delete `'bee'` (which probed from slot 0 to 1) by marking
 
 ## Interview questions
 
-> [!question]- Why is hash table lookup O(1) on average but O(n) in the worst case?
-> A good hash spreads keys evenly, so each slot holds O(1) entries when the load factor is bounded. If many keys collide (bad hash or adversarial input), one slot holds O(n) entries and lookups degrade to a linear scan (O(log n) with Java's tree bins).
+<Accordion title="Why is hash table lookup O(1) on average but O(n) in the worst case?">
+A good hash spreads keys evenly, so each slot holds O(1) entries when the load factor is bounded. If many keys collide (bad hash or adversarial input), one slot holds O(n) entries and lookups degrade to a linear scan (O(log n) with Java's tree bins).
+</Accordion>
 
-> [!question]- Chaining vs open addressing: pros and cons?
-> Chaining is simple, tolerates load factor above 1, and deletes easily, but chases pointers. Open addressing stores everything in one array (cache friendly, less allocation) but must keep load below 1, suffers clustering, and needs tombstones or backward-shift for deletes.
+<Accordion title="Chaining vs open addressing: pros and cons?">
+Chaining is simple, tolerates load factor above 1, and deletes easily, but chases pointers. Open addressing stores everything in one array (cache friendly, less allocation) but must keep load below 1, suffers clustering, and needs tombstones or backward-shift for deletes.
+</Accordion>
 
-> [!question]- What is the load factor and why do tables resize?
-> `n / capacity`. As it grows, collisions and probe lengths grow. Tables double capacity and rehash every key past a threshold (0.75 in Java, ~2/3 in CPython). Doubling keeps insert amortized O(1).
+<Accordion title="What is the load factor and why do tables resize?">
+`n / capacity`. As it grows, collisions and probe lengths grow. Tables double capacity and rehash every key past a threshold (0.75 in Java, ~2/3 in CPython). Doubling keeps insert amortized O(1).
+</Accordion>
 
-> [!question]- Why is the Python dict ordered, and is a set ordered too?
-> CPython 3.6 introduced a compact layout: a sparse index table pointing into a dense, insertion-ordered entries array. Python 3.7 made insertion order a language guarantee. `set` uses a different layout and is not ordered.
+<Accordion title="Why is the Python dict ordered, and is a set ordered too?">
+CPython 3.6 introduced a compact layout: a sparse index table pointing into a dense, insertion-ordered entries array. Python 3.7 made insertion order a language guarantee. `set` uses a different layout and is not ordered.
+</Accordion>
 
-> [!question]- When should you use `Map` instead of a plain object in JS?
-> When keys are dynamic or not strings, when you add/delete often, when you need `size` or reliable insertion-order iteration, or when keys might collide with prototype properties like `__proto__`. Objects are for fixed-shape records and JSON.
+<Accordion title="When should you use `Map` instead of a plain object in JS?">
+When keys are dynamic or not strings, when you add/delete often, when you need `size` or reliable insertion-order iteration, or when keys might collide with prototype properties like `__proto__`. Objects are for fixed-shape records and JSON.
+</Accordion>
 
-> [!question]- What is hash flooding and how do languages defend against it?
-> An attacker crafts many colliding keys so every insert is O(n), causing CPU-exhaustion DoS (famous 2011 disclosure). Defenses: randomized keyed hashes (SipHash with a per-process seed), tree bins for bounded worst case, and limits on input key counts.
+<Accordion title="What is hash flooding and how do languages defend against it?">
+An attacker crafts many colliding keys so every insert is O(n), causing CPU-exhaustion DoS (famous 2011 disclosure). Defenses: randomized keyed hashes (SipHash with a per-process seed), tree bins for bounded worst case, and limits on input key counts.
+</Accordion>
 
-> [!question]- How would you use a list as a dictionary key in Python, or an array as a Map key in JS?
-> Python: convert to a `tuple` (immutable, hashable). JS: `Map` compares objects by identity, so derive a primitive key such as `JSON.stringify(arr)` or `arr.join(",")` (ensure the separator can't appear in the values).
+<Accordion title="How would you use a list as a dictionary key in Python, or an array as a Map key in JS?">
+Python: convert to a `tuple` (immutable, hashable). JS: `Map` compares objects by identity, so derive a primitive key such as `JSON.stringify(arr)` or `arr.join(",")` (ensure the separator can't appear in the values).
+</Accordion>
 
-> [!question]- Design a data structure with O(1) insert, delete and getRandom.
-> Keep values in an array and a map from value to its index. Insert: push and record the index. Delete: swap the element with the last one, update the moved element's index, pop. getRandom: pick a random index. (LeetCode 380.)
+<Accordion title="Design a data structure with O(1) insert, delete and getRandom.">
+Keep values in an array and a map from value to its index. Insert: push and record the index. Delete: swap the element with the last one, update the moved element's index, pop. getRandom: pick a random index. (LeetCode 380.)
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Arrays & Strings]] · [[Linked Lists]] · [[Trees & Binary Search Trees]] · [[Tries]]
-- Patterns: [[Prefix Sum]] · [[Sliding Window]] · [[Two Pointers]]
-- Frontend: [[Collections - Map, Set, WeakMap & WeakRef]] · [[Memory Management & Garbage Collection]]
-- [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) · [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) · [Tries](/Software%20Engineering/DSA/02%20Data%20Structures/Tries)
+- Patterns: [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers)
+- Frontend: [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef) · [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 11, hash tables)

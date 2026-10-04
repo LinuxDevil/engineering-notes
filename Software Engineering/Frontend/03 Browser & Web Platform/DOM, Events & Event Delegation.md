@@ -1,12 +1,16 @@
 ---
+title: "DOM, Events & Event Delegation"
 tags: [frontend, frontend/browser, frontend/dom]
 aliases: [DOM, Events, Event Delegation, Event Propagation, Event Bubbling, DOM API]
 updated: 2026-09-27
 ---
 # DOM, Events & Event Delegation
 
-> [!tldr] TL;DR
-> The **DOM** is the live object tree the browser builds from HTML; the **BOM** is everything else the browser exposes (`window`, `location`, `history`, `navigator`). Events travel **capture → target → bubble**, which lets one listener on a parent handle events for many children (**event delegation**). Know `stopPropagation` vs `preventDefault`, passive listeners, and `AbortSignal` cleanup; and remember React wraps all this in its own delegated event system.
+<Note>
+**TL;DR**
+
+The **DOM** is the live object tree the browser builds from HTML; the **BOM** is everything else the browser exposes (`window`, `location`, `history`, `navigator`). Events travel **capture → target → bubble**, which lets one listener on a parent handle events for many children (**event delegation**). Know `stopPropagation` vs `preventDefault`, passive listeners, and `AbortSignal` cleanup; and remember React wraps all this in its own delegated event system.
+</Note>
 
 ## 1. DOM vs BOM
 
@@ -37,21 +41,24 @@ Performance tips (from the "Optimizing query performance" item of the FE system 
 - **Scope** queries to a container: `list.querySelectorAll('li')` instead of `document.querySelectorAll('#list li')`.
 - `getElementById` and class lookups are fast; complex selectors (`div > ul li:nth-child(odd) a`) are slower. Browsers match selectors **right to left**, so the right-most part should be specific.
 - Beware live collections in loops: removing items while iterating a live `HTMLCollection` skips elements. Convert with `Array.from()` first.
-- Batch DOM writes (`DocumentFragment`, `append(...nodes)`, `replaceChildren()`) to avoid repeated reflows (see [[How Browsers Render - Critical Rendering Path]]).
+- Batch DOM writes (`DocumentFragment`, `append(...nodes)`, `replaceChildren()`) to avoid repeated reflows (see [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)).
 
-> [!example] Building a list without N reflows
-> ```js
-> const frag = document.createDocumentFragment();
-> for (const flight of flights) {
->   const li = document.createElement('li');
->   li.textContent = `${flight.from} → ${flight.to}`;   // textContent, not innerHTML (XSS-safe)
->   li.dataset.id = flight.id;
->   frag.append(li);
-> }
-> list.replaceChildren(frag); // one insertion, one layout
-> ```
+<Info>
+**Building a list without N reflows**
 
-Modern DOM manipulation methods: `append`, `prepend`, `before`, `after`, `replaceWith`, `replaceChildren`, `remove`, `toggleAttribute`, `classList.toggle(name, force)`. For HTML strings from users, never use `innerHTML` unsanitized; see [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] and `setHTML()` in [[Modern Web Platform APIs 2025-2026]].
+```js
+const frag = document.createDocumentFragment();
+for (const flight of flights) {
+  const li = document.createElement('li');
+  li.textContent = `${flight.from} → ${flight.to}`;   // textContent, not innerHTML (XSS-safe)
+  li.dataset.id = flight.id;
+  frag.append(li);
+}
+list.replaceChildren(frag); // one insertion, one layout
+```
+</Info>
+
+Modern DOM manipulation methods: `append`, `prepend`, `before`, `after`, `replaceWith`, `replaceChildren`, `remove`, `toggleAttribute`, `classList.toggle(name, force)`. For HTML strings from users, never use `innerHTML` unsanitized; see [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) and `setHTML()` in [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026).
 
 ## 3. HTML attributes vs DOM properties
 
@@ -59,23 +66,26 @@ Modern DOM manipulation methods: `append`, `prepend`, `before`, `after`, `replac
 - **Properties** live on the JS object and can be any type: `input.value`, `input.checked` (boolean), `el.style` (object).
 - Many attributes are **reflected** into properties (`id`, `className` ↔ `class`, `href`), but not all stay in sync.
 
-> [!example] The classic `value` trap
-> ```js
-> // <input id="city" value="Dubai">
-> const input = document.getElementById('city');
-> // user types "Cairo"
-> input.value;                    // "Cairo"  ← current state (property)
-> input.getAttribute('value');    // "Dubai"  ← initial/default value (attribute)
-> input.defaultValue;             // "Dubai"
->
-> a.getAttribute('href');         // "/flights"          (as written)
-> a.href;                         // "https://site.com/flights" (resolved)
->
-> el.dataset.flightId;            // reads data-flight-id
-> ```
+<Info>
+**The classic `value` trap**
+
+```js
+// <input id="city" value="Dubai">
+const input = document.getElementById('city');
+// user types "Cairo"
+input.value;                    // "Cairo"  ← current state (property)
+input.getAttribute('value');    // "Dubai"  ← initial/default value (attribute)
+input.defaultValue;             // "Dubai"
+
+a.getAttribute('href');         // "/flights"          (as written)
+a.href;                         // "https://site.com/flights" (resolved)
+
+el.dataset.flightId;            // reads data-flight-id
+```
+</Info>
 
 - Boolean attributes (`disabled`, `checked`, `hidden`) are true when **present**, regardless of value: `disabled="false"` still disables. Use `el.disabled = false` or `removeAttribute`.
-- Custom elements often need to reflect properties to attributes manually (see [[Web Components & Shadow DOM]]).
+- Custom elements often need to reflect properties to attributes manually (see [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM)).
 
 ## 4. Event phases: capture → target → bubble
 
@@ -122,10 +132,13 @@ form.addEventListener('submit', (e) => {
 modal.addEventListener('click', (e) => e.stopPropagation()); // clicks inside don't reach the backdrop
 ```
 
-> [!warning] Common pitfalls
-> - `stopPropagation` breaks things you don't own: analytics listeners on `document`, "click outside to close" menus, delegated handlers. Prefer checking `e.target` in the parent, or `e.defaultPrevented` flags.
-> - `return false` only prevents default in inline `onclick` handlers / jQuery, not in `addEventListener`.
-> - Capture listeners run **before** the target's listeners, so a child calling `stopPropagation()` in bubble phase cannot stop an ancestor's capture listener.
+<Warning>
+**Common pitfalls**
+
+- `stopPropagation` breaks things you don't own: analytics listeners on `document`, "click outside to close" menus, delegated handlers. Prefer checking `e.target` in the parent, or `e.defaultPrevented` flags.
+- `return false` only prevents default in inline `onclick` handlers / jQuery, not in `addEventListener`.
+- Capture listeners run **before** the target's listeners, so a child calling `stopPropagation()` in bubble phase cannot stop an ancestor's capture listener.
+</Warning>
 
 ## 6. Event delegation
 
@@ -133,25 +146,28 @@ Instead of attaching a listener to each child, attach **one** listener to a comm
 
 Benefits: fewer listeners (memory), works for **elements added later** (no re-binding), simpler cleanup.
 
-> [!example] Delegated click handling for a results list
-> ```js
-> const list = document.querySelector('#results');
->
-> list.addEventListener('click', (e) => {
->   // target may be a <span> or <img> inside the button, so walk up
->   const btn = e.target.closest('button[data-action]');
->   if (!btn || !list.contains(btn)) return;
->
->   const id = btn.closest('li').dataset.id;
->   switch (btn.dataset.action) {
->     case 'select':   selectFlight(id); break;
->     case 'favorite': toggleFavorite(id); break;
->   }
-> });
->
-> // New rows appended later work automatically:
-> list.insertAdjacentHTML('beforeend', `<li data-id="EK12"><button data-action="select">Select</button></li>`);
-> ```
+<Info>
+**Delegated click handling for a results list**
+
+```js
+const list = document.querySelector('#results');
+
+list.addEventListener('click', (e) => {
+  // target may be a <span> or <img> inside the button, so walk up
+  const btn = e.target.closest('button[data-action]');
+  if (!btn || !list.contains(btn)) return;
+
+  const id = btn.closest('li').dataset.id;
+  switch (btn.dataset.action) {
+    case 'select':   selectFlight(id); break;
+    case 'favorite': toggleFavorite(id); break;
+  }
+});
+
+// New rows appended later work automatically:
+list.insertAdjacentHTML('beforeend', `<li data-id="EK12"><button data-action="select">Select</button></li>`);
+```
+</Info>
 
 - Use `closest()` rather than `e.target.matches()` because the click target is often a nested element.
 - For non-bubbling events use the bubbling equivalent (`focusin` instead of `focus`) or a capture listener.
@@ -188,15 +204,18 @@ document.addEventListener('pointermove', onMove, { signal, passive: true });
 controller.abort();
 ```
 
-> [!example] Cleanup in a React effect
-> ```jsx
-> useEffect(() => {
->   const controller = new AbortController();
->   window.addEventListener('keydown', (e) => e.key === 'Escape' && close(), { signal: controller.signal });
->   fetch(`/api/flights/${id}`, { signal: controller.signal }).then(/* ... */);
->   return () => controller.abort(); // removes listener AND cancels the fetch
-> }, [id]);
-> ```
+<Info>
+**Cleanup in a React effect**
+
+```jsx
+useEffect(() => {
+  const controller = new AbortController();
+  window.addEventListener('keydown', (e) => e.key === 'Escape' && close(), { signal: controller.signal });
+  fetch(`/api/flights/${id}`, { signal: controller.signal }).then(/* ... */);
+  return () => controller.abort(); // removes listener AND cancels the fetch
+}, [id]);
+```
+</Info>
 
 `removeEventListener` requires the **same function reference and same `capture` value**; anonymous functions can't be removed that way, which is why the `signal` approach is nicer.
 
@@ -222,7 +241,7 @@ document.addEventListener('flight:selected', (e) => console.log(e.detail.id));
 - **All React events propagate except `onScroll`** (since React 17, `onScroll` doesn't bubble, matching the browser).
 - Capture handlers (`onClickCapture`) run first, top-down, so they fire **even if a child calls `stopPropagation()`** in its `onClick`. Useful for analytics/logging.
 - `e.nativeEvent` gives the underlying DOM event. Since the React listener is on the root, a native `stopPropagation` in a listener on an inner DOM node stops React handlers from firing.
-- React 19.3's Fragment refs expose `addEventListener` on a `FragmentInstance` (see [[React 19 to 19.3 & React Compiler]]).
+- React 19.3's Fragment refs expose `addEventListener` on a `FragmentInstance` (see [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)).
 
 ```jsx
 function Toolbar() {
@@ -241,42 +260,50 @@ function Toolbar() {
 - **`input` vs `change`**: `input` fires on every edit; `change` on commit (blur/select).
 - `beforeinput`, `compositionstart/end` for IME-aware editors.
 - **Page lifecycle**: `DOMContentLoaded` (DOM parsed), `load` (all resources), `visibilitychange` (tab hidden, the reliable place to send analytics with `navigator.sendBeacon`), `pagehide`/`pageshow` (bfcache). Avoid `unload`: it prevents back/forward cache.
-- **Observable** (`el.when('click')`) is a Chromium-only proposal; see [[Modern Web Platform APIs 2025-2026]].
+- **Observable** (`el.when('click')`) is a Chromium-only proposal; see [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026).
 
 ## Interview questions
 
-> [!question]- Explain event bubbling and capturing.
-> An event first travels from `window` down to the target (capture), fires on the target, then bubbles back up to `window`. `addEventListener` listens in bubble phase by default; pass `{ capture: true }` for capture phase. Some events (focus, blur, mouseenter) don't bubble.
+<Accordion title="Explain event bubbling and capturing.">
+An event first travels from `window` down to the target (capture), fires on the target, then bubbles back up to `window`. `addEventListener` listens in bubble phase by default; pass `{ capture: true }` for capture phase. Some events (focus, blur, mouseenter) don't bubble.
+</Accordion>
 
-> [!question]- What is event delegation and why use it?
-> One listener on a common ancestor handles events from many descendants by inspecting `event.target` (usually via `closest()`). Fewer listeners, works for dynamically added children, easy cleanup. React uses it internally.
+<Accordion title="What is event delegation and why use it?">
+One listener on a common ancestor handles events from many descendants by inspecting `event.target` (usually via `closest()`). Fewer listeners, works for dynamically added children, easy cleanup. React uses it internally.
+</Accordion>
 
-> [!question]- stopPropagation vs preventDefault vs stopImmediatePropagation?
-> `stopPropagation` stops the event reaching other elements; `stopImmediatePropagation` also stops other listeners on the same element; `preventDefault` cancels the browser's default action but lets the event keep propagating.
+<Accordion title="stopPropagation vs preventDefault vs stopImmediatePropagation?">
+`stopPropagation` stops the event reaching other elements; `stopImmediatePropagation` also stops other listeners on the same element; `preventDefault` cancels the browser's default action but lets the event keep propagating.
+</Accordion>
 
-> [!question]- target vs currentTarget?
-> `target` is where the event originated; `currentTarget` is the element whose listener is currently executing (the delegate).
+<Accordion title="target vs currentTarget?">
+`target` is where the event originated; `currentTarget` is the element whose listener is currently executing (the delegate).
+</Accordion>
 
-> [!question]- What are passive event listeners?
-> Listeners that promise not to call `preventDefault()`, so the browser can start scrolling without waiting for JS. Important for `touchstart`, `touchmove`, `wheel`.
+<Accordion title="What are passive event listeners?">
+Listeners that promise not to call `preventDefault()`, so the browser can start scrolling without waiting for JS. Important for `touchstart`, `touchmove`, `wheel`.
+</Accordion>
 
-> [!question]- How do you remove many listeners at once?
-> Pass the same `AbortSignal` in each `addEventListener` options object and call `controller.abort()`.
+<Accordion title="How do you remove many listeners at once?">
+Pass the same `AbortSignal` in each `addEventListener` options object and call `controller.abort()`.
+</Accordion>
 
-> [!question]- Attribute vs property?
-> Attributes are the HTML's initial string values; properties are the live JS object state. `input.value` changes as the user types, `getAttribute('value')` keeps the initial value.
+<Accordion title="Attribute vs property?">
+Attributes are the HTML's initial string values; properties are the live JS object state. `input.value` changes as the user types, `getAttribute('value')` keeps the initial value.
+</Accordion>
 
-> [!question]- How does React's event system differ from the DOM's?
-> React delegates all events to the root container and passes SyntheticEvents with the same API. `onScroll` doesn't bubble, capture handlers use the `Capture` suffix, and handlers run in React's batching context.
+<Accordion title="How does React's event system differ from the DOM's?">
+React delegates all events to the root container and passes SyntheticEvents with the same API. `onScroll` doesn't bubble, capture handlers use the `Capture` suffix, and handlers run in React's batching context.
+</Accordion>
 
 ## Related
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Observer APIs]]
-- [[Web Components & Shadow DOM]]
-- [[Event Loop - Microtasks & Macrotasks]]
-- [[State, Props & Data Flow]]
-- [[Accessibility Essentials]] (keyboard events and focus)
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)
+- [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
+- [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials) (keyboard events and focus)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
 
 ## Sources
 - React docs: [Responding to events: propagation, stopPropagation, preventDefault](https://react.dev/learn/responding-to-events)

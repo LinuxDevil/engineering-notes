@@ -1,12 +1,15 @@
+---
+title: "Chapter 3  Monorepo versus Polyrepos for Microfrontends"
+---
 There are many strategy/patterns to manage the repos, like Git submodules, Git subtrees, Polyrepos, Monorepos and many more.
 
 Monorepos
     As the name suggests, mono is single and the code is managed in a single Git repository. This means all the team members work on a common single repository that contains multiple applications.
-![[Untitled 53.png]]
+![Untitled 53](/Attachments/Untitled%2053.png)
 
 Polyrepos
     This is where each app has its own repository, Team generally work on multiple repos switching repos as they work on different apps (But ideally, each time work on 1 repo).
-![[Untitled 54.png]]
+![Untitled 54](/Attachments/Untitled%2054.png)
 
 
 Differences between Monorepo and Polyrepos

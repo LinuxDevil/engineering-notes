@@ -1,14 +1,18 @@
 ---
+title: "Cron with Message Queues - Architecture"
 tags: [backend, backend/jobs, system-design/messaging]
 aliases: [Cron and Queues, Scheduler Enqueues, Scheduled Job Architecture, Cron that enqueues, Missed Schedule Alerting, Overlap Policy, Misfire Handling]
 updated: 2026-09-27
 ---
 # Cron with Message Queues - Architecture
 
-> [!tldr] TL;DR
-> A production scheduler should **trigger, not do**: on each tick it enqueues one message with an **idempotency key** (`<job>:<scheduledTime>`), and a pool of **workers** does the work with retries, timeouts, concurrency limits and metrics. That split gives you decoupling, horizontal scaling and backpressure, but it moves the hard problems into the design: exactly one trigger per tick across N scheduler replicas (leader election, locks or a queue-native scheduler that dedupes by key), **overlap policy** (Allow / Forbid / Replace), **misfires and catch-up**, **time zones and DST**, heartbeats for long jobs, DLQs for poison messages, and a **"missed schedule" alert** that fires when success *stops* happening.
+<Note>
+**TL;DR**
 
-This note is the theory behind the Acme Ops system. The hands-on notes are [[BullMQ Job Schedulers in Practice]], [[Kubernetes CronJobs in Practice]] and [[Job Control API - Pause, Resume, Run Now & Stop]]. Cron syntax lives in [[Cron Jobs]]; queue basics (retries, backoff, idempotency) in [[Background Jobs & Task Queues]].
+A production scheduler should **trigger, not do**: on each tick it enqueues one message with an **idempotency key** (`<job>:<scheduledTime>`), and a pool of **workers** does the work with retries, timeouts, concurrency limits and metrics. That split gives you decoupling, horizontal scaling and backpressure, but it moves the hard problems into the design: exactly one trigger per tick across N scheduler replicas (leader election, locks or a queue-native scheduler that dedupes by key), **overlap policy** (Allow / Forbid / Replace), **misfires and catch-up**, **time zones and DST**, heartbeats for long jobs, DLQs for poison messages, and a **"missed schedule" alert** that fires when success *stops* happening.
+</Note>
+
+This note is the theory behind the Acme Ops system. The hands-on notes are [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice), [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) and [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop). Cron syntax lives in [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs); queue basics (retries, backoff, idempotency) in [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues).
 
 ## 1. Why "cron that enqueues" beats "cron that does the work"
 
@@ -34,7 +38,7 @@ flowchart LR
 | **Manual "run now"** | SSH and run the script | enqueue the same message with a manual trigger |
 | **Host failure** | the tick is lost | message waits in the queue; another worker takes it |
 
-The cost: you now operate a queue (Redis, RabbitMQ, SQS, Postgres) and must think about delivery semantics. For one small script on one VM, plain cron with `flock` is fine ([[Cron Jobs]]).
+The cost: you now operate a queue (Redis, RabbitMQ, SQS, Postgres) and must think about delivery semantics. For one small script on one VM, plain cron with `flock` is fine ([Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs)).
 
 ## 2. The Acme Ops reference architecture
 
@@ -54,7 +58,7 @@ flowchart LR
 
 - The **scheduler** for BullMQ jobs is *inside* Redis: a Job Scheduler keeps exactly one delayed job for the next tick, with a deterministic id `repeat:<schedulerId>:<millis>`. No separate scheduler process exists, so there is nothing to leader-elect.
 - The **scheduler** for K8s jobs is the CronJob controller in `kube-controller-manager`, which is itself leader-elected.
-- **`jobs-api`** is the control plane that pauses, resumes, triggers and stops runs on either backend. See [[Job Control API - Pause, Resume, Run Now & Stop]].
+- **`jobs-api`** is the control plane that pauses, resumes, triggers and stops runs on either backend. See [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop).
 
 ## 3. Exactly one trigger per tick
 
@@ -68,7 +72,7 @@ Only one process schedules; the others stand by.
 |---|---|---|
 | **Kubernetes Lease** | `coordination.k8s.io/v1` Lease object, renewed every few seconds (client-go `leaderelection`, or a sidecar) | What the K8s controllers themselves use; the leader can lose the lease during a GC pause, so still make jobs idempotent |
 | **Redis lock** | `SET scheduler:leader <podId> NX PX 15000`, renew every 5 s with a Lua compare-and-extend | Simple. A single Redis is a single point of failure; Redlock across nodes is debated (see Kleppmann's critique). Use **fencing tokens** if correctness matters |
-| **Postgres advisory lock** | `SELECT pg_try_advisory_lock(hashtext('acme-scheduler'))` held on a dedicated session | Lock disappears when the session dies; no TTL tuning; one less system if you already run Postgres. See [[Locking & Concurrency Control]] |
+| **Postgres advisory lock** | `SELECT pg_try_advisory_lock(hashtext('acme-scheduler'))` held on a dedicated session | Lock disappears when the session dies; no TTL tuning; one less system if you already run Postgres. See [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) |
 | **Singleton workload** | a `replicas: 1` Deployment or StatefulSet | During a rollout or node failure you may get 0 or (briefly) 2; acceptable only with idempotent enqueue |
 
 ```ts
@@ -108,14 +112,17 @@ Let the queue store the schedule and dedupe the job id. Two replicas upserting t
 | Temporal Schedules | Workflow id `<scheduleId>-<timestamp>`; a running workflow id can't be started twice |
 | pg-boss / Solid Queue | unique constraint on (job, scheduled time) in the database |
 
-> [!tip] Rule of thumb
-> Whatever does the triggering, the **enqueue must be idempotent** on `(job, scheduledTime)`. Then duplicate triggers are harmless, and you can choose the simplest trigger mechanism.
+<Tip>
+**Rule of thumb**
+
+Whatever does the triggering, the **enqueue must be idempotent** on `(job, scheduledTime)`. Then duplicate triggers are harmless, and you can choose the simplest trigger mechanism.
+</Tip>
 
 ## 4. Fan-out, chaining and flows
 
 - **Fan-out**: one tick produces many jobs. `sync-inventory` could enqueue one job per supplier (`sync-inventory-<tick>-<supplierId>`) into a queue with concurrency 20 and a rate limit that matches the supplier API. Workers scale on that queue's depth.
 - **Chaining**: job A's success enqueues job B. Easy, but the chain is invisible and a failure in the middle needs custom handling.
-- **Flows (parent/child)**: a parent job waits until all its children finish, then runs with their results. BullMQ has `FlowProducer` and `moveToWaitingChildren`; Temporal, Step Functions and Airflow model this natively. `nightly-sales-report` uses this: one child per sales region, then the parent assembles the CSV. See [[BullMQ Job Schedulers in Practice#10. Flows - parent and child jobs]].
+- **Flows (parent/child)**: a parent job waits until all its children finish, then runs with their results. BullMQ has `FlowProducer` and `moveToWaitingChildren`; Temporal, Step Functions and Airflow model this natively. `nightly-sales-report` uses this: one child per sales region, then the parent assembles the CSV. See [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice#10-flows---parent-and-child-jobs).
 
 ```mermaid
 flowchart TB
@@ -127,7 +134,7 @@ When chains become DAGs with backfills and cross-job dependencies, switch to a w
 
 ## 5. Delivery semantics and idempotency keys per run
 
-Queues give you **at-least-once** delivery: a worker can crash after doing the work but before the ack, and the job runs again. "Exactly once" is at-least-once plus **idempotent effects** ([[Message Queues & Event Streaming]]).
+Queues give you **at-least-once** delivery: a worker can crash after doing the work but before the ack, and the job runs again. "Exactly once" is at-least-once plus **idempotent effects** ([Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming)).
 
 **Key the run by its scheduled time, not its start time**:
 
@@ -169,7 +176,7 @@ A **misfire** is a tick that didn't start on time: the scheduler was down, the q
 | **Skip** | ignore missed ticks, wait for the next one | K8s with a small `startingDeadlineSeconds`; Temporal with a short `catchupWindow` |
 | **Backfill all** | run every missed tick | Temporal `backfill`, Airflow `catchup=True`; dangerous for non-idempotent jobs |
 
-Kubernetes detail worth knowing: the CronJob controller counts missed schedules since the last run; if more than **100** were missed it gives up and logs an error. Setting `startingDeadlineSeconds` limits the counting window, and missed runs while `suspend: true` also count. Acme Ops' **Resume** semantics are "no backfill", so every CronJob sets `startingDeadlineSeconds` (e.g. 300) and BullMQ misfire grace is set per job. See [[Kubernetes CronJobs in Practice]].
+Kubernetes detail worth knowing: the CronJob controller counts missed schedules since the last run; if more than **100** were missed it gives up and logs an error. Setting `startingDeadlineSeconds` limits the counting window, and missed runs while `suspend: true` also count. Acme Ops' **Resume** semantics are "no backfill", so every CronJob sets `startingDeadlineSeconds` (e.g. 300) and BullMQ misfire grace is set per job. See [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice).
 
 ## 8. Time zones and DST
 
@@ -178,8 +185,11 @@ Kubernetes detail worth knowing: the CronJob controller counts missed schedules 
 - **Fall back** (2026-10-25): 02:00–02:59 happens **twice**. A job at `30 2 * * *` may run twice. EventBridge documents that it runs **once**.
 - Business logic must not depend on the tick time: `nightly-sales-report` computes "yesterday in Europe/Berlin" from the scheduled time and keys the output by that date, so a double run overwrites the same file and a skipped run is caught by the missed-schedule alert.
 
-> [!warning] DST checklist
-> Prefer UTC for machine jobs; use a local zone only for human-facing times ("reports at 2 am Berlin"). Avoid local 01:00–03:00 for daily jobs. Store and log timestamps in UTC (ISO 8601). Test the two DST days explicitly: compute the next 5 ticks with your library and assert them.
+<Warning>
+**DST checklist**
+
+Prefer UTC for machine jobs; use a local zone only for human-facing times ("reports at 2 am Berlin"). Avoid local 01:00–03:00 for daily jobs. Store and log timestamps in UTC (ISO 8601). Test the two DST days explicitly: compute the next 5 ticks with your library and assert them.
+</Warning>
 
 ## 9. Long-running jobs, heartbeats and timeouts
 
@@ -253,11 +263,14 @@ Use a **per-queue** TTL (one queue per delay bucket), not per-message TTLs in on
 
 `rabbitmq-delayed-message-exchange` (exchange type `x-delayed-message`, header `x-delay`) was popular, but it stored delayed messages in Mnesia on a single node (not replicated) and was never meant for long delays.
 
-> [!info]+ 🆕 2025–2026: RabbitMQ delays
-> - **2025-11-04:** last plugin release, **v4.2.0**, for RabbitMQ 4.2.
-> - **2026-04-23:** **RabbitMQ 4.3.0** released. Mnesia is fully removed in the 4.3 cycle, so the Mnesia-based plugin has no future. 4.3 also adds **delayed retry for quorum queues** (`x-delayed-retry-type`, `x-delayed-retry-min`, `x-delayed-retry-max`: linear back-off when a message is rejected or returned).
-> - **2026-09:** the plugin README says Team RabbitMQ **no longer maintains** it and the GitHub repo is archived. The README points to TTL + DLX today and to **native message delivery delay in quorum queues starting with RabbitMQ 4.4**. As of 2026-09-27, 4.4 is not yet released (latest GA is 4.3.0), so treat that as upcoming.
-> - Takeaway: for new systems use TTL + DLX, quorum-queue delayed retry (4.3+), or an external scheduler. Don't adopt the plugin.
+<Info>
+**🆕 2025–2026: RabbitMQ delays**
+
+- **2025-11-04:** last plugin release, **v4.2.0**, for RabbitMQ 4.2.
+- **2026-04-23:** **RabbitMQ 4.3.0** released. Mnesia is fully removed in the 4.3 cycle, so the Mnesia-based plugin has no future. 4.3 also adds **delayed retry for quorum queues** (`x-delayed-retry-type`, `x-delayed-retry-min`, `x-delayed-retry-max`: linear back-off when a message is rejected or returned).
+- **2026-09:** the plugin README says Team RabbitMQ **no longer maintains** it and the GitHub repo is archived. The README points to TTL + DLX today and to **native message delivery delay in quorum queues starting with RabbitMQ 4.4**. As of 2026-09-27, 4.4 is not yet released (latest GA is 4.3.0), so treat that as upcoming.
+- Takeaway: for new systems use TTL + DLX, quorum-queue delayed retry (4.3+), or an external scheduler. Don't adopt the plugin.
+</Info>
 
 ## 12. SQS + EventBridge Scheduler
 
@@ -351,7 +364,7 @@ groups:
 
 The **missed-schedule** alert is the most important one: failure alerts can't fire if the scheduler never ran. External heartbeat services (Healthchecks.io, Cronitor, Sentry Crons) do the same from outside your cluster, which also catches "the whole cluster is down".
 
-**Logs**: JSON with `job` and `run_id` fields on every line ([[Grafana & the LGTM Stack]]). Keep `run_id` a **field**, never a Loki label (unbounded cardinality). In LogQL: `{namespace="shop-prod", app="jobs-worker"} | json | run_id="repeat:sync-inventory:1790500500000"`. If the stream already has a `job` label (Alloy often sets one), the extracted field becomes `job_extracted`.
+**Logs**: JSON with `job` and `run_id` fields on every line ([Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)). Keep `run_id` a **field**, never a Loki label (unbounded cardinality). In LogQL: `{namespace="shop-prod", app="jobs-worker"} | json | run_id="repeat:sync-inventory:1790500500000"`. If the stream already has a `job` label (Alloy often sets one), the extracted field becomes `job_extracted`.
 
 ## 15. Failure modes
 
@@ -384,36 +397,44 @@ The **missed-schedule** alert is the most important one: failure alerts can't fi
 
 ## Interview questions
 
-> [!question]- Why should a cron job enqueue work instead of doing it?
-> It decouples scheduling from execution. The queue adds retries with backoff, durable storage if a host dies, horizontal scaling across workers, backpressure and concurrency limits, visibility per run, and a natural "run now" path. The scheduler becomes a tiny, reliable component.
+<Accordion title="Why should a cron job enqueue work instead of doing it?">
+It decouples scheduling from execution. The queue adds retries with backoff, durable storage if a host dies, horizontal scaling across workers, backpressure and concurrency limits, visibility per run, and a natural "run now" path. The scheduler becomes a tiny, reliable component.
+</Accordion>
 
-> [!question]- You run 4 replicas of a service that contains a scheduler. How do you avoid 4 triggers per tick?
-> Options: leader election (K8s Lease, Postgres advisory lock, Redis lock with TTL and fencing), a lock per tick, or a queue-native scheduler that dedupes by key (BullMQ Job Schedulers, K8s CronJob names, SQS FIFO dedup ids). In all cases make the enqueue idempotent on `(job, scheduledTime)` so a duplicate trigger is harmless.
+<Accordion title="You run 4 replicas of a service that contains a scheduler. How do you avoid 4 triggers per tick?">
+Options: leader election (K8s Lease, Postgres advisory lock, Redis lock with TTL and fencing), a lock per tick, or a queue-native scheduler that dedupes by key (BullMQ Job Schedulers, K8s CronJob names, SQS FIFO dedup ids). In all cases make the enqueue idempotent on `(job, scheduledTime)` so a duplicate trigger is harmless.
+</Accordion>
 
-> [!question]- What's the difference between the Forbid, Replace and Allow overlap policies?
-> Allow starts a new run even if the previous one is still running. Forbid skips the new tick. Replace cancels the running one and starts the new one. Temporal adds buffer-one/buffer-all (queue the tick until the current run ends). Pick based on whether freshness or completion matters and whether runs can safely overlap.
+<Accordion title="What's the difference between the Forbid, Replace and Allow overlap policies?">
+Allow starts a new run even if the previous one is still running. Forbid skips the new tick. Replace cancels the running one and starts the new one. Temporal adds buffer-one/buffer-all (queue the tick until the current run ends). Pick based on whether freshness or completion matters and whether runs can safely overlap.
+</Accordion>
 
-> [!question]- What is a misfire and how should a scheduler handle it?
-> A tick that didn't start on time (scheduler down, suspended, no free workers). Policies: run once now, skip to the next tick, or backfill every missed tick. K8s uses `startingDeadlineSeconds` (and gives up after 100 missed schedules), Temporal a catch-up window, Quartz misfire instructions. The choice depends on idempotency and whether stale runs are useful.
+<Accordion title="What is a misfire and how should a scheduler handle it?">
+A tick that didn't start on time (scheduler down, suspended, no free workers). Policies: run once now, skip to the next tick, or backfill every missed tick. K8s uses `startingDeadlineSeconds` (and gives up after 100 missed schedules), Temporal a catch-up window, Quartz misfire instructions. The choice depends on idempotency and whether stale runs are useful.
+</Accordion>
 
-> [!question]- How do DST changes break cron jobs and how do you defend against it?
-> In spring-forward a local time like 02:30 doesn't exist, so the job may be skipped or shifted; in fall-back it exists twice and may run twice. Defend with UTC schedules or safe local hours, compute business dates from the scheduled time, make outputs idempotent by business key, and test DST days.
+<Accordion title="How do DST changes break cron jobs and how do you defend against it?">
+In spring-forward a local time like 02:30 doesn't exist, so the job may be skipped or shifted; in fall-back it exists twice and may run twice. Defend with UTC schedules or safe local hours, compute business dates from the scheduled time, make outputs idempotent by business key, and test DST days.
+</Accordion>
 
-> [!question]- How do you detect that a scheduled job silently stopped running?
-> A dead man's switch: export the last success timestamp and alert when `now - lastSuccess > 2 × expected interval` (unless paused), or ping an external heartbeat service at the end of each successful run. Failure alerts alone can't catch a scheduler that never fires.
+<Accordion title="How do you detect that a scheduled job silently stopped running?">
+A dead man's switch: export the last success timestamp and alert when `now - lastSuccess > 2 × expected interval` (unless paused), or ping an external heartbeat service at the end of each successful run. Failure alerts alone can't catch a scheduler that never fires.
+</Accordion>
 
-> [!question]- What is a poison message and what do you do about it?
-> A message that makes the consumer fail every time. Without a limit it's retried forever and can block the queue. Cap attempts or deliveries, route exhausted messages to a DLQ, mark permanent errors as non-retryable, alert on DLQ growth, and provide a replay tool after the fix.
+<Accordion title="What is a poison message and what do you do about it?">
+A message that makes the consumer fail every time. Without a limit it's retried forever and can block the queue. Cap attempts or deliveries, route exhausted messages to a DLQ, mark permanent errors as non-retryable, alert on DLQ growth, and provide a replay tool after the fix.
+</Accordion>
 
-> [!question]- How do you implement delayed retries in RabbitMQ today?
-> TTL + dead-letter exchange: publish to a per-delay-bucket queue with `x-message-ttl` whose DLX routes back to the work queue. On RabbitMQ 4.3+ quorum queues also support delayed retry with linear back-off. The delayed-message exchange plugin is no longer maintained (Mnesia-based, single node), so don't build on it.
+<Accordion title="How do you implement delayed retries in RabbitMQ today?">
+TTL + dead-letter exchange: publish to a per-delay-bucket queue with `x-message-ttl` whose DLX routes back to the work queue. On RabbitMQ 4.3+ quorum queues also support delayed retry with linear back-off. The delayed-message exchange plugin is no longer maintained (Mnesia-based, single node), so don't build on it.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]]
-- [[Cron Jobs]] · [[Background Jobs & Task Queues]] · [[Message Queues & Event Streaming]] · [[Distributed Systems Patterns]]
-- [[BullMQ Job Schedulers in Practice]] · [[Kubernetes CronJobs in Practice]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]] · [[Playwright Automation as a Cron Job]]
-- [[Locking & Concurrency Control]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[Rate Limiting & Throttling]]
-- [[Grafana & the LGTM Stack]] · [[Observability - Logs, Metrics & Traces]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)
+- [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) · [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling)
+- [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
 
 ## Sources
 - [BullMQ: Job Schedulers](https://docs.bullmq.io/guide/job-schedulers) · [Job ids](https://docs.bullmq.io/guide/jobs/job-ids) · [Stalled jobs](https://docs.bullmq.io/guide/jobs/stalled)

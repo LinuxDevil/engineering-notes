@@ -1,23 +1,27 @@
 ---
+title: "Example 1 Predicting Home Prices"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Predicting Home Prices, House Price Prediction]
 updated: 2026-09-27
 ---
 # Example 1 Predicting Home Prices
 
-> [!tldr] TL;DR
-> A **supervised regression** case study: predict a house's price from quantifiable features (lot size, bedrooms). Collect recent sales, clean out outliers, split 80/20, fit a **linear model**, evaluate with **root mean square error** plus a manual "how many were off by more than $50k?" check, then use it for inference on new homes.
+<Note>
+**TL;DR**
+
+A **supervised regression** case study: predict a house's price from quantifiable features (lot size, bedrooms). Collect recent sales, clean out outliers, split 80/20, fit a **linear model**, evaluate with **root mean square error** plus a manual "how many were off by more than $50k?" check, then use it for inference on new homes.
+</Note>
 
 House price prediction is one of the most common introductions to ML. Real estate appraisers already use quantifiable details about a home (number of rooms, lot size, year built) to estimate its value. You notice that relationship and believe ML could predict prices.
 
-![[Untitled 4.png]]
+![Untitled 4](/Attachments/Untitled%204.png)
 
 ## Step 1: Define the problem
 *Can we estimate the price of a house based on lot size or the number of bedrooms?*
 
 You can get sale prices for recently sold homes (or have them appraised), so you have **labels**: this is a **supervised** task. The target is a **continuous number**, so it's a **regression** task.
 
-![[Untitled 5.png]]
+![Untitled 5](/Attachments/Untitled%205.png)
 
 ## Step 2: Build the dataset
 - **Collect**: examples of homes sold in the neighbourhood in the past year; pay an appraiser for homes whose price isn't known.
@@ -45,11 +49,11 @@ print(model.coef_, model.intercept_)     # $ per m², $ per bedroom, base price
 ## Step 4: Evaluate the model
 - **Root mean square (RMS) error**: roughly the "average error" across the test set (it squares the errors first, so big misses weigh more). Lower is better. You compute it between the model's prediction and the true value for each test point.
 
-![[Untitled 6.png]]
+![Untitled 6](/Attachments/Untitled%206.png)
 
 You want the data points as close to the fitted line as possible, meaning less net error.
 
-![[Untitled 7.png]]
+![Untitled 7](/Attachments/Untitled%207.png)
 
 - **Interpreting results / manual threshold check**: a single RMS number is hard to judge. Many engineers count how many predictions were off by more than a threshold (say $50,000) to decide if the model is good enough.
 
@@ -61,7 +65,7 @@ off_by_50k = (abs(pred - y_test) > 50_000).mean()   # share of bad predictions
 
 ## Step 5: Use the model
 
-![[Screenshot_2023-03-29_at_11.12.48_PM.png]]
+![Screenshot_2023-03-29_at_11.12.48_PM](/Attachments/Screenshot_2023-03-29_at_11.12.48_PM.png)
 
 - **Inference**: feed in a new home's features to get a price estimate. Keep monitoring: when the market moves (interest rates, a new school), retrain.
 
@@ -79,16 +83,18 @@ off_by_50k = (abs(pred - y_test) > 50_000).mean()   # share of bad predictions
 
 ## Interview questions
 
-> [!question]- What assumptions does linear regression make?
-> A linear relationship between features and target, independent errors, constant error variance (homoscedasticity), roughly normal residuals for inference, and features that aren't highly collinear.
+<Accordion title="What assumptions does linear regression make?">
+A linear relationship between features and target, independent errors, constant error variance (homoscedasticity), roughly normal residuals for inference, and features that aren't highly collinear.
+</Accordion>
 
-> [!question]- Why remove or treat outliers here?
-> A few extreme values (a 10-room mansion) pull a least-squares line strongly because errors are squared, hurting predictions for typical homes. Remove them, cap them, model them separately, or use a robust loss.
+<Accordion title="Why remove or treat outliers here?">
+A few extreme values (a 10-room mansion) pull a least-squares line strongly because errors are squared, hurting predictions for typical homes. Remove them, cap them, model them separately, or use a robust loss.
+</Accordion>
 
 ## Related
-- [[Case Studies that use ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- [[Step 3 Train the model]] · [[Step 4 Evaluate the model]]
-- Next: [[Example 2 Micro-genre Book Genre]]
+- [Case Studies that use ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Case%20Studies%20that%20use%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model) · [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model)
+- Next: [Example 2 Micro-genre Book Genre](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%202%20Micro-genre%20Book%20Genre)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

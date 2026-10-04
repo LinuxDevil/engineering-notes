@@ -1,12 +1,16 @@
 ---
+title: "Frontend Design Patterns"
 tags: [frontend, frontend/architecture, frontend/patterns]
 aliases: [JS design patterns, Design patterns in JavaScript, Observer pattern, Pub-Sub]
 updated: 2026-09-27
 ---
 # Frontend Design Patterns
 
-> [!tldr] TL;DR
-> Design patterns are named, reusable solutions to recurring design problems. In front-end code a handful show up constantly: **module** and **singleton** (encapsulation and shared instances), **observer / pub-sub** (events, stores, RxJS, signals), **factory**, **proxy** (Vue/MobX reactivity, validation), **decorator** (HOCs, Angular decorators), **strategy**, **command** (undo/redo, Redux actions), **mediator**, **facade** and **adapter** (wrapping APIs). Knowing them lets you name what frameworks already do and pick the right tool in system design interviews. For the general catalogue see [[Design Patterns]]; for principles see [[SOLID]].
+<Note>
+**TL;DR**
+
+Design patterns are named, reusable solutions to recurring design problems. In front-end code a handful show up constantly: **module** and **singleton** (encapsulation and shared instances), **observer / pub-sub** (events, stores, RxJS, signals), **factory**, **proxy** (Vue/MobX reactivity, validation), **decorator** (HOCs, Angular decorators), **strategy**, **command** (undo/redo, Redux actions), **mediator**, **facade** and **adapter** (wrapping APIs). Knowing them lets you name what frameworks already do and pick the right tool in system design interviews. For the general catalogue see [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns); for principles see [SOLID](/Software%20Engineering/Principles/SOLID).
+</Note>
 
 ## 1. The catalogue at a glance
 
@@ -60,7 +64,7 @@ export const inc = () => ++count;
 export const get = () => count;
 ```
 
-See [[Modules (ESM)]] and [[Closures & Memory Model]].
+See [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM)) and [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model).
 
 ## 3. Singleton
 
@@ -75,8 +79,11 @@ class ApiClient {
 export const api = new ApiClient('/api');   // one instance per module graph
 ```
 
-> [!warning] Singleton pitfalls
-> Hidden global state makes tests leak into each other and breaks SSR (one instance shared by **all users' requests** on the server). Prefer dependency injection (Angular `providedIn: 'root'`, React context) so tests and requests can get fresh instances.
+<Warning>
+**Singleton pitfalls**
+
+Hidden global state makes tests leak into each other and breaks SSR (one instance shared by **all users' requests** on the server). Prefer dependency injection (Angular `providedIn: 'root'`, React context) so tests and requests can get fresh instances.
+</Warning>
 
 ## 4. Observer and pub/sub
 
@@ -104,7 +111,7 @@ function usePrice() {
 }
 ```
 
-Where you already use it: `addEventListener`, `EventTarget`, `MutationObserver`/`IntersectionObserver` ([[Observer APIs]]), RxJS, Redux `subscribe`, Angular/Solid/Vue signals, `BroadcastChannel`, micro-frontend event buses.
+Where you already use it: `addEventListener`, `EventTarget`, `MutationObserver`/`IntersectionObserver` ([Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)), RxJS, Redux `subscribe`, Angular/Solid/Vue signals, `BroadcastChannel`, micro-frontend event buses.
 
 ## 5. Factory
 
@@ -170,7 +177,7 @@ const withAuth = Component => props => {
 };
 ```
 
-TypeScript/Angular decorators (`@Component`, `@Input`) are metadata decorators applied by the compiler. In React, hooks have mostly replaced HOCs. See [[Component Patterns]].
+TypeScript/Angular decorators (`@Component`, `@Input`) are metadata decorators applied by the compiler. In React, hooks have mostly replaced HOCs. See [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns).
 
 ## 8. Strategy
 
@@ -254,7 +261,7 @@ Also: wrapping `localStorage` behind a `Storage` interface so you can swap in In
 
 ## 13. Patterns at the component and application level
 
-Component architecture (owner's checklist; details in [[Component Patterns]]):
+Component architecture (owner's checklist; details in [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)):
 - **Container vs presentational** (smart/dumb) components.
 - **Layout components** (slots/children for structure).
 - **Pure components** (`React.memo`, Angular OnPush): same props, same output.
@@ -265,50 +272,60 @@ Application architecture (owner's checklist):
 
 | Topic | Where |
 |---|---|
-| Monolith vs micro-frontends, Module Federation | [[Micro-frontends & Module Federation]] |
-| Monorepo architecture | [[Monorepos]] |
-| PWA | [[Web Workers, Service Workers & PWAs]] |
-| Serverless / edge rendering | [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]], [[Next.js Rendering & Caching]] |
-| Code standards: SOLID, KISS, DRY | [[SOLID]], [[Design Patterns]] |
+| Monolith vs micro-frontends, Module Federation | [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) |
+| Monorepo architecture | [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos) |
+| PWA | [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs) |
+| Serverless / edge rendering | [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands), [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching) |
+| Code standards: SOLID, KISS, DRY | [SOLID](/Software%20Engineering/Principles/SOLID), [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) |
 
-> [!warning] Common pitfalls
-> - Pattern-first design: don't add a factory or mediator until you have the second use case.
-> - Singletons and module-level state leak between SSR requests.
-> - Observers without unsubscribe cause memory leaks. Always return and call a cleanup function.
-> - Over-abstracted facades that hide errors or loading states make debugging hard.
+<Warning>
+**Common pitfalls**
+
+- Pattern-first design: don't add a factory or mediator until you have the second use case.
+- Singletons and module-level state leak between SSR requests.
+- Observers without unsubscribe cause memory leaks. Always return and call a cleanup function.
+- Over-abstracted facades that hide errors or loading states make debugging hard.
+</Warning>
 
 ## Interview questions
 
-> [!question]- Explain the observer pattern and where it's used in front-end code.
-> A subject keeps a list of observers and notifies them on change. DOM events, RxJS, store subscriptions (Redux, Zustand via `useSyncExternalStore`), signals and the Observer APIs all use it. Pub/sub adds a broker so publishers and subscribers are decoupled.
+<Accordion title="Explain the observer pattern and where it's used in front-end code.">
+A subject keeps a list of observers and notifies them on change. DOM events, RxJS, store subscriptions (Redux, Zustand via `useSyncExternalStore`), signals and the Observer APIs all use it. Pub/sub adds a broker so publishers and subscribers are decoupled.
+</Accordion>
 
-> [!question]- How is a singleton implemented in JavaScript, and what are the risks?
-> Export an instance from an ES module (modules are evaluated once). Risks: hidden global state, test pollution, and shared state across users in SSR. Prefer DI or context-scoped instances.
+<Accordion title="How is a singleton implemented in JavaScript, and what are the risks?">
+Export an instance from an ES module (modules are evaluated once). Risks: hidden global state, test pollution, and shared state across users in SSR. Prefer DI or context-scoped instances.
+</Accordion>
 
-> [!question]- Decorator vs proxy?
-> A decorator wraps an object to **add** behaviour while keeping the interface; a proxy **controls access** to an object (validation, lazy loading, caching, reactivity tracking). JS's `Proxy` object can implement both.
+<Accordion title="Decorator vs proxy?">
+A decorator wraps an object to **add** behaviour while keeping the interface; a proxy **controls access** to an object (validation, lazy loading, caching, reactivity tracking). JS's `Proxy` object can implement both.
+</Accordion>
 
-> [!question]- Give a front-end example of the strategy pattern.
-> Sorting flights by cheapest/fastest/best via a map of comparator functions, or selecting a payment provider implementation at runtime. It removes conditionals and lets you add strategies without modifying callers.
+<Accordion title="Give a front-end example of the strategy pattern.">
+Sorting flights by cheapest/fastest/best via a map of comparator functions, or selecting a payment provider implementation at runtime. It removes conditionals and lets you add strategies without modifying callers.
+</Accordion>
 
-> [!question]- How would you implement undo/redo?
-> Command pattern: each change is an object with `do`/`undo` pushed on a history stack (plus a redo stack), or Memento: snapshot immutable state (easy with Redux/Immer) and move a pointer through snapshots.
+<Accordion title="How would you implement undo/redo?">
+Command pattern: each change is an object with `do`/`undo` pushed on a history stack (plus a redo stack), or Memento: snapshot immutable state (easy with Redux/Immer) and move a pointer through snapshots.
+</Accordion>
 
-> [!question]- Facade vs adapter?
-> A facade simplifies a complex subsystem behind a new, smaller interface. An adapter converts an existing interface into another one that clients expect, without simplifying it.
+<Accordion title="Facade vs adapter?">
+A facade simplifies a complex subsystem behind a new, smaller interface. An adapter converts an existing interface into another one that clients expect, without simplifying it.
+</Accordion>
 
-> [!question]- Mediator vs observer?
-> Observer: one-to-many notification from a subject. Mediator: a central object coordinating many-to-many communication so components don't reference each other; it often contains the coordination rules.
+<Accordion title="Mediator vs observer?">
+Observer: one-to-many notification from a subject. Mediator: a central object coordinating many-to-many communication so components don't reference each other; it often contains the coordination rules.
+</Accordion>
 
 ## Related
-- [[Design Patterns]]
-- [[SOLID]]
-- [[Component Patterns]]
-- [[State Management Overview]]
-- [[Observer APIs]]
-- [[Closures & Memory Model]]
-- [[Micro-frontends & Module Federation]]
-- [[Angular Fundamentals]]
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)
+- [SOLID](/Software%20Engineering/Principles/SOLID)
+- [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
+- [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview)
+- [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)
+- [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals)
 
 ## Sources
 - https://www.patterns.dev/

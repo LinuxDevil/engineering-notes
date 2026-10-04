@@ -1,3 +1,6 @@
+---
+title: "Unix Commands And Rails Structure (original)"
+---
 Common Unix Commands List:
 
 

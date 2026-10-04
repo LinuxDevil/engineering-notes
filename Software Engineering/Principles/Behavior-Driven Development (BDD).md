@@ -1,12 +1,16 @@
 ---
+title: "Behavior-Driven Development (BDD)"
 tags: [principles, principles/testing]
 aliases: [BDD, Behaviour-Driven Development, Behavior Driven Development, Gherkin, Given When Then, Specification by Example, ATDD, Example Mapping]
 updated: 2026-09-27
 ---
 # Behavior-Driven Development (BDD)
 
-> [!tldr] TL;DR
-> **BDD** extends TDD outward to the whole team: business, developers and testers agree on **concrete examples** of behaviour before building, write them in a shared language (**Given / When / Then**), and automate them as acceptance tests. Its value is the **conversation** (discovery), not the tooling; Gherkin/Cucumber are optional. Use it where requirements are ambiguous and stakeholders care about rules; skip the tooling where only developers read the tests.
+<Note>
+**TL;DR**
+
+**BDD** extends TDD outward to the whole team: business, developers and testers agree on **concrete examples** of behaviour before building, write them in a shared language (**Given / When / Then**), and automate them as acceptance tests. Its value is the **conversation** (discovery), not the tooling; Gherkin/Cucumber are optional. Use it where requirements are ambiguous and stakeholders care about rules; skip the tooling where only developers read the tests.
+</Note>
 
 ## The idea
 
@@ -67,7 +71,7 @@ Feature: Free shipping on large orders
 
 Writing good scenarios:
 - **Declarative, not imperative**: "When I check out", not "When I click the button with id #checkout". UI details belong in step code.
-- One behaviour per scenario; business language from the domain's [[Domain-Driven Design (DDD)|ubiquitous language]].
+- One behaviour per scenario; business language from the domain's [ubiquitous language](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)).
 - Given = context (past), When = one event/action, Then = observable outcome.
 - Keep the number of scenarios small; edge cases can live in unit tests.
 
@@ -125,18 +129,24 @@ flowchart LR
   AF --> Inner --> AP
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Spec-driven development** with AI agents revives BDD ideas: AWS **Kiro** (announced 2025-07-14) writes requirements as user stories with acceptance criteria in the EARS notation before design and tasks, and GitHub **Spec Kit** (2025-09-02) structures work as spec → plan → tasks. Well-written Given/When/Then examples make good agent acceptance criteria, but Thoughtworks (Radar Vol. 33, Nov 2025, "Assess") cautions the workflows are still elaborate and opinionated.
-> - In .NET, **Reqnroll** ("a reboot of the SpecFlow project", SpecFlow-compatible) is the actively maintained option; the specflow.org site now redirects to Tricentis' ShiftSync community. SpecFlow's exact end-of-life date is (unverified).
+<Info>
+**🆕 2025–2026**
+
+- **Spec-driven development** with AI agents revives BDD ideas: AWS **Kiro** (announced 2025-07-14) writes requirements as user stories with acceptance criteria in the EARS notation before design and tasks, and GitHub **Spec Kit** (2025-09-02) structures work as spec → plan → tasks. Well-written Given/When/Then examples make good agent acceptance criteria, but Thoughtworks (Radar Vol. 33, Nov 2025, "Assess") cautions the workflows are still elaborate and opinionated.
+- In .NET, **Reqnroll** ("a reboot of the SpecFlow project", SpecFlow-compatible) is the actively maintained option; the specflow.org site now redirects to Tricentis' ShiftSync community. SpecFlow's exact end-of-life date is (unverified).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common BDD failures
-> - **Tool-first BDD**: developers write Gherkin alone after coding. You pay Cucumber's maintenance cost without the conversation's benefit.
-> - **Imperative UI scripts** in Gherkin ("click", "fill in") that break on every UI tweak.
-> - Huge step-definition libraries with regex spaghetti and shared mutable "world" state.
-> - Testing everything through the UI: slow, flaky suites. Automate scenarios against the API or domain layer when possible.
-> - Scenarios nobody from the business reads: then plain test code is cheaper.
+<Warning>
+**Common BDD failures**
+
+- **Tool-first BDD**: developers write Gherkin alone after coding. You pay Cucumber's maintenance cost without the conversation's benefit.
+- **Imperative UI scripts** in Gherkin ("click", "fill in") that break on every UI tweak.
+- Huge step-definition libraries with regex spaghetti and shared mutable "world" state.
+- Testing everything through the UI: slow, flaky suites. Automate scenarios against the API or domain layer when possible.
+- Scenarios nobody from the business reads: then plain test code is cheaper.
+</Warning>
 
 ## Senior perspective
 
@@ -147,22 +157,26 @@ flowchart LR
 
 ## Interview questions
 
-> [!question]- What is BDD and how does it differ from TDD?
-> BDD is a collaborative practice where the team discovers and agrees on behaviour through concrete examples, formulates them as Given/When/Then scenarios and automates them as acceptance tests. TDD is a developer practice for designing code in red–green–refactor cycles. BDD works outside-in at the feature level and often drives TDD inside.
+<Accordion title="What is BDD and how does it differ from TDD?">
+BDD is a collaborative practice where the team discovers and agrees on behaviour through concrete examples, formulates them as Given/When/Then scenarios and automates them as acceptance tests. TDD is a developer practice for designing code in red–green–refactor cycles. BDD works outside-in at the feature level and often drives TDD inside.
+</Accordion>
 
-> [!question]- What makes a good Gherkin scenario?
-> Declarative business language, one behaviour, clear context (Given), a single action (When) and observable outcomes (Then), no UI implementation details, independent of other scenarios.
+<Accordion title="What makes a good Gherkin scenario?">
+Declarative business language, one behaviour, clear context (Given), a single action (When) and observable outcomes (Then), no UI implementation details, independent of other scenarios.
+</Accordion>
 
-> [!question]- Who are the "Three Amigos"?
-> Business/product, development and testing perspectives meeting before implementation to explore a story with examples, uncover rules and questions, and agree on acceptance criteria.
+<Accordion title="Who are the &quot;Three Amigos&quot;?">
+Business/product, development and testing perspectives meeting before implementation to explore a story with examples, uncover rules and questions, and agree on acceptance criteria.
+</Accordion>
 
-> [!question]- When would you not use Cucumber?
-> When no non-developer reads or contributes to the scenarios. The translation layer (steps, regex, world state) then only adds cost; use BDD-style names in the normal test framework instead.
+<Accordion title="When would you not use Cucumber?">
+When no non-developer reads or contributes to the scenarios. The translation layer (steps, regex, world state) then only adds cost; use BDD-style names in the normal test framework instead.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Test-Driven Development (TDD)]] · [[Domain-Driven Design (DDD)]] · [[Clean Code & Refactoring]]
-- [[Frontend Testing]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Test-Driven Development (TDD)](/Software%20Engineering/Principles/Test-Driven%20Development%20(TDD)) · [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)) · [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
 
 ## Sources
 - [Dan North: Introducing BDD (2006)](https://dannorth.net/introducing-bdd/)

@@ -1,12 +1,16 @@
 ---
+title: "Linux & Shell Essentials"
 tags: [devops, devops/linux]
 aliases: [Linux, Unix Commands, Shell, Bash, Linux Commands, Command Line, systemd, grep sed awk]
 updated: 2026-09-27
 ---
 # Linux & Shell Essentials
 
-> [!tldr] TL;DR
-> Almost every server, container and CI runner runs Linux, so the shell is a core engineering skill. Learn to **navigate and manipulate files**, understand **permissions and users**, inspect and control **processes**, compose small tools with **pipes and redirection** (`grep`, `sed`, `awk`, `sort`, `xargs`), work remotely with **ssh**, manage services with **systemd/journald**, and debug **networking** (`ss`, `curl`, `dig`). Everything is a file, and small tools combine into powerful pipelines.
+<Note>
+**TL;DR**
+
+Almost every server, container and CI runner runs Linux, so the shell is a core engineering skill. Learn to **navigate and manipulate files**, understand **permissions and users**, inspect and control **processes**, compose small tools with **pipes and redirection** (`grep`, `sed`, `awk`, `sort`, `xargs`), work remotely with **ssh**, manage services with **systemd/journald**, and debug **networking** (`ss`, `curl`, `dig`). Everything is a file, and small tools combine into powerful pipelines.
+</Note>
 
 ## 1. Files and navigation
 
@@ -99,7 +103,7 @@ vmstat 1; iostat -xz 1       # CPU/memory/IO over time
 strace -p <pid>              # system calls (why is it stuck?)
 ```
 
-Key concepts: every process has a PID, parent (PPID), user, and exit code (0 = success). **Signals** (`SIGTERM`, `SIGKILL`, `SIGHUP` often = reload config, `SIGINT` = Ctrl+C). **Zombies** are finished children not yet reaped by the parent; **orphans** get re-parented to PID 1. Containers are processes too ([[Docker Basics]]).
+Key concepts: every process has a PID, parent (PPID), user, and exit code (0 = success). **Signals** (`SIGTERM`, `SIGKILL`, `SIGHUP` often = reload config, `SIGINT` = Ctrl+C). **Zombies** are finished children not yet reaped by the parent; **orphans** get re-parented to PID 1. Containers are processes too ([Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics)).
 
 ## 4. Pipes, redirection and text processing
 
@@ -233,7 +237,7 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload && sudo systemctl enable --now myapp
 ```
 
-Timers (`.timer` units) are the systemd alternative to cron ([[Cron Jobs]]).
+Timers (`.timer` units) are the systemd alternative to cron ([Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs)).
 
 ## 7. Networking tools
 
@@ -253,19 +257,25 @@ cat /etc/hosts; cat /etc/resolv.conf           # local name resolution config
 
 Debug order for "service X cannot reach Y": DNS resolves? → route/security group/firewall allows? → port listening on Y (`ss`)? → TLS valid? → HTTP status/app logs.
 
-> [!info]+ 🆕 2025–2026
-> - **Ubuntu 25.10 (October 2025)** made **sudo-rs** (a memory-safe Rust reimplementation of `sudo`) the default sudo provider and switched core utilities to **Rust coreutils (uutils)**; it also shipped Linux 6.17 and systemd 257. Most flags behave the same, but edge-case differences exist in scripts; test automation on new images.
-> - **Kubernetes v1.35 (2025-12)** made the kubelet refuse to start on **cgroup v1** by default, so older distros without cgroup v2 are effectively unsupported for Kubernetes nodes (see [[Kubernetes Workloads in Production]]).
+<Info>
+**🆕 2025–2026**
+
+- **Ubuntu 25.10 (October 2025)** made **sudo-rs** (a memory-safe Rust reimplementation of `sudo`) the default sudo provider and switched core utilities to **Rust coreutils (uutils)**; it also shipped Linux 6.17 and systemd 257. Most flags behave the same, but edge-case differences exist in scripts; test automation on new images.
+- **Kubernetes v1.35 (2025-12)** made the kubelet refuse to start on **cgroup v1** by default, so older distros without cgroup v2 are effectively unsupported for Kubernetes nodes (see [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - `rm -rf $DIR/` with an unset `DIR` → deletes `/`. Use `set -u` and `${DIR:?}`.
-> - `chmod -R 777` to "fix" permissions: a security hole. Find the right owner/group instead.
-> - `kill -9` as the first reaction: no graceful shutdown, possible corruption.
-> - Parsing `ls` output in scripts; use `find -print0 | xargs -0` or globs.
-> - Forgetting that `cmd | grep x` returns the pipeline's last exit status (use `set -o pipefail`).
-> - Editing config on a server by hand instead of through [[Infrastructure as Code]] or images.
+<Warning>
+**Common pitfalls**
+
+- `rm -rf $DIR/` with an unset `DIR` → deletes `/`. Use `set -u` and `${DIR:?}`.
+- `chmod -R 777` to "fix" permissions: a security hole. Find the right owner/group instead.
+- `kill -9` as the first reaction: no graceful shutdown, possible corruption.
+- Parsing `ls` output in scripts; use `find -print0 | xargs -0` or globs.
+- Forgetting that `cmd | grep x` returns the pipeline's last exit status (use `set -o pipefail`).
+- Editing config on a server by hand instead of through [Infrastructure as Code](/Software%20Engineering/DevOps/Infrastructure%20as%20Code) or images.
+</Warning>
 
 ## Senior perspective
 
@@ -276,31 +286,38 @@ Debug order for "service X cannot reach Y": DNS resolves? → route/security gro
 
 ## Interview questions
 
-> [!question]- What do permissions 755 and 644 mean?
-> 755: owner rwx, group r-x, others r-x (typical for executables/directories). 644: owner rw-, group r--, others r-- (typical for files). Each digit is read(4)+write(2)+execute(1).
+<Accordion title="What do permissions 755 and 644 mean?">
+755: owner rwx, group r-x, others r-x (typical for executables/directories). 644: owner rw-, group r--, others r-- (typical for files). Each digit is read(4)+write(2)+execute(1).
+</Accordion>
 
-> [!question]- Difference between SIGTERM and SIGKILL?
-> SIGTERM (15) asks a process to terminate and can be caught for graceful cleanup. SIGKILL (9) cannot be caught or ignored; the kernel stops the process immediately.
+<Accordion title="Difference between SIGTERM and SIGKILL?">
+SIGTERM (15) asks a process to terminate and can be caught for graceful cleanup. SIGKILL (9) cannot be caught or ignored; the kernel stops the process immediately.
+</Accordion>
 
-> [!question]- How do you find which process is listening on port 8080?
-> `ss -tulpn | grep 8080` or `lsof -i :8080`.
+<Accordion title="How do you find which process is listening on port 8080?">
+`ss -tulpn | grep 8080` or `lsof -i :8080`.
+</Accordion>
 
-> [!question]- A server is slow. What do you check?
-> Load average vs CPU count (`uptime`), CPU saturation and steal (`top`, `mpstat`), memory and swapping (`free`, `vmstat`), disk I/O wait (`iostat`), network errors (`ss`, `sar -n`), kernel messages (`dmesg` for OOM kills), then the application's own metrics and logs.
+<Accordion title="A server is slow. What do you check?">
+Load average vs CPU count (`uptime`), CPU saturation and steal (`top`, `mpstat`), memory and swapping (`free`, `vmstat`), disk I/O wait (`iostat`), network errors (`ss`, `sar -n`), kernel messages (`dmesg` for OOM kills), then the application's own metrics and logs.
+</Accordion>
 
-> [!question]- What does `set -euo pipefail` do?
-> `-e` exits on any command failure, `-u` treats unset variables as errors, `-o pipefail` makes a pipeline fail if any command in it fails (not just the last). Together they make bash scripts fail fast instead of continuing in a broken state.
+<Accordion title="What does `set -euo pipefail` do?">
+`-e` exits on any command failure, `-u` treats unset variables as errors, `-o pipefail` makes a pipeline fail if any command in it fails (not just the last). Together they make bash scripts fail fast instead of continuing in a broken state.
+</Accordion>
 
-> [!question]- Count the most common error messages in a log file.
-> `grep ERROR app.log | awk -F'ERROR' '{print $2}' | sort | uniq -c | sort -rn | head`
+<Accordion title="Count the most common error messages in a log file.">
+`grep ERROR app.log | awk -F'ERROR' '{print $2}' | sort | uniq -c | sort -rn | head`
+</Accordion>
 
-> [!question]- What is systemd?
-> The init system (PID 1) on most Linux distributions: it starts and supervises services defined in unit files, handles dependencies, restarts, logging (journald), timers and resource control via cgroups.
+<Accordion title="What is systemd?">
+The init system (PID 1) on most Linux distributions: it starts and supervises services defined in unit files, handles dependencies, restarts, logging (journald), timers and resource control via cgroups.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Docker Basics]] · [[Containers vs VMs vs Serverless]] · [[Git Essentials & Workflows]] · [[Cron Jobs]] · [[Nginx]]
-- [[Rails Project Structure]] (the other half of the original note)
-- Original note: [[Unix Commands And Rails Structure (original)]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) · [Containers vs VMs vs Serverless](/Software%20Engineering/DevOps/Containers%20vs%20VMs%20vs%20Serverless) · [Git Essentials & Workflows](/Software%20Engineering/DevOps/Git%20Essentials%20%26%20Workflows) · [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Nginx](/Software%20Engineering/Backend/Nginx)
+- [Rails Project Structure](/Software%20Engineering/DevOps/Rails%20Project%20Structure) (the other half of the original note)
+- Original note: [Unix Commands And Rails Structure (original)](/Software%20Engineering/DevOps/_Archive/Unix%20Commands%20And%20Rails%20Structure%20(original))
 
 ## Sources
 - [GNU Coreutils manual](https://www.gnu.org/software/coreutils/manual/) · [GNU Bash manual](https://www.gnu.org/software/bash/manual/)

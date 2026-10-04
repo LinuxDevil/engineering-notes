@@ -1,3 +1,6 @@
+---
+title: "Chapter 4  Implementing The Multi-SPA Pattern for Microfrontends"
+---
 In this chapter, we will see what is module federation and how to set up a micro front-end, how to break down the app into smaller micro apps that are loaded via Module Federation. 
 
 ## Module Federation
@@ -49,7 +52,7 @@ We can also use the Module federation to dynamically load common libraries or mo
 
 > **Any kind of JS module can be dynamically imported into Module Federation**
 
-![[Untitled 55.png]]
+![Untitled 55](/Attachments/Untitled%2055.png)
 
 To setup the microfrontend with a Host (App shell) and a remote app to make the users get that “true” single-page experience while still ensuring that the app is independently built and deployed you’ll need to:
 
@@ -59,7 +62,7 @@ To setup the microfrontend with a Host (App shell) and a remote app to make the 
 
 > In Module-Federation the host app will take care of the routing, so we really don’t need any proxy configurations.
 
-![[Untitled 56.png]]
+![Untitled 56](/Attachments/Untitled%2056.png)
 
 
 For the remote micro-apps 
@@ -126,12 +129,12 @@ module.exports = withModuleFederation(defaultConfig);
 
 If we want to use something like context api in the regular manner, we will think to put the context in the app-shell and export the context api as a remote app. This will make a cyclic dependency issue where we also need to reimport the context for the components that acts as a shell too.
 
-![[Untitled 57.png]]
+![Untitled 57](/Attachments/Untitled%2057.png)
 
 When you work with module federation, you ideally need a unidirectional flow of how the remote and host apps are loaded. So ideally you will want the store to be defined as a micro app to make all other apps consume it.
 
 > This is like the SDK in our Verticals 
 
-![[Untitled 58.png]]
+![Untitled 58](/Attachments/Untitled%2058.png)
 
 This will make sure that our host app will never be bloated and our dependencies is will defined.

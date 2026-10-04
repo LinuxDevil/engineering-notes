@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Distributed Cache"
 tags: [system-design, system-design/case-study]
 aliases: [Distributed Cache Design, Design Redis, Design Memcached, Key-Value Cache]
 updated: 2026-09-27
 ---
 # Case Study - Distributed Cache
 
-> [!tldr] TL;DR
-> Design a Redis/Memcached-like in-memory cache cluster: an in-node **hash table + LRU/LFU eviction with TTLs**, data **partitioned** across nodes with consistent hashing or hash slots, **replicated** (async primary → replicas) for availability, with **failure detection and failover** (gossip or a coordinator), and clients that route keys to the right node. The hard parts are hot keys, resharding without downtime, memory efficiency, and the consistency you promise during failover.
+<Note>
+**TL;DR**
+
+Design a Redis/Memcached-like in-memory cache cluster: an in-node **hash table + LRU/LFU eviction with TTLs**, data **partitioned** across nodes with consistent hashing or hash slots, **replicated** (async primary → replicas) for availability, with **failure detection and failover** (gossip or a coordinator), and clients that route keys to the right node. The hard parts are hot keys, resharding without downtime, memory efficiency, and the consistency you promise during failover.
+</Note>
 
 ## 1. Requirements
 **Functional**: `GET`, `SET key value [TTL]`, `DEL`; eviction when full; optional atomic ops (`INCR`, CAS).
@@ -28,10 +32,10 @@ CAS key expected_version value   → OK | CONFLICT
 
 ## 4. Single-node design
 - **Hash table** (open addressing or chaining) with incremental rehashing so resizing doesn't pause.
-- **Eviction**: approximate LRU/LFU by sampling (Redis samples a few keys and evicts the best candidate) rather than a global linked list, saving memory and locks. See [[Caching Strategies]].
+- **Eviction**: approximate LRU/LFU by sampling (Redis samples a few keys and evicts the best candidate) rather than a global linked list, saving memory and locks. See [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies).
 - **TTL**: lazy expiry on access + periodic active sampling of keys with TTLs.
 - **Memory**: slab allocator (Memcached) or jemalloc; avoid fragmentation; compact encodings for small values.
-- **Concurrency**: single-threaded event loop per core/shard (Redis-style, no locks, [[Operating Systems Essentials]] epoll) or multithreaded with striped locks (Memcached). I/O threads for network parsing.
+- **Concurrency**: single-threaded event loop per core/shard (Redis-style, no locks, [Operating Systems Essentials](/Software%20Engineering/CS%20Fundamentals/Operating%20Systems%20Essentials) epoll) or multithreaded with striped locks (Memcached). I/O threads for network parsing.
 
 ## 5. High-level design
 ```mermaid
@@ -52,12 +56,12 @@ flowchart LR
 
 ## 6. Deep dives
 ### Partitioning
-- Keys → 16,384 **hash slots** → nodes (Redis Cluster) or a **consistent hash ring** with virtual nodes ([[Consistent Hashing]]).
+- Keys → 16,384 **hash slots** → nodes (Redis Cluster) or a **consistent hash ring** with virtual nodes ([Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing)).
 - **Routing**: smart clients cache the slot map and handle `MOVED` redirects; or a proxy tier (Twemproxy, Envoy, mcrouter) keeps clients simple at the cost of a hop.
 
 ### Replication and failover
 - Primary acks writes before replicating (async) → low latency, but a failover can lose the last writes. Acceptable for a cache; document it.
-- Failure detection: nodes gossip heartbeats; when a majority of primaries agree a node is down, its replica is promoted (epoch/term numbers prevent split brain, see [[Consistency Models & Consensus]]).
+- Failure detection: nodes gossip heartbeats; when a majority of primaries agree a node is down, its replica is promoted (epoch/term numbers prevent split brain, see [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus)).
 - Alternative: external coordinator (Sentinel, etcd) holds the authoritative topology.
 
 ### Resharding
@@ -89,28 +93,36 @@ Failure scenarios: node loss (replica promotion, brief misses), network partitio
 - Capacity: plan for 2× memory headroom during resharding/forks (copy-on-write).
 - Multi-tenant clusters need per-tenant quotas and key prefixes; noisy neighbors are common.
 
-> [!info]+ 🆕 2025–2026
-> The open-source landscape changed: **Valkey** (Linux Foundation fork of Redis 7.2) reached **9.0 on 2025-10-21** with atomic slot migration, hash-field TTLs and multi-DB cluster mode, while **Redis 8.0 (2025-05-01)** became available under **AGPLv3** again with vector sets and the former Stack modules in core. ([Valkey 9.0](https://valkey.io/blog/introducing-valkey-9/), [Redis AGPLv3](https://redis.io/blog/agplv3/))
+<Info>
+**🆕 2025–2026**
+
+The open-source landscape changed: **Valkey** (Linux Foundation fork of Redis 7.2) reached **9.0 on 2025-10-21** with atomic slot migration, hash-field TTLs and multi-DB cluster mode, while **Redis 8.0 (2025-05-01)** became available under **AGPLv3** again with vector sets and the former Stack modules in core. ([Valkey 9.0](https://valkey.io/blog/introducing-valkey-9/), [Redis AGPLv3](https://redis.io/blog/agplv3/))
+</Info>
 
 ## Interview questions
-> [!question]- How do clients find the node for a key?
-> Hash the key to a slot or ring position and look it up in a cached cluster map. Nodes reply with redirects (MOVED/ASK) when the map is stale, and clients refresh it. Alternatively, a proxy does the routing.
+<Accordion title="How do clients find the node for a key?">
+Hash the key to a slot or ring position and look it up in a cached cluster map. Nodes reply with redirects (MOVED/ASK) when the map is stale, and clients refresh it. Alternatively, a proxy does the routing.
+</Accordion>
 
-> [!question]- What happens when a primary fails?
-> Peers detect missed heartbeats, a replica is promoted with a new epoch, and the slot map is updated. Writes acknowledged by the old primary but not yet replicated are lost; clients see errors briefly and then retry against the new primary.
+<Accordion title="What happens when a primary fails?">
+Peers detect missed heartbeats, a replica is promoted with a new epoch, and the slot map is updated. Writes acknowledged by the old primary but not yet replicated are lost; clients see errors briefly and then retry against the new primary.
+</Accordion>
 
-> [!question]- How do you add a node without downtime?
-> Move a subset of slots (or vnode ranges) to the new node gradually, serving from the old owner and redirecting during migration, then flip ownership and update clients. Consistent hashing/slots keep the moved fraction around 1/N.
+<Accordion title="How do you add a node without downtime?">
+Move a subset of slots (or vnode ranges) to the new node gradually, serving from the old owner and redirecting during migration, then flip ownership and update clients. Consistent hashing/slots keep the moved fraction around 1/N.
+</Accordion>
 
-> [!question]- How is eviction implemented efficiently?
-> Approximate LRU/LFU: sample a handful of keys and evict the worst one, instead of maintaining a global ordered structure. Expired keys are removed lazily on access plus periodic sampling.
+<Accordion title="How is eviction implemented efficiently?">
+Approximate LRU/LFU: sample a handful of keys and evict the worst one, instead of maintaining a global ordered structure. Expired keys are removed lazily on access plus periodic sampling.
+</Accordion>
 
-> [!question]- How would you handle a key receiving 500k reads/s?
-> Client-side near cache with short TTL, replicate the key across nodes under suffixed names and pick randomly, allow reads from replicas, and coalesce misses.
+<Accordion title="How would you handle a key receiving 500k reads/s?">
+Client-side near cache with short TTL, replicate the key across nodes under suffixed names and pick randomly, allow reads from replicas, and coalesce misses.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[Caching Strategies]] · [[Consistent Hashing]] · [[Consistency Models & Consensus]] · [[Case Study - Rate Limiter]] · [[Operating Systems Essentials]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies) · [Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing) · [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus) · [Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter) · [Operating Systems Essentials](/Software%20Engineering/CS%20Fundamentals/Operating%20Systems%20Essentials)
 
 ## Sources
 - [Redis Cluster specification](https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/)

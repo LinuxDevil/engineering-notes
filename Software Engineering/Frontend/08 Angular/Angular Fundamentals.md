@@ -1,16 +1,20 @@
 ---
+title: "Angular Fundamentals"
 tags: [frontend, frontend/angular]
 aliases: [Angular basics, Angular DI, Angular building blocks]
 updated: 2026-09-27
 ---
 # Angular Fundamentals
 
-> [!tldr] TL;DR
-> An Angular app is a tree of **components** (class + template + styles) wired together by a hierarchical **dependency injection** system. Templates use a small binding language (`{{ }}`, `[prop]`, `(event)`, `[(model)]`) and are compiled **ahead of time** into efficient instructions. Since v19 components are **standalone by default**, so NgModules are optional. Routing, HttpClient, forms, pipes and directives are all first-party.
+<Note>
+**TL;DR**
+
+An Angular app is a tree of **components** (class + template + styles) wired together by a hierarchical **dependency injection** system. Templates use a small binding language (`{{ }}`, `[prop]`, `(event)`, `[(model)]`) and are compiled **ahead of time** into efficient instructions. Since v19 components are **standalone by default**, so NgModules are optional. Routing, HttpClient, forms, pipes and directives are all first-party.
+</Note>
 
 ## 1. Building blocks
 
-![[Untitled 43.png]]
+![Untitled 43](/Attachments/Untitled%2043.png)
 
 | Block | What it is | Modern form (2026) |
 |---|---|---|
@@ -66,24 +70,27 @@ The template can live inline (`template:`) or in a separate file (`templateUrl: 
 | `#ref` | template variable | `<input #box>` | Reference an element or directive in the template |
 | `@let x = expr;` | local variable | `@let total = price() * qty();` | Template-local variable (v18.1+) |
 
-> [!example] Two-way binding by hand (the owner's parent/child update question)
-> `@Input()` is one-way. To let the child update the parent, pair it with an output named `<input>Change`, then the parent can use banana-in-a-box.
-> ```ts
-> // child (classic decorators)
-> @Input() searchStatus!: boolean;
-> @Output() searchStatusChange = new EventEmitter<boolean>();
-> toggle() { this.searchStatusChange.emit(!this.searchStatus); }
->
-> // child (modern, v17.2+): model() does both in one line
-> searchStatus = model(false);
-> toggle() { this.searchStatus.update(v => !v); }
-> ```
-> ```html
-> <!-- parent -->
-> <app-search [(searchStatus)]="isSearching" />
-> <!-- or, to run a callback on change -->
-> <app-search [searchStatus]="isSearching" (searchStatusChange)="onChange($event)" />
-> ```
+<Info>
+**Two-way binding by hand (the owner's parent/child update question)**
+
+`@Input()` is one-way. To let the child update the parent, pair it with an output named `<input>Change`, then the parent can use banana-in-a-box.
+```ts
+// child (classic decorators)
+@Input() searchStatus!: boolean;
+@Output() searchStatusChange = new EventEmitter<boolean>();
+toggle() { this.searchStatusChange.emit(!this.searchStatus); }
+
+// child (modern, v17.2+): model() does both in one line
+searchStatus = model(false);
+toggle() { this.searchStatus.update(v => !v); }
+```
+```html
+<!-- parent -->
+<app-search [(searchStatus)]="isSearching" />
+<!-- or, to run a callback on change -->
+<app-search [searchStatus]="isSearching" (searchStatusChange)="onChange($event)" />
+```
+</Info>
 
 ### Content projection
 `<ng-content>` projects the children a parent passes in. Use `select="[slot=header]"` for named slots. Projected content belongs to the **parent's** view for change detection and DI purposes.
@@ -142,11 +149,11 @@ Use an `InjectionToken<T>` for non-class values: `export const API_URL = new Inj
 
 Angular has **two** injector hierarchies that are searched in order:
 
-![[injector hierarchies.png]]
+![injector hierarchies](/Attachments/injector%20hierarchies.png)
 
 1. **Element injectors** (the component/directive tree). Angular creates an `ElementInjector` for every element that hosts a component or directive. You configure it with `providers` / `viewProviders` in `@Component` or `@Directive`. It mirrors the DOM tree, so it forms its own hierarchy.
 
-   ![[element injector hieracrhy.png]]
+   ![element injector hieracrhy](/Attachments/element%20injector%20hieracrhy.png)
 
 2. **Environment injectors** (formerly "module injectors"):
    - **Root injector**: services with `providedIn: 'root'`, plus everything in `bootstrapApplication` providers (or eagerly imported NgModules' `providers`). Anything here is available app-wide.
@@ -154,7 +161,7 @@ Angular has **two** injector hierarchies that are searched in order:
    - **Platform injector**: created by `platformBrowser()` (the old `platformBrowserDynamic()` in `main.ts`); holds platform-wide services such as `DomSanitizer`, shared if you bootstrap several apps on one page.
    - **NullInjector**: the top. It throws `NullInjectorError: No provider for X` unless the lookup is `optional`, in which case you get `null`.
 
-![[hierarchy diagram.png]]
+![hierarchy diagram](/Attachments/hierarchy%20diagram.png)
 
 ```mermaid
 flowchart BT
@@ -175,22 +182,28 @@ flowchart BT
 | `@SkipSelf()` | `{ skipSelf: true }` | Start from the parent |
 | `@Host()` | `{ host: true }` | Stop at the host component's injector |
 
-> [!example] Scoping a service per component instance
-> ```ts
-> @Component({
->   selector: 'app-booking-form',
->   providers: [BookingFormState],   // new instance for every <app-booking-form>
->   template: `<app-passenger-list /> <app-payment />`,
-> })
-> export class BookingFormComponent {}
-> // Children that inject(BookingFormState) share THIS instance,
-> // a second <app-booking-form> gets its own.
-> ```
+<Info>
+**Scoping a service per component instance**
 
-> [!warning] Common DI pitfalls
-> - Adding a service to a lazy route's `providers` **and** `providedIn: 'root'` creates two instances. Pick one.
-> - `inject()` only works in an **injection context**: field initializers, constructors, factory functions, or inside `runInInjectionContext()`. Calling it in `ngOnInit` or a `setTimeout` throws.
-> - `providers` vs `viewProviders`: `viewProviders` are not visible to projected content (`<ng-content>`).
+```ts
+@Component({
+  selector: 'app-booking-form',
+  providers: [BookingFormState],   // new instance for every <app-booking-form>
+  template: `<app-passenger-list /> <app-payment />`,
+})
+export class BookingFormComponent {}
+// Children that inject(BookingFormState) share THIS instance,
+// a second <app-booking-form> gets its own.
+```
+</Info>
+
+<Warning>
+**Common DI pitfalls**
+
+- Adding a service to a lazy route's `providers` **and** `providedIn: 'root'` creates two instances. Pick one.
+- `inject()` only works in an **injection context**: field initializers, constructors, factory functions, or inside `runInInjectionContext()`. Calling it in `ngOnInit` or a `setTimeout` throws.
+- `providers` vs `viewProviders`: `viewProviders` are not visible to projected content (`<ng-content>`).
+</Warning>
 
 ## 5. Services
 
@@ -205,8 +218,11 @@ export class CartStore {
 }
 ```
 
-> [!info]+ 🆕 2025–2026
-> Angular v22 (June 3, 2026) adds `@Service()` as a shorthand for `@Injectable({ providedIn: 'root' })`, and `injectAsync()` for lazy-loading a service's code only when needed.
+<Info>
+**🆕 2025–2026**
+
+Angular v22 (June 3, 2026) adds `@Service()` as a shorthand for `@Injectable({ providedIn: 'root' })`, and `injectAsync()` for lazy-loading a service's code only when needed.
+</Info>
 
 ## 6. Sharing data between components
 
@@ -290,12 +306,18 @@ Interceptors run in array order on the request and in reverse order on the respo
 
 The class-based form (`implements HttpInterceptor` + `{ provide: HTTP_INTERCEPTORS, useClass, multi: true }`) still works via `withInterceptorsFromDi()`, but functional interceptors are preferred.
 
-> [!warning] Where to keep the JWT
-> The original note suggested storing the token in `sessionStorage` or IndexedDB and attaching it in an interceptor. That works, but anything readable by JS is exposed to XSS. Prefer an **HttpOnly, Secure, SameSite cookie** set by the server (then the interceptor only adds CSRF headers), or keep the access token in memory with a short lifetime. See [[Authentication & Token Storage]] and [[JWT vs Cookies]].
+<Warning>
+**Where to keep the JWT**
 
-> [!info]+ 🆕 2025–2026
-> - Angular v22 makes **HttpClient use `fetch` by default** (previously you opted in with `withFetch()`).
-> - `httpResource()` (stable in v22) wraps a request in a signal-based resource. See [[Angular Change Detection, Zones & Signals]].
+The original note suggested storing the token in `sessionStorage` or IndexedDB and attaching it in an interceptor. That works, but anything readable by JS is exposed to XSS. Prefer an **HttpOnly, Secure, SameSite cookie** set by the server (then the interceptor only adds CSRF headers), or keep the access token in memory with a short lifetime. See [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) and [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies).
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- Angular v22 makes **HttpClient use `fetch` by default** (previously you opted in with `withFetch()`).
+- `httpResource()` (stable in v22) wraps a request in a signal-based resource. See [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals).
+</Info>
 
 ## 9. Pipes
 
@@ -320,8 +342,11 @@ export class DurationPipe implements PipeTransform {
 | Cost | Cheap, memoized per binding | Can run on every keystroke or mouse move |
 | Example | `date`, `currency` | `async`, `json` |
 
-> [!warning] Pure pipes and mutation
-> `items.push(x)` does not change the array reference, so a pure `filter` pipe will not re-run. Replace the array (`items = [...items, x]`) or use a `computed()` signal instead.
+<Warning>
+**Pure pipes and mutation**
+
+`items.push(x)` does not change the array reference, so a pure `filter` pipe will not re-run. Replace the array (`items = [...items, x]`) or use a `computed()` signal instead.
+</Warning>
 
 ## 10. Directives
 
@@ -359,7 +384,7 @@ The original example set `el.nativeElement.style.backgroundColor` directly. It w
 
 ## 11. Lifecycle hooks
 
-![[lifecycle.png]]
+![lifecycle](/Attachments/lifecycle.png)
 
 | Hook | When | Typical use |
 |---|---|---|
@@ -453,44 +478,54 @@ const search$ = this.query.valueChanges.pipe(
 results = toSignal(search$, { initialValue: [] });   // RxJS → signal interop
 ```
 
-> [!warning] Subscription leaks
-> Manual `subscribe()` in a component must be cleaned up. Prefer the `async` pipe, `toSignal()`, or `.pipe(takeUntilDestroyed())`. `HttpClient` completes after one response, but `valueChanges`, `interval` and router events do not.
+<Warning>
+**Subscription leaks**
+
+Manual `subscribe()` in a component must be cleaned up. Prefer the `async` pipe, `toSignal()`, or `.pipe(takeUntilDestroyed())`. `HttpClient` completes after one response, but `valueChanges`, `interval` and router events do not.
+</Warning>
 
 ## 15. Security basics
 
-Angular treats every value as **untrusted** and sanitizes/escapes it when binding into the DOM (interpolation, property, attribute, style, class). Binding `[innerHTML]` to `'Template <script>alert("0wned")</script> <b>Syntax</b>'` drops the `<script>` (keeping safe content) and logs a warning. `<script>` tags written in a template are ignored. `DomSanitizer.bypassSecurityTrust*` opts out, so treat it as a code-review red flag. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+Angular treats every value as **untrusted** and sanitizes/escapes it when binding into the DOM (interpolation, property, attribute, style, class). Binding `[innerHTML]` to `'Template <script>alert("0wned")</script> <b>Syntax</b>'` drops the `<script>` (keeping safe content) and logs a warning. `<script>` tags written in a template are ignored. `DomSanitizer.bypassSecurityTrust*` opts out, so treat it as a code-review red flag. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## Interview questions
 
-> [!question]- Explain Angular's injector hierarchy and how a dependency is resolved.
-> Two trees: element injectors (from `providers` on components/directives, mirroring the DOM) and environment injectors (root, lazy-route children, platform, then NullInjector). Lookup starts at the requesting element, walks up the element tree, then the environment chain. First match wins; nothing found → `NullInjectorError` unless `optional: true`. `self`, `skipSelf` and `host` narrow the search.
+<Accordion title="Explain Angular's injector hierarchy and how a dependency is resolved.">
+Two trees: element injectors (from `providers` on components/directives, mirroring the DOM) and environment injectors (root, lazy-route children, platform, then NullInjector). Lookup starts at the requesting element, walks up the element tree, then the environment chain. First match wins; nothing found → `NullInjectorError` unless `optional: true`. `self`, `skipSelf` and `host` narrow the search.
+</Accordion>
 
-> [!question]- What does `providedIn: 'root'` give you over listing a service in `providers`?
-> An app-wide singleton that is **tree-shakable**: if nothing injects it, it is dropped from the bundle. Listing it in a component's `providers` instead gives one instance per component instance, and in a lazy route's `providers` gives one per route injector.
+<Accordion title="What does `providedIn: 'root'` give you over listing a service in `providers`?">
+An app-wide singleton that is **tree-shakable**: if nothing injects it, it is dropped from the bundle. Listing it in a component's `providers` instead gives one instance per component instance, and in a lazy route's `providers` gives one per route injector.
+</Accordion>
 
-> [!question]- Why use `inject()` instead of constructor injection?
-> Works in functions (guards, interceptors, resolvers, factory providers), plays well with inheritance (no `super(...)` chains), avoids `useDefineForClassFields` ordering issues, and keeps types inferred. It must run in an injection context.
+<Accordion title="Why use `inject()` instead of constructor injection?">
+Works in functions (guards, interceptors, resolvers, factory providers), plays well with inheritance (no `super(...)` chains), avoids `useDefineForClassFields` ordering issues, and keeps types inferred. It must run in an injection context.
+</Accordion>
 
-> [!question]- How do functional interceptors work and in what order do they run?
-> An interceptor is `(req, next) => Observable<HttpEvent>`. Register with `provideHttpClient(withInterceptors([a, b]))`. Requests pass `a` then `b`; responses come back through `b` then `a`. Clone the request to modify it.
+<Accordion title="How do functional interceptors work and in what order do they run?">
+An interceptor is `(req, next) => Observable<HttpEvent>`. Register with `provideHttpClient(withInterceptors([a, b]))`. Requests pass `a` then `b`; responses come back through `b` then `a`. Clone the request to modify it.
+</Accordion>
 
-> [!question]- Pure vs impure pipes?
-> Pure pipes run only when the input reference or an argument changes, so they are memoized and cheap. Impure pipes run every change detection cycle (e.g. `async`). Mutating an array does not re-run a pure pipe.
+<Accordion title="Pure vs impure pipes?">
+Pure pipes run only when the input reference or an argument changes, so they are memoized and cheap. Impure pipes run every change detection cycle (e.g. `async`). Mutating an array does not re-run a pure pipe.
+</Accordion>
 
-> [!question]- `switchMap` vs `mergeMap` vs `concatMap` vs `exhaustMap`?
-> Cancel previous / run all in parallel / queue in order / ignore new while busy. Typeahead → `switchMap`; submit button → `exhaustMap`.
+<Accordion title="`switchMap` vs `mergeMap` vs `concatMap` vs `exhaustMap`?">
+Cancel previous / run all in parallel / queue in order / ignore new while busy. Typeahead → `switchMap`; submit button → `exhaustMap`.
+</Accordion>
 
-> [!question]- What is the difference between `providers` and `viewProviders`?
-> Both create element-injector providers, but `viewProviders` are visible only to the component's own view, not to content projected into it via `<ng-content>`.
+<Accordion title="What is the difference between `providers` and `viewProviders`?">
+Both create element-injector providers, but `viewProviders` are visible only to the component's own view, not to content projected into it via `<ng-content>`.
+</Accordion>
 
 ## Related
-- [[Angular Index]]
-- [[Angular Change Detection, Zones & Signals]]
-- [[Modern Angular v17 to v22]]
-- [[Angular Interview Q&A]]
-- [[Frontend Design Patterns]] (DI, observer, decorator)
-- [[Web Components & Shadow DOM]] (Angular Elements)
-- [[Promises, Async-Await & Cancellation]]
+- [Angular Index](/Software%20Engineering/Frontend/08%20Angular/Angular%20Index)
+- [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [Angular Interview Q&A](/Software%20Engineering/Frontend/08%20Angular/Angular%20Interview%20Q%26A)
+- [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) (DI, observer, decorator)
+- [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM) (Angular Elements)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
 
 ## Sources
 - https://angular.dev/guide/components

@@ -1,21 +1,28 @@
 ---
+title: "Using Views"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [Views, CREATE VIEW, Materialized Views, Updatable Views, WITH CHECK OPTION, Indexed Views]
 updated: 2026-09-27
 ---
 # Using Views
 
-> [!tldr] TL;DR
-> A **view** is a saved query you can use like a table. It stores no data (the query runs each time), so it simplifies complex joins, reformats data and limits what users can see. Simple views are **updatable**, and `WITH CHECK OPTION` stops writes that would fall outside the view. A **materialized view** stores the result for fast reads and must be refreshed; in PostgreSQL `REFRESH MATERIALIZED VIEW CONCURRENTLY` needs a unique index.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 18 · Prev: [[Creating and Manipulating Tables]] · Next: [[Working with Stored Procedures]]
+A **view** is a saved query you can use like a table. It stores no data (the query runs each time), so it simplifies complex joins, reformats data and limits what users can see. Simple views are **updatable**, and `WITH CHECK OPTION` stops writes that would fall outside the view. A **materialized view** stores the result for fast reads and must be refreshed; in PostgreSQL `REFRESH MATERIALIZED VIEW CONCURRENTLY` needs a unique index.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 18 · Prev: [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables) · Next: [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures)
 
 ## Understanding views
 
 Views are virtual tables. Tables contain data; views contain **queries** that retrieve data dynamically when used.
 
-> [!note] SQLite
-> SQLite views are read-only: you can create and query them, but not write through them (unless you add `INSTEAD OF` triggers).
+<Note>
+**SQLite**
+
+SQLite views are read-only: you can create and query them, but not write through them (unless you add `INSTEAD OF` triggers).
+</Note>
 
 Take this query, which retrieves data from three tables:
 
@@ -49,11 +56,13 @@ Common uses:
 5. To change data **formatting and representation**.
 6. To keep a **stable interface** while the underlying tables are refactored.
 
-> [!note]
-> After creation, views are used like tables: `SELECT`, filter, sort, join to other views or tables, and sometimes insert and update (with restrictions, see below).
+<Note>
+After creation, views are used like tables: `SELECT`, filter, sort, join to other views or tables, and sometimes insert and update (with restrictions, see below).
+</Note>
 
-> [!note]
-> Views contain no data themselves; they return data from other tables. When those tables change, the view returns the changed data.
+<Note>
+Views contain no data themselves; they return data from other tables. When those tables change, the view returns the changed data.
+</Note>
 
 ## View rules and restrictions
 
@@ -99,12 +108,13 @@ WHERE prod_id = 'RGAN01';
 
 **Analysis:** retrieves specific data from the view with a `WHERE`. The DBMS merges this `WHERE` with the view's own conditions, so data is filtered correctly (and the planner can still use indexes on the base tables). Write the SQL once, reuse it as needed.
 
-> [!tip]
-> Create views that are **not** tied to specific data. `ProductCustomers` returns customers for all products, so it's reusable; a view hard-coded to `RGAN01` would not be.
+<Tip>
+Create views that are **not** tied to specific data. `ProductCustomers` returns customers for all products, so it's reusable; a view hard-coded to `RGAN01` would not be.
+</Tip>
 
 ### Using views to reformat retrieved data
 
-This `SELECT` (from [[Creating Calculated Fields]]) returns vendor name and location in one combined calculated column:
+This `SELECT` (from [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields)) returns vendor name and location in one combined calculated column:
 
 ```sql
 SELECT RTRIM(vend_name) || ' (' || RTRIM(vend_country) || ')'
@@ -141,7 +151,7 @@ WHERE cust_email IS NOT NULL;
 
 #### Example 4
 
-This `SELECT` (from [[Creating Calculated Fields]]) retrieves the items of one order and calculates each expanded price:
+This `SELECT` (from [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields)) retrieves the items of one order and calculates each expanded price:
 
 ```sql
 SELECT prod_id,
@@ -237,27 +247,33 @@ Refresh on a schedule (cron, `pg_cron`) or after batch loads. For incremental ma
 
 ## Interview questions
 
-> [!question]- What's the difference between a view and a table?
-> A table stores data; a view stores a query and returns fresh data from the base tables each time it's used.
+<Accordion title="What's the difference between a view and a table?">
+A table stores data; a view stores a query and returns fresh data from the base tables each time it's used.
+</Accordion>
 
-> [!question]- View vs materialized view?
-> A view is re-executed on every use and always current. A materialized view stores the result, is fast to read and can be indexed, but is only as fresh as its last refresh.
+<Accordion title="View vs materialized view?">
+A view is re-executed on every use and always current. A materialized view stores the result, is fast to read and can be indexed, but is only as fresh as its last refresh.
+</Accordion>
 
-> [!question]- What does REFRESH MATERIALIZED VIEW CONCURRENTLY need, and why use it?
-> A unique index on the materialized view. It lets readers keep querying the old contents during the refresh instead of being blocked; the cost is a slower refresh.
+<Accordion title="What does REFRESH MATERIALIZED VIEW CONCURRENTLY need, and why use it?">
+A unique index on the materialized view. It lets readers keep querying the old contents during the refresh instead of being blocked; the cost is a slower refresh.
+</Accordion>
 
-> [!question]- Can you insert into a view?
-> Yes if it's a simple, automatically updatable view (single table, no aggregates/DISTINCT/GROUP BY etc.), or if it has `INSTEAD OF` triggers. SQLite views are read-only without triggers.
+<Accordion title="Can you insert into a view?">
+Yes if it's a simple, automatically updatable view (single table, no aggregates/DISTINCT/GROUP BY etc.), or if it has `INSTEAD OF` triggers. SQLite views are read-only without triggers.
+</Accordion>
 
-> [!question]- What does WITH CHECK OPTION do?
-> Rejects inserts and updates through the view that would create rows not visible through the view's `WHERE` condition.
+<Accordion title="What does WITH CHECK OPTION do?">
+Rejects inserts and updates through the view that would create rows not visible through the view's `WHERE` condition.
+</Accordion>
 
-> [!question]- Can views be indexed?
-> Plain views can't, but they use the base tables' indexes. SQL Server indexed views and PostgreSQL/Oracle materialized views can be indexed.
+<Accordion title="Can views be indexed?">
+Plain views can't, but they use the base tables' indexes. SQL Server indexed views and PostgreSQL/Oracle materialized views can be indexed.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Creating Calculated Fields]] · [[Grouping Data]] · [[Working with Stored Procedures]] · [[SQL Trigger Functions]] (INSTEAD OF triggers) · [[Query Optimization & EXPLAIN]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields) · [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data) · [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures) · [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions) (INSTEAD OF triggers) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 18 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

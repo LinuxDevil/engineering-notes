@@ -1,12 +1,16 @@
 ---
+title: "Java Concurrency & Virtual Threads"
 tags: [backend, backend/java]
 aliases: [Java Concurrency, Virtual Threads, Project Loom, ExecutorService, CompletableFuture, Structured Concurrency, Java threads, synchronized]
 updated: 2026-09-27
 ---
 # Java Concurrency & Virtual Threads
 
-> [!tldr] TL;DR
-> Java runs code on **threads** that share the heap, so you need **synchronization** (locks, `volatile`, atomics, concurrent collections) to avoid races. You rarely create threads yourself: submit tasks to an **`ExecutorService`** and compose async results with **`CompletableFuture`**. Since Java 21, **virtual threads** make threads cheap (millions per JVM), so simple blocking code scales for I/O-bound servers, often removing the need for reactive programming. **Structured concurrency** (treating a group of subtasks as one unit) is still a preview API in 2026.
+<Note>
+**TL;DR**
+
+Java runs code on **threads** that share the heap, so you need **synchronization** (locks, `volatile`, atomics, concurrent collections) to avoid races. You rarely create threads yourself: submit tasks to an **`ExecutorService`** and compose async results with **`CompletableFuture`**. Since Java 21, **virtual threads** make threads cheap (millions per JVM), so simple blocking code scales for I/O-bound servers, often removing the need for reactive programming. **Structured concurrency** (treating a group of subtasks as one unit) is still a preview API in 2026.
+</Note>
 
 ## Platform threads vs virtual threads
 
@@ -22,7 +26,7 @@ flowchart TB
   end
 ```
 
-- A **platform thread** wraps an OS thread: expensive to create, ~1 MB stack by default, a few thousand per JVM. See [[Reactive Spring - Ch 4 IO & Reactive Streams]] for why that motivated reactive programming.
+- A **platform thread** wraps an OS thread: expensive to create, ~1 MB stack by default, a few thousand per JVM. See [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) for why that motivated reactive programming.
 - A **virtual thread** is scheduled by the JVM onto a small pool of **carrier** threads. When it blocks on I/O (socket read, `Thread.sleep`, `BlockingQueue.take`, JDBC), the JVM **unmounts** it and the carrier runs another virtual thread. Its stack lives on the heap and grows as needed.
 
 ```java
@@ -86,8 +90,11 @@ pool.shutdown();
 | `ForkJoinPool` / `commonPool()` | Divide-and-conquer, parallel streams, default for `CompletableFuture.*Async` |
 | `ThreadPoolExecutor` (custom) | Explicit queue size and rejection policy (backpressure) |
 
-> [!warning] `newCachedThreadPool` and unbounded queues
-> Cached pools create unbounded platform threads; fixed pools use an unbounded queue. Under load both can exhaust memory. In production configure `ThreadPoolExecutor` with a bounded queue and a rejection policy, or use virtual threads + semaphores.
+<Warning>
+**`newCachedThreadPool` and unbounded queues**
+
+Cached pools create unbounded platform threads; fixed pools use an unbounded queue. Under load both can exhaust memory. In production configure `ThreadPoolExecutor` with a bounded queue and a rejection policy, or use virtual threads + semaphores.
+</Warning>
 
 ## CompletableFuture
 
@@ -131,11 +138,14 @@ Response handle(String id) throws InterruptedException {
 }
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Java 24 (2025-03-18)**, JEP 491: virtual threads no longer pin carriers inside `synchronized` blocks. This removed the biggest practical blocker (JDBC drivers and libraries using `synchronized`).
-> - **Java 25 LTS (2025-09-16)**: **Scoped Values** final (JEP 506). Structured concurrency 5th preview with a reworked API (`StructuredTaskScope.open()` + `Joiner`s).
-> - **Java 26 (2026-03-17)**: structured concurrency 6th preview; **Java 27 (2026-09-15)**: 7th preview. Still not final.
-> - **Spring Boot 4.0 (2025-11-20)**: JDK `HttpClient` auto-configuration uses virtual threads when they're enabled. See [[Spring Boot 3 to 4 - What's New]].
+<Info>
+**🆕 2025–2026**
+
+- **Java 24 (2025-03-18)**, JEP 491: virtual threads no longer pin carriers inside `synchronized` blocks. This removed the biggest practical blocker (JDBC drivers and libraries using `synchronized`).
+- **Java 25 LTS (2025-09-16)**: **Scoped Values** final (JEP 506). Structured concurrency 5th preview with a reworked API (`StructuredTaskScope.open()` + `Joiner`s).
+- **Java 26 (2026-03-17)**: structured concurrency 6th preview; **Java 27 (2026-09-15)**: 7th preview. Still not final.
+- **Spring Boot 4.0 (2025-11-20)**: JDK `HttpClient` auto-configuration uses virtual threads when they're enabled. See [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New).
+</Info>
 
 ## Virtual threads vs reactive (WebFlux/Reactor)
 
@@ -148,7 +158,7 @@ Response handle(String id) throws InterruptedException {
 | Ecosystem | JDBC, JPA, all blocking libs just work | Needs reactive drivers (R2DBC, reactive Mongo/Redis) |
 | Learning curve | Low | High |
 
-Rule of thumb in 2026: for new request/response services use **virtual threads**; keep reactive for streaming, backpressure-heavy pipelines, or existing reactive codebases. See [[Reactor - Mono & Flux]] and [[Reactive Spring Book]].
+Rule of thumb in 2026: for new request/response services use **virtual threads**; keep reactive for streaming, backpressure-heavy pipelines, or existing reactive codebases. See [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux) and [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book).
 
 ## Pitfalls
 - Sharing a non-thread-safe object (`SimpleDateFormat`, `HashMap`) between threads.
@@ -165,32 +175,39 @@ Rule of thumb in 2026: for new request/response services use **virtual threads**
 
 ## Interview questions
 
-> [!question]- What are virtual threads and when should you use them?
-> Lightweight threads managed by the JVM (Java 21, JEP 444) that unmount from their carrier OS thread when blocked. Use them for high-concurrency I/O-bound work (request handling, calling DBs/APIs) with plain blocking code. They don't speed up CPU-bound work and shouldn't be pooled.
+<Accordion title="What are virtual threads and when should you use them?">
+Lightweight threads managed by the JVM (Java 21, JEP 444) that unmount from their carrier OS thread when blocked. Use them for high-concurrency I/O-bound work (request handling, calling DBs/APIs) with plain blocking code. They don't speed up CPU-bound work and shouldn't be pooled.
+</Accordion>
 
-> [!question]- What is pinning?
-> A virtual thread that can't unmount while blocked, so it holds its carrier OS thread. It used to happen inside `synchronized` (fixed in Java 24, JEP 491) and still happens during native/JNI frames.
+<Accordion title="What is pinning?">
+A virtual thread that can't unmount while blocked, so it holds its carrier OS thread. It used to happen inside `synchronized` (fixed in Java 24, JEP 491) and still happens during native/JNI frames.
+</Accordion>
 
-> [!question]- `synchronized` vs `volatile` vs `AtomicInteger`?
-> `synchronized` gives mutual exclusion and visibility. `volatile` gives visibility/ordering for a single variable but no atomic compound operations. `AtomicInteger` gives lock-free atomic operations via CAS.
+<Accordion title="`synchronized` vs `volatile` vs `AtomicInteger`?">
+`synchronized` gives mutual exclusion and visibility. `volatile` gives visibility/ordering for a single variable but no atomic compound operations. `AtomicInteger` gives lock-free atomic operations via CAS.
+</Accordion>
 
-> [!question]- How does `CompletableFuture` differ from `Future`?
-> `Future` only lets you block with `get()`. `CompletableFuture` can be completed manually and composed non-blockingly (`thenApply`, `thenCompose`, `thenCombine`, `allOf`) with error handling and timeouts.
+<Accordion title="How does `CompletableFuture` differ from `Future`?">
+`Future` only lets you block with `get()`. `CompletableFuture` can be completed manually and composed non-blockingly (`thenApply`, `thenCompose`, `thenCombine`, `allOf`) with error handling and timeouts.
+</Accordion>
 
-> [!question]- What is structured concurrency?
-> Scoping concurrent subtasks to a code block so they start and finish together: failures cancel siblings, no thread leaks, clear parent-child relationships in dumps. Preview in Java 21–27 via `StructuredTaskScope`.
+<Accordion title="What is structured concurrency?">
+Scoping concurrent subtasks to a code block so they start and finish together: failures cancel siblings, no thread leaks, clear parent-child relationships in dumps. Preview in Java 21–27 via `StructuredTaskScope`.
+</Accordion>
 
-> [!question]- Do virtual threads make reactive programming obsolete?
-> For most request/response services, largely yes: you get similar scalability with simpler code. Reactive still wins for streaming, built-in backpressure and composing many async event sources.
+<Accordion title="Do virtual threads make reactive programming obsolete?">
+For most request/response services, largely yes: you get similar scalability with simpler code. Reactive still wins for streaming, built-in backpressure and composing many async event sources.
+</Accordion>
 
-> [!question]- How do you avoid deadlocks?
-> Acquire locks in a consistent global order, hold them briefly, avoid calling unknown code while holding a lock, use `tryLock` with timeouts, and prefer higher-level concurrent utilities.
+<Accordion title="How do you avoid deadlocks?">
+Acquire locks in a consistent global order, hold them briefly, avoid calling unknown code while holding a lock, use `tryLock` with timeouts, and prefer higher-level concurrent utilities.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Modern Java 17 to 25]] · [[JVM Internals - Memory & Garbage Collection]] · [[Spring Boot Essentials]]
-- [[Reactor - Mono & Flux]] · [[Reactive Spring - Ch 4 IO & Reactive Streams]] · [[Reactive Spring - Ch 5 Reactor & Backpressure]]
-- [[Concurrency And Parallelism]] · Node comparison: [[Node.js Concurrency - Worker Threads, Cluster & Child Processes]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025) · [JVM Internals - Memory & Garbage Collection](/Software%20Engineering/Backend/Java/JVM%20Internals%20-%20Memory%20%26%20Garbage%20Collection) · [Spring Boot Essentials](/Software%20Engineering/Backend/Java/Spring%20Boot%20Essentials)
+- [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux) · [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) · [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure)
+- [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism) · Node comparison: [Node.js Concurrency - Worker Threads, Cluster & Child Processes](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Concurrency%20-%20Worker%20Threads%2C%20Cluster%20%26%20Child%20Processes)
 
 ## Sources
 - [JEP 444: Virtual Threads](https://openjdk.org/jeps/444)

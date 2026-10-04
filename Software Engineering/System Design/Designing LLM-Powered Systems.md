@@ -1,12 +1,16 @@
 ---
+title: "Designing LLM-Powered Systems"
 tags: [system-design, system-design/llm]
 aliases: [LLM System Design, RAG Architecture, LLM Serving, Semantic Caching, LLM Guardrails, LLM Evals]
 updated: 2026-09-27
 ---
 # Designing LLM-Powered Systems
 
-> [!tldr] TL;DR
-> Building features on large language models is ordinary system design with unusual constraints: calls are **slow (seconds), expensive (per token), non-deterministic, rate-limited by providers, and can be manipulated by their inputs**. The standard architecture is an **LLM gateway** (routing, keys, quotas, retries, fallbacks, logging) in front of model providers, a **RAG pipeline** (ingest → chunk → embed → index → retrieve → re-rank → prompt) for grounding in your data, **caching** (provider prompt caching, exact and semantic response caches), **streaming** responses, **guardrails** on input and output, and **evals** as the test suite. See [[AI & ML Index]] for the ML side.
+<Note>
+**TL;DR**
+
+Building features on large language models is ordinary system design with unusual constraints: calls are **slow (seconds), expensive (per token), non-deterministic, rate-limited by providers, and can be manipulated by their inputs**. The standard architecture is an **LLM gateway** (routing, keys, quotas, retries, fallbacks, logging) in front of model providers, a **RAG pipeline** (ingest → chunk → embed → index → retrieve → re-rank → prompt) for grounding in your data, **caching** (provider prompt caching, exact and semantic response caches), **streaming** responses, **guardrails** on input and output, and **evals** as the test suite. See [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index) for the ML side.
+</Note>
 
 ## What's different about LLM calls
 | Property | Consequence |
@@ -40,8 +44,8 @@ flowchart LR
 **Ingestion (offline / streaming)**
 1. Load sources (docs, tickets, DB rows) with **ACL metadata**.
 2. Clean and **chunk** (e.g. 300–800 tokens, overlap 10–20%, split on headings; keep titles in each chunk).
-3. **Embed** chunks; store vectors + text + metadata ([[Vector Databases & pgvector]]).
-4. Also index text for **BM25** ([[Search Systems & Inverted Indexes]]).
+3. **Embed** chunks; store vectors + text + metadata ([Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector)).
+4. Also index text for **BM25** ([Search Systems & Inverted Indexes](/Software%20Engineering/System%20Design/Search%20Systems%20%26%20Inverted%20Indexes)).
 5. Re-embed on change (CDC), version the embedding model (changing it means re-indexing everything).
 
 **Query (online)**
@@ -72,15 +76,15 @@ def answer(question, user):
 | **Retrieval cache** | Query → retrieved chunk IDs | Invalidate on re-index |
 | **Embedding cache** | Text hash → vector | Avoid re-embedding unchanged chunks |
 
-See [[Caching Strategies]].
+See [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies).
 
 ## Rate limits, cost and latency
-- **Token-aware rate limiting** per user/tenant (tokens/min, not just requests) at the gateway ([[Case Study - Rate Limiter]]).
+- **Token-aware rate limiting** per user/tenant (tokens/min, not just requests) at the gateway ([Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter)).
 - **Model routing / cascades**: small fast model by default, escalate to a larger one on low confidence or hard tasks.
 - Cap `max_tokens`; trim context; summarize long histories.
 - **Batch APIs** for offline workloads (typically discounted).
 - Parallelize independent calls; stream to cut perceived latency; speculative prefetch of retrieval.
-- Fallbacks: secondary provider/region on 429/5xx with circuit breakers ([[Distributed Systems Patterns]]).
+- Fallbacks: secondary provider/region on 429/5xx with circuit breakers ([Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)).
 - Track cost per feature, per tenant, per request in the gateway logs.
 
 ## Self-hosting (when it makes sense)
@@ -99,10 +103,13 @@ Serving engines (vLLM, TGI, TensorRT-LLM, SGLang) use continuous batching and pa
 - Output validation: JSON schema, groundedness checks, content policy classifiers.
 - **Unbounded consumption**: cap tokens, loop iterations for agents, and spend per user.
 
-> [!info]+ 🆕 2025–2026
-> - **OWASP Top 10 for LLM Applications 2025** (released late 2024 for 2025): LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM03 Supply Chain, LLM04 Data and Model Poisoning, LLM05 Improper Output Handling, LLM06 Excessive Agency, **LLM07 System Prompt Leakage** (new), **LLM08 Vector and Embedding Weaknesses** (new, RAG-specific), LLM09 Misinformation, LLM10 Unbounded Consumption. ([OWASP GenAI](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/))
-> - **Vector storage went mainstream in general-purpose stores**: Redis 8 vector sets (2025-05-01), S3 Vectors GA (2025-12-02, up to 2 B vectors per index), PostgreSQL + pgvector. Choose by latency needs and data size. ([AWS](https://aws.amazon.com/about-aws/whats-new/2025/12/amazon-s3-vectors-generally-available/), [Redis](https://redis.io/blog/agplv3/))
-> - Tool access is increasingly standardized via the **Model Context Protocol** (see [[MCP]] and [[AI in Frontend - MCP, WebMCP & Built-in AI]]); treat every MCP server as a third-party dependency with its own permissions.
+<Info>
+**🆕 2025–2026**
+
+- **OWASP Top 10 for LLM Applications 2025** (released late 2024 for 2025): LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM03 Supply Chain, LLM04 Data and Model Poisoning, LLM05 Improper Output Handling, LLM06 Excessive Agency, **LLM07 System Prompt Leakage** (new), **LLM08 Vector and Embedding Weaknesses** (new, RAG-specific), LLM09 Misinformation, LLM10 Unbounded Consumption. ([OWASP GenAI](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/))
+- **Vector storage went mainstream in general-purpose stores**: Redis 8 vector sets (2025-05-01), S3 Vectors GA (2025-12-02, up to 2 B vectors per index), PostgreSQL + pgvector. Choose by latency needs and data size. ([AWS](https://aws.amazon.com/about-aws/whats-new/2025/12/amazon-s3-vectors-generally-available/), [Redis](https://redis.io/blog/agplv3/))
+- Tool access is increasingly standardized via the **Model Context Protocol** (see [MCP](/Software%20Engineering/AI%20%26%20ML/MCP) and [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)); treat every MCP server as a third-party dependency with its own permissions.
+</Info>
 
 ## Senior perspective
 - Start with the **eval set**, not the prompt. Without evals you can't change models, prompts or chunking safely.
@@ -112,28 +119,34 @@ Serving engines (vLLM, TGI, TensorRT-LLM, SGLang) use continuous batching and pa
 - Watch cost regressions like latency regressions: alert on tokens per request.
 
 ## Interview questions
-> [!question]- Walk through a RAG pipeline.
-> Ingest documents with metadata and ACLs, chunk them, embed and index (vector + keyword). At query time, rewrite the query, run hybrid retrieval filtered by the user's permissions, fuse and re-rank, build a prompt with the top chunks and ask for cited answers, then validate output and stream it back.
+<Accordion title="Walk through a RAG pipeline.">
+Ingest documents with metadata and ACLs, chunk them, embed and index (vector + keyword). At query time, rewrite the query, run hybrid retrieval filtered by the user's permissions, fuse and re-rank, build a prompt with the top chunks and ask for cited answers, then validate output and stream it back.
+</Accordion>
 
-> [!question]- How do you reduce LLM cost and latency?
-> Smaller models by default with cascades, provider prompt caching with stable prefixes, response/semantic caches where safe, trimmed contexts, `max_tokens` caps, batching for offline work, streaming for perceived latency, and parallel tool/retrieval calls.
+<Accordion title="How do you reduce LLM cost and latency?">
+Smaller models by default with cascades, provider prompt caching with stable prefixes, response/semantic caches where safe, trimmed contexts, `max_tokens` caps, batching for offline work, streaming for perceived latency, and parallel tool/retrieval calls.
+</Accordion>
 
-> [!question]- Why is semantic caching risky?
-> Two semantically similar questions can require different answers (different user, date, negation, entity). Wrong hits return confidently wrong or leaked answers. Restrict to non-personal FAQ traffic, scope per tenant, use high thresholds and short TTLs.
+<Accordion title="Why is semantic caching risky?">
+Two semantically similar questions can require different answers (different user, date, negation, entity). Wrong hits return confidently wrong or leaked answers. Restrict to non-personal FAQ traffic, scope per tenant, use high thresholds and short TTLs.
+</Accordion>
 
-> [!question]- How do you defend against prompt injection?
-> Assume it will sometimes succeed and limit blast radius: least-privilege tools, authorization enforced outside the model, human approval for side effects, isolation of untrusted content, output encoding, and monitoring. Filters and instructions help but aren't sufficient.
+<Accordion title="How do you defend against prompt injection?">
+Assume it will sometimes succeed and limit blast radius: least-privilege tools, authorization enforced outside the model, human approval for side effects, isolation of untrusted content, output encoding, and monitoring. Filters and instructions help but aren't sufficient.
+</Accordion>
 
-> [!question]- How do you test an LLM feature?
-> An offline eval suite with representative inputs and scored properties (schema validity, groundedness, correctness via references or calibrated LLM judges), run on every prompt/model change, plus online metrics and A/B tests, feeding production failures back into the dataset.
+<Accordion title="How do you test an LLM feature?">
+An offline eval suite with representative inputs and scored properties (schema validity, groundedness, correctness via references or calibrated LLM judges), run on every prompt/model change, plus online metrics and A/B tests, feeding production failures back into the dataset.
+</Accordion>
 
-> [!question]- How do you handle provider rate limits at scale?
-> Token-aware quotas per tenant at a gateway, queueing with priorities, retries with backoff honoring Retry-After, multiple deployments/regions/providers with fallback routing, and batch APIs for non-interactive work.
+<Accordion title="How do you handle provider rate limits at scale?">
+Token-aware quotas per tenant at a gateway, queueing with priorities, retries with backoff honoring Retry-After, multiple deployments/regions/providers with fallback routing, and batch APIs for non-interactive work.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[AI & ML Index]]
-- [[Vector Databases & pgvector]] · [[Search Systems & Inverted Indexes]] · [[Caching Strategies]] · [[Case Study - Rate Limiter]] · [[Distributed Systems Patterns]]
-- [[MCP]] · [[AI Agents & Agentic Patterns]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]] · [[Observability - Logs, Metrics & Traces]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector) · [Search Systems & Inverted Indexes](/Software%20Engineering/System%20Design/Search%20Systems%20%26%20Inverted%20Indexes) · [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies) · [Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)
+- [MCP](/Software%20Engineering/AI%20%26%20ML/MCP) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
 
 ## Sources
 - [Lewis et al.: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (2020)](https://arxiv.org/abs/2005.11401)

@@ -1,12 +1,16 @@
 ---
+title: "Java Language Essentials"
 tags: [backend, backend/java]
 aliases: [Java Basics, Java Fundamentals, Java Collections, Java Generics, Java Streams, Records, Sealed Classes, Java Exceptions]
 updated: 2026-09-27
 ---
 # Java Language Essentials
 
-> [!tldr] TL;DR
-> Java is a statically typed, object-oriented language compiled to **bytecode** that runs on the **JVM**. The daily toolkit is: primitives vs reference types, classes/interfaces, the **Collections** framework (`List`, `Set`, `Map`), **generics**, **exceptions**, **lambdas + Streams**, and since Java 16–21 **records**, **sealed types** and **pattern matching** that make data-oriented code concise. Know `equals`/`hashCode`, immutability and null handling cold; they're behind most real bugs.
+<Note>
+**TL;DR**
+
+Java is a statically typed, object-oriented language compiled to **bytecode** that runs on the **JVM**. The daily toolkit is: primitives vs reference types, classes/interfaces, the **Collections** framework (`List`, `Set`, `Map`), **generics**, **exceptions**, **lambdas + Streams**, and since Java 16–21 **records**, **sealed types** and **pattern matching** that make data-oriented code concise. Know `equals`/`hashCode`, immutability and null handling cold; they're behind most real bugs.
+</Note>
 
 ## How Java runs
 
@@ -68,7 +72,7 @@ public final class Circle extends Base {
 - Access modifiers: `private` < package-private (default) < `protected` < `public`.
 - `final` class can't be extended; `final` field can't be reassigned; `static` belongs to the class.
 - Interfaces can have `default` and `static` methods (Java 8) and `private` methods (Java 9).
-- Abstract class vs interface: [[Abstract Class and Interface]] and [[Reactive Spring - Ch 2 Java Refresher]]. OOP principles: [[OOP]], [[SOLID]].
+- Abstract class vs interface: [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) and [Reactive Spring - Ch 2 Java Refresher](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%202%20Java%20Refresher). OOP principles: [OOP](/Software%20Engineering/Principles/OOP), [SOLID](/Software%20Engineering/Principles/SOLID).
 
 ### `equals`, `hashCode`, `toString`
 
@@ -194,7 +198,7 @@ List<String> top3 = revenueByCustomer.entrySet().stream()
 ```
 
 - Core functional interfaces: `Function<T,R>`, `Supplier<T>`, `Consumer<T>`, `Predicate<T>`, `BiFunction`, `UnaryOperator`.
-- Streams are **lazy**: intermediate ops (`map`, `filter`) do nothing until a terminal op (`collect`, `toList`, `forEach`, `reduce`). Same idea as "nothing happens until you subscribe" in [[Reactor - Mono & Flux]].
+- Streams are **lazy**: intermediate ops (`map`, `filter`) do nothing until a terminal op (`collect`, `toList`, `forEach`, `reduce`). Same idea as "nothing happens until you subscribe" in [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux).
 - Streams are single-use. `parallelStream()` uses the common ForkJoinPool; rarely a win on servers.
 - **Gatherers** (Java 24) add custom intermediate operations (`windowFixed`, `fold`, `mapConcurrent`).
 
@@ -219,42 +223,52 @@ Use `Optional` as a **return type** for "maybe absent", not for fields or parame
 ## Senior perspective
 - Prefer **immutability** (records, `List.copyOf`, final fields): thread safety and easier reasoning for free.
 - Model domain states with **sealed types + records** instead of flags and nullable fields; exhaustive `switch` turns missing cases into compile errors.
-- Adopt **JSpecify** `@Nullable`/`@NullMarked` with NullAway or IntelliJ to make nullness explicit (Spring 7 did portfolio-wide). See [[Spring Boot 3 to 4 - What's New]].
+- Adopt **JSpecify** `@Nullable`/`@NullMarked` with NullAway or IntelliJ to make nullness explicit (Spring 7 did portfolio-wide). See [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New).
 - In review: `equals/hashCode` consistency, resource closing, exception wrapping with cause, streams that hide side effects, accidental O(n²) (`list.contains` in loops).
 
-> [!info]+ 🆕 2025–2026
-> - **JDK 25 (LTS, 2025-09-16)** finalised *compact source files and instance main methods* (JEP 512, `void main()` + `IO.println`), *module import declarations* (JEP 511, `import module java.base;`) and *flexible constructor bodies* (JEP 513: statements before `super(...)`).
-> - **JDK 24 (2025-03-18)** finalised **Stream Gatherers** (JEP 485).
-> - Primitive types in patterns (`case int i`) is still in preview (5th preview in JDK 27, 2026-09-15).
-> Full list: [[Modern Java 17 to 25]].
+<Info>
+**🆕 2025–2026**
+
+- **JDK 25 (LTS, 2025-09-16)** finalised *compact source files and instance main methods* (JEP 512, `void main()` + `IO.println`), *module import declarations* (JEP 511, `import module java.base;`) and *flexible constructor bodies* (JEP 513: statements before `super(...)`).
+- **JDK 24 (2025-03-18)** finalised **Stream Gatherers** (JEP 485).
+- Primitive types in patterns (`case int i`) is still in preview (5th preview in JDK 27, 2026-09-15).
+Full list: [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025).
+</Info>
 
 ## Interview questions
 
-> [!question]- What's the contract between `equals` and `hashCode`?
-> Equal objects must have equal hash codes (the reverse isn't required). Breaking it makes hash-based collections lose or duplicate entries. Override both together, based on the same fields; records do it automatically.
+<Accordion title="What's the contract between `equals` and `hashCode`?">
+Equal objects must have equal hash codes (the reverse isn't required). Breaking it makes hash-based collections lose or duplicate entries. Override both together, based on the same fields; records do it automatically.
+</Accordion>
 
-> [!question]- Checked vs unchecked exceptions?
-> Checked (`Exception` subclasses except `RuntimeException`) must be caught or declared, for recoverable conditions like I/O. Unchecked (`RuntimeException`) signal programming errors or are used by frameworks to avoid boilerplate. `Error`s are JVM problems you shouldn't catch.
+<Accordion title="Checked vs unchecked exceptions?">
+Checked (`Exception` subclasses except `RuntimeException`) must be caught or declared, for recoverable conditions like I/O. Unchecked (`RuntimeException`) signal programming errors or are used by frameworks to avoid boilerplate. `Error`s are JVM problems you shouldn't catch.
+</Accordion>
 
-> [!question]- What is type erasure?
-> Generic type parameters exist only at compile time; the compiler inserts casts and erases them to their bounds in bytecode. Consequences: no `new T()`, no generic arrays, no `instanceof List<String>`, and overloads can't differ only by type argument.
+<Accordion title="What is type erasure?">
+Generic type parameters exist only at compile time; the compiler inserts casts and erases them to their bounds in bytecode. Consequences: no `new T()`, no generic arrays, no `instanceof List<String>`, and overloads can't differ only by type argument.
+</Accordion>
 
-> [!question]- `ArrayList` vs `LinkedList`?
-> `ArrayList` is a resizable array: O(1) random access, cache-friendly; inserts in the middle are O(n). `LinkedList` has O(1) insert/remove at a known node but O(n) access and poor locality. In practice `ArrayList` (or `ArrayDeque` for queues) almost always wins.
+<Accordion title="`ArrayList` vs `LinkedList`?">
+`ArrayList` is a resizable array: O(1) random access, cache-friendly; inserts in the middle are O(n). `LinkedList` has O(1) insert/remove at a known node but O(n) access and poor locality. In practice `ArrayList` (or `ArrayDeque` for queues) almost always wins.
+</Accordion>
 
-> [!question]- What are records and sealed classes good for?
-> Records: concise immutable data (DTOs, value objects, events). Sealed classes: closed hierarchies so the compiler knows all subtypes. Together with pattern-matching `switch` they give exhaustive, type-safe handling of variants.
+<Accordion title="What are records and sealed classes good for?">
+Records: concise immutable data (DTOs, value objects, events). Sealed classes: closed hierarchies so the compiler knows all subtypes. Together with pattern-matching `switch` they give exhaustive, type-safe handling of variants.
+</Accordion>
 
-> [!question]- How does `HashMap` work internally?
-> An array of buckets indexed by `hash(key) & (n-1)`. Collisions form a linked list that turns into a red-black tree when a bucket exceeds 8 entries (and the table is large enough). It resizes (doubles) when size exceeds capacity × load factor (0.75), rehashing entries.
+<Accordion title="How does `HashMap` work internally?">
+An array of buckets indexed by `hash(key) & (n-1)`. Collisions form a linked list that turns into a red-black tree when a bucket exceeds 8 entries (and the table is large enough). It resizes (doubles) when size exceeds capacity × load factor (0.75), rehashing entries.
+</Accordion>
 
-> [!question]- Are Java streams lazy?
-> Yes. Intermediate operations build a pipeline; nothing runs until a terminal operation. Elements flow one at a time through the whole pipeline, and short-circuiting ops like `findFirst`/`limit` stop early.
+<Accordion title="Are Java streams lazy?">
+Yes. Intermediate operations build a pipeline; nothing runs until a terminal operation. Elements flow one at a time through the whole pipeline, and short-circuiting ops like `findFirst`/`limit` stop early.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Modern Java 17 to 25]] · [[Java Concurrency & Virtual Threads]] · [[JVM Internals - Memory & Garbage Collection]]
-- [[Reactive Spring - Ch 2 Java Refresher]] · [[OOP]] · [[SOLID]] · [[Abstract Class and Interface]] · [[Design Patterns]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025) · [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [JVM Internals - Memory & Garbage Collection](/Software%20Engineering/Backend/Java/JVM%20Internals%20-%20Memory%20%26%20Garbage%20Collection)
+- [Reactive Spring - Ch 2 Java Refresher](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%202%20Java%20Refresher) · [OOP](/Software%20Engineering/Principles/OOP) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)
 
 ## Sources
 - [dev.java: Learn Java](https://dev.java/learn/)

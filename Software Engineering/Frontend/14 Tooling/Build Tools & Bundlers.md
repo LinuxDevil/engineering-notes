@@ -1,12 +1,16 @@
 ---
+title: "Build Tools & Bundlers"
 tags: [frontend, frontend/tooling]
 aliases: [Bundlers, Build Tools, Vite, Webpack, Tree Shaking, Turbopack, Rspack, Rolldown]
 updated: 2026-09-27
 ---
 # Build Tools & Bundlers
 
-> [!tldr] TL;DR
-> A **bundler** takes your source (TS, JSX, CSS, images, npm packages) and produces optimised files browsers can load fast: it resolves the module graph, transforms code, **tree-shakes** unused exports, **splits** code into chunks, minifies and fingerprints files. In development, modern tools (Vite) serve native ES modules with **HMR** instead of bundling everything. In 2026 the landscape is **Vite 8 (Rolldown + Oxc)**, **Turbopack** (Next.js default), **Rspack 2** (webpack-compatible, Rust), **esbuild**, and legacy **webpack 5**. Create React App is sunset.
+<Note>
+**TL;DR**
+
+A **bundler** takes your source (TS, JSX, CSS, images, npm packages) and produces optimised files browsers can load fast: it resolves the module graph, transforms code, **tree-shakes** unused exports, **splits** code into chunks, minifies and fingerprints files. In development, modern tools (Vite) serve native ES modules with **HMR** instead of bundling everything. In 2026 the landscape is **Vite 8 (Rolldown + Oxc)**, **Turbopack** (Next.js default), **Rspack 2** (webpack-compatible, Rust), **esbuild**, and legacy **webpack 5**. Create React App is sunset.
+</Note>
 
 ## What a bundler does
 
@@ -43,8 +47,11 @@ Why bundle at all when browsers support ES modules?
 | Source maps | Fast, inline | Separate files (upload to error tracker) |
 | HMR | Yes | No |
 
-> [!warning] Dev/prod parity
-> Because dev and build used different pipelines (esbuild + native ESM vs Rollup), Vite apps occasionally behaved differently between the two. Vite 8's single Rolldown-based pipeline is partly about closing this gap. Always test the production build (`vite build && vite preview`).
+<Warning>
+**Dev/prod parity**
+
+Because dev and build used different pipelines (esbuild + native ESM vs Rollup), Vite apps occasionally behaved differently between the two. Vite 8's single Rolldown-based pipeline is partly about closing this gap. Always test the production build (`vite build && vite preview`).
+</Warning>
 
 ### HMR (Hot Module Replacement)
 When a file changes, the dev server sends the updated module over a WebSocket; the runtime swaps it in **without a full reload**, keeping app state. React Fast Refresh preserves component state across edits; editing a non-component module usually bubbles up to the nearest HMR boundary or causes a full reload.
@@ -77,24 +84,27 @@ And from the owner's interview note: tree shaking aims to remove code that will 
 | Done by | Bundler | Mostly the minifier (Terser/esbuild/Oxc) |
 | Requires | **Static ESM** `import`/`export` | Constant folding (e.g. `process.env.NODE_ENV === 'production'`) |
 
-> [!example] What tree shaking can and can't remove
-> ```js
-> // utils.js
-> export function formatPrice(n) { return n.toFixed(2); }
-> export function heavyChart() { /* 50 KB */ }
->
-> // app.js
-> import { formatPrice } from './utils.js';  // ✅ heavyChart is dropped
->
-> // ❌ Defeats tree shaking
-> import * as utils from './utils.js'; utils[name]();   // dynamic property access
-> const utils = require('./utils');                      // CommonJS is not statically analysable
-> import _ from 'lodash';                                // CJS package → whole library
->
-> // ✅ Tree-shakeable alternatives
-> import { debounce } from 'lodash-es';
-> import debounce from 'lodash/debounce';
-> ```
+<Info>
+**What tree shaking can and can't remove**
+
+```js
+// utils.js
+export function formatPrice(n) { return n.toFixed(2); }
+export function heavyChart() { /* 50 KB */ }
+
+// app.js
+import { formatPrice } from './utils.js';  // ✅ heavyChart is dropped
+
+// ❌ Defeats tree shaking
+import * as utils from './utils.js'; utils[name]();   // dynamic property access
+const utils = require('./utils');                      // CommonJS is not statically analysable
+import _ from 'lodash';                                // CJS package → whole library
+
+// ✅ Tree-shakeable alternatives
+import { debounce } from 'lodash-es';
+import debounce from 'lodash/debounce';
+```
+</Info>
 
 ### `sideEffects`
 A module has **side effects** if importing it does something (polyfills, CSS imports, `window.x = …`, registering custom elements). A bundler can only drop an unused import if it knows the module is side-effect free.
@@ -129,9 +139,9 @@ export default defineConfig({
   },
 });
 ```
-Too many tiny chunks = request overhead; too few = over-downloading. Let the bundler's defaults do most of the work. See [[Performance Optimization Playbook]].
+Too many tiny chunks = request overhead; too few = over-downloading. Let the bundler's defaults do most of the work. See [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook).
 
-Related bundler features: **Module Federation** (webpack 5, Rspack, Vite plugin) shares code between separately deployed apps — see [[Micro-frontends & Module Federation]].
+Related bundler features: **Module Federation** (webpack 5, Rspack, Vite plugin) shares code between separately deployed apps — see [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation).
 
 ## The tools
 
@@ -211,55 +221,68 @@ export default defineConfig({
 - CRA fell behind (slow webpack dev server, no SSR, unmaintained deps). React's docs stopped recommending it, and React officially **sunset Create React App on 2025-02-14**, recommending a framework (Next.js, React Router, Expo…) or a build tool like **Vite** or Parcel for SPAs.
 - Migration: CRA → Vite is usually straightforward (`index.html` at the root, `REACT_APP_*` → `VITE_*` env vars, Jest → Vitest).
 
-> [!warning] Common pitfalls
-> - Assuming the bundler type-checks — Vite/esbuild/SWC strip types; run `tsc --noEmit` (or TS 7) in CI.
-> - CommonJS dependencies and `import *` defeating tree shaking.
-> - Missing `sideEffects` in your own libraries → consumers can't drop unused code (or, if set wrongly to `false`, CSS imports disappear).
-> - Leaking secrets through `import.meta.env.VITE_*` / `process.env.NEXT_PUBLIC_*` — see [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
-> - Only testing the dev server.
+<Warning>
+**Common pitfalls**
 
-> [!info]+ 🆕 2025–2026
-> - **CRA sunset**: 2025-02-14.
-> - **Vite 7** (2025-06-24) ESM-only; **Vite 8** (2026-03-12) Rolldown + Oxc single pipeline; now 8.3.1.
-> - **Rolldown 1.0** stable 2026-05-07.
-> - **Next.js 16** (2025-10-21): Turbopack stable and default for dev and build; 16.3 turns on the build filesystem cache and adds `import.meta.glob` in Turbopack.
-> - **Rspack 2.0** (2026-04-22): pure ESM core, `import defer`, experimental RSC.
-> - **Vite+ beta** (2026-07-02, MIT): one `vp` CLI for dev/check/test/build/pack/run bundling Vite 8, Vitest, Rolldown, tsdown, Oxlint and Oxfmt — see [[Linting, Formatting, Package Managers & Runtimes]].
-> - **Angular v22** deprecated the webpack builder.
-> - **TypeScript 7.0** (2026-07-08), the native Go port, makes type-checking ~8–12× faster — see [[TypeScript 5.8 to 7.0]].
+- Assuming the bundler type-checks — Vite/esbuild/SWC strip types; run `tsc --noEmit` (or TS 7) in CI.
+- CommonJS dependencies and `import *` defeating tree shaking.
+- Missing `sideEffects` in your own libraries → consumers can't drop unused code (or, if set wrongly to `false`, CSS imports disappear).
+- Leaking secrets through `import.meta.env.VITE_*` / `process.env.NEXT_PUBLIC_*` — see [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
+- Only testing the dev server.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **CRA sunset**: 2025-02-14.
+- **Vite 7** (2025-06-24) ESM-only; **Vite 8** (2026-03-12) Rolldown + Oxc single pipeline; now 8.3.1.
+- **Rolldown 1.0** stable 2026-05-07.
+- **Next.js 16** (2025-10-21): Turbopack stable and default for dev and build; 16.3 turns on the build filesystem cache and adds `import.meta.glob` in Turbopack.
+- **Rspack 2.0** (2026-04-22): pure ESM core, `import defer`, experimental RSC.
+- **Vite+ beta** (2026-07-02, MIT): one `vp` CLI for dev/check/test/build/pack/run bundling Vite 8, Vitest, Rolldown, tsdown, Oxlint and Oxfmt — see [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes).
+- **Angular v22** deprecated the webpack builder.
+- **TypeScript 7.0** (2026-07-08), the native Go port, makes type-checking ~8–12× faster — see [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0).
+</Info>
 
 ## Interview questions
 
-> [!question]- What does a bundler do and why do we still need one with native ES modules?
-> Resolves the module graph, transforms TS/JSX/CSS, tree-shakes, splits code, minifies and hashes files. Native ESM alone means thousands of requests and no transforms or optimisations, so production still bundles; dev servers like Vite use native ESM for speed.
+<Accordion title="What does a bundler do and why do we still need one with native ES modules?">
+Resolves the module graph, transforms TS/JSX/CSS, tree-shakes, splits code, minifies and hashes files. Native ESM alone means thousands of requests and no transforms or optimisations, so production still bundles; dev servers like Vite use native ESM for speed.
+</Accordion>
 
-> [!question]- Tree shaking vs dead code elimination?
-> Tree shaking is at the module-graph level: unused exports of ES modules are excluded. DCE removes unreachable/unused code inside modules, mostly done by the minifier. Tree shaking needs static `import`/`export` and side-effect information.
+<Accordion title="Tree shaking vs dead code elimination?">
+Tree shaking is at the module-graph level: unused exports of ES modules are excluded. DCE removes unreachable/unused code inside modules, mostly done by the minifier. Tree shaking needs static `import`/`export` and side-effect information.
+</Accordion>
 
-> [!question]- What is the `sideEffects` field?
-> A package.json hint telling bundlers which files have side effects when imported. `false` (or a list of exceptions like CSS files) lets the bundler drop whole modules that aren't used.
+<Accordion title="What is the `sideEffects` field?">
+A package.json hint telling bundlers which files have side effects when imported. `false` (or a list of exceptions like CSS files) lets the bundler drop whole modules that aren't used.
+</Accordion>
 
-> [!question]- Why is Vite's dev server fast?
-> It doesn't bundle the app in dev: it serves source files as native ESM on demand, transforms only what the browser requests, pre-bundles dependencies once, and HMR updates only the changed module.
+<Accordion title="Why is Vite's dev server fast?">
+It doesn't bundle the app in dev: it serves source files as native ESM on demand, transforms only what the browser requests, pre-bundles dependencies once, and HMR updates only the changed module.
+</Accordion>
 
-> [!question]- How does HMR work?
-> The dev server watches files; on change it re-transforms the module and notifies the browser over a WebSocket; the client runtime fetches the new module and swaps it at the nearest HMR boundary, keeping app state (React Fast Refresh preserves component state).
+<Accordion title="How does HMR work?">
+The dev server watches files; on change it re-transforms the module and notifies the browser over a WebSocket; the client runtime fetches the new module and swaps it at the nearest HMR boundary, keeping app state (React Fast Refresh preserves component state).
+</Accordion>
 
-> [!question]- webpack vs Vite vs Turbopack vs Rspack — which would you pick?
-> New SPA or most frameworks: Vite. Next.js: Turbopack (default). Large existing webpack app needing speed with minimal rewrite: Rspack. Library: Rolldown/tsdown or esbuild. Keep webpack only where migration cost is too high.
+<Accordion title="webpack vs Vite vs Turbopack vs Rspack — which would you pick?">
+New SPA or most frameworks: Vite. Next.js: Turbopack (default). Large existing webpack app needing speed with minimal rewrite: Rspack. Library: Rolldown/tsdown or esbuild. Keep webpack only where migration cost is too high.
+</Accordion>
 
-> [!question]- What did "eject" do in Create React App?
-> It copied the hidden webpack/Babel/Jest configuration into the project so it could be customised, permanently detaching from `react-scripts` upgrades. CRA itself was sunset in February 2025.
+<Accordion title="What did &quot;eject&quot; do in Create React App?">
+It copied the hidden webpack/Babel/Jest configuration into the project so it could be customised, permanently detaching from `react-scripts` upgrades. CRA itself was sunset in February 2025.
+</Accordion>
 
 ## Related
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[Monorepos]]
-- [[Performance Optimization Playbook]]
-- [[Modules (ESM)]]
-- [[Micro-frontends & Module Federation]]
-- [[Next.js 15 to 16.3]]
-- [[TypeScript 5.8 to 7.0]]
-- [[Frontend Interview Concepts & Question Bank]]
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM))
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0)
+- [Frontend Interview Concepts & Question Bank](/Software%20Engineering/Interviews/Frontend%20Interview%20Concepts%20%26%20Question%20Bank)
 
 ## Sources
 - Owner's notes: `Frontend/Front End.md` ("Webpack, React Eject, Vite" callout), `Interviews/Interview.md` (Tree Shaking), `Frontend/JS Concepts.md` (Packaging & Bundling: Vite, Webpack, Turbopack)

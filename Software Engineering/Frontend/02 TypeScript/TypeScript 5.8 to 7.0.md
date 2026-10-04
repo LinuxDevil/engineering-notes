@@ -1,12 +1,16 @@
 ---
+title: "TypeScript 5.8 to 7.0"
 tags: [frontend, frontend/typescript]
 aliases: [TypeScript 7, TypeScript 6, TS 7, tsgo, erasableSyntaxOnly, Node type stripping, tsconfig 2026]
 updated: 2026-09-27
 ---
 # TypeScript 5.8 to 7.0
 
-> [!tldr] TL;DR
-> Between February 2025 and July 2026 TypeScript went through its biggest change ever. **5.8** added `--erasableSyntaxOnly` (for Node's built-in type stripping) and `require(esm)` support. **5.9** added `import defer` and a minimal `tsc --init`. **6.0** (March 2026) is the last JavaScript-based compiler: it flips defaults (`strict` on, ESM, ES2025) and removes legacy options. **7.0** (July 2026) is the **native Go port**, roughly 8–12x faster builds, installed as plain `typescript`, but without a programmatic API until 7.1.
+<Note>
+**TL;DR**
+
+Between February 2025 and July 2026 TypeScript went through its biggest change ever. **5.8** added `--erasableSyntaxOnly` (for Node's built-in type stripping) and `require(esm)` support. **5.9** added `import defer` and a minimal `tsc --init`. **6.0** (March 2026) is the last JavaScript-based compiler: it flips defaults (`strict` on, ESM, ES2025) and removes legacy options. **7.0** (July 2026) is the **native Go port**, roughly 8–12x faster builds, installed as plain `typescript`, but without a programmatic API until 7.1.
+</Note>
 
 ## Timeline
 
@@ -55,7 +59,7 @@ class FlightService {
 Why it exists: runtimes and tools that **strip** types (replace them with whitespace) instead of compiling them, above all Node.js.
 
 ### Other 5.8 items
-- `require()` of ES modules under `--module nodenext` (matches Node 22.12+/20.19+ unflagged `require(esm)`, see [[Modules (ESM)]]).
+- `require()` of ES modules under `--module nodenext` (matches Node 22.12+/20.19+ unflagged `require(esm)`, see [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM))).
 - `--module node18` as a stable target.
 - `--libReplacement` flag.
 - Better checking of each branch of a conditional expression in `return` statements.
@@ -88,14 +92,17 @@ Why it exists: runtimes and tools that **strip** types (replace them with whites
 - `downlevelIteration`.
 
 ### New
-- Built-in **Temporal** types (see [[Modern JavaScript ES2022-ES2027]]).
+- Built-in **Temporal** types (see [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)).
 - `es2025` lib.
 - `#/` subpath imports.
 - Map upsert (`getOrInsert`) types.
 - `--stableTypeOrdering`, to make output ordering match TS 7 and smooth the migration.
 
-> [!warning] `types: []` surprise
-> With the new default, globals from `@types/node`, `@types/jest` etc. are no longer picked up automatically. Add them explicitly: `"types": ["node", "vitest/globals"]`.
+<Warning>
+**`types: []` surprise**
+
+With the new default, globals from `@types/node`, `@types/jest` etc. are no longer picked up automatically. Add them explicitly: `"types": ["node", "vitest/globals"]`.
+</Warning>
 
 ## TypeScript 7.0: native (Go) compiler
 
@@ -146,8 +153,11 @@ For an app or Node project that runs through type stripping or a bundler, with `
 }
 ```
 
-> [!note] Bundler apps
-> For Vite/Next.js front ends the common setup is `"module": "preserve"` (or `esnext`) with `"moduleResolution": "bundler"`, `"jsx": "react-jsx"`, `"noEmit": true`, and your framework's plugin. The bundler (esbuild/Rolldown/SWC/Turbopack) strips types; `tsc` only checks. See [[Build Tools & Bundlers]].
+<Note>
+**Bundler apps**
+
+For Vite/Next.js front ends the common setup is `"module": "preserve"` (or `esnext`) with `"moduleResolution": "bundler"`, `"jsx": "react-jsx"`, `"noEmit": true`, and your framework's plugin. The bundler (esbuild/Rolldown/SWC/Turbopack) strips types; `tsc` only checks. See [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
+</Note>
 
 ## Migration checklist (5.x → 6.0 → 7.0)
 
@@ -163,40 +173,49 @@ For an app or Node project that runs through type stripping or a bundler, with `
 10. Check your toolchain: Angular/Vue/Svelte/Astro/MDX tooling, typescript-eslint and codegen that use the compiler API may need TS 6 (or `@typescript/typescript6`) until 7.1.
 11. Run type checking with TS 7 in CI for speed once the above is clean.
 
-> [!info]+ 🆕 2025–2026
-> - **5.8** 2025-02-28 · **5.9** 2025-08-01 · **6.0** 2026-03-23 · **7.0** 2026-07-08 (native Go).
-> - Node type stripping stable (v25.2 / v24.12); `--experimental-transform-types` removed in Node 26.
-> - **Angular v22** requires TypeScript 6 (5.9 dropped). See [[Modern Angular v17 to v22]].
-> - Next.js 16 needs TypeScript 5.1+ minimum; 16.3 can type check with TS 7. See [[Next.js 15 to 16.3]].
+<Info>
+**🆕 2025–2026**
+
+- **5.8** 2025-02-28 · **5.9** 2025-08-01 · **6.0** 2026-03-23 · **7.0** 2026-07-08 (native Go).
+- Node type stripping stable (v25.2 / v24.12); `--experimental-transform-types` removed in Node 26.
+- **Angular v22** requires TypeScript 6 (5.9 dropped). See [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
+- Next.js 16 needs TypeScript 5.1+ minimum; 16.3 can type check with TS 7. See [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is `erasableSyntaxOnly` and why was it added?
-> A TS 5.8 flag that errors on TypeScript features that emit runtime code (enums, namespaces with values, parameter properties, `import =`). It guarantees your code can run by just stripping types, which is how Node.js (and some bundlers) run TypeScript natively.
+<Accordion title="What is `erasableSyntaxOnly` and why was it added?">
+A TS 5.8 flag that errors on TypeScript features that emit runtime code (enums, namespaces with values, parameter properties, `import =`). It guarantees your code can run by just stripping types, which is how Node.js (and some bundlers) run TypeScript natively.
+</Accordion>
 
-> [!question]- What changed in TypeScript 6.0?
-> It's the last JS-based compiler and a bridge to 7: `strict`, `module: esnext`, `target: es2025`, `types: []` became defaults; ES5 target, `moduleResolution node/classic`, AMD/UMD/SystemJS, `baseUrl`, `outFile` and `downlevelIteration` were removed or deprecated; it added Temporal types and the es2025 lib.
+<Accordion title="What changed in TypeScript 6.0?">
+It's the last JS-based compiler and a bridge to 7: `strict`, `module: esnext`, `target: es2025`, `types: []` became defaults; ES5 target, `moduleResolution node/classic`, AMD/UMD/SystemJS, `baseUrl`, `outFile` and `downlevelIteration` were removed or deprecated; it added Temporal types and the es2025 lib.
+</Accordion>
 
-> [!question]- What is TypeScript 7?
-> A native port of the compiler to Go, shipped as the normal `typescript` package in July 2026, with around 8–12x faster builds and much faster editor feedback. It has no programmatic API until 7.1, so tools like Angular template checking still use TS 6 for now.
+<Accordion title="What is TypeScript 7?">
+A native port of the compiler to Go, shipped as the normal `typescript` package in July 2026, with around 8–12x faster builds and much faster editor feedback. It has no programmatic API until 7.1, so tools like Angular template checking still use TS 6 for now.
+</Accordion>
 
-> [!question]- Can Node run TypeScript directly now? What are the limits?
-> Yes, by stripping types (default since v22.18/v23.6, stable in v24.12/v25.2). It doesn't type-check, and only erasable syntax is supported: no enums, runtime namespaces, parameter properties or `import =`.
+<Accordion title="Can Node run TypeScript directly now? What are the limits?">
+Yes, by stripping types (default since v22.18/v23.6, stable in v24.12/v25.2). It doesn't type-check, and only erasable syntax is supported: no enums, runtime namespaces, parameter properties or `import =`.
+</Accordion>
 
-> [!question]- Why are enums discouraged in modern TypeScript?
-> They emit runtime code (incompatible with type stripping and `erasableSyntaxOnly`), numeric ones are loosely typed, and unions/`as const` objects give the same safety with zero or minimal runtime cost.
+<Accordion title="Why are enums discouraged in modern TypeScript?">
+They emit runtime code (incompatible with type stripping and `erasableSyntaxOnly`), numeric ones are loosely typed, and unions/`as const` objects give the same safety with zero or minimal runtime cost.
+</Accordion>
 
-> [!question]- What does `verbatimModuleSyntax` do?
-> Imports/exports are emitted exactly as written, except those marked `type`, which are dropped. It forces explicit `import type` and avoids surprises when per-file transpilers can't tell whether an import is type-only.
+<Accordion title="What does `verbatimModuleSyntax` do?">
+Imports/exports are emitted exactly as written, except those marked `type`, which are dropped. It forces explicit `import type` and avoids surprises when per-file transpilers can't tell whether an import is type-only.
+</Accordion>
 
 ## Related
-- [[TypeScript Essentials]]
-- [[Advanced TypeScript - Generics & Utility Types]]
-- [[Modules (ESM)]]
-- [[Build Tools & Bundlers]]
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[What's New in Frontend 2025-2026]]
-- [[Modern Angular v17 to v22]]
+- [TypeScript Essentials](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%20Essentials)
+- [Advanced TypeScript - Generics & Utility Types](/Software%20Engineering/Frontend/02%20TypeScript/Advanced%20TypeScript%20-%20Generics%20%26%20Utility%20Types)
+- [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM))
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
 
 ## Sources
 - [Announcing TypeScript 5.8](https://devblogs.microsoft.com/typescript/announcing-typescript-5-8/)

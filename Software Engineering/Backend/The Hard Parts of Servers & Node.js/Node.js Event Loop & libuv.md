@@ -1,12 +1,16 @@
 ---
+title: "Node.js Event Loop & libuv"
 tags: [backend, backend/node]
 aliases: [Node Event Loop, libuv event loop, process.nextTick, setImmediate, Event loop phases]
 updated: 2026-09-27
 ---
 # Node.js Event Loop & libuv
 
-> [!tldr] TL;DR
-> Node's event loop, implemented by **libuv**, cycles through **phases**: timers → pending callbacks → idle/prepare → **poll** (wait for and run I/O callbacks) → **check** (`setImmediate`) → close callbacks. After **every single callback** Node drains the `process.nextTick` queue and then the promise microtask queue. Your JS runs on one thread, so anything slow on it (CPU work, sync I/O) delays every other request. The browser event loop is covered in [[Event Loop - Microtasks & Macrotasks]]; this note is the Node-specific, server-side view.
+<Note>
+**TL;DR**
+
+Node's event loop, implemented by **libuv**, cycles through **phases**: timers → pending callbacks → idle/prepare → **poll** (wait for and run I/O callbacks) → **check** (`setImmediate`) → close callbacks. After **every single callback** Node drains the `process.nextTick` queue and then the promise microtask queue. Your JS runs on one thread, so anything slow on it (CPU work, sync I/O) delays every other request. The browser event loop is covered in [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks); this note is the Node-specific, server-side view.
+</Note>
 
 ## The idea
 
@@ -47,8 +51,11 @@ flowchart LR
 | **check** | `setImmediate` callbacks | Always right after poll |
 | **close** | `'close'` events of destroyed handles | |
 
-> [!note] libuv 1.45 / Node 20 detail
-> Since libuv 1.45.0 (Node 20), timers are run **after** the poll phase in each iteration (plus once before the loop starts, for backwards compatibility). Earlier versions ran them before polling. This can change the relative order of timers and `setImmediate` in edge cases. Don't write code that depends on that order.
+<Note>
+**libuv 1.45 / Node 20 detail**
+
+Since libuv 1.45.0 (Node 20), timers are run **after** the poll phase in each iteration (plus once before the loop starts, for backwards compatibility). Earlier versions ran them before polling. This can change the relative order of timers and `setImmediate` in edge cases. Don't write code that depends on that order.
+</Note>
 
 ## Microtasks in Node: `process.nextTick` vs promises vs `setImmediate`
 
@@ -116,7 +123,7 @@ setInterval(() => {
 }, 5000);
 ```
 
-Fixes: move CPU work to [[Node.js Concurrency - Worker Threads, Cluster & Child Processes|worker threads]], chunk it with `setImmediate`, stream instead of buffering, or push it to a queue/other service.
+Fixes: move CPU work to [worker threads](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Concurrency%20-%20Worker%20Threads%2C%20Cluster%20%26%20Child%20Processes), chunk it with `setImmediate`, stream instead of buffering, or push it to a queue/other service.
 
 ### Partitioning long work
 
@@ -156,36 +163,45 @@ Saturating the pool (e.g. many `bcrypt` hashes) delays unrelated file reads and 
 - Use `AsyncLocalStorage` for request-scoped context (trace IDs) across async boundaries instead of passing it everywhere; Node 24 made it faster by default (`AsyncContextFrame`).
 - Graceful shutdown: on `SIGTERM`, stop accepting connections (`server.close()`), let in-flight requests finish, close pools, then exit.
 
-> [!info]+ 🆕 2025–2026
-> - **Node 24.0.0** (2025-05-06): `AsyncLocalStorage` uses `AsyncContextFrame` by default (faster context propagation).
-> - libuv 1.45 timer ordering change (above) shipped with Node 20 (2023); the Node docs were updated to describe it.
-> - See [[Node.js 22 to 24+ - What's New]] for the release timeline.
+<Info>
+**🆕 2025–2026**
+
+- **Node 24.0.0** (2025-05-06): `AsyncLocalStorage` uses `AsyncContextFrame` by default (faster context propagation).
+- libuv 1.45 timer ordering change (above) shipped with Node 20 (2023); the Node docs were updated to describe it.
+- See [Node.js 22 to 24+ - What's New](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%2022%20to%2024%2B%20-%20What's%20New) for the release timeline.
+</Info>
 
 ## Interview questions
 
-> [!question]- Walk through the phases of the Node event loop.
-> Timers (expired timeouts/intervals), pending callbacks, idle/prepare, poll (wait for and run I/O callbacks), check (`setImmediate`), close callbacks, then repeat while there are active handles. Between each callback, drain nextTick then promise microtasks.
+<Accordion title="Walk through the phases of the Node event loop.">
+Timers (expired timeouts/intervals), pending callbacks, idle/prepare, poll (wait for and run I/O callbacks), check (`setImmediate`), close callbacks, then repeat while there are active handles. Between each callback, drain nextTick then promise microtasks.
+</Accordion>
 
-> [!question]- `process.nextTick` vs `setImmediate` vs `Promise.then`?
-> nextTick runs right after the current operation, before promise microtasks. Promise callbacks run next. `setImmediate` runs in the check phase of the loop, after I/O polling. Recursive nextTick can starve I/O; setImmediate cannot.
+<Accordion title="`process.nextTick` vs `setImmediate` vs `Promise.then`?">
+nextTick runs right after the current operation, before promise microtasks. Promise callbacks run next. `setImmediate` runs in the check phase of the loop, after I/O polling. Recursive nextTick can starve I/O; setImmediate cannot.
+</Accordion>
 
-> [!question]- Why is `setTimeout(0)` vs `setImmediate` order non-deterministic?
-> From the main module, whether the 1 ms timer has expired when the loop first checks timers depends on process performance. Inside an I/O callback the loop is in poll, so check (`setImmediate`) always comes before the next timers phase.
+<Accordion title="Why is `setTimeout(0)` vs `setImmediate` order non-deterministic?">
+From the main module, whether the 1 ms timer has expired when the loop first checks timers depends on process performance. Inside an I/O callback the loop is in poll, so check (`setImmediate`) always comes before the next timers phase.
+</Accordion>
 
-> [!question]- What blocks the event loop and how do you detect it?
-> Synchronous CPU work or sync I/O on the main thread: big JSON, regex backtracking, sync crypto, heavy loops. Detect with `monitorEventLoopDelay`, `eventLoopUtilization`, CPU profiles (`--cpu-prof`, clinic.js). Fix with workers, chunking, streaming.
+<Accordion title="What blocks the event loop and how do you detect it?">
+Synchronous CPU work or sync I/O on the main thread: big JSON, regex backtracking, sync crypto, heavy loops. Detect with `monitorEventLoopDelay`, `eventLoopUtilization`, CPU profiles (`--cpu-prof`, clinic.js). Fix with workers, chunking, streaming.
+</Accordion>
 
-> [!question]- Which operations use libuv's thread pool?
-> File system, `dns.lookup`, async crypto like pbkdf2/scrypt, and zlib. Network sockets don't. Default size 4, set with `UV_THREADPOOL_SIZE`.
+<Accordion title="Which operations use libuv's thread pool?">
+File system, `dns.lookup`, async crypto like pbkdf2/scrypt, and zlib. Network sockets don't. Default size 4, set with `UV_THREADPOOL_SIZE`.
+</Accordion>
 
-> [!question]- When does a Node process exit?
-> When the event loop has no active (ref'd) handles or pending requests left, or on `process.exit()` / an uncaught exception / unhandled rejection.
+<Accordion title="When does a Node process exit?">
+When the event loop has no active (ref'd) handles or pending requests left, or on `process.exit()` / an uncaught exception / unhandled rejection.
+</Accordion>
 
 ## Related
-- [[Node.js Index]]
-- [[Event Loop - Microtasks & Macrotasks]] (browser model, same microtask concepts) · [[Promises, Async-Await & Cancellation]]
-- [[Node JS Under the hood!]] · [[Node.js Hard Parts - Streams & Event Loop Queues]] · [[Node.js Performance & Debugging]]
-- [[Node.js Concurrency - Worker Threads, Cluster & Child Processes]]
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks) (browser model, same microtask concepts) · [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
+- [Node JS Under the hood!](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node%20JS%20Under%20the%20hood!) · [Node.js Hard Parts - Streams & Event Loop Queues](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Hard%20Parts%20-%20Streams%20%26%20Event%20Loop%20Queues) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging)
+- [Node.js Concurrency - Worker Threads, Cluster & Child Processes](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Concurrency%20-%20Worker%20Threads%2C%20Cluster%20%26%20Child%20Processes)
 
 ## Sources
 - [Node.js: The event loop, timers and process.nextTick](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)

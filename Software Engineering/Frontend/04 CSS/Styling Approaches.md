@@ -1,18 +1,22 @@
 ---
+title: "Styling Approaches"
 tags: [frontend, frontend/css, frontend/architecture]
 aliases: [CSS-in-JS, Tailwind, CSS Modules, styled-components, BEM, SMACSS, Sass, Functional CSS]
 updated: 2026-09-27
 ---
 # Styling Approaches
 
-> [!tldr] TL;DR
-> There are four ways to keep CSS maintainable at scale:
-> - **naming conventions** (BEM, SMACSS);
-> - **build-time scoping** (CSS Modules, Sass);
-> - **utility-first** (Tailwind);
-> - **CSS-in-JS**, either **runtime** (styled-components, Emotion) or **zero-runtime** (vanilla-extract, Panda, StyleX).
->
-> The big shift in 2023–2026: with React Server Components and streaming SSR, **runtime CSS-in-JS became a poor fit**. New projects mostly pick CSS Modules, Tailwind, or a zero-runtime library, on top of native CSS features (`@layer`, `@scope`, nesting, custom properties).
+<Note>
+**TL;DR**
+
+There are four ways to keep CSS maintainable at scale:
+- **naming conventions** (BEM, SMACSS);
+- **build-time scoping** (CSS Modules, Sass);
+- **utility-first** (Tailwind);
+- **CSS-in-JS**, either **runtime** (styled-components, Emotion) or **zero-runtime** (vanilla-extract, Panda, StyleX).
+
+The big shift in 2023–2026: with React Server Components and streaming SSR, **runtime CSS-in-JS became a poor fit**. New projects mostly pick CSS Modules, Tailwind, or a zero-runtime library, on top of native CSS features (`@layer`, `@scope`, nesting, custom properties).
+</Note>
 
 ```mermaid
 flowchart TD
@@ -54,7 +58,7 @@ It organises CSS into **five categories**:
 | **State** | `.is-open`, `.is-disabled` | toggled by JS; may use `!important` |
 | **Theme** | `.theme-dark` | alternate looks |
 
-Today these categories map very naturally onto **cascade layers**: `@layer base, layout, modules, state, theme;`. See [[CSS Fundamentals - Cascade, Box Model & Contexts]]. Related methodologies: OOCSS (separate structure from skin), ITCSS (the "inverted triangle", ordered from generic to specific), and CUBE CSS.
+Today these categories map very naturally onto **cascade layers**: `@layer base, layout, modules, state, theme;`. See [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts). Related methodologies: OOCSS (separate structure from skin), ITCSS (the "inverted triangle", ordered from generic to specific), and CUBE CSS.
 
 ## 2. Sass / SCSS
 A **preprocessor** compiled to CSS at build time. Features:
@@ -77,7 +81,7 @@ A **preprocessor** compiled to CSS at build time. Features:
 
 **Is Sass still needed?** Much less than before:
 - native CSS now has nesting, custom properties (which are live at runtime, unlike `$vars`), `@layer`, `@scope`, `color-mix()`, `clamp()`;
-- custom functions (`@function`) and `if()` are coming, but are Chrome-only today (see [[Modern CSS 2025-2026]]).
+- custom functions (`@function`) and `if()` are coming, but are Chrome-only today (see [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)).
 
 Sass is still handy for loops that generate utility classes, BEM `&__` concatenation, and existing codebases. Prefer CSS custom properties for anything themeable, because Sass variables disappear at build time.
 
@@ -128,20 +132,23 @@ export function FlightCard({ price, selected }: { price: string; selected: boole
 - Complex selectors are awkward.
 - You need an editor plugin for autocomplete.
 
-> [!info]+ 🆕 Tailwind v4.0 (January 2025)
-> - **CSS-first configuration**: design tokens live in CSS via `@theme` instead of `tailwind.config.js`, and are exposed as real CSS custom properties.
-> - The new high-performance **Oxide** engine gives much faster builds.
-> - Setup is a single `@import "tailwindcss";`.
-> - It is built on modern CSS: native cascade layers, `color-mix()`, container queries.
-> ```css
-> @import "tailwindcss";
-> @theme {
->   --color-brand: oklch(0.62 0.19 250);
->   --font-display: "Inter", sans-serif;
->   --breakpoint-3xl: 120rem;
-> }
-> /* now `bg-brand`, `font-display`, `3xl:` work, and var(--color-brand) is usable anywhere */
-> ```
+<Info>
+**🆕 Tailwind v4.0 (January 2025)**
+
+- **CSS-first configuration**: design tokens live in CSS via `@theme` instead of `tailwind.config.js`, and are exposed as real CSS custom properties.
+- The new high-performance **Oxide** engine gives much faster builds.
+- Setup is a single `@import "tailwindcss";`.
+- It is built on modern CSS: native cascade layers, `color-mix()`, container queries.
+```css
+@import "tailwindcss";
+@theme {
+  --color-brand: oklch(0.62 0.19 250);
+  --font-display: "Inter", sans-serif;
+  --breakpoint-3xl: 120rem;
+}
+/* now `bg-brand`, `font-display`, `3xl:` work, and var(--color-brand) is usable anywhere */
+```
+</Info>
 
 ## 5. CSS-in-JS
 
@@ -173,15 +180,18 @@ const Price = styled.p<{ $discounted?: boolean }>`
 3. The rule is inserted into a `<style>` tag in `<head>` (with `useInsertionEffect` in modern versions).
 4. During SSR, a "style sheet collector" gathers the rules and inlines them into the HTML.
 
-> [!warning] Why runtime CSS-in-JS fits poorly with React Server Components and streaming
-> 1. **Server Components can't use context or hooks.** The `ThemeProvider` and `styled()` components rely on React context and client-side runtime, so every styled component has to be a **Client Component** (`'use client'`). That removes much of the benefit of RSC and ships more JS.
-> 2. **Streaming SSR:** styles are generated *while* rendering, so they must be collected and flushed into the HTML stream in sync with each chunk. Next.js needs a special **style registry** (`useServerInsertedHTML`) for this. It works, but it is extra plumbing and fragile.
-> 3. **Runtime cost:** serialising styles, hashing and inserting rules on every render of new prop combinations costs main-thread time. Rule insertion forces style recalculation, which hurts hydration and [[Core Web Vitals]] (INP), especially with concurrent rendering.
-> 4. **Bundle size:** the library runtime (roughly 10–15 kB gzipped) plus styles inside JS, which can't be cached separately as a `.css` file or loaded in parallel.
->
-> The React team's guidance: prefer static `.css` files or build-time extraction. React 19 supports `<link rel="stylesheet" precedence="...">` so components can declare stylesheets that React dedupes and orders, even in Server Components.
->
-> **Status:** in March 2025 the styled-components maintainer announced the library is in **maintenance mode** (bug fixes only, no new features), recommending other options for new projects.
+<Warning>
+**Why runtime CSS-in-JS fits poorly with React Server Components and streaming**
+
+1. **Server Components can't use context or hooks.** The `ThemeProvider` and `styled()` components rely on React context and client-side runtime, so every styled component has to be a **Client Component** (`'use client'`). That removes much of the benefit of RSC and ships more JS.
+2. **Streaming SSR:** styles are generated *while* rendering, so they must be collected and flushed into the HTML stream in sync with each chunk. Next.js needs a special **style registry** (`useServerInsertedHTML`) for this. It works, but it is extra plumbing and fragile.
+3. **Runtime cost:** serialising styles, hashing and inserting rules on every render of new prop combinations costs main-thread time. Rule insertion forces style recalculation, which hurts hydration and [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals) (INP), especially with concurrent rendering.
+4. **Bundle size:** the library runtime (roughly 10–15 kB gzipped) plus styles inside JS, which can't be cached separately as a `.css` file or loaded in parallel.
+
+The React team's guidance: prefer static `.css` files or build-time extraction. React 19 supports `<link rel="stylesheet" precedence="...">` so components can declare stylesheets that React dedupes and orders, even in Server Components.
+
+**Status:** in March 2025 the styled-components maintainer announced the library is in **maintenance mode** (bug fixes only, no new features), recommending other options for new projects.
+</Warning>
 
 ### Zero-runtime CSS-in-JS
 You write styles in TS/JS, and a **compiler extracts static `.css` files at build time**. You get type safety and co-location without the runtime.
@@ -226,39 +236,48 @@ Dynamic values that are only known at runtime (a drag position, a user-chosen co
 | Learning curve | low | low | low | medium | low | medium |
 | Best for | any codebase, legacy | legacy, generated utilities | component apps, design systems | product teams moving fast | existing apps (maintenance) | typed design systems at scale |
 
-> [!tip] In practice (Sept 2026)
-> - **Design system in a Next.js/RSC world:** CSS Modules or vanilla-extract/Panda, with tokens as CSS custom properties and `@layer` for ordering. Ship a plain `.css` file so any consumer (React, Angular, web components) can use it. See [[Design Systems]].
-> - **Product app:** Tailwind v4 is the most common default.
-> - **Migrating from styled-components:** keep it in client components, stop adding new usages, move leaf components to CSS Modules or a zero-runtime library, and turn theme values into CSS variables first. That makes the swap mechanical.
+<Tip>
+**In practice (Sept 2026)**
+
+- **Design system in a Next.js/RSC world:** CSS Modules or vanilla-extract/Panda, with tokens as CSS custom properties and `@layer` for ordering. Ship a plain `.css` file so any consumer (React, Angular, web components) can use it. See [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems).
+- **Product app:** Tailwind v4 is the most common default.
+- **Migrating from styled-components:** keep it in client components, stop adding new usages, move leaf components to CSS Modules or a zero-runtime library, and turn theme values into CSS variables first. That makes the swap mechanical.
+</Tip>
 
 ## Interview questions
 
-> [!question]- What is BEM and why use it?
-> Block__Element--Modifier is a naming convention. Every style is a single class, so specificity stays flat, names show ownership, and styles don't leak. The downside is verbosity and reliance on discipline. Tooling approaches (CSS Modules, `@scope`) give the same isolation automatically.
+<Accordion title="What is BEM and why use it?">
+Block__Element--Modifier is a naming convention. Every style is a single class, so specificity stays flat, names show ownership, and styles don't leak. The downside is verbosity and reliance on discipline. Tooling approaches (CSS Modules, `@scope`) give the same isolation automatically.
+</Accordion>
 
-> [!question]- What is functional (utility-first) CSS and what are its benefits?
-> Composing small single-purpose classes in markup (Tailwind). Benefits: a CSS bundle that plateaus in size, no naming, no dead CSS, design tokens enforced by the class vocabulary, co-located styles, zero runtime. Trade-offs: verbose markup and the need for variant helpers.
+<Accordion title="What is functional (utility-first) CSS and what are its benefits?">
+Composing small single-purpose classes in markup (Tailwind). Benefits: a CSS bundle that plateaus in size, no naming, no dead CSS, design tokens enforced by the class vocabulary, co-located styles, zero runtime. Trade-offs: verbose markup and the need for variant helpers.
+</Accordion>
 
-> [!question]- Why is runtime CSS-in-JS a problem with React Server Components?
-> It depends on React context (theme) and client runtime style injection, so styled components must be Client Components. With streaming SSR, styles have to be collected and flushed in sync with each HTML chunk (a style registry). It also adds runtime serialisation and insertion cost that hurts hydration and INP, and ships a runtime library. Zero-runtime tools extract static CSS at build time and work in RSC.
+<Accordion title="Why is runtime CSS-in-JS a problem with React Server Components?">
+It depends on React context (theme) and client runtime style injection, so styled components must be Client Components. With streaming SSR, styles have to be collected and flushed in sync with each HTML chunk (a style registry). It also adds runtime serialisation and insertion cost that hurts hydration and INP, and ships a runtime library. Zero-runtime tools extract static CSS at build time and work in RSC.
+</Accordion>
 
-> [!question]- CSS Modules vs Tailwind for a design system?
-> CSS Modules keep real CSS, semantic class names and easy consumption by any framework, which is good for a library consumed by many apps. Tailwind is fast for product teams, but consumers need a compatible Tailwind setup (or you ship compiled CSS). Many design systems use tokens as CSS variables plus CSS Modules or vanilla-extract internally, and let apps use Tailwind on top (a Tailwind v4 `@theme` can reference the same variables).
+<Accordion title="CSS Modules vs Tailwind for a design system?">
+CSS Modules keep real CSS, semantic class names and easy consumption by any framework, which is good for a library consumed by many apps. Tailwind is fast for product teams, but consumers need a compatible Tailwind setup (or you ship compiled CSS). Many design systems use tokens as CSS variables plus CSS Modules or vanilla-extract internally, and let apps use Tailwind on top (a Tailwind v4 `@theme` can reference the same variables).
+</Accordion>
 
-> [!question]- Sass variables vs CSS custom properties?
-> Sass `$vars` are compile-time constants that disappear from the output. Custom properties exist at runtime, cascade and inherit, can be changed per subtree or media query or with JS, and power theming (dark mode, brand themes). Use custom properties for tokens; Sass variables only for build-time maths or loops.
+<Accordion title="Sass variables vs CSS custom properties?">
+Sass `$vars` are compile-time constants that disappear from the output. Custom properties exist at runtime, cascade and inherit, can be changed per subtree or media query or with JS, and power theming (dark mode, brand themes). Use custom properties for tokens; Sass variables only for build-time maths or loops.
+</Accordion>
 
-> [!question]- How do you pass a dynamic value (e.g. progress %) to styles without runtime CSS-in-JS?
-> Set a CSS custom property inline (`style={{ '--progress': `${pct}%` }}`) and use it in static CSS (`width: var(--progress)`). Only the variable changes, with no new rules generated.
+<Accordion title="How do you pass a dynamic value (e.g. progress %) to styles without runtime CSS-in-JS?">
+Set a CSS custom property inline (`style={{ '--progress': `$\{pct\}%` }}`) and use it in static CSS (`width: var(--progress)`). Only the variable changes, with no new rules generated.
+</Accordion>
 
 ## Related
-- [[CSS Fundamentals - Cascade, Box Model & Contexts]]
-- [[Modern CSS 2025-2026]]
-- [[Layout - Flexbox, Grid & Container Queries]]
-- [[Design Systems]]
-- [[React Server Components & Server Functions]]
-- [[Next.js App Router Fundamentals]]
-- [[Core Web Vitals]]
+- [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [Layout - Flexbox, Grid & Container Queries](/Software%20Engineering/Frontend/04%20CSS/Layout%20-%20Flexbox%2C%20Grid%20%26%20Container%20Queries)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
 
 ## Sources
 - Owner's original note: "Styled Components" section of `Front End.md`; `Interview.md` (functional CSS, BEM)

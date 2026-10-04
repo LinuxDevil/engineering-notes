@@ -1,12 +1,16 @@
 ---
+title: "Linked Lists"
 tags: [dsa, dsa/data-structures]
 aliases: [Linked List, Singly Linked List, Doubly Linked List, SLL, DLL, LRU Cache, Classes & Pointers]
 updated: 2026-09-27
 ---
 # Linked Lists
 
-> [!tldr] TL;DR
-> A **linked list** is a chain of nodes where each node holds a value and a pointer to the next node (and, in a **doubly** linked list, also to the previous one). You get **O(1) insert/delete when you already hold the node** (or at the head/tail), but **O(n) access by index** because you must walk the chain. The two tricks that make most problems easy are a **dummy (sentinel) head** and **multiple pointers** (prev/curr/next for reversal, [[Fast and Slow Pointer]] for middles and cycles). The flagship real-world use is the **LRU cache**: doubly linked list + hash map.
+<Note>
+**TL;DR**
+
+A **linked list** is a chain of nodes where each node holds a value and a pointer to the next node (and, in a **doubly** linked list, also to the previous one). You get **O(1) insert/delete when you already hold the node** (or at the head/tail), but **O(n) access by index** because you must walk the chain. The two tricks that make most problems easy are a **dummy (sentinel) head** and **multiple pointers** (prev/curr/next for reversal, [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) for middles and cycles). The flagship real-world use is the **LRU cache**: doubly linked list + hash map.
+</Note>
 
 ## Classes & pointers (the intuition you need first)
 
@@ -26,7 +30,7 @@ b["value"] = 2
 print(a["value"])  # 2
 ```
 
-A node is just an object with a `value` and a `next` reference. A linked list is an object that keeps references to the first node (`head`), usually the last (`tail`), and a `length`. When you write `curr = curr.next`, you are **moving a pointer**, not copying data. When nothing points to a node anymore, the garbage collector frees it ([[Memory Management & Garbage Collection]]).
+A node is just an object with a `value` and a `next` reference. A linked list is an object that keeps references to the first node (`head`), usually the last (`tail`), and a `length`. When you write `curr = curr.next`, you are **moving a pointer**, not copying data. When nothing points to a node anymore, the garbage collector frees it ([Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)).
 
 ## The idea
 
@@ -296,8 +300,11 @@ class SinglyLinkedList(Generic[T]):
         self.head = prev
 ```
 
-> [!warning] Python tuple assignment order
-> `curr.next, prev, curr = prev, curr, curr.next` works because the right side is fully evaluated first, then assigned **left to right**. Reordering the targets (e.g. `curr, curr.next = ...`) assigns `curr` first and then sets `.next` on the wrong node. When in doubt, use a `nxt` temp variable.
+<Warning>
+**Python tuple assignment order**
+
+`curr.next, prev, curr = prev, curr, curr.next` works because the right side is fully evaluated first, then assigned **left to right**. Reordering the targets (e.g. `curr, curr.next = ...`) assigns `curr` first and then sets `.next` on the wrong node. When in doubt, use a `nxt` temp variable.
+</Warning>
 
 ### Doubly linked list (the operations that change)
 
@@ -575,9 +582,12 @@ class LRUCache:
             del self.map[lru.key]
 ```
 
-> [!tip] Library shortcuts (say them in interviews, then implement by hand if asked)
-> - Python: `collections.OrderedDict` with `move_to_end(key)` and `popitem(last=False)`; `functools.lru_cache` for memoizing functions.
-> - JS: `Map` iterates in insertion order, so `delete` + `set` moves a key to the end, and `map.keys().next().value` is the oldest key.
+<Tip>
+**Library shortcuts (say them in interviews, then implement by hand if asked)**
+
+- Python: `collections.OrderedDict` with `move_to_end(key)` and `popitem(last=False)`; `functools.lru_cache` for memoizing functions.
+- JS: `Map` iterates in insertion order, so `delete` + `set` moves a key to the end, and `map.keys().next().value` is the oldest key.
+</Tip>
 
 ## Trade-offs & pitfalls
 
@@ -585,7 +595,7 @@ class LRUCache:
 - **Forgetting head/tail updates**: after `pop`/`shift` of the last element, both `head` and `tail` must become `null`.
 - **Null dereference**: check `curr && curr.next` before `curr.next.next`. A dummy head removes most of these.
 - **Off-by-one when walking**: to modify position `i`, you need the node at `i - 1`.
-- **Cycles**: a bug that creates a cycle makes traversal loop forever. Detect with [[Fast and Slow Pointer]] (Floyd).
+- **Cycles**: a bug that creates a cycle makes traversal loop forever. Detect with [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) (Floyd).
 - **Recursion depth**: recursive reversal or merge is elegant but uses O(n) stack. Python's default recursion limit is 1000, so a 10^4 node list crashes. Prefer iterative.
 - **Singly `pop` is O(n)**: if you need both ends, use a doubly linked list or a deque.
 - **Memory**: each node carries object header + pointer(s). In CPython a small object with `__slots__` is still tens of bytes; in V8 each node is a separate heap object. Millions of nodes stress the GC.
@@ -596,7 +606,7 @@ class LRUCache:
 - **Where they shine in real systems**:
   - **LRU / LFU caches** (Redis approximates LRU by sampling; Memcached uses per-slab-class LRU linked lists; OS page caches use list-based schemes like CLOCK and active/inactive lists in Linux).
   - **Intrusive lists** in kernels (Linux `list_head`): the node pointers live inside the struct, so no extra allocation and O(1) removal of an object you already hold.
-  - **Free lists** in memory allocators, **hash table chaining** buckets ([[Hash Tables]]), adjacency lists ([[Graphs]]).
+  - **Free lists** in memory allocators, **hash table chaining** buckets ([Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables)), adjacency lists ([Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)).
   - **Lock-free queues and stacks** (Michael-Scott queue) in concurrent runtimes.
   - **Persistent (immutable) lists** in functional languages: sharing the tail makes `cons` O(1) without copying.
 - **Python's `collections.deque`** is a doubly linked list of fixed-size blocks (64 slots each), which keeps O(1) ends and better locality than one node per element. JS has no built-in linked list or deque.
@@ -619,33 +629,40 @@ class LRUCache:
 
 ## Interview questions
 
-> [!question]- When would you choose a linked list over an array?
-> When you need O(1) insertion/removal at known positions (you already hold the node), such as LRU eviction, or frequent inserts at both ends with no need for random access. Otherwise arrays usually win on locality, memory and simplicity.
+<Accordion title="When would you choose a linked list over an array?">
+When you need O(1) insertion/removal at known positions (you already hold the node), such as LRU eviction, or frequent inserts at both ends with no need for random access. Otherwise arrays usually win on locality, memory and simplicity.
+</Accordion>
 
-> [!question]- Why is `pop` O(n) in a singly linked list but O(1) in a doubly linked list?
-> Removing the tail requires updating the second-to-last node's `next`. In a singly list you must walk from the head to find it. In a doubly list, `tail.prev` gives it directly.
+<Accordion title="Why is `pop` O(n) in a singly linked list but O(1) in a doubly linked list?">
+Removing the tail requires updating the second-to-last node's `next`. In a singly list you must walk from the head to find it. In a doubly list, `tail.prev` gives it directly.
+</Accordion>
 
-> [!question]- What is a dummy (sentinel) node and why use it?
-> A fake node placed before the real head (and sometimes after the tail). Every real node then has a predecessor/successor, so insertions and deletions at the ends need no special cases. Return `dummy.next` at the end.
+<Accordion title="What is a dummy (sentinel) node and why use it?">
+A fake node placed before the real head (and sometimes after the tail). Every real node then has a predecessor/successor, so insertions and deletions at the ends need no special cases. Return `dummy.next` at the end.
+</Accordion>
 
-> [!question]- Design an LRU cache with O(1) get and put.
-> Hash map from key to node, plus a doubly linked list ordered by recency with head/tail sentinels. `get`: look up, move node to front. `put`: update or insert at front; if over capacity, remove `tail.prev` from both list and map (nodes store their key for this).
+<Accordion title="Design an LRU cache with O(1) get and put.">
+Hash map from key to node, plus a doubly linked list ordered by recency with head/tail sentinels. `get`: look up, move node to front. `put`: update or insert at front; if over capacity, remove `tail.prev` from both list and map (nodes store their key for this).
+</Accordion>
 
-> [!question]- Reverse a linked list iteratively and recursively. Which is better?
-> Iterative uses `prev`, `curr`, `next` and O(1) space. Recursive: reverse the rest, then `head.next.next = head; head.next = null`, using O(n) stack. Iterative is safer for long lists.
+<Accordion title="Reverse a linked list iteratively and recursively. Which is better?">
+Iterative uses `prev`, `curr`, `next` and O(1) space. Recursive: reverse the rest, then `head.next.next = head; head.next = null`, using O(n) stack. Iterative is safer for long lists.
+</Accordion>
 
-> [!question]- How do you find the middle node or detect a cycle?
-> Fast and slow pointers: slow moves one step, fast two. When fast reaches the end, slow is in the middle. If they ever meet, there's a cycle. See [[Fast and Slow Pointer]].
+<Accordion title="How do you find the middle node or detect a cycle?">
+Fast and slow pointers: slow moves one step, fast two. When fast reaches the end, slow is in the middle. If they ever meet, there's a cycle. See [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer).
+</Accordion>
 
-> [!question]- How does a linked list affect memory and GC compared to an array?
-> Each node is a separate heap allocation with an object header and pointers, so memory overhead is higher and nodes are scattered (poor locality). The GC has more objects to trace. An array is one allocation of contiguous slots.
+<Accordion title="How does a linked list affect memory and GC compared to an array?">
+Each node is a separate heap allocation with an object header and pointers, so memory overhead is higher and nodes are scattered (poor locality). The GC has more objects to trace. An array is one allocation of contiguous slots.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Arrays & Strings]] · [[Stacks & Queues]] · [[Hash Tables]] · [[Graphs]]
-- Patterns: [[Fast and Slow Pointer]] · [[Two Pointers]] · [[Recursion & Backtracking]]
-- Frontend: [[Memory Management & Garbage Collection]] · [[Collections - Map, Set, WeakMap & WeakRef]]
-- [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)
+- Patterns: [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking)
+- Frontend: [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection) · [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 10, elementary data structures)

@@ -1,0 +1,784 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Engineering Notes",
+  "description": "Software engineering notes: CS fundamentals, frontend, backend, databases, DevOps, security, system design, AI/ML, career and interviews.",
+  "colors": {
+    "primary": "#0F9D74",
+    "light": "#34D8A6",
+    "dark": "#0B7A5A"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/LinuxDevil/engineering-notes"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "Software Engineering/Software Engineering",
+              "Software Engineering/Software Engineering Roadmap - Beginner to Senior",
+              "Software Engineering/What's New in Software Engineering 2025-2026"
+            ]
+          },
+          {
+            "group": "AI & ML",
+            "pages": [
+              "Software Engineering/AI & ML/AI & ML Index",
+              "Software Engineering/AI & ML/AI Agents & Agentic Patterns",
+              "Software Engineering/AI & ML/AI Safety, Security & Guardrails for Apps",
+              "Software Engineering/AI & ML/AI Workflow",
+              "Software Engineering/AI & ML/AI-Assisted Software Development",
+              "Software Engineering/AI & ML/Embeddings & Semantic Search",
+              "Software Engineering/AI & ML/Fine-tuning vs RAG vs Prompting",
+              "Software Engineering/AI & ML/LLM Evaluation & Observability",
+              "Software Engineering/AI & ML/LLM Landscape 2025-2026",
+              "Software Engineering/AI & ML/MCP",
+              "Software Engineering/AI & ML/Neural Networks & Deep Learning Basics",
+              "Software Engineering/AI & ML/Prompt & Context Engineering",
+              "Software Engineering/AI & ML/Retrieval-Augmented Generation (RAG)",
+              "Software Engineering/AI & ML/Transformers & How LLMs Work",
+              {
+                "group": "Machine Learning",
+                "pages": [
+                  "Software Engineering/AI & ML/Machine Learning/Machine Learning",
+                  "Software Engineering/AI & ML/Machine Learning/Components of ML",
+                  "Software Engineering/AI & ML/Machine Learning/Introduction to Machine Learning",
+                  "Software Engineering/AI & ML/Machine Learning/ML Core Concepts",
+                  "Software Engineering/AI & ML/Machine Learning/Supervised vs Unsupervised Machine learning",
+                  {
+                    "group": "Case Studies that use ML",
+                    "pages": [
+                      "Software Engineering/AI & ML/Machine Learning/Case Studies that use ML/Case Studies that use ML",
+                      "Software Engineering/AI & ML/Machine Learning/Case Studies that use ML/Example 1 Predicting Home Prices",
+                      "Software Engineering/AI & ML/Machine Learning/Case Studies that use ML/Example 2 Micro-genre Book Genre",
+                      "Software Engineering/AI & ML/Machine Learning/Case Studies that use ML/Example 3 Detecting Spills"
+                    ]
+                  },
+                  {
+                    "group": "Major steps in ML",
+                    "pages": [
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Major steps in ML",
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Step 1 Define The problem",
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Step 2 Building Dataset",
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Step 3 Train the model",
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Step 4 Evaluate the model",
+                      "Software Engineering/AI & ML/Machine Learning/Major steps in ML/Step 5 Use the model"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "group": "APIs & Auth",
+            "pages": [
+              "Software Engineering/APIs & Auth/APIs & Auth Index",
+              "Software Engineering/APIs & Auth/API Versioning, Idempotency & Backward Compatibility",
+              "Software Engineering/APIs & Auth/Authentication vs Authorization",
+              "Software Engineering/APIs & Auth/GraphQL vs REST",
+              "Software Engineering/APIs & Auth/gRPC vs REST",
+              "Software Engineering/APIs & Auth/HTTP Headers vs Body - Where Data Belongs",
+              "Software Engineering/APIs & Auth/JWT vs Cookies",
+              "Software Engineering/APIs & Auth/OAuth 2.x & OpenID Connect",
+              "Software Engineering/APIs & Auth/Passkeys, WebAuthn & MFA",
+              "Software Engineering/APIs & Auth/Rate Limiting & Throttling",
+              "Software Engineering/APIs & Auth/REST API Design",
+              "Software Engineering/APIs & Auth/Webhooks, Polling, SSE & WebSockets"
+            ]
+          },
+          {
+            "group": "Backend",
+            "pages": [
+              "Software Engineering/Backend/Backend Index",
+              "Software Engineering/Backend/API Gateways & Reverse Proxies",
+              "Software Engineering/Backend/Background Jobs & Task Queues",
+              "Software Engineering/Backend/Cron Jobs",
+              "Software Engineering/Backend/Nginx",
+              "Software Engineering/Backend/Rails Clean Architecture",
+              {
+                "group": "Java",
+                "pages": [
+                  "Software Engineering/Backend/Java/Java & Spring Index",
+                  "Software Engineering/Backend/Java/Java Backend Preparation Checklist",
+                  "Software Engineering/Backend/Java/Java Concurrency & Virtual Threads",
+                  "Software Engineering/Backend/Java/Java Language Essentials",
+                  "Software Engineering/Backend/Java/JPA, Hibernate & jOOQ - Data Access in Java",
+                  "Software Engineering/Backend/Java/JVM Internals - Memory & Garbage Collection",
+                  "Software Engineering/Backend/Java/Modern Java 17 to 25",
+                  "Software Engineering/Backend/Java/Spring Boot 3 to 4 - What's New",
+                  "Software Engineering/Backend/Java/Spring Boot Essentials",
+                  {
+                    "group": "_Archive",
+                    "pages": [
+                      "Software Engineering/Backend/Java/_Archive/jOOQ (java Object Oriented Querying) (original)"
+                    ]
+                  },
+                  {
+                    "group": "Java Reactive Course",
+                    "pages": [
+                      "Software Engineering/Backend/Java/Java Reactive Course/Java Reactive Course",
+                      "Software Engineering/Backend/Java/Java Reactive Course/Reactor - Mono & Flux"
+                    ]
+                  },
+                  {
+                    "group": "Reactive Spring Book",
+                    "pages": [
+                      "Software Engineering/Backend/Java/Reactive Spring Book/Reactive Spring Book",
+                      "Software Engineering/Backend/Java/Reactive Spring Book/Reactive Spring - Ch 2 Java Refresher",
+                      "Software Engineering/Backend/Java/Reactive Spring Book/Reactive Spring - Ch 3 Spring Fundamentals",
+                      "Software Engineering/Backend/Java/Reactive Spring Book/Reactive Spring - Ch 4 IO & Reactive Streams",
+                      "Software Engineering/Backend/Java/Reactive Spring Book/Reactive Spring - Ch 5 Reactor & Backpressure"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Scheduled Jobs",
+                "pages": [
+                  "Software Engineering/Backend/Scheduled Jobs/Scheduled Jobs Index",
+                  "Software Engineering/Backend/Scheduled Jobs/BullMQ Job Schedulers in Practice",
+                  "Software Engineering/Backend/Scheduled Jobs/Cron with Message Queues - Architecture",
+                  "Software Engineering/Backend/Scheduled Jobs/Job Control API - Pause, Resume, Run Now & Stop",
+                  "Software Engineering/Backend/Scheduled Jobs/Job Scheduler Dashboard with Next.js",
+                  "Software Engineering/Backend/Scheduled Jobs/Kubernetes CronJobs in Practice",
+                  "Software Engineering/Backend/Scheduled Jobs/Playwright Automation as a Cron Job"
+                ]
+              },
+              {
+                "group": "The Hard Parts of Servers & Node.js",
+                "pages": [
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Index",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/The Hard Parts of Servers & Node.js",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Building HTTP Servers - Express, Fastify & Hono",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Introduction to Node.js",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node JS Under the hood!",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node with HTTP",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js 22 to 24+ - What's New",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Concurrency - Worker Threads, Cluster & Child Processes",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Event Loop & libuv",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Hard Parts - File System",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Hard Parts - Streams & Event Loop Queues",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Performance & Debugging",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Questions",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Node.js Security Best Practices",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/Using Node API’s",
+                  "Software Engineering/Backend/The Hard Parts of Servers & Node.js/V8 Engine - Ignition, TurboFan & Garbage Collection"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Career",
+            "pages": [
+              "Software Engineering/Career/Career Index",
+              "Software Engineering/Career/Code Review Best Practices",
+              "Software Engineering/Career/Communication & Influence for Engineers",
+              "Software Engineering/Career/Debugging Methodology",
+              "Software Engineering/Career/Engineering Levels - Junior to Staff",
+              "Software Engineering/Career/Estimation & Planning",
+              "Software Engineering/Career/Mentoring & Leading Without Authority",
+              "Software Engineering/Career/Productivity & Deep Work",
+              "Software Engineering/Career/Senior Engineer in the AI Era",
+              "Software Engineering/Career/Technical Design Docs & RFCs",
+              "Software Engineering/Career/Working With Legacy Code"
+            ]
+          },
+          {
+            "group": "CS Fundamentals",
+            "pages": [
+              "Software Engineering/CS Fundamentals/CS Fundamentals Index",
+              "Software Engineering/CS Fundamentals/Compilers & Interpreters Basics",
+              "Software Engineering/CS Fundamentals/Computer Architecture Basics",
+              "Software Engineering/CS Fundamentals/Concurrency Primitives",
+              "Software Engineering/CS Fundamentals/Cryptography Basics for Engineers",
+              "Software Engineering/CS Fundamentals/Encoding, Serialization & Character Sets",
+              "Software Engineering/CS Fundamentals/How the Internet Works",
+              "Software Engineering/CS Fundamentals/Networking - OSI, TCP-IP & Protocols",
+              "Software Engineering/CS Fundamentals/Operating Systems Essentials"
+            ]
+          },
+          {
+            "group": "Databases",
+            "pages": [
+              "Software Engineering/Databases/Databases Index",
+              {
+                "group": "_Archive",
+                "pages": [
+                  "Software Engineering/Databases/_Archive/ACID Overview (original)",
+                  "Software Engineering/Databases/_Archive/MongoDB (original)",
+                  "Software Engineering/Databases/_Archive/Overview - Locking & Distributed DB (original)",
+                  "Software Engineering/Databases/_Archive/Overview 1 - Replication & Data Systems (original)"
+                ]
+              },
+              {
+                "group": "Core Concepts",
+                "pages": [
+                  "Software Engineering/Databases/Core Concepts/Data Modeling & Normalization",
+                  "Software Engineering/Databases/Core Concepts/Database Migrations & Schema Evolution",
+                  "Software Engineering/Databases/Core Concepts/Isolation Levels & Read Phenomena",
+                  "Software Engineering/Databases/Core Concepts/Locking & Concurrency Control",
+                  "Software Engineering/Databases/Core Concepts/MVCC & Vacuum",
+                  "Software Engineering/Databases/Core Concepts/NoSQL Database Types",
+                  "Software Engineering/Databases/Core Concepts/PostgreSQL 17 to 18 - What's New",
+                  "Software Engineering/Databases/Core Concepts/Query Optimization & EXPLAIN",
+                  "Software Engineering/Databases/Core Concepts/Vector Databases & pgvector"
+                ]
+              },
+              {
+                "group": "Database Round",
+                "pages": [
+                  "Software Engineering/Databases/Database Round/Database Round",
+                  "Software Engineering/Databases/Database Round/CAP Theorem",
+                  "Software Engineering/Databases/Database Round/Clustering and Scaling",
+                  "Software Engineering/Databases/Database Round/Connection Pooling",
+                  "Software Engineering/Databases/Database Round/Database Backup",
+                  "Software Engineering/Databases/Database Round/Database Internals",
+                  "Software Engineering/Databases/Database Round/Database Pages",
+                  "Software Engineering/Databases/Database Round/Keyset Pagination vs Offset",
+                  "Software Engineering/Databases/Database Round/Replication & 2PC 3PC",
+                  "Software Engineering/Databases/Database Round/Row Vs Column Oriented Databases",
+                  "Software Engineering/Databases/Database Round/Sharding & Partitioning",
+                  "Software Engineering/Databases/Database Round/Transactions & ACID",
+                  {
+                    "group": "Indexes",
+                    "pages": [
+                      "Software Engineering/Databases/Database Round/Indexes/Database Indexes",
+                      "Software Engineering/Databases/Database Round/Indexes/Primary vs Secondary Key"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "MongoDB",
+                "pages": [
+                  "Software Engineering/Databases/MongoDB/MongoDB",
+                  "Software Engineering/Databases/MongoDB/Unit 01 Start Here - Intro to MongoDB",
+                  "Software Engineering/Databases/MongoDB/Unit 02 Getting Started with MongoDB Atlas",
+                  "Software Engineering/Databases/MongoDB/Unit 03 MongoDB and the Document Model",
+                  "Software Engineering/Databases/MongoDB/Unit 04 MongoDB Data Modeling Intro",
+                  "Software Engineering/Databases/MongoDB/Unit 05 Connecting to a MongoDB Database",
+                  "Software Engineering/Databases/MongoDB/Unit 06 Connecting to MongoDB in Node.js",
+                  "Software Engineering/Databases/MongoDB/Unit 07 MongoDB CRUD Operations Insert and Find Documents",
+                  "Software Engineering/Databases/MongoDB/Unit 08 MongoDB CRUD Operations Replace and Delete Documents",
+                  "Software Engineering/Databases/MongoDB/Unit 09 MongoDB CRUD Operations Modifying Query Results",
+                  "Software Engineering/Databases/MongoDB/Unit 10 MongoDB CRUD Operations in Node.js",
+                  "Software Engineering/Databases/MongoDB/Unit 11 MongoDB Aggregation",
+                  "Software Engineering/Databases/MongoDB/Unit 12 MongoDB Indexes",
+                  "Software Engineering/Databases/MongoDB/Unit 13 MongoDB Atlas Search"
+                ]
+              },
+              {
+                "group": "SQL ANSI",
+                "pages": [
+                  "Software Engineering/Databases/SQL ANSI/SQL ANSI",
+                  "Software Engineering/Databases/SQL ANSI/Advanced Filtering Data",
+                  "Software Engineering/Databases/SQL ANSI/Combining Queries",
+                  "Software Engineering/Databases/SQL ANSI/Creating Advanced Joins",
+                  "Software Engineering/Databases/SQL ANSI/Creating and Manipulating Tables",
+                  "Software Engineering/Databases/SQL ANSI/Creating Calculated Fields",
+                  "Software Engineering/Databases/SQL ANSI/Filtering Data",
+                  "Software Engineering/Databases/SQL ANSI/Grouping Data",
+                  "Software Engineering/Databases/SQL ANSI/Inserting Data",
+                  "Software Engineering/Databases/SQL ANSI/Introduction to SQL",
+                  "Software Engineering/Databases/SQL ANSI/Joining Tables",
+                  "Software Engineering/Databases/SQL ANSI/Managing Transaction Processing",
+                  "Software Engineering/Databases/SQL ANSI/Retrieving Information",
+                  "Software Engineering/Databases/SQL ANSI/Sorting Data",
+                  "Software Engineering/Databases/SQL ANSI/SQL Indexes Deep Dive",
+                  "Software Engineering/Databases/SQL ANSI/SQL Table Partitioning",
+                  "Software Engineering/Databases/SQL ANSI/SQL Trigger Functions",
+                  "Software Engineering/Databases/SQL ANSI/Summarizing Data",
+                  "Software Engineering/Databases/SQL ANSI/Understanding Advanced SQL Features",
+                  "Software Engineering/Databases/SQL ANSI/Updating and Deleting Data",
+                  "Software Engineering/Databases/SQL ANSI/Using Cursors",
+                  "Software Engineering/Databases/SQL ANSI/Using Data Manipulation Functions",
+                  "Software Engineering/Databases/SQL ANSI/Using Views",
+                  "Software Engineering/Databases/SQL ANSI/Using Wildcard Filtering",
+                  "Software Engineering/Databases/SQL ANSI/Working with Stored Procedures",
+                  "Software Engineering/Databases/SQL ANSI/Working with Subqueries"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "DevOps",
+            "pages": [
+              "Software Engineering/DevOps/DevOps Index",
+              "Software Engineering/DevOps/CI-CD Pipelines",
+              "Software Engineering/DevOps/Cloud Fundamentals",
+              "Software Engineering/DevOps/Containers vs VMs vs Serverless",
+              "Software Engineering/DevOps/Git Essentials & Workflows",
+              "Software Engineering/DevOps/GitOps - Argo CD & Flux",
+              "Software Engineering/DevOps/Infrastructure as Code",
+              "Software Engineering/DevOps/Linux & Shell Essentials",
+              "Software Engineering/DevOps/Microservices Architecture",
+              "Software Engineering/DevOps/Observability - Logs, Metrics & Traces",
+              "Software Engineering/DevOps/Platform Engineering & Internal Developer Platforms",
+              "Software Engineering/DevOps/Rails Project Structure",
+              "Software Engineering/DevOps/Site Reliability Engineering & Incident Management",
+              "Software Engineering/DevOps/What's New in DevOps 2025-2026",
+              {
+                "group": "_Archive",
+                "pages": [
+                  "Software Engineering/DevOps/_Archive/Microservices Study Plan (original)",
+                  "Software Engineering/DevOps/_Archive/Unix Commands And Rails Structure (original)"
+                ]
+              },
+              {
+                "group": "Delivery Platform",
+                "pages": [
+                  "Software Engineering/DevOps/Delivery Platform/Argo CD in Practice",
+                  "Software Engineering/DevOps/Delivery Platform/Argo Rollouts - Canary & Blue-Green",
+                  "Software Engineering/DevOps/Delivery Platform/Deploying Next.js Micro-frontends to Kubernetes",
+                  "Software Engineering/DevOps/Delivery Platform/Deploying Node.js Apps to Kubernetes",
+                  "Software Engineering/DevOps/Delivery Platform/Grafana & the LGTM Stack",
+                  "Software Engineering/DevOps/Delivery Platform/Jenkins - Pipelines as Code",
+                  "Software Engineering/DevOps/Delivery Platform/Kubernetes Delivery Platform - End to End",
+                  "Software Engineering/DevOps/Delivery Platform/Kubernetes Operations - Logs, Debugging & Scheduling"
+                ]
+              },
+              {
+                "group": "Docker",
+                "pages": [
+                  "Software Engineering/DevOps/Docker/Docker",
+                  "Software Engineering/DevOps/Docker/Docker Basics",
+                  "Software Engineering/DevOps/Docker/Docker Compose",
+                  "Software Engineering/DevOps/Docker/Dockerfile Best Practices & Image Security"
+                ]
+              },
+              {
+                "group": "Kubernetes",
+                "pages": [
+                  "Software Engineering/DevOps/Kubernetes/Kubernetes",
+                  "Software Engineering/DevOps/Kubernetes/Helm & Kustomize",
+                  "Software Engineering/DevOps/Kubernetes/Kubernetes Basics",
+                  "Software Engineering/DevOps/Kubernetes/Kubernetes Networking - Services, Ingress & Gateway API",
+                  "Software Engineering/DevOps/Kubernetes/Kubernetes Workloads in Production"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "DSA",
+            "pages": [
+              "Software Engineering/DSA/DSA Index",
+              "Software Engineering/DSA/Data structure & Algorithms",
+              {
+                "group": "_Archive",
+                "pages": [
+                  "Software Engineering/DSA/_Archive/Arrays and strings (original)",
+                  "Software Engineering/DSA/_Archive/Data structure & Algorithms (original)",
+                  "Software Engineering/DSA/_Archive/LC - Crash Course (original)"
+                ]
+              },
+              {
+                "group": "01 Foundations",
+                "pages": [
+                  "Software Engineering/DSA/01 Foundations/Big-O & Complexity Analysis",
+                  "Software Engineering/DSA/01 Foundations/Problem Solving"
+                ]
+              },
+              {
+                "group": "02 Data Structures",
+                "pages": [
+                  "Software Engineering/DSA/02 Data Structures/Arrays & Strings",
+                  "Software Engineering/DSA/02 Data Structures/Graphs",
+                  "Software Engineering/DSA/02 Data Structures/Hash Tables",
+                  "Software Engineering/DSA/02 Data Structures/Heaps & Priority Queues",
+                  "Software Engineering/DSA/02 Data Structures/Linked Lists",
+                  "Software Engineering/DSA/02 Data Structures/Stacks & Queues",
+                  "Software Engineering/DSA/02 Data Structures/Trees & Binary Search Trees",
+                  "Software Engineering/DSA/02 Data Structures/Tries",
+                  "Software Engineering/DSA/02 Data Structures/Union-Find"
+                ]
+              },
+              {
+                "group": "03 Algorithms",
+                "pages": [
+                  "Software Engineering/DSA/03 Algorithms/Dynamic Programming",
+                  "Software Engineering/DSA/03 Algorithms/Recursion & Backtracking",
+                  "Software Engineering/DSA/03 Algorithms/Sorting Algorithms",
+                  "Software Engineering/DSA/03 Algorithms/Tree Traversal - DFS & BFS"
+                ]
+              },
+              {
+                "group": "04 Patterns",
+                "pages": [
+                  "Software Engineering/DSA/04 Patterns/Backtracking",
+                  "Software Engineering/DSA/04 Patterns/Binary Search",
+                  "Software Engineering/DSA/04 Patterns/Bit Manipulation",
+                  "Software Engineering/DSA/04 Patterns/Fast and Slow Pointer",
+                  "Software Engineering/DSA/04 Patterns/Graph BFS-DFS patterns",
+                  "Software Engineering/DSA/04 Patterns/Greedy",
+                  "Software Engineering/DSA/04 Patterns/Intervals",
+                  "Software Engineering/DSA/04 Patterns/Monotonic Stack & Queue",
+                  "Software Engineering/DSA/04 Patterns/Prefix Sum",
+                  "Software Engineering/DSA/04 Patterns/Sliding Window",
+                  "Software Engineering/DSA/04 Patterns/Top-K & Heaps pattern",
+                  "Software Engineering/DSA/04 Patterns/Two Pointers"
+                ]
+              },
+              {
+                "group": "05 Books & Courses",
+                "pages": [
+                  "Software Engineering/DSA/05 Books & Courses/Grokking Algorithms",
+                  "Software Engineering/DSA/05 Books & Courses/LeetCode Crash Course"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Frontend",
+            "pages": [
+              "Software Engineering/Frontend/Courses & Books",
+              "Software Engineering/Frontend/Frontend Home",
+              "Software Engineering/Frontend/Frontend Roadmap & Checklist",
+              "Software Engineering/Frontend/What's New in Frontend 2025-2026",
+              {
+                "group": "_Archive",
+                "pages": [
+                  "Software Engineering/Frontend/_Archive/Front End",
+                  "Software Engineering/Frontend/_Archive/JS Concepts",
+                  "Software Engineering/Frontend/_Archive/Local Storage vs Session Storage vs Cookie",
+                  "Software Engineering/Frontend/_Archive/NextJS",
+                  "Software Engineering/Frontend/_Archive/SSR vs CSR vs Pre-Rendering",
+                  {
+                    "group": "Angular",
+                    "pages": [
+                      "Software Engineering/Frontend/_Archive/Angular/Angular"
+                    ]
+                  },
+                  {
+                    "group": "Front-End System Design",
+                    "pages": [
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Front-End System design",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Application State & Network Connectivity",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Core Fundamentals",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/DOM API",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/System design",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Virtualization",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Web APIs Complex UI Patterns",
+                      "Software Engineering/Frontend/_Archive/Front-End System Design/Web Application Performance"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "01 JavaScript",
+                "pages": [
+                  "Software Engineering/Frontend/01 JavaScript/JavaScript Index",
+                  "Software Engineering/Frontend/01 JavaScript/Closures & Memory Model",
+                  "Software Engineering/Frontend/01 JavaScript/Collections - Map, Set, WeakMap & WeakRef",
+                  "Software Engineering/Frontend/01 JavaScript/Error Handling",
+                  "Software Engineering/Frontend/01 JavaScript/Event Loop - Microtasks & Macrotasks",
+                  "Software Engineering/Frontend/01 JavaScript/Execution Context & Call Stack",
+                  "Software Engineering/Frontend/01 JavaScript/Functions - HOF, Callbacks & Currying",
+                  "Software Engineering/Frontend/01 JavaScript/Hoisting, TDZ & var-let-const",
+                  "Software Engineering/Frontend/01 JavaScript/Iterators, Generators & Iterator Helpers",
+                  "Software Engineering/Frontend/01 JavaScript/Memory Management & Garbage Collection",
+                  "Software Engineering/Frontend/01 JavaScript/Modern JavaScript ES2022-ES2027",
+                  "Software Engineering/Frontend/01 JavaScript/Modules (ESM)",
+                  "Software Engineering/Frontend/01 JavaScript/Objects, Arrays & Immutability",
+                  "Software Engineering/Frontend/01 JavaScript/Promises, Async-Await & Cancellation",
+                  "Software Engineering/Frontend/01 JavaScript/Prototypes, Classes & Inheritance",
+                  "Software Engineering/Frontend/01 JavaScript/Scope & Lexical Environment",
+                  "Software Engineering/Frontend/01 JavaScript/this, call, apply & bind",
+                  "Software Engineering/Frontend/01 JavaScript/Types, Coercion & Equality"
+                ]
+              },
+              {
+                "group": "02 TypeScript",
+                "pages": [
+                  "Software Engineering/Frontend/02 TypeScript/Advanced TypeScript - Generics & Utility Types",
+                  "Software Engineering/Frontend/02 TypeScript/TypeScript 5.8 to 7.0",
+                  "Software Engineering/Frontend/02 TypeScript/TypeScript Essentials"
+                ]
+              },
+              {
+                "group": "03 Browser & Web Platform",
+                "pages": [
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Browser Storage - Cookies, Web Storage & IndexedDB",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/DOM, Events & Event Delegation",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/How Browsers Render - Critical Rendering Path",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Modern Web Platform APIs 2025-2026",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Networking - HTTP, Caching & Real-time",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Observer APIs",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Web Components & Shadow DOM",
+                  "Software Engineering/Frontend/03 Browser & Web Platform/Web Workers, Service Workers & PWAs"
+                ]
+              },
+              {
+                "group": "04 CSS",
+                "pages": [
+                  "Software Engineering/Frontend/04 CSS/CSS Fundamentals - Cascade, Box Model & Contexts",
+                  "Software Engineering/Frontend/04 CSS/Layout - Flexbox, Grid & Container Queries",
+                  "Software Engineering/Frontend/04 CSS/Modern CSS 2025-2026",
+                  "Software Engineering/Frontend/04 CSS/Styling Approaches"
+                ]
+              },
+              {
+                "group": "05 React",
+                "pages": [
+                  "Software Engineering/Frontend/05 React/React Index",
+                  "Software Engineering/Frontend/05 React/Component Patterns",
+                  "Software Engineering/Frontend/05 React/Forms & Actions in React",
+                  "Software Engineering/Frontend/05 React/Hooks Reference",
+                  "Software Engineering/Frontend/05 React/How React Renders - Reconciliation & Fiber",
+                  "Software Engineering/Frontend/05 React/React 19 to 19.3 & React Compiler",
+                  "Software Engineering/Frontend/05 React/React Performance",
+                  "Software Engineering/Frontend/05 React/React Router",
+                  "Software Engineering/Frontend/05 React/React Server Components & Server Functions",
+                  "Software Engineering/Frontend/05 React/State, Props & Data Flow"
+                ]
+              },
+              {
+                "group": "06 State Management",
+                "pages": [
+                  "Software Engineering/Frontend/06 State Management/Redux & Redux Toolkit",
+                  "Software Engineering/Frontend/06 State Management/Server State - TanStack Query & RTK Query",
+                  "Software Engineering/Frontend/06 State Management/State Management Overview",
+                  "Software Engineering/Frontend/06 State Management/URL as State"
+                ]
+              },
+              {
+                "group": "07 Next.js",
+                "pages": [
+                  "Software Engineering/Frontend/07 Next.js/Next.js Index",
+                  "Software Engineering/Frontend/07 Next.js/Next.js 15 to 16.3",
+                  "Software Engineering/Frontend/07 Next.js/Next.js App Router Fundamentals",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Authentication & Authorization",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Data Fetching & Mutations Patterns",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Error Handling, Loading & Not-Found",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Internationalization, Metadata & SEO",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Interview Questions",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Performance Optimization",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Project Structure & Architecture",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Rendering & Caching",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Route Handlers & Backend-for-Frontend",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Self-Hosting & Deployment Options",
+                  "Software Engineering/Frontend/07 Next.js/Next.js Testing - Unit, Integration & E2E"
+                ]
+              },
+              {
+                "group": "08 Angular",
+                "pages": [
+                  "Software Engineering/Frontend/08 Angular/Angular Index",
+                  "Software Engineering/Frontend/08 Angular/Angular Change Detection, Zones & Signals",
+                  "Software Engineering/Frontend/08 Angular/Angular Fundamentals",
+                  "Software Engineering/Frontend/08 Angular/Angular Interview Q&A",
+                  "Software Engineering/Frontend/08 Angular/Modern Angular v17 to v22"
+                ]
+              },
+              {
+                "group": "09 Architecture",
+                "pages": [
+                  "Software Engineering/Frontend/09 Architecture/Design Systems",
+                  "Software Engineering/Frontend/09 Architecture/Frontend Design Patterns",
+                  "Software Engineering/Frontend/09 Architecture/Micro-frontends & Module Federation",
+                  "Software Engineering/Frontend/09 Architecture/Other Frameworks - Vue, Svelte, Solid, Astro",
+                  "Software Engineering/Frontend/09 Architecture/Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands"
+                ]
+              },
+              {
+                "group": "10 Performance",
+                "pages": [
+                  "Software Engineering/Frontend/10 Performance/Core Web Vitals",
+                  "Software Engineering/Frontend/10 Performance/Performance Optimization Playbook",
+                  "Software Engineering/Frontend/10 Performance/Virtualization & Large Lists"
+                ]
+              },
+              {
+                "group": "11 Security",
+                "pages": [
+                  "Software Engineering/Frontend/11 Security/Authentication & Token Storage",
+                  "Software Engineering/Frontend/11 Security/Frontend Security - XSS, CSRF, CSP & Trusted Types",
+                  "Software Engineering/Frontend/11 Security/Supply Chain Security"
+                ]
+              },
+              {
+                "group": "12 Accessibility",
+                "pages": [
+                  "Software Engineering/Frontend/12 Accessibility/Accessibility Essentials"
+                ]
+              },
+              {
+                "group": "13 Testing",
+                "pages": [
+                  "Software Engineering/Frontend/13 Testing/Frontend Testing"
+                ]
+              },
+              {
+                "group": "14 Tooling",
+                "pages": [
+                  "Software Engineering/Frontend/14 Tooling/Build Tools & Bundlers",
+                  "Software Engineering/Frontend/14 Tooling/Linting, Formatting, Package Managers & Runtimes",
+                  "Software Engineering/Frontend/14 Tooling/Monorepos"
+                ]
+              },
+              {
+                "group": "15 System Design",
+                "pages": [
+                  "Software Engineering/Frontend/15 System Design/Frontend System Design Index",
+                  "Software Engineering/Frontend/15 System Design/Case Study - Autocomplete",
+                  "Software Engineering/Frontend/15 System Design/Case Study - Flight Search & Booking",
+                  "Software Engineering/Frontend/15 System Design/Case Study - News Feed",
+                  "Software Engineering/Frontend/15 System Design/RADIO Framework"
+                ]
+              },
+              {
+                "group": "16 AI in Frontend",
+                "pages": [
+                  "Software Engineering/Frontend/16 AI in Frontend/AI in Frontend - MCP, WebMCP & Built-in AI"
+                ]
+              },
+              {
+                "group": "17 Interview Prep",
+                "pages": [
+                  "Software Engineering/Frontend/17 Interview Prep/JavaScript Interview Questions",
+                  "Software Engineering/Frontend/17 Interview Prep/Output Questions & Tricky Snippets",
+                  "Software Engineering/Frontend/17 Interview Prep/React Interview Questions"
+                ]
+              },
+              {
+                "group": "Courses & Books",
+                "pages": [
+                  "Software Engineering/Frontend/Courses & Books/Advance React Book",
+                  "Software Engineering/Frontend/Courses & Books/JS Book - Secrets of JS Ninja",
+                  "Software Engineering/Frontend/Courses & Books/JS the hard parts v3",
+                  {
+                    "group": "Building Micro-frontends with React",
+                    "pages": [
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Building Micro-frontends with React",
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Building Micro frontends with React 18",
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Chapter 1  Introducing Microfrontends",
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Chapter 2  Key Principles and Components of Microfrontends",
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Chapter 3  Monorepo versus Polyrepos for Microfrontends",
+                      "Software Engineering/Frontend/Courses & Books/Building Micro-frontends with React/Chapter 4  Implementing The Multi-SPA Pattern for Microfrontends"
+                    ]
+                  },
+                  {
+                    "group": "FE Masters",
+                    "pages": [
+                      "Software Engineering/Frontend/Courses & Books/FE Masters/FE Masters",
+                      "Software Engineering/Frontend/Courses & Books/FE Masters/Intermediate React V6",
+                      "Software Engineering/Frontend/Courses & Books/FE Masters/Reach Hook Form",
+                      "Software Engineering/Frontend/Courses & Books/FE Masters/Ultimate NextJs Course"
+                    ]
+                  },
+                  {
+                    "group": "JavaScript the Hard Parts v2",
+                    "pages": [
+                      "Software Engineering/Frontend/Courses & Books/JavaScript the Hard Parts v2/JavaScript the hard parts v2",
+                      "Software Engineering/Frontend/Courses & Books/JavaScript the Hard Parts v2/Asynchronous JavaScript",
+                      "Software Engineering/Frontend/Courses & Books/JavaScript the Hard Parts v2/Closures",
+                      "Software Engineering/Frontend/Courses & Books/JavaScript the Hard Parts v2/Functions & Callbacks",
+                      "Software Engineering/Frontend/Courses & Books/JavaScript the Hard Parts v2/Principles"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Interviews",
+            "pages": [
+              "Software Engineering/Interviews/Interviews Index",
+              "Software Engineering/Interviews/Backend Interview Questions",
+              "Software Engineering/Interviews/Behavioral Interviews & STAR Method",
+              "Software Engineering/Interviews/Frontend Interview Concepts & Question Bank",
+              "Software Engineering/Interviews/Interview Process & Preparation Plan",
+              "Software Engineering/Interviews/Interview Questions Angular",
+              "Software Engineering/Interviews/Online Coding Assessment - Bit Count, Consecutive Path & Missing Rolls",
+              "Software Engineering/Interviews/Salary Negotiation & Offers"
+            ]
+          },
+          {
+            "group": "Principles",
+            "pages": [
+              "Software Engineering/Principles/Principles Index",
+              "Software Engineering/Principles/Abstract Class and Interface",
+              "Software Engineering/Principles/Architecture Decision Records (ADRs) & Technical Debt",
+              "Software Engineering/Principles/Behavior-Driven Development (BDD)",
+              "Software Engineering/Principles/Behavioral Patterns",
+              "Software Engineering/Principles/Clean Code & Refactoring",
+              "Software Engineering/Principles/Concurrency And Parallelism",
+              "Software Engineering/Principles/Coupling, Cohesion & Modularity",
+              "Software Engineering/Principles/Creational Patterns",
+              "Software Engineering/Principles/Dependency Injection & Inversion of Control",
+              "Software Engineering/Principles/Design Patterns",
+              "Software Engineering/Principles/Domain-Driven Design (DDD)",
+              "Software Engineering/Principles/DRY, KISS & YAGNI",
+              "Software Engineering/Principles/Functional Programming Principles",
+              "Software Engineering/Principles/Immutability Across Languages",
+              "Software Engineering/Principles/MVC",
+              "Software Engineering/Principles/OOP",
+              "Software Engineering/Principles/Software Architecture Styles",
+              "Software Engineering/Principles/SOLID Principles with Ruby",
+              "Software Engineering/Principles/SOLID",
+              "Software Engineering/Principles/Structural Patterns",
+              "Software Engineering/Principles/Test-Driven Development (TDD)"
+            ]
+          },
+          {
+            "group": "Security",
+            "pages": [
+              "Software Engineering/Security/Security Index",
+              "Software Engineering/Security/API Security",
+              "Software Engineering/Security/Backend Security Essentials",
+              "Software Engineering/Security/OWASP Top 10",
+              "Software Engineering/Security/Secrets Management",
+              "Software Engineering/Security/Secure SDLC & Threat Modeling"
+            ]
+          },
+          {
+            "group": "System Design",
+            "pages": [
+              "Software Engineering/System Design/System Design Index",
+              "Software Engineering/System Design/Blob Storage & File Uploads",
+              "Software Engineering/System Design/Caching Strategies",
+              "Software Engineering/System Design/CDN & Edge Computing",
+              "Software Engineering/System Design/Consistency Models & Consensus",
+              "Software Engineering/System Design/Consistent Hashing",
+              "Software Engineering/System Design/Designing LLM-Powered Systems",
+              "Software Engineering/System Design/Distributed Systems Patterns",
+              "Software Engineering/System Design/Message Queues & Event Streaming",
+              "Software Engineering/System Design/Scalability Fundamentals",
+              "Software Engineering/System Design/Search Systems & Inverted Indexes",
+              "Software Engineering/System Design/System Design Interview Framework",
+              "Software Engineering/System Design/Unique ID Generation",
+              {
+                "group": "Case Studies",
+                "pages": [
+                  "Software Engineering/System Design/Case Studies/Case Study - Chat System",
+                  "Software Engineering/System Design/Case Studies/Case Study - Distributed Cache",
+                  "Software Engineering/System Design/Case Studies/Case Study - News Feed Backend",
+                  "Software Engineering/System Design/Case Studies/Case Study - Notification System",
+                  "Software Engineering/System Design/Case Studies/Case Study - Rate Limiter",
+                  "Software Engineering/System Design/Case Studies/Case Study - URL Shortener",
+                  "Software Engineering/System Design/Case Studies/Case Study - Video Streaming"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "Resources/University Courses on YT - ASU"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

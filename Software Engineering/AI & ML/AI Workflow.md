@@ -1,12 +1,16 @@
 ---
+title: "AI Workflow"
 tags: [ai-ml, ai-ml/ai-assisted-dev]
 aliases: [AI Dev Workflow, Scope Architect Develop Workflow, Build Approach and Workflow Tier]
 updated: 2026-09-27
 ---
 # AI Workflow
 
-> [!tldr] TL;DR
-> My skill-based workflow for building software with a coding agent. A new idea goes `/scope → /architect → /develop (scaffold) → /audit`; each new feature goes `/develop → /check verify → /test → /check review → /document → /sync`, with `/debug` whenever something breaks. `/scope` makes two decisions explicit: the **build approach** (Tracer Bullet, Skateboard, Facade, Journey) and the **workflow tier** (Prototype, Alpha, Beta, GA), which sets how much proof a feature needs before it counts as done.
+<Note>
+**TL;DR**
+
+My skill-based workflow for building software with a coding agent. A new idea goes `/scope → /architect → /develop (scaffold) → /audit`; each new feature goes `/develop → /check verify → /test → /check review → /document → /sync`, with `/debug` whenever something breaks. `/scope` makes two decisions explicit: the **build approach** (Tracer Bullet, Skateboard, Facade, Journey) and the **workflow tier** (Prototype, Alpha, Beta, GA), which sets how much proof a feature needs before it counts as done.
+</Note>
 
 ```mermaid
 flowchart LR
@@ -78,22 +82,24 @@ Worth being plain about this, because it's easy to read the above as a system th
 The plan isn't written once and abandoned. As features ship, `/sync` reconciles the scope against what's actually in the repo, updating statuses and flagging what the change made stale.
 
 ## Why this works with coding agents
-- **Specs before code**: `/scope` and `/architect` are a form of spec-driven development; the agent builds against written decisions instead of guessing. See [[AI-Assisted Software Development]].
-- **Evidence over claims**: agents often report "done" too early; `/check verify` and `/test` demand proof (a failure mode listed in [[AI Agents & Agentic Patterns]]).
+- **Specs before code**: `/scope` and `/architect` are a form of spec-driven development; the agent builds against written decisions instead of guessing. See [AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development).
+- **Evidence over claims**: agents often report "done" too early; `/check verify` and `/test` demand proof (a failure mode listed in [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns)).
 - **Independent review**: a different model reviewing at GA reduces the "grading your own homework" problem.
-- **Durable context**: `/audit` and `/sync` keep `AGENTS.md` files current so every future session starts with accurate project context ([[Prompt & Context Engineering]]).
+- **Durable context**: `/audit` and `/sync` keep `AGENTS.md` files current so every future session starts with accurate project context ([Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering)).
 
 ## Interview questions
 
-> [!question]- How do you decide how much verification an AI-written feature needs?
-> Match process to risk. A spike needs only to run; a user-facing feature needs to be demonstrated working in the real app; production code needs tests; anything touching money, auth, permissions or compliance needs independent review and documentation too.
+<Accordion title="How do you decide how much verification an AI-written feature needs?">
+Match process to risk. A spike needs only to run; a user-facing feature needs to be demonstrated working in the real app; production code needs tests; anything touching money, auth, permissions or compliance needs independent review and documentation too.
+</Accordion>
 
-> [!question]- What is a tracer bullet / walking skeleton and why use it?
-> A thin, end-to-end implementation through every layer (UI → API → DB) that does very little but works. It proves integration early and gives you something real to grow, instead of building layers separately and discovering at the end that they don't fit.
+<Accordion title="What is a tracer bullet / walking skeleton and why use it?">
+A thin, end-to-end implementation through every layer (UI → API → DB) that does very little but works. It proves integration early and gives you something real to grow, instead of building layers separately and discovering at the end that they don't fit.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[AI-Assisted Software Development]] · [[AI Agents & Agentic Patterns]] · [[Prompt & Context Engineering]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering)
 
 ## Sources
 - Andrew Hunt & David Thomas, *The Pragmatic Programmer* (20th anniversary ed., 2019), "Tracer Bullets"

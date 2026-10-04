@@ -1,12 +1,16 @@
 ---
+title: "Caching Strategies"
 tags: [system-design, system-design/caching]
 aliases: [Caching, Cache-aside, Write-through, Write-behind, Cache Invalidation, Cache Stampede, LRU, Redis Caching]
 updated: 2026-09-27
 ---
 # Caching Strategies
 
-> [!tldr] TL;DR
-> A cache stores the result of expensive work closer to where it's needed. Pick a **pattern** (cache-aside is the default; read-through, write-through and write-behind trade complexity for consistency or write speed), an **eviction policy** (LRU/LFU), a **TTL**, and an **invalidation** plan. At scale the hard problems are stale data, **stampedes** on hot keys, and hot shards. Redis and its fork Valkey dominate server-side caching; CDNs cache at the edge.
+<Note>
+**TL;DR**
+
+A cache stores the result of expensive work closer to where it's needed. Pick a **pattern** (cache-aside is the default; read-through, write-through and write-behind trade complexity for consistency or write speed), an **eviction policy** (LRU/LFU), a **TTL**, and an **invalidation** plan. At scale the hard problems are stale data, **stampedes** on hot keys, and hot shards. Redis and its fork Valkey dominate server-side caching; CDNs cache at the edge.
+</Note>
 
 ## Where caches live
 ```mermaid
@@ -17,7 +21,7 @@ flowchart LR
   APP --> DC["Distributed cache<br/>(Redis / Valkey / Memcached)"]
   DC --> DB[("DB: buffer pool,<br/>materialized views")]
 ```
-Browser and HTTP caching are covered in [[Networking - HTTP, Caching & Real-time]]; CDN in [[CDN & Edge Computing]].
+Browser and HTTP caching are covered in [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time); CDN in [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing).
 
 ## Read patterns
 ### Cache-aside (lazy loading), the default
@@ -50,8 +54,11 @@ The cache itself loads from the DB on a miss (a library or cache provider owns t
 | **Write-around** | Write DB only; cache filled on read | No cache pollution | Recent writes miss |
 | **Invalidate on write** (with cache-aside) | Write DB, delete key | Simple, common | Short stale windows |
 
-> [!warning] Delete, don't set, on write
-> Setting the cache after a DB write can race: two writers update DB in order A→B but set cache in order B→A, leaving A cached forever. Deleting is idempotent. For extra safety: **delete, then delete again after a short delay** ("delayed double delete"), or drive invalidation from the DB change stream (CDC via Debezium) so ordering follows the commit log.
+<Warning>
+**Delete, don't set, on write**
+
+Setting the cache after a DB write can race: two writers update DB in order A→B but set cache in order B→A, leaving A cached forever. Deleting is idempotent. For extra safety: **delete, then delete again after a short delay** ("delayed double delete"), or drive invalidation from the DB change stream (CDC via Debezium) so ordering follows the commit log.
+</Warning>
 
 ## Eviction policies
 | Policy | Evicts | Good for |
@@ -64,19 +71,22 @@ The cache itself loads from the DB on a miss (a library or cache provider owns t
 
 Redis `maxmemory-policy`: `allkeys-lru`, `allkeys-lfu`, `volatile-lru`, `volatile-ttl`, `noeviction` (errors on write when full; the default, good for primary data, bad for caches).
 
-> [!example] LRU in ~15 lines
-> ```python
-> from collections import OrderedDict
-> class LRU:
->     def __init__(self, cap): self.cap, self.d = cap, OrderedDict()
->     def get(self, k):
->         if k not in self.d: return None
->         self.d.move_to_end(k); return self.d[k]
->     def put(self, k, v):
->         self.d[k] = v; self.d.move_to_end(k)
->         if len(self.d) > self.cap: self.d.popitem(last=False)
-> ```
-> O(1) get/put: hash map + doubly linked list.
+<Info>
+**LRU in ~15 lines**
+
+```python
+from collections import OrderedDict
+class LRU:
+    def __init__(self, cap): self.cap, self.d = cap, OrderedDict()
+    def get(self, k):
+        if k not in self.d: return None
+        self.d.move_to_end(k); return self.d[k]
+    def put(self, k, v):
+        self.d[k] = v; self.d.move_to_end(k)
+        if len(self.d) > self.cap: self.d.popitem(last=False)
+```
+O(1) get/put: hash map + doubly linked list.
+</Info>
 
 ## TTL and invalidation
 "There are only two hard things in computer science: cache invalidation and naming things" (Phil Karlton).
@@ -115,13 +125,16 @@ def fetch(key, ttl, recompute, beta=1.0):
 
 ## Redis / Valkey essentials
 - In-memory data structures: strings, hashes, lists, sets, sorted sets (leaderboards), streams, HyperLogLog, bitmaps, geo.
-- **Persistence**: RDB snapshots, AOF log. **HA**: replicas + Sentinel, or Redis Cluster (16,384 hash slots, see [[Consistent Hashing]]).
+- **Persistence**: RDB snapshots, AOF log. **HA**: replicas + Sentinel, or Redis Cluster (16,384 hash slots, see [Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing)).
 - Commands are executed by one main thread (I/O threads help networking), so avoid `KEYS *` and O(N) calls on big keys in prod; use `SCAN`.
 
-> [!info]+ 🆕 2025–2026: Redis 8, Valkey 8.1/9
-> - **Licensing**: Redis moved from BSD to SSPL/RSAL in March 2024; the Linux Foundation forked **Valkey** from Redis 7.2.4. On **2025-05-01 Redis 8.0** added **AGPLv3** as a license option and folded the former Redis Stack modules (JSON, Query Engine, time series, probabilistic types) into core, plus a new **vector set** data type. ([Redis blog](https://redis.io/blog/agplv3/))
-> - **Valkey 9.0** went GA on **2025-10-21**: hash-field expiration, **atomic slot migration** for resharding, and multiple databases in cluster mode. ([Valkey blog](https://valkey.io/blog/introducing-valkey-9/), [Linux Foundation](https://www.linuxfoundation.org/press/valkey-9.0-delivers-performance-and-resiliency-for-real-time-workloads))
-> - Managed offerings (AWS ElastiCache/MemoryDB, Google Memorystore) now offer Valkey, usually cheaper than their Redis OSS tiers; for new projects Valkey is a common default.
+<Info>
+**🆕 2025–2026: Redis 8, Valkey 8.1/9**
+
+- **Licensing**: Redis moved from BSD to SSPL/RSAL in March 2024; the Linux Foundation forked **Valkey** from Redis 7.2.4. On **2025-05-01 Redis 8.0** added **AGPLv3** as a license option and folded the former Redis Stack modules (JSON, Query Engine, time series, probabilistic types) into core, plus a new **vector set** data type. ([Redis blog](https://redis.io/blog/agplv3/))
+- **Valkey 9.0** went GA on **2025-10-21**: hash-field expiration, **atomic slot migration** for resharding, and multiple databases in cluster mode. ([Valkey blog](https://valkey.io/blog/introducing-valkey-9/), [Linux Foundation](https://www.linuxfoundation.org/press/valkey-9.0-delivers-performance-and-resiliency-for-real-time-workloads))
+- Managed offerings (AWS ElastiCache/MemoryDB, Google Memorystore) now offer Valkey, usually cheaper than their Redis OSS tiers; for new projects Valkey is a common default.
+</Info>
 
 ## Senior perspective
 - A cache is a **consistency trade-off**. Ask: "How stale can this be? What's the invalidation path? What if the cache is empty?"
@@ -131,28 +144,34 @@ def fetch(key, ttl, recompute, beta=1.0):
 - Consider caching **computed/aggregated** results (feeds, counts) rather than raw rows.
 
 ## Interview questions
-> [!question]- Explain cache-aside and its consistency problems.
-> App reads cache, falls back to DB and populates the cache; writes go to the DB then delete the key. Problems: stale reads between write and delete, and a race where a slow reader puts an old value back after a delete. Mitigate with TTLs, delayed double delete, versioning, or CDC-driven invalidation.
+<Accordion title="Explain cache-aside and its consistency problems.">
+App reads cache, falls back to DB and populates the cache; writes go to the DB then delete the key. Problems: stale reads between write and delete, and a race where a slow reader puts an old value back after a delete. Mitigate with TTLs, delayed double delete, versioning, or CDC-driven invalidation.
+</Accordion>
 
-> [!question]- Write-through vs write-behind?
-> Write-through writes cache and DB synchronously: fresh cache, slower writes. Write-behind acknowledges after writing the cache and flushes to the DB asynchronously: fast and batchable but risks data loss and ordering issues if the cache fails.
+<Accordion title="Write-through vs write-behind?">
+Write-through writes cache and DB synchronously: fresh cache, slower writes. Write-behind acknowledges after writing the cache and flushes to the DB asynchronously: fast and batchable but risks data loss and ordering issues if the cache fails.
+</Accordion>
 
-> [!question]- What is a cache stampede and how do you prevent it?
-> Many concurrent misses on a hot key cause a burst of expensive recomputes. Prevent with single-flight/locks, stale-while-revalidate, probabilistic early refresh, TTL jitter and pre-warming.
+<Accordion title="What is a cache stampede and how do you prevent it?">
+Many concurrent misses on a hot key cause a burst of expensive recomputes. Prevent with single-flight/locks, stale-while-revalidate, probabilistic early refresh, TTL jitter and pre-warming.
+</Accordion>
 
-> [!question]- LRU vs LFU?
-> LRU evicts what hasn't been touched recently: adapts fast, but one scan can flush useful keys. LFU keeps frequently used items: great for stable hot sets, slower to adapt (needs decay). W-TinyLFU combines both.
+<Accordion title="LRU vs LFU?">
+LRU evicts what hasn't been touched recently: adapts fast, but one scan can flush useful keys. LFU keeps frequently used items: great for stable hot sets, slower to adapt (needs decay). W-TinyLFU combines both.
+</Accordion>
 
-> [!question]- How do you handle a celebrity hot key?
-> Local in-process cache with short TTL, replicate the key across shards with suffixes and pick randomly, read from replicas, and request coalescing so misses don't multiply.
+<Accordion title="How do you handle a celebrity hot key?">
+Local in-process cache with short TTL, replicate the key across shards with suffixes and pick randomly, read from replicas, and request coalescing so misses don't multiply.
+</Accordion>
 
-> [!question]- Redis vs Valkey vs Memcached?
-> Memcached: simple multithreaded key/value, no persistence. Redis/Valkey: rich data structures, persistence, replication, clustering, scripting. Valkey is the Linux Foundation BSD-licensed fork of Redis 7.2; Redis 8 is available under AGPLv3/RSAL/SSPL.
+<Accordion title="Redis vs Valkey vs Memcached?">
+Memcached: simple multithreaded key/value, no persistence. Redis/Valkey: rich data structures, persistence, replication, clustering, scripting. Valkey is the Linux Foundation BSD-licensed fork of Redis 7.2; Redis 8 is available under AGPLv3/RSAL/SSPL.
+</Accordion>
 
 ## Related
-- [[System Design Index]]
-- [[Case Study - Distributed Cache]] · [[CDN & Edge Computing]] · [[Consistent Hashing]] · [[Consistency Models & Consensus]]
-- [[Networking - HTTP, Caching & Real-time]] · [[Next.js Rendering & Caching]] · [[Designing LLM-Powered Systems]] (semantic caching)
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
+- [Case Study - Distributed Cache](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Distributed%20Cache) · [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing) · [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching) · [Designing LLM-Powered Systems](/Software%20Engineering/System%20Design/Designing%20LLM-Powered%20Systems) (semantic caching)
 
 ## Sources
 - [AWS whitepaper: Database caching strategies using Redis](https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/welcome.html)

@@ -1,18 +1,22 @@
 ---
+title: "Stacks & Queues"
 tags: [dsa, dsa/data-structures]
 aliases: [Stack, Queue, Deque, Stacks, Queues, LIFO, FIFO, Circular Buffer, Ring Buffer]
 updated: 2026-09-27
 ---
 # Stacks & Queues
 
-> [!tldr] TL;DR
-> A **stack** is LIFO (last in, first out): push and pop at the same end. A **queue** is FIFO (first in, first out): add at the back, remove from the front. A **deque** allows both ends. All core operations are **O(1)** when implemented right. In JS, an array is a fine stack, but `array.shift()` is **O(n)**, so a queue built on `shift` silently turns BFS quadratic; use a head index, a circular buffer, or a linked list. In Python, use `list` for stacks and `collections.deque` for queues.
+<Note>
+**TL;DR**
+
+A **stack** is LIFO (last in, first out): push and pop at the same end. A **queue** is FIFO (first in, first out): add at the back, remove from the front. A **deque** allows both ends. All core operations are **O(1)** when implemented right. In JS, an array is a fine stack, but `array.shift()` is **O(n)**, so a queue built on `shift` silently turns BFS quadratic; use a head index, a circular buffer, or a linked list. In Python, use `list` for stacks and `collections.deque` for queues.
+</Note>
 
 ## The idea
 
-- **Stack**: a pile of plates. You add to the top and take from the top. Undo history, the browser back button, and the function call stack ([[Execution Context & Call Stack]]) all work this way.
+- **Stack**: a pile of plates. You add to the top and take from the top. Undo history, the browser back button, and the function call stack ([Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack)) all work this way.
 - **Queue**: a line at a shop. First person in is first served. Print queues, task schedulers, message queues and BFS all work this way.
-- **Deque** (double-ended queue, "deck"): a line where people can join or leave at either end. Sliding-window maximum uses it ([[Monotonic Stack & Queue]]).
+- **Deque** (double-ended queue, "deck"): a line where people can join or leave at either end. Sliding-window maximum uses it ([Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue)).
 
 ```text
 Stack (LIFO)            Queue (FIFO)
@@ -39,7 +43,7 @@ Stack (LIFO)            Queue (FIFO)
 | peek | `arr[arr.length - 1]` or `arr.at(-1)` | `lst[-1]` |
 | empty? | `arr.length === 0` | `not lst` |
 
-All O(1) (amortized for push). The end of a dynamic array is the natural top ([[Arrays & Strings]]).
+All O(1) (amortized for push). The end of a dynamic array is the natural top ([Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)).
 
 ### Queue operations and the JS `shift` pitfall
 
@@ -380,7 +384,7 @@ Only pour when `outStack` is empty. Pouring every time breaks the order and the 
 - **Negative modulo in JS**: `-1 % 5 === -1`. Use `(i - 1 + cap) % cap`. Python's `%` is already non-negative for a positive divisor.
 - **Recursion is a stack**: deep recursion can overflow (`RangeError: Maximum call stack size exceeded` in JS, `RecursionError` in Python at ~1000 frames). Convert to an explicit stack for deep DFS.
 - **Python `queue.Queue`** is a thread-safe queue with locks, slower than `deque` for single-threaded algorithms. `asyncio.Queue` is for coroutines. Use `deque` in interviews.
-- **Priority queue is not a queue**: "queue" by priority is a heap ([[Heaps & Priority Queues]]).
+- **Priority queue is not a queue**: "queue" by priority is a heap ([Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues)).
 
 ## Senior perspective
 
@@ -407,30 +411,36 @@ Only pour when `outStack` is empty. Pouring every time breaks the order and the 
 
 ## Interview questions
 
-> [!question]- Why is using `array.shift()` as a queue a problem in JS?
-> `shift` removes index 0 and must move every other element down one slot, O(n). Used as a BFS queue it makes the traversal O(n²). Use a head index, a ring buffer, or a linked-list queue.
+<Accordion title="Why is using `array.shift()` as a queue a problem in JS?">
+`shift` removes index 0 and must move every other element down one slot, O(n). Used as a BFS queue it makes the traversal O(n²). Use a head index, a ring buffer, or a linked-list queue.
+</Accordion>
 
-> [!question]- Implement a queue with two stacks. What's the complexity?
-> Push to `in`. On pop/peek, if `out` is empty, move everything from `in` to `out` (reversing order), then pop from `out`. Each element moves at most once, so operations are amortized O(1); a single pop can be O(n).
+<Accordion title="Implement a queue with two stacks. What's the complexity?">
+Push to `in`. On pop/peek, if `out` is empty, move everything from `in` to `out` (reversing order), then pop from `out`. Each element moves at most once, so operations are amortized O(1); a single pop can be O(n).
+</Accordion>
 
-> [!question]- What is a circular buffer and when would you use it?
-> A fixed-size array with wrapping head/tail indexes. Enqueue and dequeue are O(1) with no shifting and no allocation. Used for streaming data, bounded logs, audio buffers, producer/consumer pipelines and "last N items" windows.
+<Accordion title="What is a circular buffer and when would you use it?">
+A fixed-size array with wrapping head/tail indexes. Enqueue and dequeue are O(1) with no shifting and no allocation. Used for streaming data, bounded logs, audio buffers, producer/consumer pipelines and "last N items" windows.
+</Accordion>
 
-> [!question]- How do you get O(1) `getMin` on a stack?
-> Store each value together with the minimum of the stack at that point (or keep a second stack of minimums). The min is always on top.
+<Accordion title="How do you get O(1) `getMin` on a stack?">
+Store each value together with the minimum of the stack at that point (or keep a second stack of minimums). The min is always on top.
+</Accordion>
 
-> [!question]- Stack vs queue: which gives DFS and which gives BFS?
-> A stack (explicit or the call stack) gives DFS: go deep first. A queue gives BFS: visit level by level, which finds shortest paths in unweighted graphs.
+<Accordion title="Stack vs queue: which gives DFS and which gives BFS?">
+A stack (explicit or the call stack) gives DFS: go deep first. A queue gives BFS: visit level by level, which finds shortest paths in unweighted graphs.
+</Accordion>
 
-> [!question]- What should a production queue do when it's full?
-> Decide a policy explicitly: block producers (backpressure), drop newest, drop oldest, or reject with an error. Unbounded queues hide overload until memory runs out.
+<Accordion title="What should a production queue do when it's full?">
+Decide a policy explicitly: block producers (backpressure), drop newest, drop oldest, or reject with an error. Unbounded queues hide overload until memory runs out.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Arrays & Strings]] · [[Linked Lists]] · [[Heaps & Priority Queues]] · [[Graphs]]
-- Patterns: [[Monotonic Stack & Queue]] · [[Graph BFS-DFS patterns]] · [[Tree Traversal - DFS & BFS]] · [[Sliding Window]]
-- Frontend: [[Execution Context & Call Stack]]
-- [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) · [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)
+- Patterns: [Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns) · [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window)
+- Frontend: [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 10, stacks and queues)

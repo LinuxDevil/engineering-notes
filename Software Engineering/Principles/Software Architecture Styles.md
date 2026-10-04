@@ -1,12 +1,16 @@
 ---
+title: "Software Architecture Styles"
 tags: [principles, principles/architecture]
 aliases: [Architecture Styles, Architectural Patterns, Layered Architecture, Clean Architecture, Hexagonal Architecture, Ports and Adapters, Onion Architecture, Modular Monolith, Event-Driven Architecture, Serverless, CQRS, Event Sourcing]
 updated: 2026-09-27
 ---
 # Software Architecture Styles
 
-> [!tldr] TL;DR
-> An **architecture style** is a named set of structural decisions about how a system is split into parts and how those parts communicate. Inside a deployable unit: **layered** and **clean/hexagonal/onion** (dependencies point inward to the domain). Across the system: **monolith → modular monolith → microservices**, plus **event-driven** and **serverless**; and for data: **CQRS** and **event sourcing**. None is best: each trades simplicity, scalability, team autonomy and operational cost. Default to a **well-modularised monolith** and split only when a measured force (team scale, independent scaling, fault isolation) demands it.
+<Note>
+**TL;DR**
+
+An **architecture style** is a named set of structural decisions about how a system is split into parts and how those parts communicate. Inside a deployable unit: **layered** and **clean/hexagonal/onion** (dependencies point inward to the domain). Across the system: **monolith → modular monolith → microservices**, plus **event-driven** and **serverless**; and for data: **CQRS** and **event sourcing**. None is best: each trades simplicity, scalability, team autonomy and operational cost. Default to a **well-modularised monolith** and split only when a measured force (team scale, independent scaling, fault isolation) demands it.
+</Note>
 
 > "Everything in software architecture is a trade-off." (Richards & Ford, first law of software architecture)
 
@@ -40,7 +44,7 @@ Domain         (business rules)
 Infrastructure (database, messaging, external APIs)
 ```
 
-- **Pros:** familiar, easy to start, matches most frameworks (MVC, see [[MVC]]).
+- **Pros:** familiar, easy to start, matches most frameworks (MVC, see [MVC](/Software%20Engineering/Principles/MVC)).
 - **Cons:** the domain often ends up depending on the database layer; changes to one feature cut across all layers ("layer lasagna"); tends toward anemic services and a big ball of mud if layers are the *only* structure.
 - **Strict vs relaxed** layering: strict allows calls only to the layer directly below.
 
@@ -75,16 +79,16 @@ src/ordering/
 
 - **Pros:** domain testable without I/O; swap infrastructure; framework upgrades don't touch business rules; clear place for everything.
 - **Cons:** more files and mapping code (DTO ↔ domain ↔ persistence); overkill for CRUD.
-- In Rails the same ideas map to service objects, entities and adapters: see [[Rails Clean Architecture]].
+- In Rails the same ideas map to service objects, entities and adapters: see [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture).
 
 ## Monolith and modular monolith
 
 A **monolith** is one deployable unit. Not a dirty word: one codebase, one deploy, in-process calls, ACID transactions, simple debugging. The problem is the **big ball of mud** (no internal boundaries), not the single deployment.
 
-A **modular monolith** keeps one deployment but enforces **strong internal module boundaries**, ideally aligned with bounded contexts ([[Domain-Driven Design (DDD)]]):
+A **modular monolith** keeps one deployment but enforces **strong internal module boundaries**, ideally aligned with bounded contexts ([Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))):
 - each module exposes a small public API (and/or events); internals are private;
 - no reaching into another module's tables (schema per module);
-- boundaries **enforced by tooling**, not just convention: Java modules / ArchUnit / **Spring Modulith**, Shopify's Packwerk (Ruby), Nx module boundaries or dependency-cruiser (TS, see [[Monorepos]]), .NET project references.
+- boundaries **enforced by tooling**, not just convention: Java modules / ArchUnit / **Spring Modulith**, Shopify's Packwerk (Ruby), Nx module boundaries or dependency-cruiser (TS, see [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)), .NET project references.
 
 ```java
 // Spring Modulith: verify module boundaries in a test
@@ -96,14 +100,17 @@ class ModularityTests {
 
 It gives most of the design benefits of microservices without distributed-systems costs, and a module with clean boundaries can later be **extracted** into a service if needed.
 
-> [!info]+ 🆕 2025–2026: modular monolith goes mainstream
-> - *Fundamentals of Software Architecture*, **2nd edition** (Richards & Ford, O'Reilly, 2025) added a dedicated chapter on the **modular monolith** style, plus new material on team topologies, governance and generative AI.
-> - **Spring Modulith 2.0 GA (2025-11-21)**, built on Spring Boot 4 / Spring Framework 7: overhauled event publication registry (a transactional-outbox-style guarantee that published events survive crashes), per-module Flyway migrations, and module-structure verification at startup. **2.1 GA** followed on 2026-06-11.
-> - Earlier context: Amazon Prime Video's widely discussed 2023 post described moving a monitoring service from serverless/microservices back to a single process and cutting infrastructure cost by about 90%, fuelling the "microservices are not the default" discussion.
+<Info>
+**🆕 2025–2026: modular monolith goes mainstream**
+
+- *Fundamentals of Software Architecture*, **2nd edition** (Richards & Ford, O'Reilly, 2025) added a dedicated chapter on the **modular monolith** style, plus new material on team topologies, governance and generative AI.
+- **Spring Modulith 2.0 GA (2025-11-21)**, built on Spring Boot 4 / Spring Framework 7: overhauled event publication registry (a transactional-outbox-style guarantee that published events survive crashes), per-module Flyway migrations, and module-structure verification at startup. **2.1 GA** followed on 2026-06-11.
+- Earlier context: Amazon Prime Video's widely discussed 2023 post described moving a monitoring service from serverless/microservices back to a single process and cutting infrastructure cost by about 90%, fuelling the "microservices are not the default" discussion.
+</Info>
 
 ## Microservices
 
-Independently deployable services, each owning its data and a business capability (bounded context), communicating over the network. Details in [[Microservices Architecture]].
+Independently deployable services, each owning its data and a business capability (bounded context), communicating over the network. Details in [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture).
 
 - **Pros:** independent deployment and scaling per service, team autonomy, fault isolation, technology freedom per service.
 - **Cons:** distributed-systems complexity (network failures, latency, partial failure, eventual consistency, distributed transactions/**sagas**), operational cost (observability, CI/CD per service, service mesh), harder refactoring across boundaries, data duplication.
@@ -132,7 +139,7 @@ Run code as managed functions (AWS Lambda, Azure Functions, Google Cloud Run fun
 
 - **Pros:** zero ops for servers, scale to zero and to spikes, pay-per-use, fast to build event-driven glue.
 - **Cons:** cold starts, execution time limits, vendor lock-in, harder local testing, cost can exceed containers at steady high load, distributed tracing across many functions.
-- Good for: spiky or low-traffic workloads, event handlers (file uploaded → thumbnail), scheduled jobs, edge logic. Frontend angle: [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]].
+- Good for: spiky or low-traffic workloads, event handlers (file uploaded → thumbnail), scheduled jobs, edge logic. Frontend angle: [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands).
 
 ## CQRS and event sourcing
 
@@ -185,19 +192,22 @@ Ratings are relative and indicative (inspired by the star ratings in *Fundamenta
 
 1. Identify the **architecture characteristics** that matter (scalability, availability, deployability, time to market, cost, security). You can't maximise all.
 2. Start with the **simplest style** that meets them; usually a modular monolith with clean boundaries.
-3. Record the decision and its trade-offs in an **ADR** ([[Architecture Decision Records (ADRs) & Technical Debt]]).
+3. Record the decision and its trade-offs in an **ADR** ([Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt)).
 4. Add **fitness functions** (automated checks of characteristics: module boundary tests, latency budgets, dependency rules) so the architecture doesn't erode.
 5. Evolve incrementally: **strangler fig** (route traffic piece by piece to new components), branch by abstraction, extract modules into services only when the boundary is proven.
 
 ## Pitfalls
 
-> [!warning] Architecture mistakes
-> - **Résumé-driven architecture**: microservices/Kubernetes/Kafka for a 3-person team.
-> - **Distributed monolith**: all the costs of microservices, none of the independence.
-> - Splitting by technical layer (a "UI service", "DB service") instead of business capability.
-> - Shared database between services: hidden coupling through tables.
-> - Synchronous call chains across 5+ services: latency and availability multiply (99.9%⁵ ≈ 99.5%).
-> - Ignoring **Conway's law**: architecture that doesn't match team structure will drift toward it.
+<Warning>
+**Architecture mistakes**
+
+- **Résumé-driven architecture**: microservices/Kubernetes/Kafka for a 3-person team.
+- **Distributed monolith**: all the costs of microservices, none of the independence.
+- Splitting by technical layer (a "UI service", "DB service") instead of business capability.
+- Shared database between services: hidden coupling through tables.
+- Synchronous call chains across 5+ services: latency and availability multiply (99.9%⁵ ≈ 99.5%).
+- Ignoring **Conway's law**: architecture that doesn't match team structure will drift toward it.
+</Warning>
 
 ## Senior perspective
 
@@ -208,32 +218,39 @@ Ratings are relative and indicative (inspired by the star ratings in *Fundamenta
 
 ## Interview questions
 
-> [!question]- What is hexagonal architecture?
-> Ports and adapters: the application core (domain + use cases) defines ports (interfaces); adapters implement them for specific technologies. Driving adapters (HTTP, CLI, tests) call the core; driven adapters (DB, email, payments) are called by it. Dependencies point inward, so the core is testable and technology-independent.
+<Accordion title="What is hexagonal architecture?">
+Ports and adapters: the application core (domain + use cases) defines ports (interfaces); adapters implement them for specific technologies. Driving adapters (HTTP, CLI, tests) call the core; driven adapters (DB, email, payments) are called by it. Dependencies point inward, so the core is testable and technology-independent.
+</Accordion>
 
-> [!question]- Monolith vs microservices: how do you decide?
-> Consider team size and structure, need for independent deployment and scaling, domain boundary clarity, and operational maturity. Most teams should start with a modular monolith with enforced boundaries and extract services when a specific force (team contention, scaling hotspot, fault isolation, different tech needs) justifies the distributed-systems cost.
+<Accordion title="Monolith vs microservices: how do you decide?">
+Consider team size and structure, need for independent deployment and scaling, domain boundary clarity, and operational maturity. Most teams should start with a modular monolith with enforced boundaries and extract services when a specific force (team contention, scaling hotspot, fault isolation, different tech needs) justifies the distributed-systems cost.
+</Accordion>
 
-> [!question]- What is a modular monolith?
-> A single deployable application divided into modules with explicit, enforced boundaries (public APIs, private internals, separate data ownership), typically aligned with bounded contexts. It keeps monolith simplicity while enabling team autonomy and later extraction.
+<Accordion title="What is a modular monolith?">
+A single deployable application divided into modules with explicit, enforced boundaries (public APIs, private internals, separate data ownership), typically aligned with bounded contexts. It keeps monolith simplicity while enabling team autonomy and later extraction.
+</Accordion>
 
-> [!question]- Explain CQRS. Does it require event sourcing?
-> Separate models for commands (writes, enforcing invariants) and queries (reads, optimised views). No: CQRS can use one database with separate read views; event sourcing is an independent choice to store events as the source of truth.
+<Accordion title="Explain CQRS. Does it require event sourcing?">
+Separate models for commands (writes, enforcing invariants) and queries (reads, optimised views). No: CQRS can use one database with separate read views; event sourcing is an independent choice to store events as the source of truth.
+</Accordion>
 
-> [!question]- What are the main challenges of event-driven systems?
-> Eventual consistency, duplicate and out-of-order delivery (idempotent consumers, ordering keys), reliable publishing (transactional outbox), schema evolution, debugging flows across services (tracing, correlation IDs), and understanding who reacts to what.
+<Accordion title="What are the main challenges of event-driven systems?">
+Eventual consistency, duplicate and out-of-order delivery (idempotent consumers, ordering keys), reliable publishing (transactional outbox), schema evolution, debugging flows across services (tracing, correlation IDs), and understanding who reacts to what.
+</Accordion>
 
-> [!question]- What is a distributed monolith?
-> Services that are deployed separately but are so coupled (shared DB, synchronous chains, lockstep releases) that they must change and deploy together, combining the costs of both styles.
+<Accordion title="What is a distributed monolith?">
+Services that are deployed separately but are so coupled (shared DB, synchronous chains, lockstep releases) that they must change and deploy together, combining the costs of both styles.
+</Accordion>
 
-> [!question]- What is the strangler fig pattern?
-> Incrementally replacing a legacy system by routing specific functionality to new components (via a proxy or facade) until the old system can be removed, instead of a big-bang rewrite.
+<Accordion title="What is the strangler fig pattern?">
+Incrementally replacing a legacy system by routing specific functionality to new components (via a proxy or facade) until the old system can be removed, instead of a big-bang rewrite.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Domain-Driven Design (DDD)]] · [[Coupling, Cohesion & Modularity]] · [[Architecture Decision Records (ADRs) & Technical Debt]] · [[MVC]]
-- [[Rails Clean Architecture]] · [[Microservices Architecture]] · [[Dependency Injection & Inversion of Control]]
-- Frontend: [[Micro-frontends & Module Federation]] · [[Monorepos]] · [[Frontend System Design Index]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity) · [Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt) · [MVC](/Software%20Engineering/Principles/MVC)
+- [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control)
+- Frontend: [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) · [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
 
 ## Sources
 - Mark Richards & Neal Ford, *Fundamentals of Software Architecture*, 2nd ed. (O'Reilly, 2025) · [O'Reilly listing](https://www.oreilly.com/library/view/fundamentals-of-software/9781098175504/)

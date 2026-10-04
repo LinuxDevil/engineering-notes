@@ -1,12 +1,16 @@
 ---
+title: "Productivity & Deep Work"
 tags: [career, career/productivity]
 aliases: [Productivity, Deep Work, Focus, Developer Productivity, Flow State]
 updated: 2026-09-27
 ---
 # Productivity & Deep Work
 
-> [!tldr] TL;DR
-> Engineering output depends on long, uninterrupted blocks of focus (**deep work**) and on **working on the right things**. Protect focus time, batch shallow work (email, chat, meetings), keep a single trusted task list, and reduce the cost of context switches. At team level, productivity is a system property: fast feedback loops, small batches, low friction and good tooling matter more than individual heroics. Measure outcomes, not hours or lines of code.
+<Note>
+**TL;DR**
+
+Engineering output depends on long, uninterrupted blocks of focus (**deep work**) and on **working on the right things**. Protect focus time, batch shallow work (email, chat, meetings), keep a single trusted task list, and reduce the cost of context switches. At team level, productivity is a system property: fast feedback loops, small batches, low friction and good tooling matter more than individual heroics. Measure outcomes, not hours or lines of code.
+</Note>
 
 ## The idea
 - **Deep work** (Cal Newport): focused, distraction-free work that pushes your ability and creates value; hard to replicate. **Shallow work**: logistical tasks done while distracted.
@@ -41,7 +45,7 @@ updated: 2026-09-27
 | Lever | Example |
 |---|---|
 | Fast feedback | CI under ~10 minutes, hot reload, fast tests, preview environments |
-| Small batches | Small PRs, trunk-based development, feature flags ([[Code Review Best Practices]]) |
+| Small batches | Small PRs, trunk-based development, feature flags ([Code Review Best Practices](/Software%20Engineering/Career/Code%20Review%20Best%20Practices)) |
 | Less waiting | Review SLAs, fewer handoffs, self-service infrastructure |
 | Fewer interruptions | Rotating "interrupt handler"/on-call buddy shields the rest of the team |
 | Clear priorities | One visible roadmap, limited work in progress |
@@ -54,17 +58,20 @@ updated: 2026-09-27
 - Never measure individuals by lines of code, commits or PR counts (Goodhart's law: when a measure becomes a target, it stops being a good measure).
 
 ## AI tools and productivity
-- AI assistants remove some typing and lookup work, but add review and verification work. Evidence is mixed: DORA 2025 reports that over 80% of respondents believe AI increased their productivity, while METR's 2025 randomised trial found experienced developers on familiar codebases were **19% slower** with early-2025 AI tools despite believing they were faster. See [[Senior Engineer in the AI Era]].
+- AI assistants remove some typing and lookup work, but add review and verification work. Evidence is mixed: DORA 2025 reports that over 80% of respondents believe AI increased their productivity, while METR's 2025 randomised trial found experienced developers on familiar codebases were **19% slower** with early-2025 AI tools despite believing they were faster. See [Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era).
 - Use AI where it clearly helps (boilerplate, tests scaffolding, unfamiliar APIs, explanations) and keep deep thinking (design, debugging hard problems) as focused human work.
 - Agent-style tools running in the background can be a new source of interruptions; batch their reviews like any other shallow work.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Being "busy" (chat, meetings) instead of productive.
-> - Saying yes to everything; the important work gets the leftovers.
-> - Heroic late nights that become the team's normal.
-> - Optimising personal tooling endlessly instead of doing the work.
-> - Measuring individuals with activity metrics.
+<Warning>
+**Common mistakes**
+
+- Being "busy" (chat, meetings) instead of productive.
+- Saying yes to everything; the important work gets the leftovers.
+- Heroic late nights that become the team's normal.
+- Optimising personal tooling endlessly instead of doing the work.
+- Measuring individuals with activity metrics.
+</Warning>
 
 ## Senior perspective
 - Your calendar is a design decision: protect your own focus and the team's.
@@ -73,21 +80,25 @@ updated: 2026-09-27
 - Balance maker and manager time deliberately (e.g. focus mornings, meetings afternoons).
 
 ## Interview questions
-> [!question]- How do you manage your time with many competing requests?
-> Clarify impact and urgency with requesters, keep a single prioritised list, protect focus blocks for the most important work, batch shallow tasks, and say no or "later" with a reason, escalating priority conflicts to my manager.
+<Accordion title="How do you manage your time with many competing requests?">
+Clarify impact and urgency with requesters, keep a single prioritised list, protect focus blocks for the most important work, batch shallow tasks, and say no or "later" with a reason, escalating priority conflicts to my manager.
+</Accordion>
 
-> [!question]- How would you improve a team's productivity?
-> Measure where time goes (lead time, review wait, CI time, interruptions, survey developers), fix the biggest bottlenecks first (slow CI, big PRs, unclear priorities), and track DORA/SPACE-style metrics over time, never individual activity counts.
+<Accordion title="How would you improve a team's productivity?">
+Measure where time goes (lead time, review wait, CI time, interruptions, survey developers), fix the biggest bottlenecks first (slow CI, big PRs, unclear priorities), and track DORA/SPACE-style metrics over time, never individual activity counts.
+</Accordion>
 
-> [!question]- What are the DORA metrics?
-> Deployment frequency, lead time for changes, change failure rate and failed-deployment recovery time (time to restore), with rework rate added more recently. They measure software delivery throughput and stability.
+<Accordion title="What are the DORA metrics?">
+Deployment frequency, lead time for changes, change failure rate and failed-deployment recovery time (time to restore), with rework rate added more recently. They measure software delivery throughput and stability.
+</Accordion>
 
-> [!question]- Has AI made you more productive? How do you know?
-> Give an honest, specific answer: which tasks it speeds up, which it doesn't, how you verify output, and whether you've measured (e.g. cycle time) rather than relied on feeling, mentioning that studies show perception and measurement can differ.
+<Accordion title="Has AI made you more productive? How do you know?">
+Give an honest, specific answer: which tasks it speeds up, which it doesn't, how you verify output, and whether you've measured (e.g. cycle time) rather than relied on feeling, mentioning that studies show perception and measurement can differ.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Senior Engineer in the AI Era]] · [[Estimation & Planning]] · [[Debugging Methodology]] · [[Code Review Best Practices]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era) · [Estimation & Planning](/Software%20Engineering/Career/Estimation%20%26%20Planning) · [Debugging Methodology](/Software%20Engineering/Career/Debugging%20Methodology) · [Code Review Best Practices](/Software%20Engineering/Career/Code%20Review%20Best%20Practices)
 
 ## Sources
 - Cal Newport, *Deep Work* (2016)

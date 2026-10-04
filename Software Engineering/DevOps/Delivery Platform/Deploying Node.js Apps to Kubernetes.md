@@ -1,14 +1,18 @@
 ---
+title: "Deploying Node.js Apps to Kubernetes"
 tags: [devops, devops/kubernetes, backend/node]
 aliases: [Node on Kubernetes, Node.js on K8s, Deploying orders-api, Cloud-ready Node.js]
 updated: 2026-09-27
 ---
 # Deploying Node.js Apps to Kubernetes
 
-> [!tldr] TL;DR
-> A Node.js service is ready for Kubernetes when it reads config from env, exposes separate **liveness** (`/healthz`) and **readiness** (`/readyz`) endpoints, **shuts down gracefully on SIGTERM**, logs JSON to stdout with trace IDs, and exposes `/metrics`. Ship it as a small non-root multi-stage image run with `node` directly (not `npm start`), one process per container, scaled with replicas instead of `cluster`/PM2. Deploy it with a Kustomize base plus per-env overlays, run DB migrations as an Argo CD `PreSync` Job, and let Jenkins → GitOps → Argo CD → Argo Rollouts carry each commit to production.
+<Note>
+**TL;DR**
 
-This note follows the `orders-api` service of the **Acme Shop** example (Fastify on Node.js 24 LTS, Postgres, route `/api/orders/*`, image `ghcr.io/acme/orders-api`) from source code to production. The general Kubernetes material (probe types, QoS, PDB semantics) lives in [[Kubernetes Workloads in Production]]; this note applies it to Node and shows every file.
+A Node.js service is ready for Kubernetes when it reads config from env, exposes separate **liveness** (`/healthz`) and **readiness** (`/readyz`) endpoints, **shuts down gracefully on SIGTERM**, logs JSON to stdout with trace IDs, and exposes `/metrics`. Ship it as a small non-root multi-stage image run with `node` directly (not `npm start`), one process per container, scaled with replicas instead of `cluster`/PM2. Deploy it with a Kustomize base plus per-env overlays, run DB migrations as an Argo CD `PreSync` Job, and let Jenkins → GitOps → Argo CD → Argo Rollouts carry each commit to production.
+</Note>
+
+This note follows the `orders-api` service of the **Acme Shop** example (Fastify on Node.js 24 LTS, Postgres, route `/api/orders/*`, image `ghcr.io/acme/orders-api`) from source code to production. The general Kubernetes material (probe types, QoS, PDB semantics) lives in [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production); this note applies it to Node and shows every file.
 
 ```mermaid
 flowchart LR
@@ -78,12 +82,15 @@ export const pool = new pg.Pool({
 });
 ```
 
-> [!warning] Pool size x replicas
-> The HPA can multiply your Postgres connections. `maxReplicas x DB_POOL_MAX` must stay under Postgres `max_connections` minus headroom, or put PgBouncer (or a managed proxy) in front.
+<Warning>
+**Pool size x replicas**
+
+The HPA can multiply your Postgres connections. `maxReplicas x DB_POOL_MAX` must stay under Postgres `max_connections` minus headroom, or put PgBouncer (or a managed proxy) in front.
+</Warning>
 
 ### 1.3 Metrics with `fastify-metrics`
 
-`fastify-metrics` registers a `/metrics` endpoint, the default Node.js runtime metrics (event loop lag, heap, GC, active handles) and a per-route request duration histogram, **`http_request_duration_seconds`**, with `method`, `route` and `status_code` labels. The Argo Rollouts analysis and the Grafana dashboards query exactly this metric (see [[Argo Rollouts - Canary & Blue-Green]] and [[Grafana & the LGTM Stack]]).
+`fastify-metrics` registers a `/metrics` endpoint, the default Node.js runtime metrics (event loop lag, heap, GC, active handles) and a per-route request duration histogram, **`http_request_duration_seconds`**, with `method`, `route` and `status_code` labels. The Argo Rollouts analysis and the Grafana dashboards query exactly this metric (see [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) and [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)).
 
 ```ts
 // registered in src/server.ts (section 1.4)
@@ -210,7 +217,7 @@ Budget: `terminationGracePeriodSeconds` (45) > `preStop` sleep (10) + `SHUTDOWN_
 
 ### 1.6 JSON logs with `trace_id`
 
-pino already logs JSON. To correlate with Tempo, run OpenTelemetry auto-instrumentation: `@opentelemetry/instrumentation-pino` (included in `@opentelemetry/auto-instrumentations-node`) injects `trace_id`, `span_id` and `trace_flags` into every log line written inside an active span. A Loki derived field on `trace_id` then turns each log line into a link to the trace (see [[Grafana & the LGTM Stack]]).
+pino already logs JSON. To correlate with Tempo, run OpenTelemetry auto-instrumentation: `@opentelemetry/instrumentation-pino` (included in `@opentelemetry/auto-instrumentations-node`) injects `trace_id`, `span_id` and `trace_flags` into every log line written inside an active span. A Loki derived field on `trace_id` then turns each log line into a link to the trace (see [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)).
 
 ```json
 {"level":30,"time":1790000000000,"service":"orders-api","reqId":"b1f...","trace_id":"4bf92f3577b34da6a3ce929d0e0e4736","span_id":"00f067aa0ba902b7","trace_flags":"01","msg":"order created","orderId":"o_123"}
@@ -277,14 +284,17 @@ env:
   # value: "--max-old-space-size=768"
 ```
 
-Set memory request = limit for this service (predictable, no over-commit). Watch `nodejs_heap_size_used_bytes` vs `container_memory_working_set_bytes`: if the working set grows while the heap is flat, the leak is outside the heap (Buffers, native addons). See [[Node.js Performance & Debugging]].
+Set memory request = limit for this service (predictable, no over-commit). Watch `nodejs_heap_size_used_bytes` vs `container_memory_working_set_bytes`: if the working set grows while the heap is flat, the leak is outside the heap (Buffers, native addons). See [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging).
 
-> [!info]+ 🆕 2025–2026
-> - **Node.js 24 "Krypton"** became LTS with **24.11.0 on 2025-10-28**; it is the line to run in production (latest 24.21.0 on 2026-09-08). Node 22 "Jod" is also still LTS; Node 25 is end of life; **Node 26** (2026-05-05) is Current. From **Node 27** the project moves to a new schedule where every major becomes LTS after its Current phase.
-> - **`--max-old-space-size-percentage`**: added in **Node 24.6.0 (2025-08-14)** and backported to **22.21.0**; sizes the V8 heap as a percentage of the memory available to the process (container-aware).
-> - **Kubernetes v1.34 (2025-08-27)**: the `preStop` **sleep** action is GA, so distroless images no longer need a `sleep` binary for the endpoint-propagation delay.
-> - **`prom-client` became `@prometheus-io/client`** (first published 2026-08-21, now maintained under the Prometheus org; `prom-client` is deprecated on npm). **fastify-metrics 14.0.0 (2026-09-03)** switched to it and requires Node 22+.
-> - **ingress-nginx was retired on 2026-03-24**, which is why `orders-api` is exposed with a Gateway API `HTTPRoute` (see [[Kubernetes Networking - Services, Ingress & Gateway API]]).
+<Info>
+**🆕 2025–2026**
+
+- **Node.js 24 "Krypton"** became LTS with **24.11.0 on 2025-10-28**; it is the line to run in production (latest 24.21.0 on 2026-09-08). Node 22 "Jod" is also still LTS; Node 25 is end of life; **Node 26** (2026-05-05) is Current. From **Node 27** the project moves to a new schedule where every major becomes LTS after its Current phase.
+- **`--max-old-space-size-percentage`**: added in **Node 24.6.0 (2025-08-14)** and backported to **22.21.0**; sizes the V8 heap as a percentage of the memory available to the process (container-aware).
+- **Kubernetes v1.34 (2025-08-27)**: the `preStop` **sleep** action is GA, so distroless images no longer need a `sleep` binary for the endpoint-propagation delay.
+- **`prom-client` became `@prometheus-io/client`** (first published 2026-08-21, now maintained under the Prometheus org; `prom-client` is deprecated on npm). **fastify-metrics 14.0.0 (2026-09-03)** switched to it and requires Node 22+.
+- **ingress-nginx was retired on 2026-03-24**, which is why `orders-api` is exposed with a Gateway API `HTTPRoute` (see [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)).
+</Info>
 
 ## 3. The image
 
@@ -323,8 +333,8 @@ CMD ["--experimental-loader=@opentelemetry/instrumentation/hook.mjs", \
 
 - Build and runtime use the same Debian release (trixie = Debian 13), so native modules built in `deps` link against the same glibc.
 - Put the OpenTelemetry packages in `dependencies`, not `devDependencies`, or `--omit=dev` drops them.
-- Prefer `node:24-slim` plus `USER node` if the team isn't ready for a shell-less image; debug distroless with `kubectl debug` (see [[Kubernetes Operations - Logs, Debugging & Scheduling]]).
-- Pin the base by digest in CI and let Renovate bump it. Scanning, SBOM and signing are covered in [[Dockerfile Best Practices & Image Security]] and [[Supply Chain Security]].
+- Prefer `node:24-slim` plus `USER node` if the team isn't ready for a shell-less image; debug distroless with `kubectl debug` (see [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)).
+- Pin the base by digest in CI and let Renovate bump it. Scanning, SBOM and signing are covered in [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security) and [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
 
 ```gitignore
 # .dockerignore
@@ -362,7 +372,7 @@ platform-gitops/apps/orders-api/
     prod/rollout.yaml
 ```
 
-Kustomize basics are in [[Helm & Kustomize]].
+Kustomize basics are in [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize).
 
 ### base/kustomization.yaml
 
@@ -407,7 +417,7 @@ data:
 
 ### base/externalsecret.yaml
 
-The DB password lives in the cloud secret manager, not Git. External Secrets Operator syncs it into a Kubernetes Secret (see [[Secrets Management]]).
+The DB password lives in the cloud secret manager, not Git. External Secrets Operator syncs it into a Kubernetes Secret (see [Secrets Management](/Software%20Engineering/Security/Secrets%20Management)).
 
 ```yaml
 apiVersion: external-secrets.io/v1
@@ -514,8 +524,11 @@ spec:
           emptyDir: { sizeLimit: 64Mi }
 ```
 
-> [!note] Readiness that checks the DB, carefully
-> `/readyz` checks the pool so a Pod that cannot reach Postgres stops receiving traffic. The trade-off: if Postgres is down, **all** Pods go unready and the Gateway returns 503 for `/api/orders`, which is usually the honest answer. Never put the DB check in liveness (restart storms). If the service can partly work without the DB (cached reads), keep the DB out of readiness too and degrade inside handlers.
+<Note>
+**Readiness that checks the DB, carefully**
+
+`/readyz` checks the pool so a Pod that cannot reach Postgres stops receiving traffic. The trade-off: if Postgres is down, **all** Pods go unready and the Gateway returns 503 for `/api/orders`, which is usually the honest answer. Never put the DB check in liveness (restart storms). If the service can partly work without the DB (cached reads), keep the DB out of readiness too and degrade inside handlers.
+</Note>
 
 ### base/service.yaml
 
@@ -550,7 +563,7 @@ spec:
         request: 15s
 ```
 
-The Gateway itself, TLS and cross-namespace `allowedRoutes` are in [[Kubernetes Networking - Services, Ingress & Gateway API]].
+The Gateway itself, TLS and cross-namespace `allowedRoutes` are in [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API).
 
 ### base/hpa.yaml
 
@@ -627,8 +640,11 @@ spec:
 
 How it behaves: Argo CD runs PreSync hooks **before** applying the rest of the manifests; if the Job fails, the sync stops and is marked failed, so the new app version never rolls out against an unmigrated schema. Without a delete policy Argo CD assumes `BeforeHookCreation`.
 
-> [!warning] Migrations and canaries must be backward compatible
-> During a canary, old and new Pods run **at the same time** against the **migrated** schema. Use expand/contract: add columns/tables first (nullable or with defaults), deploy code that writes both, backfill, and only drop old columns in a later release. A PreSync Job cannot be rolled back by Argo CD; a rollback of the app does not undo the schema. Also note the Job needs the `orders-api-db` Secret, but PreSync hooks run **before** the normal resources, so on the very first sync the ExternalSecret doesn't exist yet. Deploy secrets through a separate Argo CD Application (or an earlier app in an app-of-apps with sync waves) so they exist before `orders-api` syncs.
+<Warning>
+**Migrations and canaries must be backward compatible**
+
+During a canary, old and new Pods run **at the same time** against the **migrated** schema. Use expand/contract: add columns/tables first (nullable or with defaults), deploy code that writes both, backfill, and only drop old columns in a later release. A PreSync Job cannot be rolled back by Argo CD; a rollback of the app does not undo the schema. Also note the Job needs the `orders-api-db` Secret, but PreSync hooks run **before** the normal resources, so on the very first sync the ExternalSecret doesn't exist yet. Deploy secrets through a separate Argo CD Application (or an earlier app in an app-of-apps with sync waves) so they exist before `orders-api` syncs.
+</Warning>
 
 ### Overlays
 
@@ -736,7 +752,7 @@ The traffic-routing details (the Gateway API plugin config, the `orders-api-stab
 ## 5. The deploy flow, step by step
 
 1. Developer merges to `main` in `acme/orders-api`.
-2. **Jenkins** (see [[Jenkins - Pipelines as Code]]) runs `npm ci`, lint, unit tests, integration tests against a throwaway Postgres, `docker buildx build`, a Trivy/Grype scan, SBOM + signature, and pushes `ghcr.io/acme/orders-api:<git-sha>`.
+2. **Jenkins** (see [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)) runs `npm ci`, lint, unit tests, integration tests against a throwaway Postgres, `docker buildx build`, a Trivy/Grype scan, SBOM + signature, and pushes `ghcr.io/acme/orders-api:<git-sha>`.
 3. Jenkins (or Argo CD Image Updater) commits the new tag to `platform-gitops`:
    ```bash
    cd platform-gitops/apps/orders-api/overlays/dev
@@ -744,7 +760,7 @@ The traffic-routing details (the Gateway API plugin config, the `orders-api-stab
    git commit -am "orders-api dev -> 3f2c1ab" && git push
    ```
    Promotion to staging and prod is a PR that copies the same tag into those overlays (same image, never rebuilt).
-4. **Argo CD** ([[Argo CD in Practice]]) detects the change, runs the PreSync migration Job, then applies the manifests.
+4. **Argo CD** ([Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)) detects the change, runs the PreSync migration Job, then applies the manifests.
 5. In `shop-prod`, **Argo Rollouts** shifts 5% → 20% → 50% → 80% → 100% of traffic, running analysis against Prometheus (5xx ratio and p99 latency from `http_request_duration_seconds`, isolated to the canary Pods), and aborts automatically if the analysis fails.
 6. **Grafana** dashboards and alerts confirm the release; the Rollout's revision is visible in Argo CD.
 
@@ -766,7 +782,7 @@ kubectl argo rollouts get rollout orders-api -n shop-prod --watch
 ```
 
 - **Argo CD UI**: app `orders-api-prod` → resource tree → Pod → *Logs* and *Events* tabs; hook Jobs appear with their status, so a failed migration is visible there.
-- **Grafana / Loki**: `{namespace="shop-prod", app="orders-api"} | json | level >= 50` for errors; click `trace_id` to jump to the Tempo trace. `sum by (status_code) (rate(http_request_duration_seconds_count{namespace="shop-prod", app="orders-api"}[5m]))` in Prometheus for the error mix. Details in [[Grafana & the LGTM Stack]].
+- **Grafana / Loki**: `{namespace="shop-prod", app="orders-api"} | json | level >= 50` for errors; click `trace_id` to jump to the Tempo trace. `sum by (status_code) (rate(http_request_duration_seconds_count{namespace="shop-prod", app="orders-api"}[5m]))` in Prometheus for the error mix. Details in [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack).
 
 ### Debugging a crashing Pod
 
@@ -787,7 +803,7 @@ kubectl -n shop-prod debug -it orders-api-7d9c8-abcde --image=busybox:1.37 --tar
 kubectl -n shop-prod port-forward deploy/orders-api 8080:8080     # then curl localhost:8080/readyz
 ```
 
-More in [[Kubernetes Operations - Logs, Debugging & Scheduling]].
+More in [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling).
 
 ## 7. Scaling
 
@@ -849,17 +865,20 @@ Long-lived connections change the rules:
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Listening on `127.0.0.1` or `localhost`: the probes and Service can't reach it. Bind `0.0.0.0`.
-> - `replicas:` in Git **and** an HPA: every Argo CD sync resets the replica count. Remove `replicas` from the manifest once the HPA exists, or tell Argo CD to ignore `/spec/replicas` (`ignoreDifferences`).
-> - Liveness probe hitting the DB: a Postgres blip restarts every Pod at once.
-> - No `startupProbe` and a slow boot (OTel loading, migrations in-process): liveness kills the Pod before it's up.
-> - Running migrations on app startup: N replicas race each other and a failed migration becomes a CrashLoop in every Pod.
-> - CPU limits on a Node service: CFS throttling shows up as p99 latency spikes and event loop lag while average CPU looks fine.
-> - `process.exit()` in the SIGTERM handler without draining: dropped in-flight requests on every deploy.
-> - Logging with `console.log` of objects: multi-line output that Loki can't parse; no levels.
-> - OTel packages in `devDependencies`: the `--import` crashes the container after `npm ci --omit=dev`.
-> - Unbounded label values in metrics (user IDs, raw URLs): Prometheus memory blow-up.
+<Warning>
+**Common mistakes**
+
+- Listening on `127.0.0.1` or `localhost`: the probes and Service can't reach it. Bind `0.0.0.0`.
+- `replicas:` in Git **and** an HPA: every Argo CD sync resets the replica count. Remove `replicas` from the manifest once the HPA exists, or tell Argo CD to ignore `/spec/replicas` (`ignoreDifferences`).
+- Liveness probe hitting the DB: a Postgres blip restarts every Pod at once.
+- No `startupProbe` and a slow boot (OTel loading, migrations in-process): liveness kills the Pod before it's up.
+- Running migrations on app startup: N replicas race each other and a failed migration becomes a CrashLoop in every Pod.
+- CPU limits on a Node service: CFS throttling shows up as p99 latency spikes and event loop lag while average CPU looks fine.
+- `process.exit()` in the SIGTERM handler without draining: dropped in-flight requests on every deploy.
+- Logging with `console.log` of objects: multi-line output that Loki can't parse; no levels.
+- OTel packages in `devDependencies`: the `--import` crashes the container after `npm ci --omit=dev`.
+- Unbounded label values in metrics (user IDs, raw URLs): Prometheus memory blow-up.
+</Warning>
 
 ## Senior perspective
 
@@ -872,35 +891,42 @@ Long-lived connections change the rules:
 
 ## Interview questions
 
-> [!question]- Why separate liveness and readiness endpoints for a Node service?
-> Liveness answers "is the process healthy enough to keep?" and failure restarts the container; it should check only the process (event loop responsive). Readiness answers "should I receive traffic now?" and failure only removes the Pod from endpoints; it can include dependencies such as the DB pool and returns 503 during shutdown. Mixing them causes restart storms when a dependency blips.
+<Accordion title="Why separate liveness and readiness endpoints for a Node service?">
+Liveness answers "is the process healthy enough to keep?" and failure restarts the container; it should check only the process (event loop responsive). Readiness answers "should I receive traffic now?" and failure only removes the Pod from endpoints; it can include dependencies such as the DB pool and returns 503 during shutdown. Mixing them causes restart storms when a dependency blips.
+</Accordion>
 
-> [!question]- Walk through what happens when Kubernetes terminates an orders-api Pod.
-> The Pod is marked Terminating; in parallel, endpoints are updated (asynchronously) and the kubelet runs `preStop` (sleep 10 s) so proxies stop routing to it. Then SIGTERM: the app marks itself unready, `app.close()` stops accepting and drains in-flight requests, the pg pool closes, and the process exits 0. If anything takes longer than `terminationGracePeriodSeconds` (counted from the start, including preStop), the kubelet sends SIGKILL.
+<Accordion title="Walk through what happens when Kubernetes terminates an orders-api Pod.">
+The Pod is marked Terminating; in parallel, endpoints are updated (asynchronously) and the kubelet runs `preStop` (sleep 10 s) so proxies stop routing to it. Then SIGTERM: the app marks itself unready, `app.close()` stops accepting and drains in-flight requests, the pg pool closes, and the process exits 0. If anything takes longer than `terminationGracePeriodSeconds` (counted from the start, including preStop), the kubelet sends SIGKILL.
+</Accordion>
 
-> [!question]- Why is `CMD ["npm", "start"]` a problem in a container?
-> npm becomes PID 1 and doesn't reliably forward SIGTERM to Node, so graceful shutdown never runs; the Pod is SIGKILLed after the grace period, dropping requests. Shell-form `CMD` adds `sh -c`, which doesn't forward signals either. Run `node` directly in exec form and handle SIGTERM in code.
+<Accordion title="Why is `CMD [&quot;npm&quot;, &quot;start&quot;]` a problem in a container?">
+npm becomes PID 1 and doesn't reliably forward SIGTERM to Node, so graceful shutdown never runs; the Pod is SIGKILLed after the grace period, dropping requests. Shell-form `CMD` adds `sh -c`, which doesn't forward signals either. Run `node` directly in exec form and handle SIGTERM in code.
+</Accordion>
 
-> [!question]- Should you use PM2 or the cluster module in a Kubernetes Pod?
-> No. Kubernetes already restarts processes, balances load and scales. PM2/cluster hide crashes from Kubernetes, share one memory limit across several heaps (one OOMKill takes all workers down), and make probes and HPA less accurate. Run one Node process per container and scale replicas; use worker_threads for CPU-bound work.
+<Accordion title="Should you use PM2 or the cluster module in a Kubernetes Pod?">
+No. Kubernetes already restarts processes, balances load and scales. PM2/cluster hide crashes from Kubernetes, share one memory limit across several heaps (one OOMKill takes all workers down), and make probes and HPA less accurate. Run one Node process per container and scale replicas; use worker_threads for CPU-bound work.
+</Accordion>
 
-> [!question]- How do you size Node's heap in a container?
-> The container memory limit is enforced by the kernel (OOMKill, exit 137); the V8 heap limit is separate. Recent Node versions derive a default heap from the cgroup limit (roughly half), which is safe but conservative. Set the heap to about 70–75% of the limit with `--max-old-space-size-percentage` (Node 24.6+/22.21+) or an explicit `--max-old-space-size`, keep memory request = limit, and monitor heap vs working set to find non-heap leaks.
+<Accordion title="How do you size Node's heap in a container?">
+The container memory limit is enforced by the kernel (OOMKill, exit 137); the V8 heap limit is separate. Recent Node versions derive a default heap from the cgroup limit (roughly half), which is safe but conservative. Set the heap to about 70–75% of the limit with `--max-old-space-size-percentage` (Node 24.6+/22.21+) or an explicit `--max-old-space-size`, keep memory request = limit, and monitor heap vs working set to find non-heap leaks.
+</Accordion>
 
-> [!question]- How do you run database migrations safely with GitOps and canaries?
-> Run them once per release as an Argo CD PreSync Job using the same image, so a failed migration stops the sync before the app changes. Because old and new versions run side by side during a canary and the schema can't be rolled back by Argo CD, migrations must be backward compatible (expand/contract): add first, switch code, backfill, remove later.
+<Accordion title="How do you run database migrations safely with GitOps and canaries?">
+Run them once per release as an Argo CD PreSync Job using the same image, so a failed migration stops the sync before the app changes. Because old and new versions run side by side during a canary and the schema can't be rolled back by Argo CD, migrations must be backward compatible (expand/contract): add first, switch code, backfill, remove later.
+</Accordion>
 
-> [!question]- When would you scale on something other than CPU?
-> When the service is I/O bound: a Node API waiting on Postgres can hit latency limits (pool waits, event loop lag) at 30% CPU. Scale on RPS per Pod, event loop lag or queue depth via Prometheus Adapter or KEDA. For WebSockets, scale on connection count, since connections, not requests, are load balanced.
+<Accordion title="When would you scale on something other than CPU?">
+When the service is I/O bound: a Node API waiting on Postgres can hit latency limits (pool waits, event loop lag) at 30% CPU. Scale on RPS per Pod, event loop lag or queue depth via Prometheus Adapter or KEDA. For WebSockets, scale on connection count, since connections, not requests, are load balanced.
+</Accordion>
 
 ## Related
 
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]]
-- [[Deploying Next.js Micro-frontends to Kubernetes]] (the frontend side of Acme Shop)
-- [[Kubernetes Workloads in Production]] · [[Kubernetes Networking - Services, Ingress & Gateway API]] · [[Helm & Kustomize]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]]
-- [[Argo CD in Practice]] · [[Argo Rollouts - Canary & Blue-Green]] · [[Jenkins - Pipelines as Code]] · [[Grafana & the LGTM Stack]]
-- [[Dockerfile Best Practices & Image Security]] · [[Secrets Management]] · [[Supply Chain Security]] · [[Observability - Logs, Metrics & Traces]]
-- [[Node.js Index]] · [[Building HTTP Servers - Express, Fastify & Hono]] · [[Node.js Performance & Debugging]] · [[Node.js 22 to 24+ - What's New]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End)
+- [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) (the frontend side of Acme Shop)
+- [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)
+- [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)
+- [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security) · [Secrets Management](/Software%20Engineering/Security/Secrets%20Management) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index) · [Building HTTP Servers - Express, Fastify & Hono](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Building%20HTTP%20Servers%20-%20Express%2C%20Fastify%20%26%20Hono) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging) · [Node.js 22 to 24+ - What's New](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%2022%20to%2024%2B%20-%20What's%20New)
 
 ## Sources
 

@@ -1,12 +1,16 @@
 ---
+title: "Trees & Binary Search Trees"
 tags: [dsa, dsa/data-structures]
 aliases: [Trees, Binary Tree, BST, Binary Search Tree, AVL Tree, Red-Black Tree, B-Tree, B+ Tree]
 updated: 2026-09-27
 ---
 # Trees & Binary Search Trees
 
-> [!tldr] TL;DR
-> A **tree** is a connected, acyclic hierarchy of nodes with one root. A **binary tree** gives each node at most two children, and a **binary search tree (BST)** adds an ordering rule: everything in the left subtree is smaller, everything in the right subtree is larger. That rule makes search, insert and delete **O(h)**, where h is the height: O(log n) when balanced, O(n) when it degenerates into a linked list. Self-balancing trees (AVL, red-black) guarantee O(log n); **B-trees / B+ trees** are the disk-friendly cousins behind almost every database index.
+<Note>
+**TL;DR**
+
+A **tree** is a connected, acyclic hierarchy of nodes with one root. A **binary tree** gives each node at most two children, and a **binary search tree (BST)** adds an ordering rule: everything in the left subtree is smaller, everything in the right subtree is larger. That rule makes search, insert and delete **O(h)**, where h is the height: O(log n) when balanced, O(n) when it degenerates into a linked list. Self-balancing trees (AVL, red-black) guarantee O(log n); **B-trees / B+ trees** are the disk-friendly cousins behind almost every database index.
+</Note>
 
 ## The idea
 
@@ -45,7 +49,7 @@ This is a valid BST: for every node, all keys on the left are smaller and all ke
 | Kind | Definition |
 |---|---|
 | **Full** | Every node has 0 or 2 children |
-| **Complete** | Every level full except possibly the last, which is filled left to right. This is the shape of a heap, see [[Heaps & Priority Queues]] |
+| **Complete** | Every level full except possibly the last, which is filled left to right. This is the shape of a heap, see [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues) |
 | **Perfect** | All internal nodes have 2 children and all leaves are on the same level: 2^(h+1) - 1 nodes |
 | **Balanced** | Height is O(log n). Precise meaning depends on the scheme (AVL: subtree heights differ by at most 1) |
 | **Degenerate / skewed** | Every node has one child. It is a linked list in disguise, height n - 1 |
@@ -54,7 +58,7 @@ This is a valid BST: for every node, all keys on the left are smaller and all ke
 
 ### Search
 
-Start at the root. If the key equals the node, done. If it is smaller go left, otherwise go right. Stop at `null` (not found). Each step discards a whole subtree, which is binary search on a linked structure (see [[Binary Search]]).
+Start at the root. If the key equals the node, done. If it is smaller go left, otherwise go right. Stop at `null` (not found). Each step discards a whole subtree, which is binary search on a linked structure (see [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search)).
 
 ### Insert
 
@@ -76,7 +80,7 @@ Deleting `3` from the tree above: it has two children, its successor is `4` (lef
 
 ### Traversals
 
-Pre-order, in-order, post-order (DFS) and level-order (BFS) are covered in depth in [[Tree Traversal - DFS & BFS]]. For a BST, remember one fact: **in-order = sorted order**.
+Pre-order, in-order, post-order (DFS) and level-order (BFS) are covered in depth in [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS). For a BST, remember one fact: **in-order = sorted order**.
 
 ## Complexity
 
@@ -291,7 +295,7 @@ You rarely implement AVL or red-black in interviews. Know the invariants, that r
   - Consequences you should reason about in review: composite index column order (leftmost prefix rule), random UUID primary keys causing page splits vs monotonic keys (UUIDv7, sequences), and why `LIKE '%foo'` cannot use the index.
   - LSM trees (RocksDB, Cassandra) are the write-optimized alternative: faster writes, costlier reads and compaction.
 - **Cache locality**: pointer-based binary trees scatter nodes across the heap, so each step can be a cache miss. That is why B-trees also win in memory (Rust's `BTreeMap` is a B-tree, not a red-black tree) and why sorted arrays plus binary search often beat a BST for read-heavy, rarely-changing data.
-- **Where trees show up in real systems**: DOM and virtual DOM, ASTs in compilers and bundlers, file systems, interval trees for calendars, segment/Fenwick trees for range queries, tries for autocomplete ([[Tries]]), Merkle trees in Git and blockchains.
+- **Where trees show up in real systems**: DOM and virtual DOM, ASTs in compilers and bundlers, file systems, interval trees for calendars, segment/Fenwick trees for range queries, tries for autocomplete ([Tries](/Software%20Engineering/DSA/02%20Data%20Structures/Tries)), Merkle trees in Git and blockchains.
 - **Interview framing**: say "O(h), which is O(log n) if balanced". Interviewers often probe the skewed case, the iterative version, and how you would get sorted order or the k-th element (augment nodes with subtree size for O(log n) order statistics).
 
 ## Classic LeetCode problems
@@ -309,29 +313,35 @@ You rarely implement AVL or red-black in interviews. Know the invariants, that r
 
 ## Interview questions
 
-> [!question]- What is the difference between a binary tree and a binary search tree?
-> A binary tree only limits each node to two children. A BST adds the ordering invariant: every key in the left subtree is less than the node and every key in the right subtree is greater. That invariant enables O(h) search and makes in-order traversal sorted.
+<Accordion title="What is the difference between a binary tree and a binary search tree?">
+A binary tree only limits each node to two children. A BST adds the ordering invariant: every key in the left subtree is less than the node and every key in the right subtree is greater. That invariant enables O(h) search and makes in-order traversal sorted.
+</Accordion>
 
-> [!question]- Why can a BST be O(n) and how do you prevent it?
-> Operations are O(h). Inserting keys in sorted order makes each new node the right child of the previous one, so h = n - 1. Prevent it with a self-balancing tree (AVL, red-black), a randomized structure (treap, skip list), or by building from sorted data with the middle-element recursion.
+<Accordion title="Why can a BST be O(n) and how do you prevent it?">
+Operations are O(h). Inserting keys in sorted order makes each new node the right child of the previous one, so h = n - 1. Prevent it with a self-balancing tree (AVL, red-black), a randomized structure (treap, skip list), or by building from sorted data with the middle-element recursion.
+</Accordion>
 
-> [!question]- Walk through deleting a node with two children.
-> Find the in-order successor (leftmost node of the right subtree). It has no left child. Copy its key into the node being deleted, then delete the successor from the right subtree, which is now a 0- or 1-child case. The in-order predecessor works symmetrically.
+<Accordion title="Walk through deleting a node with two children.">
+Find the in-order successor (leftmost node of the right subtree). It has no left child. Copy its key into the node being deleted, then delete the successor from the right subtree, which is now a 0- or 1-child case. The in-order predecessor works symmetrically.
+</Accordion>
 
-> [!question]- AVL vs red-black: when would you pick each?
-> AVL is more strictly balanced, so lookups are slightly faster; it may rotate more on inserts and deletes. Red-black allows more imbalance (height up to about 2 log n) but needs fewer rotations per update, so it is the common choice for general-purpose ordered maps with many writes (Java TreeMap, C++ std::map).
+<Accordion title="AVL vs red-black: when would you pick each?">
+AVL is more strictly balanced, so lookups are slightly faster; it may rotate more on inserts and deletes. Red-black allows more imbalance (height up to about 2 log n) but needs fewer rotations per update, so it is the common choice for general-purpose ordered maps with many writes (Java TreeMap, C++ std::map).
+</Accordion>
 
-> [!question]- Why do databases use B+ trees instead of binary search trees?
-> Storage is read in pages, and each page read is expensive. A B+ tree packs hundreds of keys per node, so the tree is only 3 to 4 levels deep for billions of rows, minimizing page reads. Leaves are linked in key order, so range queries and ordered scans are sequential. Binary trees would need about 30 levels and a random read per level.
+<Accordion title="Why do databases use B+ trees instead of binary search trees?">
+Storage is read in pages, and each page read is expensive. A B+ tree packs hundreds of keys per node, so the tree is only 3 to 4 levels deep for billions of rows, minimizing page reads. Leaves are linked in key order, so range queries and ordered scans are sequential. Binary trees would need about 30 levels and a random read per level.
+</Accordion>
 
-> [!question]- How do you find the k-th smallest element efficiently?
-> In-order traversal and stop at the k-th visited node: O(h + k). If this is a frequent query on a changing tree, augment each node with the size of its subtree; then you can descend directly in O(h) (an order-statistic tree).
+<Accordion title="How do you find the k-th smallest element efficiently?">
+In-order traversal and stop at the k-th visited node: O(h + k). If this is a frequent query on a changing tree, augment each node with the size of its subtree; then you can descend directly in O(h) (an order-statistic tree).
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Tree Traversal - DFS & BFS]] · [[Recursion & Backtracking]] · [[Binary Search]]
-- [[Heaps & Priority Queues]] (complete binary trees in an array) · [[Tries]] · [[Graphs]] (a tree is a connected acyclic graph)
-- [[Big-O & Complexity Analysis]] · [[Execution Context & Call Stack]] (recursion depth)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search)
+- [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues) (complete binary trees in an array) · [Tries](/Software%20Engineering/DSA/02%20Data%20Structures/Tries) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) (a tree is a connected acyclic graph)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) (recursion depth)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022: ch. 12 (BSTs), ch. 13 (red-black trees), ch. 18 (B-trees)

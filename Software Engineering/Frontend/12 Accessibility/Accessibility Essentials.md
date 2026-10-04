@@ -1,15 +1,19 @@
 ---
+title: "Accessibility Essentials"
 tags: [frontend, frontend/a11y]
 aliases: [Accessibility, a11y, WCAG, ARIA, Accessibility Tree]
 updated: 2026-09-27
 ---
 # Accessibility Essentials
 
-> [!tldr] TL;DR
-> Accessibility (a11y) means everyone can perceive, operate and understand your UI: keyboard users, screen-reader users, low-vision and colour-blind users, people with motor or cognitive disabilities, and anyone on a small screen in bright sun.
-> - The recipe is **semantic HTML first**, **ARIA only to fill gaps**, **visible and managed focus**, **sufficient contrast**, and **respect for user preferences**.
-> - The target is **WCAG 2.2 AA**.
-> - Since **June 28, 2025**, the **European Accessibility Act** makes this a legal requirement for many consumer services in the EU, including e-commerce and passenger transport booking (which covers a flights product).
+<Note>
+**TL;DR**
+
+Accessibility (a11y) means everyone can perceive, operate and understand your UI: keyboard users, screen-reader users, low-vision and colour-blind users, people with motor or cognitive disabilities, and anyone on a small screen in bright sun.
+- The recipe is **semantic HTML first**, **ARIA only to fill gaps**, **visible and managed focus**, **sufficient contrast**, and **respect for user preferences**.
+- The target is **WCAG 2.2 AA**.
+- Since **June 28, 2025**, the **European Accessibility Act** makes this a legal requirement for many consumer services in the EU, including e-commerce and passenger transport booking (which covers a flights product).
+</Note>
 
 ---
 
@@ -32,12 +36,15 @@ Each accessible node exposes:
 - **Value**: for inputs and sliders.
 - **Description**: `aria-describedby`, e.g. hint text.
 
-> [!note] Correction to my earlier note
-> I had written "Accessibility tree = DOM subset representing accessible content". It is closer to say it is a **separate tree derived from the DOM *and* CSS**:
-> - it **drops** nodes (`display: none`, `hidden`, `aria-hidden="true"`, purely decorative wrappers);
-> - it **adds or computes** information that isn't in the DOM as such (computed names, CSS-generated `content`, implicit roles and states).
->
-> You can inspect it in Chrome DevTools (Elements > Accessibility pane, with the "full-page accessibility tree" toggle) and in the Firefox Accessibility Inspector.
+<Note>
+**Correction to my earlier note**
+
+I had written "Accessibility tree = DOM subset representing accessible content". It is closer to say it is a **separate tree derived from the DOM *and* CSS**:
+- it **drops** nodes (`display: none`, `hidden`, `aria-hidden="true"`, purely decorative wrappers);
+- it **adds or computes** information that isn't in the DOM as such (computed names, CSS-generated `content`, implicit roles and states).
+
+You can inspect it in Chrome DevTools (Elements > Accessibility pane, with the "full-page accessibility tree" toggle) and in the Firefox Accessibility Inspector.
+</Note>
 
 ## 2. Semantic HTML first
 Native elements give you role, name, keyboard behaviour and states **for free**.
@@ -49,7 +56,7 @@ Native elements give you role, name, keyboard behaviour and states **for free**.
 | `<div class="header">` | `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>` | **landmarks** that SR users jump between |
 | bold divs as titles | `<h1>`–`<h6>` in logical order | a heading outline. It is the #1 way SR users skim a page |
 | custom checkbox div | `<input type="checkbox">` + `<label>` | checked state, Space toggles, label click target |
-| custom dropdown | `<select>` (now stylable with `appearance: base-select`, see [[Modern CSS 2025-2026]]) | full keyboard and AT support |
+| custom dropdown | `<select>` (now stylable with `appearance: base-select`, see [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)) | full keyboard and AT support |
 | custom modal div | `<dialog>` + `showModal()` | focus moved in, background inert, Esc closes, top layer |
 | JS accordion | `<details>`/`<summary>` | expanded state, keyboard |
 | `<table>` for layout | CSS grid; `<table>` + `<th scope>` for **data** | cell and header relationships for data tables |
@@ -199,23 +206,26 @@ WCAG is organised by **POUR**: Perceivable, Operable, Understandable, Robust. Le
 
 AAA additions: 2.4.12 Focus Not Obscured (Enhanced), 2.4.13 Focus Appearance, 3.3.9 Accessible Authentication (Enhanced).
 
-> [!info]+ 🆕 2025–2026
-> - **European Accessibility Act (EAA)** has applied since **June 28, 2025**.
->   - It covers products and services such as e-commerce, banking, e-books, and **passenger transport services** (booking websites and apps).
->   - The technical standard is **EN 301 549 v3.2.1**, which references **WCAG 2.1 AA**.
->   - Microenterprises are exempt for **services only**.
->   - Service contracts from before June 2025 must comply by **June 28, 2027**; products already in use before June 2025 have until **2030**.
->   - The first lawsuits were filed in France in **Nov 2025**.
->   - A vendor (Level Access) reports that EN 301 549 **v4.1.1 (aligned with WCAG 2.2)** was published on 2026-09-02. *This is unverified against ETSI*, but building to WCAG 2.2 AA is the safe target anyway.
-> - **WCAG 3.0** is still a **Working Draft**. The latest drafts are March 2026 and **September 10, 2026**, with no Candidate Recommendation date yet. It proposes a new model (outcomes and a different scoring/conformance approach). Keep building to 2.2 AA; WCAG 3 is years from being a legal reference.
-> - **`ariaNotify()`**: **Baseline Newly available 2026-09-14**. It lets you announce to screen readers without a hidden live-region element:
->   ```js
->   document.ariaNotify('Flight added to comparison');
->   ```
->   Use it for transient status messages. For simple cases, a `role="status"` region still works everywhere.
-> - **Angular Aria** (`@angular/aria`): headless, accessible UI patterns (directives that implement the APG keyboard and ARIA contracts; you bring the styling). It was a developer preview in **v21 (Nov 2025)** and became **stable in v22 (June 2026) with 12 patterns**. It is Angular's equivalent of React Aria or Radix. See [[Modern Angular v17 to v22]].
-> - Platform help: **invoker commands** (Newly Dec 2025), `dialog.requestClose()`, `:open`, the customizable `<select>` (Limited), and `reading-flow` (Chrome only) all reduce the amount of custom, error-prone widget code.
-> - **Playwright 1.57 removed `page.accessibility`**. Use **aria snapshots** (`toMatchAriaSnapshot`) instead. See [[Frontend Testing]].
+<Info>
+**🆕 2025–2026**
+
+- **European Accessibility Act (EAA)** has applied since **June 28, 2025**.
+  - It covers products and services such as e-commerce, banking, e-books, and **passenger transport services** (booking websites and apps).
+  - The technical standard is **EN 301 549 v3.2.1**, which references **WCAG 2.1 AA**.
+  - Microenterprises are exempt for **services only**.
+  - Service contracts from before June 2025 must comply by **June 28, 2027**; products already in use before June 2025 have until **2030**.
+  - The first lawsuits were filed in France in **Nov 2025**.
+  - A vendor (Level Access) reports that EN 301 549 **v4.1.1 (aligned with WCAG 2.2)** was published on 2026-09-02. *This is unverified against ETSI*, but building to WCAG 2.2 AA is the safe target anyway.
+- **WCAG 3.0** is still a **Working Draft**. The latest drafts are March 2026 and **September 10, 2026**, with no Candidate Recommendation date yet. It proposes a new model (outcomes and a different scoring/conformance approach). Keep building to 2.2 AA; WCAG 3 is years from being a legal reference.
+- **`ariaNotify()`**: **Baseline Newly available 2026-09-14**. It lets you announce to screen readers without a hidden live-region element:
+  ```js
+  document.ariaNotify('Flight added to comparison');
+  ```
+  Use it for transient status messages. For simple cases, a `role="status"` region still works everywhere.
+- **Angular Aria** (`@angular/aria`): headless, accessible UI patterns (directives that implement the APG keyboard and ARIA contracts; you bring the styling). It was a developer preview in **v21 (Nov 2025)** and became **stable in v22 (June 2026) with 12 patterns**. It is Angular's equivalent of React Aria or Radix. See [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
+- Platform help: **invoker commands** (Newly Dec 2025), `dialog.requestClose()`, `:open`, the customizable `<select>` (Limited), and `reading-flow` (Chrome only) all reduce the amount of custom, error-prone widget code.
+- **Playwright 1.57 removed `page.accessibility`**. Use **aria snapshots** (`toMatchAriaSnapshot`) instead. See [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
+</Info>
 
 ## 10. Testing accessibility
 Automated tools catch **only part** of WCAG issues (roughly a third; estimates vary). Combine them:
@@ -229,68 +239,82 @@ Automated tools catch **only part** of WCAG issues (roughly a third; estimates v
 | Manual (essential) | keyboard-only walkthrough (Tab, Shift+Tab, Enter, Space, Esc, arrows); screen readers: **NVDA** and **JAWS** (Windows), **VoiceOver** (macOS/iOS), **TalkBack** (Android); zoom to 200% and 400%; 320px reflow |
 | Real users | usability testing with disabled users; an accessibility statement with a feedback channel (the EAA expects one) |
 
-> [!example] Automated a11y check in a component test
-> ```tsx
-> import { render, screen } from '@testing-library/react';
-> import { axe } from 'vitest-axe';           // or jest-axe
-> import { SearchForm } from './SearchForm';
->
-> test('search form is accessible', async () => {
->   const { container } = render(<SearchForm />);
->   expect(screen.getByRole('combobox', { name: /from/i })).toBeInTheDocument();
->   expect(await axe(container)).toHaveNoViolations();
-> });
-> ```
-> (`toHaveNoViolations` needs the matcher to be registered in your setup file.)
+<Info>
+**Automated a11y check in a component test**
 
-> [!warning] Common pitfalls
-> - `outline: none` with no replacement focus style.
-> - Clickable `div`s and `span`s.
-> - Placeholder used as the label.
-> - Icon buttons with no name.
-> - `aria-hidden="true"` on a focusable element, or on a parent of focusable content.
-> - A live region injected together with its content (nothing gets announced). Render it empty first.
-> - Modals that don't return focus, or let Tab escape to the page behind.
-> - Hover-only tooltips and menus.
-> - Disabling zoom in the viewport meta.
-> - Custom selects and date pickers without APG keyboard support. Airline and date pickers are the classic failures in travel sites.
+```tsx
+import { render, screen } from '@testing-library/react';
+import { axe } from 'vitest-axe';           // or jest-axe
+import { SearchForm } from './SearchForm';
+
+test('search form is accessible', async () => {
+  const { container } = render(<SearchForm />);
+  expect(screen.getByRole('combobox', { name: /from/i })).toBeInTheDocument();
+  expect(await axe(container)).toHaveNoViolations();
+});
+```
+(`toHaveNoViolations` needs the matcher to be registered in your setup file.)
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- `outline: none` with no replacement focus style.
+- Clickable `div`s and `span`s.
+- Placeholder used as the label.
+- Icon buttons with no name.
+- `aria-hidden="true"` on a focusable element, or on a parent of focusable content.
+- A live region injected together with its content (nothing gets announced). Render it empty first.
+- Modals that don't return focus, or let Tab escape to the page behind.
+- Hover-only tooltips and menus.
+- Disabling zoom in the viewport meta.
+- Custom selects and date pickers without APG keyboard support. Airline and date pickers are the classic failures in travel sites.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is semantic HTML and why is it important?
-> Using elements for their meaning (`<button>`, `<nav>`, `<h2>`, `<label>`, `<table>` for data) instead of generic divs. It gives assistive technology correct roles, names and states, gives keyboard behaviour for free, improves SEO and maintainability, and removes the need for most ARIA.
+<Accordion title="What is semantic HTML and why is it important?">
+Using elements for their meaning (`<button>`, `<nav>`, `<h2>`, `<label>`, `<table>` for data) instead of generic divs. It gives assistive technology correct roles, names and states, gives keyboard behaviour for free, improves SEO and maintainability, and removes the need for most ARIA.
+</Accordion>
 
-> [!question]- What is the accessibility tree?
-> A tree the browser derives from the DOM and CSS and exposes to assistive technology through OS accessibility APIs. Each node has a role, name, state, value and description. Hidden or decorative nodes are pruned, and names are computed. You can inspect it in the DevTools Accessibility pane. Screen readers only "see" this tree, not your pixels.
+<Accordion title="What is the accessibility tree?">
+A tree the browser derives from the DOM and CSS and exposes to assistive technology through OS accessibility APIs. Each node has a role, name, state, value and description. Hidden or decorative nodes are pruned, and names are computed. You can inspect it in the DevTools Accessibility pane. Screen readers only "see" this tree, not your pixels.
+</Accordion>
 
-> [!question]- When should you use ARIA?
-> Only when HTML can't express the semantics: custom composite widgets (tabs, combobox, tree), live regions, relationships (`aria-controls`, `aria-describedby`), and states (`aria-expanded`, `aria-current`). The first rule of ARIA is to use native HTML where possible. ARIA adds no behaviour, so you must implement the keyboard support yourself.
+<Accordion title="When should you use ARIA?">
+Only when HTML can't express the semantics: custom composite widgets (tabs, combobox, tree), live regions, relationships (`aria-controls`, `aria-describedby`), and states (`aria-expanded`, `aria-current`). The first rule of ARIA is to use native HTML where possible. ARIA adds no behaviour, so you must implement the keyboard support yourself.
+</Accordion>
 
-> [!question]- How do you build an accessible modal?
-> Use `<dialog>` with `showModal()`. It gives you the top layer, an inert background, focus moved inside, and Esc to close. Label it with `aria-labelledby`, set sensible initial focus, return focus to the trigger on close, and lock scroll. For a custom implementation: `role="dialog"` + `aria-modal="true"`, `inert` on the rest of the page, a focus trap, Esc handling and focus restoration.
+<Accordion title="How do you build an accessible modal?">
+Use `<dialog>` with `showModal()`. It gives you the top layer, an inert background, focus moved inside, and Esc to close. Label it with `aria-labelledby`, set sensible initial focus, return focus to the trigger on close, and lock scroll. For a custom implementation: `role="dialog"` + `aria-modal="true"`, `inert` on the rest of the page, a focus trap, Esc handling and focus restoration.
+</Accordion>
 
-> [!question]- What did WCAG 2.2 add at level AA?
-> Focus Not Obscured (Minimum), Dragging Movements, Target Size (Minimum) of 24×24 CSS px, and Accessible Authentication (Minimum). It also added two level-A criteria, Consistent Help and Redundant Entry, and dropped 4.1.1 Parsing.
+<Accordion title="What did WCAG 2.2 add at level AA?">
+Focus Not Obscured (Minimum), Dragging Movements, Target Size (Minimum) of 24×24 CSS px, and Accessible Authentication (Minimum). It also added two level-A criteria, Consistent Help and Redundant Entry, and dropped 4.1.1 Parsing.
+</Accordion>
 
-> [!question]- What tools can be used to analyse the accessibility of a page?
-> Automated: axe (DevTools, `@axe-core/playwright`, `vitest-axe`/`jest-axe`), Lighthouse, WAVE, Accessibility Insights, `eslint-plugin-jsx-a11y`, Playwright aria snapshots. Browser DevTools: the accessibility tree, contrast checker, vision-deficiency and reduced-motion emulation. Manual: keyboard-only testing and screen readers (NVDA, JAWS, VoiceOver, TalkBack), zoom and reflow checks. Automation finds only part of the issues, so manual testing is required.
+<Accordion title="What tools can be used to analyse the accessibility of a page?">
+Automated: axe (DevTools, `@axe-core/playwright`, `vitest-axe`/`jest-axe`), Lighthouse, WAVE, Accessibility Insights, `eslint-plugin-jsx-a11y`, Playwright aria snapshots. Browser DevTools: the accessibility tree, contrast checker, vision-deficiency and reduced-motion emulation. Manual: keyboard-only testing and screen readers (NVDA, JAWS, VoiceOver, TalkBack), zoom and reflow checks. Automation finds only part of the issues, so manual testing is required.
+</Accordion>
 
-> [!question]- How do you announce dynamic updates (e.g. "24 flights found") to screen reader users?
-> Use a live region that already exists in the DOM: `role="status"` (polite) or `role="alert"` (assertive), and update its text content. Since Sept 2026, `document.ariaNotify('…')` is Baseline and can announce without a DOM region. Don't over-announce: debounce updates from filters.
+<Accordion title="How do you announce dynamic updates (e.g. &quot;24 flights found&quot;) to screen reader users?">
+Use a live region that already exists in the DOM: `role="status"` (polite) or `role="alert"` (assertive), and update its text content. Since Sept 2026, `document.ariaNotify('…')` is Baseline and can announce without a DOM region. Don't over-announce: debounce updates from filters.
+</Accordion>
 
-> [!question]- What does the European Accessibility Act mean for a travel booking site?
-> Since June 28, 2025, consumer services like e-commerce and passenger transport booking sold in the EU must be accessible, per EN 301 549 (currently WCAG 2.1 AA). Existing service contracts have until June 2027. You need conformance to the standard, an accessibility statement, and a feedback mechanism, and enforcement has started (the first French lawsuits in Nov 2025). Targeting WCAG 2.2 AA future-proofs you.
+<Accordion title="What does the European Accessibility Act mean for a travel booking site?">
+Since June 28, 2025, consumer services like e-commerce and passenger transport booking sold in the EU must be accessible, per EN 301 549 (currently WCAG 2.1 AA). Existing service contracts have until June 2027. You need conformance to the standard, an accessibility statement, and a feedback mechanism, and enforcement has started (the first French lawsuits in Nov 2025). Targeting WCAG 2.2 AA future-proofs you.
+</Accordion>
 
 ## Related
-- [[CSS Fundamentals - Cascade, Box Model & Contexts]]
-- [[Modern CSS 2025-2026]]
-- [[DOM, Events & Event Delegation]]
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Frontend Testing]]
-- [[Design Systems]]
-- [[Modern Angular v17 to v22]]
-- [[Modern Web Platform APIs 2025-2026]]
-- [[Frontend Interview Concepts & Question Bank]]
+- [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [DOM, Events & Event Delegation](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/DOM%2C%20Events%20%26%20Event%20Delegation)
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026)
+- [Frontend Interview Concepts & Question Bank](/Software%20Engineering/Interviews/Frontend%20Interview%20Concepts%20%26%20Question%20Bank)
 
 ## Sources
 - Owner's notes: `Front End.md` (trees: DOM, CSSOM, accessibility tree), `Interview.md` (semantic HTML, accessibility tree, a11y tools)

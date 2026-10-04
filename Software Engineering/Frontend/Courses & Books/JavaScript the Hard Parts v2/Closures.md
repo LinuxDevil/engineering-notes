@@ -1,4 +1,7 @@
-![[Screenshot_2023-08-29_at_10.27.33_PM.png]]
+---
+title: "Closures"
+---
+![Screenshot_2023-08-29_at_10.27.33_PM](/Attachments/Screenshot_2023-08-29_at_10.27.33_PM.png)
 
 Lexical Scoping
 
@@ -10,7 +13,7 @@ Memoizations
     A go to practice to enable us to not repeat calculations and tasks that has been run before.
 
 
-![[Screenshot_2023-08-30_at_11.11.04_PM.png]]
+![Screenshot_2023-08-30_at_11.11.04_PM](/Attachments/Screenshot_2023-08-30_at_11.11.04_PM.png)
 
 ```typescript
 // ------------------------------
@@ -78,7 +81,7 @@ incrementCounter()		counter: 0
 
 ```
 
-![[Screenshot_2023-08-31_at_8.27.13_PM.png]]
+![Screenshot_2023-08-31_at_8.27.13_PM](/Attachments/Screenshot_2023-08-31_at_8.27.13_PM.png)
 
 ```typescript
 ===Global Memory===

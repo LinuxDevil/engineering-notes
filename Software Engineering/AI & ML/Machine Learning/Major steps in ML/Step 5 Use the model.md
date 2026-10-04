@@ -1,17 +1,21 @@
 ---
+title: "Step 5 Use the model"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Use the Model, ML Step 5, Model Inference, Model Deployment, MLOps]
 updated: 2026-09-27
 ---
 # Step 5 Use the model
 
-> [!tldr] TL;DR
-> Once the model is trained, evaluated and good enough, you use it to make predictions on new, real-world data. This is called **inference**. Deployment isn't the end: data and the world change, so you **monitor** predictions and inputs, and go back to earlier steps (more data, new parameters, a different model) when quality drops. Keeping models healthy in production is the job of **MLOps**.
+<Note>
+**TL;DR**
+
+Once the model is trained, evaluated and good enough, you use it to make predictions on new, real-world data. This is called **inference**. Deployment isn't the end: data and the world change, so you **monitor** predictions and inputs, and go back to earlier steps (more data, new parameters, a different model) when quality drops. Keeping models healthy in production is the job of **MLOps**.
+</Note>
 
 ## Model inference
 Once you have trained the model, evaluated its effectiveness and are satisfied with the results, you can generate predictions for real problems using **unseen data in the field**. In ML this is **inference**.
 
-![[Untitled 3.png]]
+![Untitled 3](/Attachments/Untitled%203.png)
 
 ## Ways to serve a model
 
@@ -20,7 +24,7 @@ Once you have trained the model, evaluated its effectiveness and are satisfied w
 | **Batch** | run on a schedule over many records, store results | nightly churn scores written to a table |
 | **Online / real-time** | API endpoint answers each request in milliseconds | fraud check during checkout |
 | **Streaming** | score events as they flow through Kafka/Kinesis | anomaly detection on sensor data |
-| **Edge / on-device** | model runs on the device or camera | spill detection on AWS Panorama ([[Example 3 Detecting Spills]]), on-device browser AI |
+| **Edge / on-device** | model runs on the device or camera | spill detection on AWS Panorama ([Example 3 Detecting Spills](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%203%20Detecting%20Spills)), on-device browser AI |
 
 ```python
 # minimal online inference service
@@ -61,7 +65,7 @@ flowchart LR
 - **Training/serving skew**: features computed differently offline and online silently break models. Share feature code, or use a feature store.
 - **Feedback loops**: a model's predictions can change the data it's later trained on (recommendations shape what people click). Keep some randomised exploration or holdout traffic.
 - **Human in the loop** for high-stakes decisions, plus explanations and an appeal path.
-- For LLM-based features the same ideas apply with extra layers: tracing, evals on live traffic and guardrails. See [[LLM Evaluation & Observability]] and [[AI Safety, Security & Guardrails for Apps]].
+- For LLM-based features the same ideas apply with extra layers: tracing, evals on live traffic and guardrails. See [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability) and [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps).
 
 ## Recap
 1. *Solving problems with ML is an evolving and iterative process.*
@@ -70,19 +74,22 @@ flowchart LR
 
 ## Interview questions
 
-> [!question]- What is model drift and how do you detect it?
-> Model quality degrades because production data (data drift) or the input-to-label relationship (concept drift) changed since training. Detect it by monitoring input feature distributions (e.g. population stability index, KS test), prediction distributions, and live metrics once ground truth arrives; alert and retrain.
+<Accordion title="What is model drift and how do you detect it?">
+Model quality degrades because production data (data drift) or the input-to-label relationship (concept drift) changed since training. Detect it by monitoring input feature distributions (e.g. population stability index, KS test), prediction distributions, and live metrics once ground truth arrives; alert and retrain.
+</Accordion>
 
-> [!question]- Batch vs real-time inference?
-> Batch is cheaper and simpler when predictions can be precomputed (daily scores). Real-time is needed when the input only exists at request time (a transaction being made) and brings latency, scaling and availability requirements.
+<Accordion title="Batch vs real-time inference?">
+Batch is cheaper and simpler when predictions can be precomputed (daily scores). Real-time is needed when the input only exists at request time (a transaction being made) and brings latency, scaling and availability requirements.
+</Accordion>
 
-> [!question]- How would you safely replace a model in production?
-> Register the new version, run it in shadow mode comparing outputs, then canary or A/B test on a slice of traffic with guardrail metrics, ramp up, and keep the old version ready for instant rollback.
+<Accordion title="How would you safely replace a model in production?">
+Register the new version, run it in shadow mode comparing outputs, then canary or A/B test on a slice of traffic with guardrail metrics, ramp up, and keep the old version ready for instant rollback.
+</Accordion>
 
 ## Related
-- [[Major steps in ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Step 4 Evaluate the model]] · Next: [[Case Studies that use ML]]
-- [[LLM Evaluation & Observability]]
+- [Major steps in ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Major%20steps%20in%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model) · Next: [Case Studies that use ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Case%20Studies%20that%20use%20ML)
+- [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

@@ -1,14 +1,18 @@
 ---
+title: "Creating and Manipulating Tables"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [CREATE TABLE, ALTER TABLE, DROP TABLE, DDL, Identity Columns, Generated Columns, uuidv7]
 updated: 2026-09-27
 ---
 # Creating and Manipulating Tables
 
-> [!tldr] TL;DR
-> `CREATE TABLE` defines columns, types, `NULL`/`NOT NULL` and `DEFAULT`s; `ALTER TABLE` changes the definition; `DROP TABLE` deletes it with no undo (outside a transaction). Modern practice adds **identity columns** (or UUIDv7) for keys, constraints from day one, and **generated columns** for derived values. On a live system, schema changes are about **locks**: know which `ALTER`s rewrite the table.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 17 · Prev: [[Updating and Deleting Data]] · Next: [[Using Views]]
+`CREATE TABLE` defines columns, types, `NULL`/`NOT NULL` and `DEFAULT`s; `ALTER TABLE` changes the definition; `DROP TABLE` deletes it with no undo (outside a transaction). Modern practice adds **identity columns** (or UUIDv7) for keys, constraints from day one, and **generated columns** for derived values. On a live system, schema changes are about **locks**: know which `ALTER`s rewrite the table.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 17 · Prev: [Updating and Deleting Data](/Software%20Engineering/Databases/SQL%20ANSI/Updating%20and%20Deleting%20Data) · Next: [Using Views](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Views)
 
 ## Creating tables
 
@@ -40,11 +44,14 @@ CREATE TABLE Products
 
 **Analysis:** the table name follows `CREATE TABLE`, and the column definitions are inside parentheses, separated by commas. Five columns; each starts with a name (unique within the table) followed by its datatype.
 
-> [!tip] Datatype choices the book doesn't discuss
-> - `CHAR(n)` pads with spaces (hence all the `RTRIM()` calls in earlier lessons). Prefer `VARCHAR(n)` or PostgreSQL `TEXT`.
-> - Money: `DECIMAL`/`NUMERIC`, never `FLOAT`.
-> - Instants: `TIMESTAMPTZ` in PostgreSQL (`DATETIME` is SQL Server/MySQL, and doesn't exist in PostgreSQL).
-> - IDs: `BIGINT` rather than `INT`.
+<Tip>
+**Datatype choices the book doesn't discuss**
+
+- `CHAR(n)` pads with spaces (hence all the `RTRIM()` calls in earlier lessons). Prefer `VARCHAR(n)` or PostgreSQL `TEXT`.
+- Money: `DECIMAL`/`NUMERIC`, never `FLOAT`.
+- Instants: `TIMESTAMPTZ` in PostgreSQL (`DATETIME` is SQL Server/MySQL, and doesn't exist in PostgreSQL).
+- IDs: `BIGINT` rather than `INT`.
+</Tip>
 
 ## Working with `NULL` values
 
@@ -80,8 +87,11 @@ CREATE TABLE Vendors
 
 **Analysis:** vendor ID and name are required; the other five allow `NULL`. `NULL` is the default in most DBMSs, so if `NOT NULL` isn't specified, `NULL` is assumed. (Exception: SQL Server can be configured otherwise, so being explicit is safer.)
 
-> [!warning] `NULL` is not an empty string
-> `''` is a value; `NULL` is the absence of one. `NOT NULL` columns accept `''`. (Oracle is the odd one out: it treats `''` as `NULL`.)
+<Warning>
+**`NULL` is not an empty string**
+
+`''` is a value; `NULL` is the absence of one. `NOT NULL` columns accept `''`. (Oracle is the odd one out: it treats `''` as `NULL`.)
+</Warning>
 
 ## Specifying default values
 
@@ -113,12 +123,15 @@ Defaults are often used for date/timestamp columns, with the system date. The fu
 | SQLite | `date('now')` / `CURRENT_DATE` |
 | DB2 | `CURRENT_DATE` |
 
-> [!tip] Defaults vs `NULL`
-> Many developers prefer `DEFAULT` values over `NULL` columns, especially for columns used in calculations or grouping.
+<Tip>
+**Defaults vs `NULL`**
+
+Many developers prefer `DEFAULT` values over `NULL` columns, especially for columns used in calculations or grouping.
+</Tip>
 
 ## Primary keys, identity columns and UUIDs
 
-The book's examples add keys in [[Understanding Advanced SQL Features]]. Modern PostgreSQL:
+The book's examples add keys in [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features). Modern PostgreSQL:
 
 ```sql
 CREATE TABLE orders (
@@ -153,18 +166,21 @@ CREATE TABLE order_items (
 
 `STORED` computes on write and stores the value (indexable). `VIRTUAL` computes on read and uses no space. MySQL 5.7+ supports both; SQL Server has computed columns (`PERSISTED` or not).
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 18 (released 2025-09-25)** added **virtual generated columns**, and virtual is now the **default** kind: `GENERATED ALWAYS AS (expr)` without `STORED` is virtual. Before 18, PostgreSQL only had `STORED`. Write `STORED` explicitly if you need to index the value or want the old behaviour.
-> - **PostgreSQL 18** added **`uuidv7()`**: timestamp-ordered UUIDs, much better for B-tree primary key locality than random `gen_random_uuid()` (v4).
->   ```sql
->   CREATE TABLE events (
->     id         uuid PRIMARY KEY DEFAULT uuidv7(),
->     payload    jsonb NOT NULL,
->     created_at timestamptz NOT NULL DEFAULT now()
->   );
->   ```
-> - **PostgreSQL 18** also added temporal constraints: `PRIMARY KEY`/`UNIQUE ... WITHOUT OVERLAPS` on a range column and `PERIOD` in foreign keys (e.g. "a room can't have two overlapping bookings").
-> - **MySQL 8.0 reached end of life on 2026-04-30.** Current LTS lines are **8.4** (2024-04-30) and **9.7** (2026-04-21); plan upgrades of any DDL/migration tooling accordingly.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 18 (released 2025-09-25)** added **virtual generated columns**, and virtual is now the **default** kind: `GENERATED ALWAYS AS (expr)` without `STORED` is virtual. Before 18, PostgreSQL only had `STORED`. Write `STORED` explicitly if you need to index the value or want the old behaviour.
+- **PostgreSQL 18** added **`uuidv7()`**: timestamp-ordered UUIDs, much better for B-tree primary key locality than random `gen_random_uuid()` (v4).
+  ```sql
+  CREATE TABLE events (
+    id         uuid PRIMARY KEY DEFAULT uuidv7(),
+    payload    jsonb NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  );
+  ```
+- **PostgreSQL 18** also added temporal constraints: `PRIMARY KEY`/`UNIQUE ... WITHOUT OVERLAPS` on a range column and `PERIOD` in foreign keys (e.g. "a room can't have two overlapping bookings").
+- **MySQL 8.0 reached end of life on 2026-04-30.** Current LTS lines are **8.4** (2024-04-30) and **9.7** (2026-04-21); plan upgrades of any DDL/migration tooling accordingly.
+</Info>
 
 ## Updating tables: `ALTER TABLE`
 
@@ -196,8 +212,11 @@ ALTER TABLE Vendors RENAME COLUMN vend_zip TO vend_postcode;
 ALTER TABLE Vendors ADD CONSTRAINT vendors_pk PRIMARY KEY (vend_id);
 ```
 
-> [!note] SQLite
-> SQLite's `ALTER TABLE` is limited. It can't add primary or foreign keys after the fact; define them in the initial `CREATE TABLE`. The standard workaround for bigger changes: create a new table, copy data, drop the old one, rename the new one (inside a transaction).
+<Note>
+**SQLite**
+
+SQLite's `ALTER TABLE` is limited. It can't add primary or foreign keys after the fact; define them in the initial `CREATE TABLE`. The standard workaround for bigger changes: create a new table, copy data, drop the old one, rename the new one (inside a transaction).
+</Note>
 
 ## Deleting tables
 
@@ -209,7 +228,7 @@ Deleting a table (the whole table, not just its contents) is easy, arguably too 
 DROP TABLE CustCopy;
 ```
 
-**Analysis:** deletes the `CustCopy` table. No confirmation, and no undo, unless you're in PostgreSQL inside an open transaction (DDL is transactional there, so `ROLLBACK` brings it back; see [[Managing Transaction Processing]]). Use `DROP TABLE IF EXISTS` in scripts, and note that tables referenced by foreign keys can't be dropped without `CASCADE`.
+**Analysis:** deletes the `CustCopy` table. No confirmation, and no undo, unless you're in PostgreSQL inside an open transaction (DDL is transactional there, so `ROLLBACK` brings it back; see [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing)). Use `DROP TABLE IF EXISTS` in scripts, and note that tables referenced by foreign keys can't be dropped without `CASCADE`.
 
 ## Renaming tables
 
@@ -227,30 +246,35 @@ No hard standard:
 ## Beyond the book / Senior perspective
 
 - **Schema changes lock tables.** In PostgreSQL most `ALTER TABLE` forms take an `ACCESS EXCLUSIVE` lock. Cheap ones (add nullable column, add column with a constant default since PG 11, rename) are instant; expensive ones rewrite the table (change type, add a volatile default). Any of them can queue behind a long-running query and then block everyone behind *them*. Set `lock_timeout` (e.g. `SET lock_timeout = '3s'`) and retry.
-- **Safe migration patterns**: add constraints as `NOT VALID` then `VALIDATE CONSTRAINT` separately; create indexes `CONCURRENTLY` ([[SQL Indexes Deep Dive]]); expand-and-contract for renames (add new column, dual-write, backfill in batches, switch reads, drop old). MySQL has online DDL (`ALGORITHM=INSTANT/INPLACE`) and tools like gh-ost / pt-online-schema-change.
+- **Safe migration patterns**: add constraints as `NOT VALID` then `VALIDATE CONSTRAINT` separately; create indexes `CONCURRENTLY` ([SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive)); expand-and-contract for renames (add new column, dual-write, backfill in batches, switch reads, drop old). MySQL has online DDL (`ALGORITHM=INSTANT/INPLACE`) and tools like gh-ost / pt-online-schema-change.
 - **Constraints are documentation that can't lie.** `NOT NULL`, `CHECK`, `UNIQUE` and FKs catch bugs the application misses.
 - **Temporary and unlogged tables**: `CREATE TEMP TABLE` (session-local) and PostgreSQL `UNLOGGED` tables (fast, not crash-safe, not replicated) for scratch data.
 
 ## Interview questions
 
-> [!question]- IDENTITY, SERIAL or UUID for primary keys?
-> Identity `BIGINT` is compact and index-friendly. UUIDs let clients generate IDs and avoid guessable URLs; use time-ordered UUIDv7 (native `uuidv7()` in PostgreSQL 18) rather than random v4 to keep B-tree inserts local.
+<Accordion title="IDENTITY, SERIAL or UUID for primary keys?">
+Identity `BIGINT` is compact and index-friendly. UUIDs let clients generate IDs and avoid guessable URLs; use time-ordered UUIDv7 (native `uuidv7()` in PostgreSQL 18) rather than random v4 to keep B-tree inserts local.
+</Accordion>
 
-> [!question]- What's a generated column? STORED vs VIRTUAL?
-> A column computed from others in the same row. STORED computes on write and takes space (indexable); VIRTUAL computes on read. PostgreSQL 18 added virtual and made it the default.
+<Accordion title="What's a generated column? STORED vs VIRTUAL?">
+A column computed from others in the same row. STORED computes on write and takes space (indexable); VIRTUAL computes on read. PostgreSQL 18 added virtual and made it the default.
+</Accordion>
 
-> [!question]- Why can a simple ALTER TABLE take down production?
-> It needs an exclusive lock. If a long query holds a conflicting lock, the ALTER waits, and all new queries queue behind the ALTER. Some ALTERs also rewrite the whole table. Use `lock_timeout`, off-peak windows and online patterns.
+<Accordion title="Why can a simple ALTER TABLE take down production?">
+It needs an exclusive lock. If a long query holds a conflicting lock, the ALTER waits, and all new queries queue behind the ALTER. Some ALTERs also rewrite the whole table. Use `lock_timeout`, off-peak windows and online patterns.
+</Accordion>
 
-> [!question]- How do you rename a column with zero downtime?
-> Expand/contract: add the new column, write to both, backfill, switch reads, stop writing the old one, then drop it. A direct rename breaks any running code that uses the old name.
+<Accordion title="How do you rename a column with zero downtime?">
+Expand/contract: add the new column, write to both, backfill, switch reads, stop writing the old one, then drop it. A direct rename breaks any running code that uses the old name.
+</Accordion>
 
-> [!question]- Does CREATE TABLE AS copy constraints?
-> No, only column definitions and data. Add keys and indexes afterwards, or use `CREATE TABLE ... (LIKE src INCLUDING ALL)` in PostgreSQL.
+<Accordion title="Does CREATE TABLE AS copy constraints?">
+No, only column definitions and data. Add keys and indexes afterwards, or use `CREATE TABLE ... (LIKE src INCLUDING ALL)` in PostgreSQL.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Understanding Advanced SQL Features]] (constraints) · [[Inserting Data]] · [[Managing Transaction Processing]] · [[SQL Indexes Deep Dive]] · [[Data Modeling & Normalization]] · [[Primary vs Secondary Key]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (constraints) · [Inserting Data](/Software%20Engineering/Databases/SQL%20ANSI/Inserting%20Data) · [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 17 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

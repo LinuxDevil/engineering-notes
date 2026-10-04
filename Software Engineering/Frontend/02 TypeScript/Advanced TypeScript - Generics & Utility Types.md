@@ -1,12 +1,16 @@
 ---
+title: "Advanced TypeScript - Generics & Utility Types"
 tags: [frontend, frontend/typescript]
 aliases: [Generics, Utility Types, Conditional Types, Mapped Types, infer, Template Literal Types, RequireOnly]
 updated: 2026-09-27
 ---
 # Advanced TypeScript - Generics & Utility Types
 
-> [!tldr] TL;DR
-> **Generics** are type parameters: they let functions, components and types work over many types while keeping the relationship between input and output. With **constraints** (`extends`), **`keyof`**, **indexed access**, **conditional types** (with `infer`), **mapped types** and **template literal types**, you can compute new types from existing ones. The built-in **utility types** (`Partial`, `Pick`, `Omit`, `ReturnType`...) are just mapped/conditional types you can read and write yourself.
+<Note>
+**TL;DR**
+
+**Generics** are type parameters: they let functions, components and types work over many types while keeping the relationship between input and output. With **constraints** (`extends`), **`keyof`**, **indexed access**, **conditional types** (with `infer`), **mapped types** and **template literal types**, you can compute new types from existing ones. The built-in **utility types** (`Partial`, `Pick`, `Omit`, `ReturnType`...) are just mapped/conditional types you can read and write yourself.
+</Note>
 
 ## Generics
 
@@ -194,33 +198,39 @@ Built-in string helpers: `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`.
 | `InstanceType<C>` / `ConstructorParameters<C>` | For classes | |
 | `NoInfer<T>` (TS 5.4) | Block inference from this position | `fn<T>(values: T[], fallback: NoInfer<T>)` |
 
-> [!note] `Omit` is not strictly typed
-> `Omit<T, K>` accepts any `K extends string | number | symbol`, so typos in `K` aren't errors. A strict version: `type StrictOmit<T, K extends keyof T> = Omit<T, K>;`. Also, `Omit` on a **union** doesn't distribute (it collapses to common keys); use `type DistributiveOmit<T, K extends PropertyKey> = T extends any ? Omit<T, K> : never;`.
+<Note>
+**`Omit` is not strictly typed**
+
+`Omit<T, K>` accepts any `K extends string | number | symbol`, so typos in `K` aren't errors. A strict version: `type StrictOmit<T, K extends keyof T> = Omit<T, K>;`. Also, `Omit` on a **union** doesn't distribute (it collapses to common keys); use `type DistributiveOmit<T, K extends PropertyKey> = T extends any ? Omit<T, K> : never;`.
+</Note>
 
 ### `Required` vs "required only some"
 
 `Required<T>` makes **all** properties required. Often you want a mix: some required, the rest optional. That's the owner's favourite helper:
 
-> [!example] `RequireOnly<T, P>`: "a great type"
-> ```ts
-> type RequireOnly<T, P extends keyof T> = Pick<T, P> & Partial<Omit<T, P>>;
->
-> interface User {
->   id: string;
->   realName: string;
->   alterEgo: string;
->   email: string;
->   avatarUrl: string;
-> }
->
-> // Then you can use it
-> type DraftUser = RequireOnly<User, 'realName' | 'alterEgo'>;
-> // { realName: string; alterEgo: string } & { id?: string; email?: string; avatarUrl?: string }
->
-> const draft: DraftUser = { realName: 'Bruce Wayne', alterEgo: 'Batman' };   // OK
-> const bad: DraftUser = { realName: 'Clark Kent' };                          // Error: alterEgo missing
-> ```
-> How it works: `Pick<T, P>` keeps the chosen keys as-is (required), `Omit<T, P>` takes the rest and `Partial` makes them optional, and `&` combines them.
+<Info>
+**`RequireOnly<T, P>`: "a great type"**
+
+```ts
+type RequireOnly<T, P extends keyof T> = Pick<T, P> & Partial<Omit<T, P>>;
+
+interface User {
+  id: string;
+  realName: string;
+  alterEgo: string;
+  email: string;
+  avatarUrl: string;
+}
+
+// Then you can use it
+type DraftUser = RequireOnly<User, 'realName' | 'alterEgo'>;
+// { realName: string; alterEgo: string } & { id?: string; email?: string; avatarUrl?: string }
+
+const draft: DraftUser = { realName: 'Bruce Wayne', alterEgo: 'Batman' };   // OK
+const bad: DraftUser = { realName: 'Clark Kent' };                          // Error: alterEgo missing
+```
+How it works: `Pick<T, P>` keeps the chosen keys as-is (required), `Omit<T, P>` takes the rest and `Partial` makes them optional, and `&` combines them.
+</Info>
 
 Related helpers worth knowing:
 
@@ -289,7 +299,7 @@ const tasks = useAppSelector(state => state.tasks.entities);   // fully typed
 const dispatch = useAppDispatch();                              // knows about thunks
 ```
 
-Why it works: `ReturnType<typeof store.getState>` uses `typeof` to get the function's type and the `ReturnType` conditional type (built with `infer`) to extract the state shape. See [[Redux & Redux Toolkit]].
+Why it works: `ReturnType<typeof store.getState>` uses `typeof` to get the function's type and the `ReturnType` conditional type (built with `infer`) to extract the state shape. See [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit).
 
 ## Variance, briefly
 
@@ -297,45 +307,56 @@ Why it works: `ReturnType<typeof store.getState>` uses `typeof` to get the funct
 - Arrays are covariant (unsound but practical): `Dog[]` is assignable to `Animal[]`.
 - You can annotate variance on type parameters (`in`, `out`, TS 4.7) for performance/clarity in libraries.
 
-> [!warning] Common pitfalls
-> - Over-engineering types that nobody can read; prefer simple, named helper types and add comments.
-> - `getJson<T>()` returning `T` is a **cast**, not validation. Validate external data (Zod/Valibot) and infer the type from the schema: `type Flight = z.infer<typeof FlightSchema>`.
-> - Distributive conditional types surprising you on unions (wrap in `[T]` to stop it).
-> - Deep recursive types slowing down the checker ("Type instantiation is excessively deep").
-> - `Omit` on union types losing discriminants.
+<Warning>
+**Common pitfalls**
+
+- Over-engineering types that nobody can read; prefer simple, named helper types and add comments.
+- `getJson<T>()` returning `T` is a **cast**, not validation. Validate external data (Zod/Valibot) and infer the type from the schema: `type Flight = z.infer<typeof FlightSchema>`.
+- Distributive conditional types surprising you on unions (wrap in `[T]` to stop it).
+- Deep recursive types slowing down the checker ("Type instantiation is excessively deep").
+- `Omit` on union types losing discriminants.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What are generics and why use them?
-> Type parameters that let code work with many types while preserving the relationship between inputs and outputs (e.g. `first<T>(arr: T[]): T`). They avoid both duplication and `any`.
+<Accordion title="What are generics and why use them?">
+Type parameters that let code work with many types while preserving the relationship between inputs and outputs (e.g. `first<T>(arr: T[]): T`). They avoid both duplication and `any`.
+</Accordion>
 
-> [!question]- What does `K extends keyof T` mean?
-> A constraint: `K` must be one of `T`'s keys. Combined with `T[K]` it lets you type property access generically (`getProp(obj, key)` returns the property's exact type).
+<Accordion title="What does `K extends keyof T` mean?">
+A constraint: `K` must be one of `T`'s keys. Combined with `T[K]` it lets you type property access generically (`getProp(obj, key)` returns the property's exact type).
+</Accordion>
 
-> [!question]- Explain conditional types and `infer`.
-> `T extends U ? X : Y` chooses a type based on assignability, distributing over unions. `infer` declares a type variable inside the `extends` clause to capture part of a type, e.g. `T extends Promise<infer V> ? V : T`.
+<Accordion title="Explain conditional types and `infer`.">
+`T extends U ? X : Y` chooses a type based on assignability, distributing over unions. `infer` declares a type variable inside the `extends` clause to capture part of a type, e.g. `T extends Promise<infer V> ? V : T`.
+</Accordion>
 
-> [!question]- How are `Partial`, `Pick` and `Omit` implemented?
-> `Partial<T> = { [K in keyof T]?: T[K] }`, `Pick<T, K extends keyof T> = { [P in K]: T[P] }`, `Omit<T, K> = Pick<T, Exclude<keyof T, K>>`.
+<Accordion title="How are `Partial`, `Pick` and `Omit` implemented?">
+`Partial<T> = { [K in keyof T]?: T[K] }`, `Pick<T, K extends keyof T> = { [P in K]: T[P] }`, `Omit<T, K> = Pick<T, Exclude<keyof T, K>>`.
+</Accordion>
 
-> [!question]- How would you make only some properties required?
-> `type RequireOnly<T, P extends keyof T> = Pick<T, P> & Partial<Omit<T, P>>`: pick the required keys, make the rest optional, intersect them.
+<Accordion title="How would you make only some properties required?">
+`type RequireOnly<T, P extends keyof T> = Pick<T, P> & Partial<Omit<T, P>>`: pick the required keys, make the rest optional, intersect them.
+</Accordion>
 
-> [!question]- What are template literal types used for?
-> Building string literal unions from other types: event names (`on${Capitalize<E>}`), CSS variables, typed route strings and parsing route params, key remapping in mapped types.
+<Accordion title="What are template literal types used for?">
+Building string literal unions from other types: event names (`on${Capitalize<E>}`), CSS variables, typed route strings and parsing route params, key remapping in mapped types.
+</Accordion>
 
-> [!question]- How do you type Redux hooks?
-> Export `RootState = ReturnType<typeof store.getState>` and `AppDispatch = typeof store.dispatch`, then create `useAppSelector`/`useAppDispatch` with `useSelector.withTypes<RootState>()` and `useDispatch.withTypes<AppDispatch>()` (or the older `TypedUseSelectorHook`).
+<Accordion title="How do you type Redux hooks?">
+Export `RootState = ReturnType<typeof store.getState>` and `AppDispatch = typeof store.dispatch`, then create `useAppSelector`/`useAppDispatch` with `useSelector.withTypes<RootState>()` and `useDispatch.withTypes<AppDispatch>()` (or the older `TypedUseSelectorHook`).
+</Accordion>
 
-> [!question]- What's the difference between `Exclude` and `Omit`?
-> `Exclude` removes members from a **union** type; `Omit` removes **keys** from an object type (implemented with `Pick` + `Exclude<keyof T, K>`).
+<Accordion title="What's the difference between `Exclude` and `Omit`?">
+`Exclude` removes members from a **union** type; `Omit` removes **keys** from an object type (implemented with `Pick` + `Exclude<keyof T, K>`).
+</Accordion>
 
 ## Related
-- [[TypeScript Essentials]]
-- [[TypeScript 5.8 to 7.0]]
-- [[Redux & Redux Toolkit]]
-- [[Component Patterns]]
-- [[Server State - TanStack Query & RTK Query]]
+- [TypeScript Essentials](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%20Essentials)
+- [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0)
+- [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit)
+- [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
+- [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
 
 ## Sources
 - TypeScript Handbook: [Generics](https://www.typescriptlang.org/docs/handbook/2/generics.html), [Keyof](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html), [Conditional types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html), [Mapped types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html), [Template literal types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html), [Utility types](https://www.typescriptlang.org/docs/handbook/utility-types.html)

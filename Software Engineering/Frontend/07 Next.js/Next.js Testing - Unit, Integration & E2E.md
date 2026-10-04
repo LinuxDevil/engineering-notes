@@ -1,12 +1,16 @@
 ---
+title: "Next.js Testing - Unit, Integration & E2E"
 tags: [frontend, frontend/nextjs, frontend/testing, testing]
 aliases: [Next.js Testing, Testing Next.js, Next.js Playwright, Next.js Vitest, Testing Server Actions]
 updated: 2026-09-27
 ---
 # Next.js Testing - Unit, Integration & E2E
 
-> [!tldr] TL;DR
-> Test a Next.js App Router app in three layers. **Vitest + React Testing Library** for Client Components, hooks and pure logic. **Plain function tests** for Server Actions, Route Handlers, `proxy.ts` and your data access layer (mock `next/headers`, `next/cache` and auth; mock the network with **MSW**). **Playwright** against a **production build** (`next build && next start`) for anything that depends on the framework: async Server Components, streaming, caching, redirects, auth flows. The official docs still say Vitest **does not support async Server Components**, so E2E is the recommended way to test them.
+<Note>
+**TL;DR**
+
+Test a Next.js App Router app in three layers. **Vitest + React Testing Library** for Client Components, hooks and pure logic. **Plain function tests** for Server Actions, Route Handlers, `proxy.ts` and your data access layer (mock `next/headers`, `next/cache` and auth; mock the network with **MSW**). **Playwright** against a **production build** (`next build && next start`) for anything that depends on the framework: async Server Components, streaming, caching, redirects, auth flows. The official docs still say Vitest **does not support async Server Components**, so E2E is the recommended way to test them.
+</Note>
 
 ## 1. What to test where
 
@@ -31,7 +35,7 @@ flowchart TB
 | `proxy.ts` | Vitest with `next/experimental/testing/server` | Matcher + rewrite/redirect assertions |
 | Streaming, caching, `revalidate*`, `redirect()` flows, metadata | Playwright E2E | Needs the real server |
 
-General testing principles (trophy, RTL queries, MSW, flakiness) are in [[Frontend Testing]]. This note is the Next-specific part.
+General testing principles (trophy, RTL queries, MSW, flakiness) are in [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing). This note is the Next-specific part.
 
 ## 2. Vitest + React Testing Library setup
 
@@ -87,8 +91,11 @@ vi.mock("next/navigation", async (orig) => ({
 }));
 ```
 
-> [!note] Environment per project
-> Server Actions, Route Handlers and DAL code run in Node in production; test them in `environment: 'node'`, not jsdom (jsdom replaces globals like `Request`, `fetch` behaviour and `TextEncoder` in surprising ways).
+<Note>
+**Environment per project**
+
+Server Actions, Route Handlers and DAL code run in Node in production; test them in `environment: 'node'`, not jsdom (jsdom replaces globals like `Request`, `fetch` behaviour and `TextEncoder` in surprising ways).
+</Note>
 
 ### A Client Component test
 
@@ -218,7 +225,7 @@ describe("addToCart", () => {
 });
 ```
 
-Security tests belong here: every action must reject unauthenticated and unauthorized callers and invalid input, because actions are public POST endpoints ([[Next.js Authentication & Authorization]]).
+Security tests belong here: every action must reject unauthenticated and unauthorized callers and invalid input, because actions are public POST endpoints ([Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization)).
 
 ## 5. Testing Route Handlers as functions
 
@@ -261,7 +268,7 @@ test("maps upstream 404 to 404", async () => {
 });
 ```
 
-Here `getProduct` is real and uses `fetch`; **MSW** intercepts the outgoing request, so serialization and error mapping are tested too. BFF patterns for these handlers are in [[Next.js Route Handlers & Backend-for-Frontend]].
+Here `getProduct` is real and uses `fetch`; **MSW** intercepts the outgoing request, so serialization and error mapping are tested too. BFF patterns for these handlers are in [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend).
 
 ## 6. Testing `proxy.ts`
 
@@ -442,7 +449,7 @@ test("product card visual", async ({ page }) => {
 
 - Baselines depend on OS, fonts and browser build: generate and compare them **in the same Docker image** (`mcr.microsoft.com/playwright:v<your version>-noble`), never "my Mac vs Linux CI".
 - Update intentionally: `npx playwright test --update-snapshots`, reviewed in the PR.
-- Prefer **aria snapshots** (`toMatchAriaSnapshot`) for structure and a few screenshot tests for key components ([[Frontend Testing]]).
+- Prefer **aria snapshots** (`toMatchAriaSnapshot`) for structure and a few screenshot tests for key components ([Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)).
 
 ### Trace viewer
 
@@ -537,20 +544,23 @@ pipeline {
 }
 ```
 
-More on pipeline structure in [[Jenkins - Pipelines as Code]] and [[CI-CD Pipelines]]. Running the same Playwright suite **on a schedule against production** (synthetic monitoring) is covered in [[Playwright Automation as a Cron Job]].
+More on pipeline structure in [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) and [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines). Running the same Playwright suite **on a schedule against production** (synthetic monitoring) is covered in [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job).
 
 ## 10. Pitfalls
 
-> [!warning] Common pitfalls
-> - Running E2E against `next dev`: slow first hits, no prefetching, different caching. Use `next build && next start`.
-> - Trying to render async Server Component trees with RTL and fighting errors; test the DAL + E2E instead.
-> - Testing Server Actions only through the UI; the auth and validation branches are easier and more complete as function tests.
-> - Mocking `fetch` globally instead of using MSW; you miss serialization and error handling.
-> - `page.route()` to mock backend calls that the **Next server** makes: the browser never sees them.
-> - Shared test accounts mutated by parallel workers (flaky carts, orders).
-> - Screenshot baselines generated on a different OS than CI.
-> - Forgetting that `redirect()` and `notFound()` throw: code after them never runs, and tests must expect a throw.
-> - Leaving `playwright/.auth/*.json` in git (it contains session cookies).
+<Warning>
+**Common pitfalls**
+
+- Running E2E against `next dev`: slow first hits, no prefetching, different caching. Use `next build && next start`.
+- Trying to render async Server Component trees with RTL and fighting errors; test the DAL + E2E instead.
+- Testing Server Actions only through the UI; the auth and validation branches are easier and more complete as function tests.
+- Mocking `fetch` globally instead of using MSW; you miss serialization and error handling.
+- `page.route()` to mock backend calls that the **Next server** makes: the browser never sees them.
+- Shared test accounts mutated by parallel workers (flaky carts, orders).
+- Screenshot baselines generated on a different OS than CI.
+- Forgetting that `redirect()` and `notFound()` throw: code after them never runs, and tests must expect a throw.
+- Leaving `playwright/.auth/*.json` in git (it contains session cookies).
+</Warning>
 
 ## Senior perspective
 
@@ -561,48 +571,58 @@ More on pipeline structure in [[Jenkins - Pipelines as Code]] and [[CI-CD Pipeli
 - **Security testing**: add tests that call Server Actions and Route Handlers without a session or with another user's IDs (IDOR). The Dec 2025 RSC CVEs showed that this surface is public.
 - **Artifacts and ownership**: traces, videos and JUnit reports on every failure; route test failures to owning teams via CODEOWNERS.
 
-> [!info]+ 🆕 2025–2026
-> - **Next 16.0 (2025-10-21)**: `middleware` → `proxy` (the 15.1 testing helpers are now `unstable_doesProxyMatch` etc.); async-only request APIs (tests must pass `params` as Promises); `RouteContext`/`PageProps` type helpers via `next typegen` (15.5).
-> - **Next 16.3 (2026-08-03)**: `@next/playwright` `instant()` helper for Instant Navigation regression tests; the docs (16.3.6) still state Vitest doesn't support async Server Components.
-> - **Playwright 1.56 (Oct 2025)**: Test Agents (planner, generator, healer); **1.57** switched to Chrome for Testing builds; **1.63 (Sept 2026)**: test locks.
-> - **Vitest 4 (2025-10-22)**: Browser Mode stable, `toMatchScreenshot`; **Vitest 5 (2026-09-03)**: un-awaited assertions fail, `clearMocks` on by default. Details in [[Frontend Testing]].
+<Info>
+**🆕 2025–2026**
+
+- **Next 16.0 (2025-10-21)**: `middleware` → `proxy` (the 15.1 testing helpers are now `unstable_doesProxyMatch` etc.); async-only request APIs (tests must pass `params` as Promises); `RouteContext`/`PageProps` type helpers via `next typegen` (15.5).
+- **Next 16.3 (2026-08-03)**: `@next/playwright` `instant()` helper for Instant Navigation regression tests; the docs (16.3.6) still state Vitest doesn't support async Server Components.
+- **Playwright 1.56 (Oct 2025)**: Test Agents (planner, generator, healer); **1.57** switched to Chrome for Testing builds; **1.63 (Sept 2026)**: test locks.
+- **Vitest 4 (2025-10-22)**: Browser Mode stable, `toMatchScreenshot`; **Vitest 5 (2026-09-03)**: un-awaited assertions fail, `clearMocks` on by default. Details in [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you test async Server Components in Next.js?
-> The official docs say Vitest/Jest don't support async Server Components, so test them end to end with Playwright against a production build. Keep them thin: unit-test the data functions they call (with MSW) and the synchronous presentational components they render. Awaiting the component manually works only for trivial trees.
+<Accordion title="How do you test async Server Components in Next.js?">
+The official docs say Vitest/Jest don't support async Server Components, so test them end to end with Playwright against a production build. Keep them thin: unit-test the data functions they call (with MSW) and the synchronous presentational components they render. Awaiting the component manually works only for trivial trees.
+</Accordion>
 
-> [!question]- How do you unit test a Server Action?
-> Import and call it like any async function in a Node test environment. Mock auth, `next/headers`, `next/cache` (`updateTag`, `revalidateTag`) and `next/navigation` (`redirect` throws), and mock the network with MSW or the DAL with `vi.mock`. Assert on the returned state, the side effects (DB/API calls, invalidated tags) and the unauthorized/invalid-input branches.
+<Accordion title="How do you unit test a Server Action?">
+Import and call it like any async function in a Node test environment. Mock auth, `next/headers`, `next/cache` (`updateTag`, `revalidateTag`) and `next/navigation` (`redirect` throws), and mock the network with MSW or the DAL with `vi.mock`. Assert on the returned state, the side effects (DB/API calls, invalidated tags) and the unauthorized/invalid-input branches.
+</Accordion>
 
-> [!question]- Why should Playwright run against `next build && next start` rather than `next dev`?
-> Dev mode compiles routes on demand, disables prefetching, adds dev-only behaviour and is much slower, so timings, caching and navigation differ from production. Testing the production build catches build-only issues and gives stable timings.
+<Accordion title="Why should Playwright run against `next build && next start` rather than `next dev`?">
+Dev mode compiles routes on demand, disables prefetching, adds dev-only behaviour and is much slower, so timings, caching and navigation differ from production. Testing the production build catches build-only issues and gives stable timings.
+</Accordion>
 
-> [!question]- How do you avoid logging in for every E2E test?
-> Use a Playwright setup project that logs in once and saves `storageState` to a file; other projects depend on it and load that state. Use separate accounts per worker if tests mutate account data, and never commit the state file.
+<Accordion title="How do you avoid logging in for every E2E test?">
+Use a Playwright setup project that logs in once and saves `storageState` to a file; other projects depend on it and load that state. Use separate accounts per worker if tests mutate account data, and never commit the state file.
+</Accordion>
 
-> [!question]- You need to mock a backend API that your Server Components call during E2E. `page.route()` doesn't work. Why, and what do you do?
-> `page.route()` intercepts browser requests only; Server Components fetch from the Next server process. Point the server's backend URL env var to a mock server (MSW-based HTTP server, WireMock, Prism) started via Playwright's `webServer`, or run against a seeded test backend.
+<Accordion title="You need to mock a backend API that your Server Components call during E2E. `page.route()` doesn't work. Why, and what do you do?">
+`page.route()` intercepts browser requests only; Server Components fetch from the Next server process. Point the server's backend URL env var to a mock server (MSW-based HTTP server, WireMock, Prism) started via Playwright's `webServer`, or run against a seeded test backend.
+</Accordion>
 
-> [!question]- How do you make screenshot tests stable?
-> Generate and compare baselines in the same Docker image and browser version, disable animations, mask dynamic regions, set a small diff threshold, wait for fonts and network idle states via web-first assertions, and review baseline updates in PRs. Use aria snapshots for structure to reduce the number of pixel tests.
+<Accordion title="How do you make screenshot tests stable?">
+Generate and compare baselines in the same Docker image and browser version, disable animations, mask dynamic regions, set a small diff threshold, wait for fonts and network idle states via web-first assertions, and review baseline updates in PRs. Use aria snapshots for structure to reduce the number of pixel tests.
+</Accordion>
 
-> [!question]- How would you test that a route stays instant after refactors in Next 16.3?
-> Enable Instant Navigations (`cacheComponents` + `partialPrefetching`) and write Playwright tests with `@next/playwright`'s `instant()` helper, asserting which content is visible during navigation before any network response. A new `cookies()` call in a shared component or a moved Suspense boundary makes the test fail.
+<Accordion title="How would you test that a route stays instant after refactors in Next 16.3?">
+Enable Instant Navigations (`cacheComponents` + `partialPrefetching`) and write Playwright tests with `@next/playwright`'s `instant()` helper, asserting which content is visible during navigation before any network response. A new `cookies()` call in a shared component or a moved Suspense boundary makes the test fail.
+</Accordion>
 
 ## Related
-- [[Next.js Index]]
-- [[Frontend Testing]]
-- [[Next.js Route Handlers & Backend-for-Frontend]]
-- [[Next.js Data Fetching & Mutations Patterns]]
-- [[Next.js Authentication & Authorization]]
-- [[Next.js Error Handling, Loading & Not-Found]]
-- [[Next.js Performance Optimization]]
-- [[Next.js Self-Hosting & Deployment Options]]
-- [[Playwright Automation as a Cron Job]]
-- [[Jenkins - Pipelines as Code]]
-- [[CI-CD Pipelines]]
-- [[Frontend Home]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
+- [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)
+- [Next.js Data Fetching & Mutations Patterns](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Data%20Fetching%20%26%20Mutations%20Patterns)
+- [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization)
+- [Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found)
+- [Next.js Performance Optimization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Performance%20Optimization)
+- [Next.js Self-Hosting & Deployment Options](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Self-Hosting%20%26%20Deployment%20Options)
+- [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)
+- [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)
+- [Frontend Home](/Software%20Engineering/Frontend/Frontend%20Home)
 
 ## Sources
 - Next.js docs: [Testing overview](https://nextjs.org/docs/app/guides/testing), [Vitest](https://nextjs.org/docs/app/guides/testing/vitest), [Jest](https://nextjs.org/docs/app/guides/testing/jest), [Playwright](https://nextjs.org/docs/app/guides/testing/playwright), [proxy.js unit testing](https://nextjs.org/docs/app/api-reference/file-conventions/proxy#unit-testing-experimental), [Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route), [Next.js 16.3 blog (`instant()`)](https://nextjs.org/blog/next-16-3)

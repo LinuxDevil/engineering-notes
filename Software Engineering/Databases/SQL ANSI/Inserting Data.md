@@ -1,14 +1,18 @@
 ---
+title: "Inserting Data"
 tags: [databases, databases/sql]
 aliases: [INSERT, INSERT SELECT, Upsert, ON CONFLICT, MERGE, RETURNING, CREATE TABLE AS]
 updated: 2026-09-27
 ---
 # Inserting Data
 
-> [!tldr] TL;DR
-> `INSERT INTO t (cols) VALUES (...)` adds rows; always list the columns. `INSERT ... SELECT` copies query results into an existing table, `CREATE TABLE ... AS SELECT` creates a new one. In practice you'll also need **upserts** (`INSERT ... ON CONFLICT` in PostgreSQL/SQLite, `ON DUPLICATE KEY UPDATE` in MySQL, standard `MERGE`) and **`RETURNING`** to get generated IDs back without a second query.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 15 · Prev: [[Combining Queries]] · Next: [[Updating and Deleting Data]]
+`INSERT INTO t (cols) VALUES (...)` adds rows; always list the columns. `INSERT ... SELECT` copies query results into an existing table, `CREATE TABLE ... AS SELECT` creates a new one. In practice you'll also need **upserts** (`INSERT ... ON CONFLICT` in PostgreSQL/SQLite, `ON DUPLICATE KEY UPDATE` in MySQL, standard `MERGE`) and **`RETURNING`** to get generated IDs back without a second query.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 15 · Prev: [Combining Queries](/Software%20Engineering/Databases/SQL%20ANSI/Combining%20Queries) · Next: [Updating and Deleting Data](/Software%20Engineering/Databases/SQL%20ANSI/Updating%20and%20Deleting%20Data)
 
 ## What is `INSERT`
 
@@ -44,8 +48,11 @@ VALUES(1000000006,
 
 **Analysis:** inserts a new customer. `VALUES` supplies a value for each listed column, **in the order of the column list**. Columns with no value (`cust_contact`, `cust_email`) get `NULL`, assuming the table allows it.
 
-> [!warning] Always name the columns
-> `INSERT INTO Customers VALUES (...)` without a column list also works, but then values must match the table's column order exactly. It breaks the moment someone adds or reorders a column. Always list the columns.
+<Warning>
+**Always name the columns**
+
+`INSERT INTO Customers VALUES (...)` without a column list also works, but then values must match the table's column order exactly. It breaks the moment someone adds or reorders a column. Always list the columns.
+</Warning>
 
 ## Inserting partial rows
 
@@ -121,8 +128,9 @@ CREATE TABLE CustCopy AS SELECT * FROM Customers;
 
 **Analysis:** creates `CustCopy` with every column of `Customers` and copies all rows. List columns instead of `*` to copy a subset. SQL Server uses `SELECT * INTO CustCopy FROM Customers;`.
 
-> [!note]
-> CTAS copies columns and data, but **not** primary keys, indexes, defaults or foreign keys. In PostgreSQL, `CREATE TABLE t (LIKE Customers INCLUDING ALL)` copies the structure.
+<Note>
+CTAS copies columns and data, but **not** primary keys, indexes, defaults or foreign keys. In PostgreSQL, `CREATE TABLE t (LIKE Customers INCLUDING ALL)` copies the structure.
+</Note>
 
 ## Getting generated values back: `RETURNING`
 
@@ -171,46 +179,54 @@ WHEN NOT MATCHED THEN INSERT (prod_id, vend_id, prod_name, prod_price)
 
 `MERGE` syncs a table from a source in one statement. In PostgreSQL, prefer `ON CONFLICT` for concurrent single-row upserts: `MERGE` doesn't use the unique index as an arbiter and can fail with a unique violation if another session inserts the same key at the same moment.
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)** added `RETURNING` to `MERGE` (with `merge_action()` telling you whether each row was inserted, updated or deleted).
-> - **PostgreSQL 18 (2025-09-25)**: `RETURNING` can reference both `OLD` and `NEW` values in `INSERT`, `UPDATE`, `DELETE` and `MERGE`. For an upsert that means you can see what the row looked like before the update:
->   ```sql
->   INSERT INTO Products (prod_id, vend_id, prod_name, prod_price)
->   VALUES ('TOY01', 'DLL01', 'Yo-yo', 3.49)
->   ON CONFLICT (prod_id) DO UPDATE SET prod_price = EXCLUDED.prod_price
->   RETURNING old.prod_price AS before, new.prod_price AS after;  -- old.* is NULL for a fresh insert
->   ```
-> - **PostgreSQL 18** also added `uuidv7()` for time-ordered UUID keys (see [[Creating and Manipulating Tables]]).
-> - **PostgreSQL 19 (beta, not yet released; GA expected around October 2026)**: the v19 release notes list `INSERT ... ON CONFLICT DO SELECT ... RETURNING`, which returns the **existing** conflicting row (optionally locked `FOR UPDATE`/`SHARE`) instead of doing nothing. This is the "get or create" pattern in one statement. Check the final release notes before relying on it.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)** added `RETURNING` to `MERGE` (with `merge_action()` telling you whether each row was inserted, updated or deleted).
+- **PostgreSQL 18 (2025-09-25)**: `RETURNING` can reference both `OLD` and `NEW` values in `INSERT`, `UPDATE`, `DELETE` and `MERGE`. For an upsert that means you can see what the row looked like before the update:
+  ```sql
+  INSERT INTO Products (prod_id, vend_id, prod_name, prod_price)
+  VALUES ('TOY01', 'DLL01', 'Yo-yo', 3.49)
+  ON CONFLICT (prod_id) DO UPDATE SET prod_price = EXCLUDED.prod_price
+  RETURNING old.prod_price AS before, new.prod_price AS after;  -- old.* is NULL for a fresh insert
+  ```
+- **PostgreSQL 18** also added `uuidv7()` for time-ordered UUID keys (see [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables)).
+- **PostgreSQL 19 (beta, not yet released; GA expected around October 2026)**: the v19 release notes list `INSERT ... ON CONFLICT DO SELECT ... RETURNING`, which returns the **existing** conflicting row (optionally locked `FOR UPDATE`/`SHARE`) instead of doing nothing. This is the "get or create" pattern in one statement. Check the final release notes before relying on it.
+</Info>
 
 ## Beyond the book / Senior perspective
 
 - **Identity columns over `SERIAL`.** Use `id BIGINT GENERATED ALWAYS AS IDENTITY` (standard, PostgreSQL 10+). `SERIAL` is a legacy shorthand for a sequence with looser ownership and permissions. Use `bigint`: `int` IDs overflowing at 2.1 billion is a real outage story.
 - **Batch your inserts.** Multi-row `VALUES`, `COPY`, or driver batch APIs. Thousands of single-row autocommit inserts each pay a round trip and a WAL flush.
 - **Idempotency.** Retried requests (network timeouts, queue redelivery) should not create duplicates. Use a unique key (e.g. an idempotency key column) plus `ON CONFLICT DO NOTHING`.
-- **Parameters, always.** Values from users go in as bind parameters, never concatenated ([[Advanced Filtering Data]]).
+- **Parameters, always.** Values from users go in as bind parameters, never concatenated ([Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data)).
 - **Big `INSERT ... SELECT`s** hold locks and generate lots of WAL/redo in one transaction. Chunk them for large migrations.
 
 ## Interview questions
 
-> [!question]- Why should INSERT always specify a column list?
-> Without it, values map to the current physical column order, so schema changes (added or reordered columns) break the statement or put data in the wrong columns.
+<Accordion title="Why should INSERT always specify a column list?">
+Without it, values map to the current physical column order, so schema changes (added or reordered columns) break the statement or put data in the wrong columns.
+</Accordion>
 
-> [!question]- How do you implement an upsert safely?
-> A single atomic statement backed by a unique constraint: `INSERT ... ON CONFLICT (key) DO UPDATE` (PostgreSQL/SQLite), `ON DUPLICATE KEY UPDATE` (MySQL), or `MERGE` (SQL Server/Oracle, with care about concurrency). Not "select then insert" in app code, which races.
+<Accordion title="How do you implement an upsert safely?">
+A single atomic statement backed by a unique constraint: `INSERT ... ON CONFLICT (key) DO UPDATE` (PostgreSQL/SQLite), `ON DUPLICATE KEY UPDATE` (MySQL), or `MERGE` (SQL Server/Oracle, with care about concurrency). Not "select then insert" in app code, which races.
+</Accordion>
 
-> [!question]- How do you get the ID of the row you just inserted?
-> `RETURNING id` (PostgreSQL, SQLite, MariaDB), `OUTPUT inserted.id` (SQL Server), `LAST_INSERT_ID()` (MySQL), or the driver's generated-keys API. Never `SELECT MAX(id)`.
+<Accordion title="How do you get the ID of the row you just inserted?">
+`RETURNING id` (PostgreSQL, SQLite, MariaDB), `OUTPUT inserted.id` (SQL Server), `LAST_INSERT_ID()` (MySQL), or the driver's generated-keys API. Never `SELECT MAX(id)`.
+</Accordion>
 
-> [!question]- INSERT SELECT vs CREATE TABLE AS?
-> `INSERT SELECT` appends to an existing table. `CREATE TABLE AS SELECT` creates a new table from the query; it copies data and column types, not constraints or indexes.
+<Accordion title="INSERT SELECT vs CREATE TABLE AS?">
+`INSERT SELECT` appends to an existing table. `CREATE TABLE AS SELECT` creates a new table from the query; it copies data and column types, not constraints or indexes.
+</Accordion>
 
-> [!question]- SERIAL vs IDENTITY in PostgreSQL?
-> Both use a sequence. `IDENTITY` is SQL-standard, ties the sequence tightly to the column, and with `GENERATED ALWAYS` prevents accidental manual values. Prefer it for new tables.
+<Accordion title="SERIAL vs IDENTITY in PostgreSQL?">
+Both use a sequence. `IDENTITY` is SQL-standard, ties the sequence tightly to the column, and with `GENERATED ALWAYS` prevents accidental manual values. Prefer it for new tables.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Updating and Deleting Data]] · [[Creating and Manipulating Tables]] · [[Managing Transaction Processing]] · [[Transactions & ACID]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Updating and Deleting Data](/Software%20Engineering/Databases/SQL%20ANSI/Updating%20and%20Deleting%20Data) · [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables) · [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 15 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Flight Search & Booking"
 tags: [frontend, frontend/system-design, interview, case-study]
 aliases: [Flight Search, Flight Booking, Design a flight search, OTA flights design]
 updated: 2026-09-27
 ---
 # Case Study - Flight Search & Booking
 
-> [!tldr] TL;DR
-> Design the flights part of an online travel agency (OTA): a search form, a results page fed by **many slow suppliers**, filters/sort, fare details, passenger details, **seat selection**, checkout with **3-D Secure payment**, and a confirmation page, in **Arabic (RTL) and English** with **multiple currencies**, fast on mid-range phones. This is the question where 3 years on a flights product is your advantage: use real stories (price changes, supplier timeouts, RTL bugs, A/B tests) for every deep dive.
+<Note>
+**TL;DR**
+
+Design the flights part of an online travel agency (OTA): a search form, a results page fed by **many slow suppliers**, filters/sort, fare details, passenger details, **seat selection**, checkout with **3-D Secure payment**, and a confirmation page, in **Arabic (RTL) and English** with **multiple currencies**, fast on mid-range phones. This is the question where 3 years on a flights product is your advantage: use real stories (price changes, supplier timeouts, RTL bugs, A/B tests) for every deep dive.
+</Note>
 
 ## R: Requirements
 
@@ -85,7 +89,7 @@ Search, booking and post-booking are often owned by different teams:
 - Split by **business domain and page**, not by widget: `search-app` (home, results), `booking-app` (pax → pay → confirm), `account-app` (manage booking). Cross them with normal navigation, passing state via the URL and a server-side **booking session id**, not shared in-memory stores.
 - Shared: design system package, auth/session SDK, analytics SDK, i18n/currency formatter, a thin app shell (header/footer).
 - Composition options: route-level split behind a reverse proxy (simplest, most robust), Module Federation for shared header/widgets, or build-time packages. Keep one version of React per page.
-- Risks: duplicate dependencies (bundle size), inconsistent UX, cross-app analytics. See [[Micro-frontends & Module Federation]] and [[Building Micro-frontends with React]].
+- Risks: duplicate dependencies (bundle size), inconsistent UX, cross-app analytics. See [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) and [Building Micro-frontends with React](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro-frontends%20with%20React).
 
 ## D: Data model
 
@@ -145,7 +149,7 @@ Everything needed to reproduce the search lives in the URL, so results are share
 ```
 - Search params → part of the URL path/query (canonical, validated server-side).
 - Filters/sort → query params updated with `replaceState` (don't spam history) or pushed when users expect Back to undo them; debounce slider changes.
-- Transient UI (drawer open, hovered card) stays in component state. See [[URL as State]].
+- Transient UI (drawer open, hovered card) stays in component state. See [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State).
 
 ## I: Interface (API)
 
@@ -178,31 +182,34 @@ A good answer: **polling with adaptive intervals** (server hints `pollAfterMs`, 
 - Show a progress bar ("Searching 9 airlines... 5 done") and let users filter/sort partial results.
 - Cancel polling with `AbortController` when the user edits the search or leaves the page; stop polling when the tab is hidden.
 
-> [!example] Poller with abort and backoff
-> ```ts
-> async function pollResults(searchId: string, onBatch: (b: Batch) => void, signal: AbortSignal) {
->   let version = 0, delay = 800;
->   const started = Date.now();
->   while (!signal.aborted) {
->     const res = await fetch(`/api/flights/searches/${searchId}/results?since=${version}`, { signal });
->     if (res.status === 410) throw new SearchExpiredError();
->     const batch: Batch = await res.json();
->     onBatch(batch);
->     version = batch.version;
->     if (batch.status === 'complete' || Date.now() - started > 45_000) return;
->     delay = batch.pollAfterMs ?? Math.min(delay * 1.5, 4000);
->     await new Promise(r => setTimeout(r, delay));
->   }
-> }
->
-> // React
-> useEffect(() => {
->   const ctrl = new AbortController();
->   pollResults(searchId, batch => dispatch(resultsReceived(batch)), ctrl.signal)
->     .catch(e => { if (e.name !== 'AbortError') dispatch(searchFailed(e)); });
->   return () => ctrl.abort();                 // new search or unmount
-> }, [searchId]);
-> ```
+<Info>
+**Poller with abort and backoff**
+
+```ts
+async function pollResults(searchId: string, onBatch: (b: Batch) => void, signal: AbortSignal) {
+  let version = 0, delay = 800;
+  const started = Date.now();
+  while (!signal.aborted) {
+    const res = await fetch(`/api/flights/searches/${searchId}/results?since=${version}`, { signal });
+    if (res.status === 410) throw new SearchExpiredError();
+    const batch: Batch = await res.json();
+    onBatch(batch);
+    version = batch.version;
+    if (batch.status === 'complete' || Date.now() - started > 45_000) return;
+    delay = batch.pollAfterMs ?? Math.min(delay * 1.5, 4000);
+    await new Promise(r => setTimeout(r, delay));
+  }
+}
+
+// React
+useEffect(() => {
+  const ctrl = new AbortController();
+  pollResults(searchId, batch => dispatch(resultsReceived(batch)), ctrl.signal)
+    .catch(e => { if (e.name !== 'AbortError') dispatch(searchFailed(e)); });
+  return () => ctrl.abort();                 // new search or unmount
+}, [searchId]);
+```
+</Info>
 
 ### Pricing, booking and payment
 ```http
@@ -218,7 +225,7 @@ GET  /api/bookings/:id                  -> { state: "CONFIRMED" | "TICKETING" | 
 ## O: Optimizations & deep dives
 
 ### 1. Search form
-- **Airport/city picker** = the [[Case Study - Autocomplete]] component: client-side list for popular airports in the market + server search for the long tail; match on city, airport name, IATA code, and Arabic names/transliterations ("دبي", "Dubai", "DXB"); group "All airports in London (LON)". Recent searches on focus.
+- **Airport/city picker** = the [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete) component: client-side list for popular airports in the market + server search for the long tail; match on city, airport name, IATA code, and Arabic names/transliterations ("دبي", "Dubai", "DXB"); group "All airports in London (LON)". Recent searches on focus.
 - **Swap button** for origin/destination with an accessible label.
 - **Date picker**: range selection for round trip; keyboard grid navigation (WAI-ARIA date picker dialog pattern); disable past dates; show both months on desktop, full-screen sheet on mobile; week starts on Saturday/Sunday per locale; month names via `Intl.DateTimeFormat`; mirror arrows in RTL. Optional **price calendar** (cheapest fare per day) from a cached endpoint, loaded after the picker opens.
 - **Passenger selector**: steppers with rules (infants ≤ adults, max 9 seats), explained inline.
@@ -229,7 +236,7 @@ GET  /api/bookings/:id                  -> { state: "CONFIRMED" | "TICKETING" | 
 - **Client-side filtering** of the full normalized set with memoized selectors (`createSelector`) is fast for ~1–3k itineraries and allows instant filter feedback with counts ("Non-stop (12) from AED 1,240"). If the set is huge, send filters to the server.
 - Use `useDeferredValue`/`startTransition` for filter changes so the slider stays responsive (INP) while the list re-renders.
 - **Sort** stable and explainable ("Best" = weighted price + duration + stops; show a tooltip).
-- **Pagination**: render the first 20–30 cards, "Show more" or virtualized infinite scroll ([[Virtualization & Large Lists]]). Keep the scroll position when returning from fare details (store it or render details in a drawer so the list never unmounts).
+- **Pagination**: render the first 20–30 cards, "Show more" or virtualized infinite scroll ([Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)). Keep the scroll position when returning from fare details (store it or render details in a drawer so the list never unmounts).
 - **Empty state after filters**: "No results with these filters. Remove 'Non-stop'?" with one-click removal.
 - **Date strip** (±3 days prices) from cache to encourage flexible dates.
 
@@ -284,28 +291,31 @@ stateDiagram-v2
   Confirmed --> [*]
 ```
 
-> [!example] Reducer sketch
-> ```ts
-> type CheckoutState =
->   | { tag: 'pricing' }
->   | { tag: 'priceChanged'; oldTotal: Money; newTotal: Money }
->   | { tag: 'details' } | { tag: 'extras' } | { tag: 'payment'; error?: string }
->   | { tag: 'authorizing' } | { tag: 'threeDS'; url: string }
->   | { tag: 'ticketing' } | { tag: 'confirmed'; pnr: string }
->   | { tag: 'failed'; reason: string };
->
-> function reducer(s: CheckoutState, e: CheckoutEvent): CheckoutState {
->   switch (s.tag) {
->     case 'authorizing':
->       if (e.type === 'REQUIRES_ACTION') return { tag: 'threeDS', url: e.url };
->       if (e.type === 'AUTHORIZED') return { tag: 'ticketing' };
->       if (e.type === 'DECLINED') return { tag: 'payment', error: e.message };
->       return s;
->     // ...each state only accepts the events that make sense
->     default: return s;
->   }
-> }
-> ```
+<Info>
+**Reducer sketch**
+
+```ts
+type CheckoutState =
+  | { tag: 'pricing' }
+  | { tag: 'priceChanged'; oldTotal: Money; newTotal: Money }
+  | { tag: 'details' } | { tag: 'extras' } | { tag: 'payment'; error?: string }
+  | { tag: 'authorizing' } | { tag: 'threeDS'; url: string }
+  | { tag: 'ticketing' } | { tag: 'confirmed'; pnr: string }
+  | { tag: 'failed'; reason: string };
+
+function reducer(s: CheckoutState, e: CheckoutEvent): CheckoutState {
+  switch (s.tag) {
+    case 'authorizing':
+      if (e.type === 'REQUIRES_ACTION') return { tag: 'threeDS', url: e.url };
+      if (e.type === 'AUTHORIZED') return { tag: 'ticketing' };
+      if (e.type === 'DECLINED') return { tag: 'payment', error: e.message };
+      return s;
+    // ...each state only accepts the events that make sense
+    default: return s;
+  }
+}
+```
+</Info>
 
 Funnel details:
 - **Passenger form**: names exactly as in passport (Latin characters for most airlines even when the UI is Arabic, with a clear hint), date of birth checks against pax type at travel date, passport fields only when the route needs them, saved travellers for logged-in users, autofill attributes (`autocomplete="given-name"`, `bday`, `email`, `tel`).
@@ -332,7 +342,7 @@ Funnel details:
 | Ticketing slow | "Booking received, confirmation email within X minutes"; confirmation page polls |
 | Offline mid-funnel | Offline banner; block submit; never lose entered data |
 
-Mechanics: request timeouts with `AbortSignal.timeout(ms)`, retries with exponential backoff + jitter only for idempotent requests, error boundaries per page section so one broken widget (e.g., the price calendar) doesn't blank the page. See [[Error Handling]].
+Mechanics: request timeouts with `AbortSignal.timeout(ms)`, retries with exponential backoff + jitter only for idempotent requests, error boundaries per page section so one broken widget (e.g., the price calendar) doesn't blank the page. See [Error Handling](/Software%20Engineering/Frontend/01%20JavaScript/Error%20Handling).
 
 ### 8. i18n, RTL (Arabic) and currency
 - **Direction**: `<html lang="ar" dir="rtl">`. Use **logical CSS properties** (`margin-inline-start`, `padding-inline`, `inset-inline-end`, `text-align: start`) so one stylesheet serves both directions. Mirror directional icons (arrows, "next" chevrons) but not logos, clocks, or the plane on a timeline if it depicts geography consistently; decide and document.
@@ -355,13 +365,13 @@ Mechanics: request timeouts with `AbortSignal.timeout(ms)`, retries with exponen
 - Results: skeleton cards with fixed height (no CLS), virtualized list, memoized cards, filters in `startTransition`.
 - Prefetch the results bundle when the search form is focused/filled; start the search request as soon as the user submits (or even speculatively on the last field change when confident).
 - Third-party scripts (tag managers, A/B tools, chat) are often the biggest INP/LCP problem on travel sites: load them `async`/deferred, audit them, and consider server-side experiments to avoid flicker.
-- Measure with RUM (`web-vitals`) segmented by device class and market, not only Lighthouse. See [[Core Web Vitals]] and [[Performance Optimization Playbook]].
+- Measure with RUM (`web-vitals`) segmented by device class and market, not only Lighthouse. See [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals) and [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook).
 
 ### 10. SSR / SEO for landing pages
 - Thousands of route pages (`/en/flights/dubai-to-cairo`, `/ar/flights/...`): generate at build or on demand with ISR, cache at the CDN, revalidate prices periodically.
 - Content: route facts (airlines, flight duration, cheapest month), FAQ, a pre-filled search form, internal links to nearby routes.
 - Technical SEO: `hreflang` alternates for ar/en, canonical URLs, localized slugs, structured data (FAQPage, BreadcrumbList), fast LCP, `noindex` on search results pages, sitemap per locale.
-- See [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]] and [[Next.js Rendering & Caching]].
+- See [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands) and [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 
 ### 11. Analytics and experiments
 - Funnel events with a consistent schema: `search_submitted`, `results_viewed` (with count, time-to-first-result), `filter_applied`, `itinerary_selected`, `price_changed_shown`, `pax_submitted`, `payment_attempted`, `3ds_challenge`, `booking_confirmed`.
@@ -373,7 +383,7 @@ Mechanics: request timeouts with `AbortSignal.timeout(ms)`, retries with exponen
 - CSP, no inline scripts, PSP iframes for card data, strict third-party script control on payment pages.
 - Bot protection on search (scrapers hurt look-to-book ratios): rate limits and challenge on the server, not client tricks.
 - Don't put PII (names, passport numbers) in URLs or analytics.
-- See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] and [[Authentication & Token Storage]].
+- See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) and [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).
 
 ### 13. Accessibility checklist for the flow
 - Search form fully keyboard operable (combobox, date grid, steppers), errors announced.
@@ -381,42 +391,52 @@ Mechanics: request timeouts with `AbortSignal.timeout(ms)`, retries with exponen
 - Itinerary cards: a heading per card, times with full text for screen readers ("Departs 06:40 from Dubai, arrives 10:15 in Cairo, non-stop, 3 hours 35 minutes").
 - Seat map with list alternative; payment iframe titled; focus moved to the price-change modal and returned after.
 
-> [!warning] Common pitfalls (and good war stories to tell)
-> - Reordering results while suppliers stream in: users click the wrong flight.
-> - Computing prices on the client (floating point, rounding per pax) and showing a total the server does not charge.
-> - Losing state on the 3DS redirect because it lived only in memory.
-> - Treating a payment timeout as a failure and letting the user pay twice.
-> - Broken bidi rendering of flight numbers and times in Arabic.
-> - A/B test scripts causing flicker and hurting LCP/CLS.
-> - Search results pages indexed by Google (thin/duplicate content).
+<Warning>
+**Common pitfalls (and good war stories to tell)**
+
+- Reordering results while suppliers stream in: users click the wrong flight.
+- Computing prices on the client (floating point, rounding per pax) and showing a total the server does not charge.
+- Losing state on the 3DS redirect because it lived only in memory.
+- Treating a payment timeout as a failure and letting the user pay twice.
+- Broken bidi rendering of flight numbers and times in Arabic.
+- A/B test scripts causing flicker and hurting LCP/CLS.
+- Search results pages indexed by Google (thin/duplicate content).
+</Warning>
 
 ## Interview questions
-> [!question]- Suppliers take 1–30 seconds. How do you show results?
-> Start an async search (`POST` → `searchId`), then poll with a version cursor (or subscribe via SSE) and merge batches into a normalized store. Show a progress indicator, let users filter partial results, and avoid reshuffling what the user is looking at. Abort polling on new search/unmount and stop on complete or timeout.
+<Accordion title="Suppliers take 1–30 seconds. How do you show results?">
+Start an async search (`POST` → `searchId`), then poll with a version cursor (or subscribe via SSE) and merge batches into a normalized store. Show a progress indicator, let users filter partial results, and avoid reshuffling what the user is looking at. Abort polling on new search/unmount and stop on complete or timeout.
+</Accordion>
 
-> [!question]- Where does the search state live?
-> In the URL: search params in the path/query, filters and sort as query params (replaceState for rapid changes). That makes results shareable and refresh/back-safe. Results themselves live in a normalized client store keyed by `searchId`.
+<Accordion title="Where does the search state live?">
+In the URL: search params in the path/query, filters and sort as query params (replaceState for rapid changes). That makes results shareable and refresh/back-safe. Results themselves live in a normalized client store keyed by `searchId`.
+</Accordion>
 
-> [!question]- The price changes between results and payment. What happens?
-> Re-price on selection and before payment; the server holds the confirmed total. If it changed, show a modal with old and new price and let the user continue or go back. Never charge a price the user didn't see.
+<Accordion title="The price changes between results and payment. What happens?">
+Re-price on selection and before payment; the server holds the confirmed total. If it changed, show a modal with old and new price and let the user continue or go back. Never charge a price the user didn't see.
+</Accordion>
 
-> [!question]- How do you design the checkout so it survives a 3-D Secure redirect?
-> Keep the booking in a server-side session, model the flow as a state machine that mirrors server states, use a return URL that carries the booking id, and on return poll the booking status. Use an idempotency key so retries don't double-charge; treat "unknown" as pending, not failed.
+<Accordion title="How do you design the checkout so it survives a 3-D Secure redirect?">
+Keep the booking in a server-side session, model the flow as a state machine that mirrors server states, use a return URL that carries the booking id, and on return poll the booking status. Use an idempotency key so retries don't double-charge; treat "unknown" as pending, not failed.
+</Accordion>
 
-> [!question]- How do you support Arabic and English with one codebase?
-> `dir` on `<html>`, logical CSS properties, mirrored directional icons, bidi isolation for codes/numbers, `Intl` for numbers/dates/currency/plurals, ICU messages, locale-specific fonts, and currency chosen independently from language.
+<Accordion title="How do you support Arabic and English with one codebase?">
+`dir` on `<html>`, logical CSS properties, mirrored directional icons, bidi isolation for codes/numbers, `Intl` for numbers/dates/currency/plurals, ICU messages, locale-specific fonts, and currency chosen independently from language.
+</Accordion>
 
-> [!question]- How would you split this into micro-frontends?
-> By domain and route: search/results, booking funnel, post-booking. Integrate via navigation with state in the URL and a server-side booking session; share a design system, auth, analytics and i18n SDKs; avoid shared runtime stores between apps.
+<Accordion title="How would you split this into micro-frontends?">
+By domain and route: search/results, booking funnel, post-booking. Integrate via navigation with state in the URL and a server-side booking session; share a design system, auth, analytics and i18n SDKs; avoid shared runtime stores between apps.
+</Accordion>
 
-> [!question]- How do you make the results page fast on a mid-range phone?
-> SSR shell + skeleton, early search request, small route bundle, virtualized memoized cards, filters in transitions, lazy-load heavy widgets, defer third-party scripts, server-side experiment assignment, and RUM by device class.
+<Accordion title="How do you make the results page fast on a mid-range phone?">
+SSR shell + skeleton, early search request, small route bundle, virtualized memoized cards, filters in transitions, lazy-load heavy widgets, defer third-party scripts, server-side experiment assignment, and RUM by device class.
+</Accordion>
 
 ## Related
-- [[RADIO Framework]] · [[Frontend System Design Index]] · [[Case Study - Autocomplete]]
-- [[URL as State]] · [[State Management Overview]] · [[Redux & Redux Toolkit]]
-- [[Micro-frontends & Module Federation]] · [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Accessibility Essentials]] · [[Core Web Vitals]] · [[Networking - HTTP, Caching & Real-time]]
+- [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) · [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete)
+- [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State) · [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview) · [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) · [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials) · [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
 
 ## Sources
 - EMV 3-D Secure overview (EMVCo): https://www.emvco.com/emv-technologies/3-d-secure/

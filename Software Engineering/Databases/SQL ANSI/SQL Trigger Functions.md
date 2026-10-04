@@ -1,18 +1,22 @@
 ---
+title: "SQL Trigger Functions"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [PostgreSQL Triggers, Triggers, Trigger Functions, CREATE TRIGGER, Audit Trigger, TG_OP, Transition Tables]
 updated: 2026-09-27
 ---
 # SQL Trigger Functions
 
-> [!tldr] TL;DR
-> In PostgreSQL a trigger has two parts: a **trigger function** (`CREATE FUNCTION ... RETURNS trigger LANGUAGE plpgsql`) and a **trigger** that binds it to a table and event (`CREATE TRIGGER ... EXECUTE FUNCTION`). Triggers fire `BEFORE`, `AFTER` or `INSTEAD OF` an `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE`, once per **row** or per **statement**, and see `NEW`, `OLD` and `TG_OP`. Great for audit trails and invariants; dangerous as hidden business logic, and slow on bulk loads.
+<Note>
+**TL;DR**
 
-> PostgreSQL extra, after the course. Book intro to triggers: [[Understanding Advanced SQL Features]] · Next extra: [[SQL Indexes Deep Dive]]
+In PostgreSQL a trigger has two parts: a **trigger function** (`CREATE FUNCTION ... RETURNS trigger LANGUAGE plpgsql`) and a **trigger** that binds it to a table and event (`CREATE TRIGGER ... EXECUTE FUNCTION`). Triggers fire `BEFORE`, `AFTER` or `INSTEAD OF` an `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE`, once per **row** or per **statement**, and see `NEW`, `OLD` and `TG_OP`. Great for audit trails and invariants; dangerous as hidden business logic, and slow on bulk loads.
+</Note>
+
+> PostgreSQL extra, after the course. Book intro to triggers: [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) · Next extra: [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive)
 
 ## What a trigger is
 
-A trigger is code the database runs automatically when a specific change happens to a specific table (or view). The book's general introduction (what triggers can see, before/after, typical uses, "constraints are faster than triggers") is in [[Understanding Advanced SQL Features]]; this note is the PostgreSQL deep dive.
+A trigger is code the database runs automatically when a specific change happens to a specific table (or view). The book's general introduction (what triggers can see, before/after, typical uses, "constraints are faster than triggers") is in [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features); this note is the PostgreSQL deep dive.
 
 PostgreSQL specifics compared with the SQL standard:
 - The trigger's action must be a **function** returning type `trigger`, written in PL/pgSQL, PL/Python, PL/Perl, C, etc. (the standard allows inline SQL statements).
@@ -327,27 +331,33 @@ Triggers belong to their table: dropping the table drops its triggers. The funct
 
 ## Interview questions
 
-> [!question]- BEFORE vs AFTER trigger?
-> `BEFORE` runs before the row is written and can change `NEW` or skip the row; good for validation and defaults. `AFTER` runs once the row is written (constraints checked), sees the final values, and is used for side effects like audit logs.
+<Accordion title="BEFORE vs AFTER trigger?">
+`BEFORE` runs before the row is written and can change `NEW` or skip the row; good for validation and defaults. `AFTER` runs once the row is written (constraints checked), sees the final values, and is used for side effects like audit logs.
+</Accordion>
 
-> [!question]- Row-level vs statement-level trigger?
-> Row-level fires once per affected row with `NEW`/`OLD`. Statement-level fires once per statement (even for zero rows); in PostgreSQL it can read all changed rows through transition tables.
+<Accordion title="Row-level vs statement-level trigger?">
+Row-level fires once per affected row with `NEW`/`OLD`. Statement-level fires once per statement (even for zero rows); in PostgreSQL it can read all changed rows through transition tables.
+</Accordion>
 
-> [!question]- How do you write a trigger in PostgreSQL?
-> Create a function `RETURNS trigger` (e.g. in PL/pgSQL, using `NEW`, `OLD`, `TG_OP`), then `CREATE TRIGGER name {BEFORE|AFTER} event ON table FOR EACH ROW EXECUTE FUNCTION fn();`.
+<Accordion title="How do you write a trigger in PostgreSQL?">
+Create a function `RETURNS trigger` (e.g. in PL/pgSQL, using `NEW`, `OLD`, `TG_OP`), then `CREATE TRIGGER name {BEFORE|AFTER} event ON table FOR EACH ROW EXECUTE FUNCTION fn();`.
+</Accordion>
 
-> [!question]- In what order do multiple triggers fire in PostgreSQL?
-> `BEFORE` statement, then per row `BEFORE` row triggers, the write, `AFTER` row triggers (at end of statement), then `AFTER` statement. Within the same kind, alphabetical by trigger name.
+<Accordion title="In what order do multiple triggers fire in PostgreSQL?">
+`BEFORE` statement, then per row `BEFORE` row triggers, the write, `AFTER` row triggers (at end of statement), then `AFTER` statement. Within the same kind, alphabetical by trigger name.
+</Accordion>
 
-> [!question]- What are the downsides of triggers?
-> Hidden behaviour, harder debugging and testing, possible recursion, slower bulk operations, and coupling business logic to the database. Use them sparingly and document them.
+<Accordion title="What are the downsides of triggers?">
+Hidden behaviour, harder debugging and testing, possible recursion, slower bulk operations, and coupling business logic to the database. Use them sparingly and document them.
+</Accordion>
 
-> [!question]- How would you keep an audit trail of every change to a table?
-> An `AFTER INSERT OR UPDATE OR DELETE` trigger writing `OLD`/`NEW` as JSONB with user and timestamp to an audit table (same transaction), or CDC via logical decoding for high-volume tables.
+<Accordion title="How would you keep an audit trail of every change to a table?">
+An `AFTER INSERT OR UPDATE OR DELETE` trigger writing `OLD`/`NEW` as JSONB with user and timestamp to an audit table (same transaction), or CDC via logical decoding for high-volume tables.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Understanding Advanced SQL Features]] (book intro to triggers) · [[Working with Stored Procedures]] · [[Using Views]] (INSTEAD OF) · [[Managing Transaction Processing]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (book intro to triggers) · [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures) · [Using Views](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Views) (INSTEAD OF) · [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing)
 
 ## Sources
 - [PostgreSQL docs: CREATE TRIGGER](https://www.postgresql.org/docs/current/sql-createtrigger.html)

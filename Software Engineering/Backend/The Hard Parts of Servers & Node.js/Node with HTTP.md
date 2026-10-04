@@ -1,20 +1,24 @@
 ---
+title: "Node with HTTP"
 tags: [backend, backend/node, course]
 aliases: [Node HTTP, Middleware, Node middleware]
 updated: 2026-09-27
 ---
 # Node with HTTP
 
-> [!tldr] TL;DR
-> A Node HTTP server is one handler function called once per request. As apps grow you split that function into **middleware**: small functions that each receive the Node-created `req` and `res` objects, inspect or change them, and then pass control to the **next** function. Express, Koa, Fastify and Hono are all variations on this idea.
+<Note>
+**TL;DR**
 
-*Part of [[The Hard Parts of Servers & Node.js]] (course notes).*
+A Node HTTP server is one handler function called once per request. As apps grow you split that function into **middleware**: small functions that each receive the Node-created `req` and `res` objects, inspect or change them, and then pass control to the **next** function. Express, Koa, Fastify and Hono are all variations on this idea.
+</Note>
+
+*Part of [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) (course notes).*
 
 ## Middleware
 
 Middleware is just a way to **modularise** the one big handler: each function receives the Node-created `req` and `res`, analyses or changes them, and then hands them to the next middleware (or ends the response).
 
-![[Screenshot_2023-04-30_at_12.10.27_AM.png]]
+![Screenshot_2023-04-30_at_12.10.27_AM](/Attachments/Screenshot_2023-04-30_at_12.10.27_AM.png)
 
 ## Worked example: middleware from scratch
 
@@ -95,15 +99,17 @@ app.listen(3000);
 
 ## Interview questions
 
-> [!question]- What is middleware?
-> A function in the request pipeline that gets `req`, `res` and `next`. It can read or modify the request/response, end the response, or call `next()` to continue. It lets you compose cross-cutting concerns (logging, auth, parsing, CORS) separately from route logic.
+<Accordion title="What is middleware?">
+A function in the request pipeline that gets `req`, `res` and `next`. It can read or modify the request/response, end the response, or call `next()` to continue. It lets you compose cross-cutting concerns (logging, auth, parsing, CORS) separately from route logic.
+</Accordion>
 
-> [!question]- How does error handling middleware work in Express?
-> A middleware with four parameters `(err, req, res, next)` is treated as an error handler. Calling `next(err)` (or, in Express 5, throwing/rejecting in an async handler) skips normal middleware and jumps to it.
+<Accordion title="How does error handling middleware work in Express?">
+A middleware with four parameters `(err, req, res, next)` is treated as an error handler. Calling `next(err)` (or, in Express 5, throwing/rejecting in an async handler) skips normal middleware and jumps to it.
+</Accordion>
 
 ## Related
-- [[The Hard Parts of Servers & Node.js]] · [[Node.js Index]]
-- [[Using Node API’s]] · [[Building HTTP Servers - Express, Fastify & Hono]] · [[Node.js Security Best Practices]]
+- [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) · [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Using Node API’s](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Using%20Node%20API%E2%80%99s) · [Building HTTP Servers - Express, Fastify & Hono](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Building%20HTTP%20Servers%20-%20Express%2C%20Fastify%20%26%20Hono) · [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices)
 
 ## Sources
 - [Express: Using middleware](https://expressjs.com/en/guide/using-middleware.html)

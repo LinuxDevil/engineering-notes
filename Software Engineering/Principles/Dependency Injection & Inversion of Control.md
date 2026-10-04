@@ -1,12 +1,16 @@
 ---
+title: "Dependency Injection & Inversion of Control"
 tags: [principles, principles/solid]
 aliases: [Dependency Injection, DI, Inversion of Control, IoC, IoC Container, DI Container, Composition Root, Service Locator, Hollywood Principle]
 updated: 2026-09-27
 ---
 # Dependency Injection & Inversion of Control
 
-> [!tldr] TL;DR
-> **Inversion of Control (IoC)**: a framework or caller controls the flow and calls your code ("don't call us, we'll call you"). **Dependency Injection (DI)** is one form of IoC: an object **receives** its collaborators (usually through the constructor) instead of creating or looking them up. It's the main technique for applying the **Dependency Inversion Principle** ([[SOLID]]). Wire everything in one **composition root**; a **DI container** (Spring, NestJS, Angular, .NET) automates the wiring but isn't required.
+<Note>
+**TL;DR**
+
+**Inversion of Control (IoC)**: a framework or caller controls the flow and calls your code ("don't call us, we'll call you"). **Dependency Injection (DI)** is one form of IoC: an object **receives** its collaborators (usually through the constructor) instead of creating or looking them up. It's the main technique for applying the **Dependency Inversion Principle** ([SOLID](/Software%20Engineering/Principles/SOLID)). Wire everything in one **composition root**; a **DI container** (Spring, NestJS, Angular, .NET) automates the wiring but isn't required.
+</Note>
 
 ## The three terms
 
@@ -135,24 +139,30 @@ It inverts creation but hides what a class needs, fails at runtime instead of co
 - **Pass functions**: a dependency can be a function parameter (`(fetch, now) => ...`), or closed over by a factory (`makeSignup({ repo, mailer })` returns the handler).
 - **Partial application / Reader pattern**: provide dependencies first, data later.
 - **React**: props and **Context** are DI for components; hooks like `useQueryClient()` read injected services.
-- **Ruby/Python**: default arguments (`def initialize(mailer: SmtpMailer.new)`) give injection with sensible defaults (see [[SOLID Principles with Ruby]]).
+- **Ruby/Python**: default arguments (`def initialize(mailer: SmtpMailer.new)`) give injection with sensible defaults (see [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby)).
 - **Kotlin**: **context parameters** declare dependencies that are implicitly available from the calling scope (`context(logger: Logger) fun process() { ... }`).
 
-> [!info]+ 🆕 2025–2026
-> - **Kotlin context parameters**: introduced as a preview in **Kotlin 2.2.0 (June 2025)** and **stable in Kotlin 2.4.0 (2026-07-14)** (except explicit context arguments and callable references). They replace the older experimental context receivers and give a language-level way to pass ambient dependencies (logger, transaction, clock) without threading them through every call.
-> - **Java 25 (2025-09-16)** finalised **Scoped Values** (JEP 506): immutable, bounded per-call context (e.g. request or tenant info) that's safer than `ThreadLocal` for passing implicit context, especially with virtual threads. Not a DI container replacement, but a cleaner option for "ambient context".
-> - **JEP 500 (Java 26, 2026-03-17)** warns when libraries mutate `final` fields via reflection. Field-injection frameworks that write into `final` fields will need to adapt; constructor injection is unaffected.
+<Info>
+**🆕 2025–2026**
+
+- **Kotlin context parameters**: introduced as a preview in **Kotlin 2.2.0 (June 2025)** and **stable in Kotlin 2.4.0 (2026-07-14)** (except explicit context arguments and callable references). They replace the older experimental context receivers and give a language-level way to pass ambient dependencies (logger, transaction, clock) without threading them through every call.
+- **Java 25 (2025-09-16)** finalised **Scoped Values** (JEP 506): immutable, bounded per-call context (e.g. request or tenant info) that's safer than `ThreadLocal` for passing implicit context, especially with virtual threads. Not a DI container replacement, but a cleaner option for "ambient context".
+- **JEP 500 (Java 26, 2026-03-17)** warns when libraries mutate `final` fields via reflection. Field-injection frameworks that write into `final` fields will need to adapt; constructor injection is unaffected.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **Constructor over-injection** (8+ dependencies): the class does too much (SRP). Split it or introduce a facade over related collaborators.
-> - **Field injection** everywhere: hidden dependencies, tests require the container.
-> - **Captive dependencies**: a singleton holding a request-scoped object, leaking one user's data into another's request.
-> - **Circular dependencies**: A needs B needs A. Usually a missing third abstraction or event.
-> - **Injecting the container** itself (service locator in disguise).
-> - **Interface-per-class** for everything: DI works with concrete classes too; add interfaces where you need substitution or a boundary.
-> - Heavy runtime reflection/classpath scanning hurting startup (serverless, CLI). Consider compile-time DI (Dagger, Micronaut, Spring AOT/GraalVM) where startup matters.
+<Warning>
+**Common mistakes**
+
+- **Constructor over-injection** (8+ dependencies): the class does too much (SRP). Split it or introduce a facade over related collaborators.
+- **Field injection** everywhere: hidden dependencies, tests require the container.
+- **Captive dependencies**: a singleton holding a request-scoped object, leaking one user's data into another's request.
+- **Circular dependencies**: A needs B needs A. Usually a missing third abstraction or event.
+- **Injecting the container** itself (service locator in disguise).
+- **Interface-per-class** for everything: DI works with concrete classes too; add interfaces where you need substitution or a boundary.
+- Heavy runtime reflection/classpath scanning hurting startup (serverless, CLI). Consider compile-time DI (Dagger, Micronaut, Spring AOT/GraalVM) where startup matters.
+</Warning>
 
 ## Senior perspective
 
@@ -163,28 +173,34 @@ It inverts creation but hides what a class needs, fails at runtime instead of co
 
 ## Interview questions
 
-> [!question]- What's the difference between DIP, DI and IoC?
-> DIP is a principle about dependency direction (both sides depend on abstractions owned by the high-level policy). IoC is the broader idea that control flow is handed to a framework that calls your code. DI is a specific technique where an object receives its dependencies from outside; containers automate it.
+<Accordion title="What's the difference between DIP, DI and IoC?">
+DIP is a principle about dependency direction (both sides depend on abstractions owned by the high-level policy). IoC is the broader idea that control flow is handed to a framework that calls your code. DI is a specific technique where an object receives its dependencies from outside; containers automate it.
+</Accordion>
 
-> [!question]- Why prefer constructor injection over field injection?
-> Dependencies are explicit and required, fields can be final/immutable, the object is fully valid after construction, and tests can create it with `new` and fakes without a container. Too many constructor parameters also reveal SRP problems early.
+<Accordion title="Why prefer constructor injection over field injection?">
+Dependencies are explicit and required, fields can be final/immutable, the object is fully valid after construction, and tests can create it with `new` and fakes without a container. Too many constructor parameters also reveal SRP problems early.
+</Accordion>
 
-> [!question]- What is a composition root?
-> The single place, close to the application entry point, where the object graph is assembled and implementations are chosen. Everything else receives dependencies and never looks them up.
+<Accordion title="What is a composition root?">
+The single place, close to the application entry point, where the object graph is assembled and implementations are chosen. Everything else receives dependencies and never looks them up.
+</Accordion>
 
-> [!question]- Why is Service Locator considered an anti-pattern?
-> It hides a class's dependencies inside method bodies, so you can't see or satisfy them from the API; missing registrations fail at runtime; and every class depends on the locator. DI makes dependencies explicit in constructors.
+<Accordion title="Why is Service Locator considered an anti-pattern?">
+It hides a class's dependencies inside method bodies, so you can't see or satisfy them from the API; missing registrations fail at runtime; and every class depends on the locator. DI makes dependencies explicit in constructors.
+</Accordion>
 
-> [!question]- What are DI scopes, and what's a captive dependency?
-> Singleton (one per app), scoped (one per request/unit of work), transient (new every time). A captive dependency is a longer-lived object holding a shorter-lived one (singleton holding a request-scoped DB context), causing stale state, thread-safety bugs or data leaks between requests.
+<Accordion title="What are DI scopes, and what's a captive dependency?">
+Singleton (one per app), scoped (one per request/unit of work), transient (new every time). A captive dependency is a longer-lived object holding a shorter-lived one (singleton holding a request-scoped DB context), causing stale state, thread-safety bugs or data leaks between requests.
+</Accordion>
 
-> [!question]- Do you need a DI framework to do DI?
-> No. Passing dependencies through constructors and wiring them in `main` ("pure DI") is DI. Containers help with large graphs, scopes and framework integration.
+<Accordion title="Do you need a DI framework to do DI?">
+No. Passing dependencies through constructors and wiring them in `main` ("pure DI") is DI. Containers help with large graphs, scopes and framework integration.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[SOLID]] · [[SOLID Principles with Ruby]] · [[Abstract Class and Interface]] · [[Creational Patterns]]
-- [[Software Architecture Styles]] · [[Test-Driven Development (TDD)]] · [[Coupling, Cohesion & Modularity]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [SOLID](/Software%20Engineering/Principles/SOLID) · [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby) · [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) · [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns)
+- [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Test-Driven Development (TDD)](/Software%20Engineering/Principles/Test-Driven%20Development%20(TDD)) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)
 
 ## Sources
 - [Martin Fowler: Inversion of Control Containers and the Dependency Injection pattern (2004)](https://martinfowler.com/articles/injection.html)

@@ -1,14 +1,18 @@
 ---
+title: "Reactive Spring - Ch 4 IO & Reactive Streams"
 tags: [backend, backend/java, book]
 aliases: [Reactive Streams, Publisher Subscriber Subscription Processor, Why reactive programming]
 updated: 2026-09-27
 ---
 # Reactive Spring - Ch 4 IO & Reactive Streams
 
-> [!tldr] TL;DR
-> Reactive programming embraces **asynchronous I/O**: instead of a thread waiting idle for I/O, the client of a data stream is **notified** when new data arrives. It pays off for I/O-bound work, not CPU-bound work. The **Reactive Streams** initiative standardises four interfaces, **`Publisher`**, **`Subscriber`**, **`Subscription`** and **`Processor`**, whose only job is to move data from producer to consumer with demand-based flow control.
+<Note>
+**TL;DR**
 
-*Part of [[Reactive Spring Book]] (book notes). Renamed from "Chapter 4 I-O".*
+Reactive programming embraces **asynchronous I/O**: instead of a thread waiting idle for I/O, the client of a data stream is **notified** when new data arrives. It pays off for I/O-bound work, not CPU-bound work. The **Reactive Streams** initiative standardises four interfaces, **`Publisher`**, **`Subscriber`**, **`Subscription`** and **`Processor`**, whose only job is to move data from producer to consumer with demand-based flow control.
+</Note>
+
+*Part of [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) (book notes). Renamed from "Chapter 4 I-O".*
 
 ## Why reactive?
 
@@ -33,8 +37,11 @@ flowchart LR
   end
 ```
 
-> [!info]+ 🆕 Since the book: virtual threads
-> Java 21 (2023-09-19) added **virtual threads** (JEP 444): cheap JVM-managed threads that unmount from the OS thread while blocked, fixing the "expensive idle thread" problem *without* rewriting code in reactive style. Java 24 (2025-03-18, JEP 491) removed pinning in `synchronized`. For many request/response services this is now the simpler choice; reactive keeps its edge for streaming and backpressure. See [[Java Concurrency & Virtual Threads]].
+<Info>
+**🆕 Since the book: virtual threads**
+
+Java 21 (2023-09-19) added **virtual threads** (JEP 444): cheap JVM-managed threads that unmount from the OS thread while blocked, fixing the "expensive idle thread" problem *without* rewriting code in reactive style. Java 24 (2025-03-18, JEP 491) removed pinning in `synchronized`. For many request/response services this is now the simpler choice; reactive keeps its edge for streaming and backpressure. See [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads).
+</Info>
 
 ## The Reactive Streams interfaces
 
@@ -64,23 +71,26 @@ public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {}
 
 The type parameter `T` is the type of item processed by `Publisher`, `Subscriber` and `Processor`. `Subscription` has **no** type parameter: it only deals with the mechanics of subscribing, not the data. In `Processor<T, R>`, `T` is the input type and `R` the output type.
 
-Since Java 9 the same four interfaces exist in the JDK as `java.util.concurrent.Flow.*`; `FlowAdapters` converts between them (see [[Reactive Spring - Ch 5 Reactor & Backpressure]]).
+Since Java 9 the same four interfaces exist in the JDK as `java.util.concurrent.Flow.*`; `FlowAdapters` converts between them (see [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure)).
 
 ## Interview questions
 
-> [!question]- When does reactive programming help and when doesn't it?
-> It helps when threads would otherwise wait on I/O (many concurrent network/DB calls, streaming). It doesn't help CPU-bound work, where cores are the limit.
+<Accordion title="When does reactive programming help and when doesn't it?">
+It helps when threads would otherwise wait on I/O (many concurrent network/DB calls, streaming). It doesn't help CPU-bound work, where cores are the limit.
+</Accordion>
 
-> [!question]- Name the Reactive Streams interfaces and their roles.
-> Publisher (produces items on demand), Subscriber (receives onSubscribe/onNext/onError/onComplete), Subscription (link between them: `request(n)` and `cancel()`), Processor (both, a transformation stage).
+<Accordion title="Name the Reactive Streams interfaces and their roles.">
+Publisher (produces items on demand), Subscriber (receives onSubscribe/onNext/onError/onComplete), Subscription (link between them: `request(n)` and `cancel()`), Processor (both, a transformation stage).
+</Accordion>
 
-> [!question]- Why doesn't `Subscription` have a type parameter?
-> It doesn't carry data, only control: demand (`request`) and cancellation.
+<Accordion title="Why doesn't `Subscription` have a type parameter?">
+It doesn't carry data, only control: demand (`request`) and cancellation.
+</Accordion>
 
 ## Related
-- [[Reactive Spring Book]] · [[Java & Spring Index]]
-- [[Reactive Spring - Ch 5 Reactor & Backpressure]] · [[Reactor - Mono & Flux]] · [[Java Reactive Course]]
-- [[Java Concurrency & Virtual Threads]] · [[Concurrency And Parallelism]]
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure) · [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux) · [Java Reactive Course](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Java%20Reactive%20Course)
+- [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism)
 
 ## Sources
 - Josh Long, *Reactive Spring* (2020), chapter 4

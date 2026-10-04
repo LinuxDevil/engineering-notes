@@ -1,12 +1,16 @@
 ---
+title: "Salary Negotiation & Offers"
 tags: [interviews, interviews/negotiation]
 aliases: [Salary Negotiation, Offer Negotiation, Total Compensation, TC]
 updated: 2026-09-27
 ---
 # Salary Negotiation & Offers
 
-> [!tldr] TL;DR
-> An offer is a package, not a salary: base, bonus, equity, sign-on, level, and benefits. Your leverage comes from **alternatives** (competing offers, a good current job) and **information** (market data for your level and location). Don't name a number first if you can avoid it, always negotiate politely once the offer is written, negotiate the **level** as well as the money, and get everything in writing. This note is general career guidance, not financial or tax advice.
+<Note>
+**TL;DR**
+
+An offer is a package, not a salary: base, bonus, equity, sign-on, level, and benefits. Your leverage comes from **alternatives** (competing offers, a good current job) and **information** (market data for your level and location). Don't name a number first if you can avoid it, always negotiate politely once the offer is written, negotiate the **level** as well as the money, and get everything in writing. This note is general career guidance, not financial or tax advice.
+</Note>
 
 ## Anatomy of an offer
 
@@ -22,16 +26,19 @@ updated: 2026-09-27
 
 **Total compensation (TC)** per year ≈ base + expected bonus + (equity grant ÷ vesting years) + (sign-on amortised). Compare offers on the same basis.
 
-> [!example] Comparing two offers (illustrative numbers)
-> | | Company A (public) | Company B (startup) |
-> |---|---|---|
-> | Base | 150k | 165k |
-> | Bonus | 15% target → 22.5k | none |
-> | Equity | 200k RSUs / 4 yrs → 50k/yr | 0.1% options, strike 2/share |
-> | Sign-on | 20k (year 1) | 0 |
-> | Year-1 TC | ≈ 242k | 165k cash + options of uncertain value |
->
-> Startup options are worth something only if there is a liquidity event above the strike price; value them conservatively (many treat them as a lottery ticket) and ask about the latest preferred price, number of shares outstanding, exercise window and dilution.
+<Info>
+**Comparing two offers (illustrative numbers)**
+
+| | Company A (public) | Company B (startup) |
+|---|---|---|
+| Base | 150k | 165k |
+| Bonus | 15% target → 22.5k | none |
+| Equity | 200k RSUs / 4 yrs → 50k/yr | 0.1% options, strike 2/share |
+| Sign-on | 20k (year 1) | 0 |
+| Year-1 TC | ≈ 242k | 165k cash + options of uncertain value |
+
+Startup options are worth something only if there is a liquidity event above the strike price; value them conservatively (many treat them as a lottery ticket) and ask about the latest preferred price, number of shares outstanding, exercise window and dilution.
+</Info>
 
 ## The process
 
@@ -72,14 +79,17 @@ Script:
 Beyond money: the manager, the team's scope, growth path, on-call load, remote policy, company stability. A slightly lower offer with a much better manager can be the better career move.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Naming a low number first, which anchors everything after it.
-> - Negotiating only base and ignoring equity, level and sign-on.
-> - Accepting on the spot, then trying to negotiate.
-> - Bluffing about offers or deadlines. Recruiters talk, and it can cost the offer.
-> - Treating startup options like cash.
-> - Being aggressive or ultimatum-driven. Firm and friendly works better.
-> - Forgetting the clawback terms on a sign-on bonus or relocation.
+<Warning>
+**Common mistakes**
+
+- Naming a low number first, which anchors everything after it.
+- Negotiating only base and ignoring equity, level and sign-on.
+- Accepting on the spot, then trying to negotiate.
+- Bluffing about offers or deadlines. Recruiters talk, and it can cost the offer.
+- Treating startup options like cash.
+- Being aggressive or ultimatum-driven. Firm and friendly works better.
+- Forgetting the clawback terms on a sign-on bonus or relocation.
+</Warning>
 
 ## Senior perspective
 - At senior and staff level, **level and scope** drive long-term earnings. Ask what separates the offered level from the next one and ask for the higher level if your loop supported it.
@@ -88,22 +98,26 @@ Beyond money: the manager, the team's scope, growth path, on-call load, remote p
 - For internal raises and promotions, the same rules apply: data, documented impact (a brag document), and timing with review cycles.
 
 ## Interview questions
-> [!question]- What are your salary expectations?
-> Deflect politely early and ask for the band. If pressed, give a researched total-compensation range for the level and location, with the bottom at a number you'd accept happily.
+<Accordion title="What are your salary expectations?">
+Deflect politely early and ask for the band. If pressed, give a researched total-compensation range for the level and location, with the bottom at a number you'd accept happily.
+</Accordion>
 
-> [!question]- Why are you leaving your current job?
-> Positive and forward-looking: the scope, technology or growth this role offers. Never criticise your current employer.
+<Accordion title="Why are you leaving your current job?">
+Positive and forward-looking: the scope, technology or growth this role offers. Never criticise your current employer.
+</Accordion>
 
-> [!question]- What matters most to you in an offer?
-> Be honest about priorities (scope, team, growth, compensation, flexibility). It helps the recruiter shape the offer; it's not a trap.
+<Accordion title="What matters most to you in an offer?">
+Be honest about priorities (scope, team, growth, compensation, flexibility). It helps the recruiter shape the offer; it's not a trap.
+</Accordion>
 
-> [!question]- How do you value equity from a startup vs a public company?
-> Public RSUs: value at current share price minus some volatility discount. Startup options: value depends on a future exit, strike price, preferences and dilution; assume a large chance of zero and ask for the numbers needed to estimate it.
+<Accordion title="How do you value equity from a startup vs a public company?">
+Public RSUs: value at current share price minus some volatility discount. Startup options: value depends on a future exit, strike price, preferences and dilution; assume a large chance of zero and ask for the numbers needed to estimate it.
+</Accordion>
 
 ## Related
-- [[Interviews Index]]
-- [[Interview Process & Preparation Plan]] · [[Behavioral Interviews & STAR Method]]
-- [[Engineering Levels - Junior to Staff]] · [[Career Index]]
+- [Interviews Index](/Software%20Engineering/Interviews/Interviews%20Index)
+- [Interview Process & Preparation Plan](/Software%20Engineering/Interviews/Interview%20Process%20%26%20Preparation%20Plan) · [Behavioral Interviews & STAR Method](/Software%20Engineering/Interviews/Behavioral%20Interviews%20%26%20STAR%20Method)
+- [Engineering Levels - Junior to Staff](/Software%20Engineering/Career/Engineering%20Levels%20-%20Junior%20to%20Staff) · [Career Index](/Software%20Engineering/Career/Career%20Index)
 
 ## Sources
 - Patrick McKenzie, [Salary Negotiation: Make More Money, Be More Valued](https://www.kalzumeus.com/2012/01/23/salary-negotiation/)

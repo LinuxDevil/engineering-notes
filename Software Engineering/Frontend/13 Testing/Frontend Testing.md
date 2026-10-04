@@ -1,15 +1,19 @@
 ---
+title: "Frontend Testing"
 tags: [frontend, frontend/testing]
 aliases: [Testing, Jest, Vitest, Playwright, Cypress, React Testing Library, MSW, A/B Testing]
 updated: 2026-09-27
 ---
 # Frontend Testing
 
-> [!tldr] TL;DR
-> Tests exist to give **confidence to ship and refactor**. Put most of your effort where confidence per cost is highest: **integration and component tests** that render real components and interact with them **the way a user does** (Testing Library + MSW), backed by static analysis, a few fast unit tests for pure logic, and a small set of **E2E tests** (Playwright) for critical journeys such as search, then select, then pay.
-> 2025–2026 changes:
-> - **Vitest** replaced Jest as the default in most new stacks (Vitest 4 made Browser Mode stable; Vitest 5 shipped Sept 2026).
-> - **Playwright** added AI **Test Agents** and **aria snapshots**.
+<Note>
+**TL;DR**
+
+Tests exist to give **confidence to ship and refactor**. Put most of your effort where confidence per cost is highest: **integration and component tests** that render real components and interact with them **the way a user does** (Testing Library + MSW), backed by static analysis, a few fast unit tests for pure logic, and a small set of **E2E tests** (Playwright) for critical journeys such as search, then select, then pay.
+2025–2026 changes:
+- **Vitest** replaced Jest as the default in most new stacks (Vitest 4 made Browser Mode stable; Vitest 5 shipped Sept 2026).
+- **Playwright** added AI **Test Agents** and **aria snapshots**.
+</Note>
 
 ---
 
@@ -43,8 +47,11 @@ flowchart TB
 | **Contract / API** | the frontend and backend agree on shapes | Zod schemas, Pact, typed OpenAPI clients | the `/search` response schema |
 | **Performance** | budgets and Web Vitals | Lighthouse CI, web-vitals RUM | LCP ≤ 2.5s on the results page |
 
-> [!note] Correction to my earlier note
-> I had labelled component tests as "Component (Snapshot)". **Component testing and snapshot testing are different things.** A component test renders the component and asserts on behaviour and visible output. A snapshot is just one assertion technique. Large snapshots of whole component trees are brittle: they fail on any markup change, and people then approve them blindly. Prefer explicit assertions, and keep snapshots for small, stable output (serialisers, error messages) or use **aria snapshots**, which only capture the accessible structure.
+<Note>
+**Correction to my earlier note**
+
+I had labelled component tests as "Component (Snapshot)". **Component testing and snapshot testing are different things.** A component test renders the component and asserts on behaviour and visible output. A snapshot is just one assertion technique. Large snapshots of whole component trees are brittle: they fail on any markup change, and people then approve them blindly. Prefer explicit assertions, and keep snapshots for small, stable output (serialisers, error messages) or use **aria snapshots**, which only capture the accessible structure.
+</Note>
 
 ## 3. Jest (and the move to Vitest)
 
@@ -75,29 +82,32 @@ Migration is mostly find-and-replace plus config. Watch for:
 - `jest.requireActual` becomes `await vi.importActual()`;
 - some Jest-specific matchers and environment options differ.
 
-Angular made **Vitest the default test runner in v21** (Nov 2025) and provides a schematic that migrates from Jasmine (`ng g @schematics/angular:refactor-jasmine-vitest`). See [[Modern Angular v17 to v22]].
+Angular made **Vitest the default test runner in v21** (Nov 2025) and provides a schematic that migrates from Jasmine (`ng g @schematics/angular:refactor-jasmine-vitest`). See [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
 
-> [!info]+ 🆕 Vitest 4 and Vitest 5
-> - **Vitest 4 (2025-10-22):**
->   - **Browser Mode is stable**. It runs tests in a real browser through provider packages such as `@vitest/browser-playwright`, so there are no jsdom gaps for layout, focus, CSS or real events.
->   - `toMatchScreenshot` gives built-in **visual regression**.
->   - Playwright traces.
-> - **Vitest 5 (2026-09-03):**
->   - **Trace View**, `vi.when()` (conditional mock return values), nested projects.
->   - **Un-awaited async assertions now fail**, which catches the forgotten-`await` false positive.
->   - **`clearMocks` is on by default**.
->   - Requires Node 22.12+ and Vite 6.4+.
->   - Angular 22.2 added Vitest 5 integration.
->
-> ```ts
-> // vitest.config.ts (Browser Mode)
-> import { defineConfig } from 'vitest/config';
-> import { playwright } from '@vitest/browser-playwright';
-> export default defineConfig({
->   test: { browser: { enabled: true, provider: playwright(), instances: [{ browser: 'chromium' }] } },
-> });
-> ```
-> Check the exact provider import against the Vitest docs for your version.
+<Info>
+**🆕 Vitest 4 and Vitest 5**
+
+- **Vitest 4 (2025-10-22):**
+  - **Browser Mode is stable**. It runs tests in a real browser through provider packages such as `@vitest/browser-playwright`, so there are no jsdom gaps for layout, focus, CSS or real events.
+  - `toMatchScreenshot` gives built-in **visual regression**.
+  - Playwright traces.
+- **Vitest 5 (2026-09-03):**
+  - **Trace View**, `vi.when()` (conditional mock return values), nested projects.
+  - **Un-awaited async assertions now fail**, which catches the forgotten-`await` false positive.
+  - **`clearMocks` is on by default**.
+  - Requires Node 22.12+ and Vite 6.4+.
+  - Angular 22.2 added Vitest 5 integration.
+
+```ts
+// vitest.config.ts (Browser Mode)
+import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
+export default defineConfig({
+  test: { browser: { enabled: true, provider: playwright(), instances: [{ browser: 'chromium' }] } },
+});
+```
+Check the exact provider import against the Vitest docs for your version.
+</Info>
 
 ## 4. React Testing Library principles
 Testing Library's guiding principle: **test behaviour, not implementation**. Query the DOM the way users and assistive technology find things, and interact the way users do.
@@ -125,40 +135,43 @@ Testing Library's guiding principle: **test behaviour, not implementation**. Que
 - wrap everything in `act()` manually (RTL does it for you);
 - use `waitFor` with side effects inside.
 
-> [!example] Worked example: search form + results (Vitest + RTL + MSW)
-> ```tsx
-> // FlightSearch.test.tsx
-> import { render, screen, within } from '@testing-library/react';
-> import userEvent from '@testing-library/user-event';
-> import { http, HttpResponse } from 'msw';
-> import { server } from '../test/server';
-> import { FlightSearch } from './FlightSearch';
->
-> test('searches and shows results sorted by price', async () => {
->   const user = userEvent.setup();
->   render(<FlightSearch />);
->
->   await user.type(screen.getByRole('combobox', { name: /from/i }), 'DXB');
->   await user.type(screen.getByRole('combobox', { name: /to/i }), 'LHR');
->   await user.click(screen.getByRole('button', { name: /search flights/i }));
->
->   // async UI: findBy* waits for the mocked network response
->   const list = await screen.findByRole('list', { name: /results/i });
->   const items = within(list).getAllByRole('listitem');
->   expect(items).toHaveLength(2);
->   expect(within(items[0]).getByText('AED 1,240')).toBeInTheDocument();
->   expect(screen.getByRole('status')).toHaveTextContent('2 flights found');
-> });
->
-> test('shows an error message when the API fails', async () => {
->   server.use(http.get('/api/flights', () => HttpResponse.json({ message: 'down' }, { status: 503 })));
->   const user = userEvent.setup();
->   render(<FlightSearch />);
->   await user.click(screen.getByRole('button', { name: /search flights/i }));
->   expect(await screen.findByRole('alert')).toHaveTextContent(/try again/i);
-> });
-> ```
-> Nothing here knows about `useState`, React Query, or component internals. You could rewrite the component with a different state library and these tests would still pass. That is the point.
+<Info>
+**Worked example: search form + results (Vitest + RTL + MSW)**
+
+```tsx
+// FlightSearch.test.tsx
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import { server } from '../test/server';
+import { FlightSearch } from './FlightSearch';
+
+test('searches and shows results sorted by price', async () => {
+  const user = userEvent.setup();
+  render(<FlightSearch />);
+
+  await user.type(screen.getByRole('combobox', { name: /from/i }), 'DXB');
+  await user.type(screen.getByRole('combobox', { name: /to/i }), 'LHR');
+  await user.click(screen.getByRole('button', { name: /search flights/i }));
+
+  // async UI: findBy* waits for the mocked network response
+  const list = await screen.findByRole('list', { name: /results/i });
+  const items = within(list).getAllByRole('listitem');
+  expect(items).toHaveLength(2);
+  expect(within(items[0]).getByText('AED 1,240')).toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('2 flights found');
+});
+
+test('shows an error message when the API fails', async () => {
+  server.use(http.get('/api/flights', () => HttpResponse.json({ message: 'down' }, { status: 503 })));
+  const user = userEvent.setup();
+  render(<FlightSearch />);
+  await user.click(screen.getByRole('button', { name: /search flights/i }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(/try again/i);
+});
+```
+Nothing here knows about `useState`, React Query, or component internals. You could rewrite the component with a different state library and these tests would still pass. That is the point.
+</Info>
 
 ## 5. MSW: mocking at the network layer
 **Mock Service Worker** intercepts requests at the network level: a Service Worker in the browser, and request interception in Node. Your app code keeps calling `fetch`/axios unchanged, and **the same handlers work in unit tests, Storybook, local dev and Playwright**.
@@ -269,14 +282,17 @@ await expect(page.getByRole('navigation', { name: 'Booking steps' })).toMatchAri
 `);
 ```
 
-> [!info]+ 🆕 Playwright 2025–2026 (release notes)
-> - **1.56 (Oct 2025): Playwright Test Agents.** Three AI agents: a **planner** (explores the app and writes a Markdown test plan), a **generator** (turns the plan into tests), and a **healer** (runs and repairs failing tests).
-> - **1.57:** moves to Chrome for Testing builds; **removes `page.accessibility`**, so use aria snapshots instead.
-> - **1.59:** `browser.bind()` for interop with playwright-cli and MCP; `--debug=cli`; `npx playwright trace`.
-> - **1.60:** HAR tracing API; aria snapshots with bounding boxes.
-> - **1.62:** a new component-testing model (stories and galleries).
-> - **1.63 (Sept 2026):** test locks, `locator.visible()`, aria snapshots in traces.
-> - **Playwright MCP** is a separate server that lets AI agents drive a browser. **Next.js 16.3** ships an `@next/playwright` `instant()` helper for testing Instant Navigations.
+<Info>
+**🆕 Playwright 2025–2026 (release notes)**
+
+- **1.56 (Oct 2025): Playwright Test Agents.** Three AI agents: a **planner** (explores the app and writes a Markdown test plan), a **generator** (turns the plan into tests), and a **healer** (runs and repairs failing tests).
+- **1.57:** moves to Chrome for Testing builds; **removes `page.accessibility`**, so use aria snapshots instead.
+- **1.59:** `browser.bind()` for interop with playwright-cli and MCP; `--debug=cli`; `npx playwright trace`.
+- **1.60:** HAR tracing API; aria snapshots with bounding boxes.
+- **1.62:** a new component-testing model (stories and galleries).
+- **1.63 (Sept 2026):** test locks, `locator.visible()`, aria snapshots in traces.
+- **Playwright MCP** is a separate server that lets AI agents drive a browser. **Next.js 16.3** ships an `@next/playwright` `instant()` helper for testing Instant Navigations.
+</Info>
 
 ### Cypress vs Playwright
 
@@ -324,7 +340,7 @@ From the owner's notes: **A/B testing** is an experimentation technique where tw
 - **Testing the variants themselves:** each variant needs unit, component and E2E coverage. Force a variant in tests with a flag override (cookie or query param).
 
 ## 8. What to test in a design system
-A design system ([[Design Systems]]) is consumed by many teams, so its tests guard the **public contract**:
+A design system ([Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)) is consumed by many teams, so its tests guard the **public contract**:
 
 | Layer | What | How |
 |---|---|---|
@@ -340,42 +356,50 @@ Don't test the framework itself (that React renders a `div`) or pure styling det
 
 ## Interview questions
 
-> [!question]- Testing pyramid vs testing trophy?
-> The pyramid puts most tests at the unit level and few at E2E, because UI tests used to be slow. The trophy (Kent C. Dodds) adds static analysis at the base and puts **most tests at the integration level**, because tests that resemble real usage give more confidence per test, and modern tools make them fast. E2E stays small for critical paths either way.
+<Accordion title="Testing pyramid vs testing trophy?">
+The pyramid puts most tests at the unit level and few at E2E, because UI tests used to be slow. The trophy (Kent C. Dodds) adds static analysis at the base and puts **most tests at the integration level**, because tests that resemble real usage give more confidence per test, and modern tools make them fast. E2E stays small for critical paths either way.
+</Accordion>
 
-> [!question]- What are the principles of React Testing Library?
-> Test behaviour, not implementation. Query like a user or AT would (role and label first, test IDs last), interact with `user-event`, use `findBy` for async, and assert on what the user sees. Tests then survive refactors and push you toward accessible markup.
+<Accordion title="What are the principles of React Testing Library?">
+Test behaviour, not implementation. Query like a user or AT would (role and label first, test IDs last), interact with `user-event`, use `findBy` for async, and assert on what the user sees. Tests then survive refactors and push you toward accessible markup.
+</Accordion>
 
-> [!question]- How do you mock API calls in frontend tests?
-> Prefer MSW: request handlers intercept at the network level (a Service Worker in the browser, interception in Node), so the real fetching, caching and error code runs. Override handlers per test with `server.use()` for error and edge cases, and set `onUnhandledRequest: 'error'` to catch unexpected calls. The same handlers can power Storybook and local dev.
+<Accordion title="How do you mock API calls in frontend tests?">
+Prefer MSW: request handlers intercept at the network level (a Service Worker in the browser, interception in Node), so the real fetching, caching and error code runs. Override handlers per test with `server.use()` for error and edge cases, and set `onUnhandledRequest: 'error'` to catch unexpected calls. The same handlers can power Storybook and local dev.
+</Accordion>
 
-> [!question]- Jest vs Vitest: why migrate?
-> Vitest has a Jest-compatible API but runs on Vite: native ESM/TS without Babel, shared app config and aliases, faster watch mode, and a stable real-browser mode (Vitest 4) with screenshot testing. Migration is mostly `jest.*` to `vi.*` plus config. Angular made Vitest its default runner in v21. Vitest 5 (Sept 2026) makes un-awaited async assertions fail and clears mocks by default.
+<Accordion title="Jest vs Vitest: why migrate?">
+Vitest has a Jest-compatible API but runs on Vite: native ESM/TS without Babel, shared app config and aliases, faster watch mode, and a stable real-browser mode (Vitest 4) with screenshot testing. Migration is mostly `jest.*` to `vi.*` plus config. Angular made Vitest its default runner in v21. Vitest 5 (Sept 2026) makes un-awaited async assertions fail and clears mocks by default.
+</Accordion>
 
-> [!question]- Cypress vs Playwright?
-> Cypress runs inside the browser with a great time-travel debugger and chained commands, but has limited multi-tab/origin support and weaker WebKit support. Playwright drives Chromium, Firefox and WebKit externally with `async/await`, native multi-context, free parallel sharding, traces, codegen, aria snapshots and (since 1.56) AI Test Agents. For new suites, Playwright is the common choice.
+<Accordion title="Cypress vs Playwright?">
+Cypress runs inside the browser with a great time-travel debugger and chained commands, but has limited multi-tab/origin support and weaker WebKit support. Playwright drives Chromium, Firefox and WebKit externally with `async/await`, native multi-context, free parallel sharding, traces, codegen, aria snapshots and (since 1.56) AI Test Agents. For new suites, Playwright is the common choice.
+</Accordion>
 
-> [!question]- Are snapshot tests good?
-> Only for small, stable, meaningful output. Large component snapshots break on any markup change, get approved without review, and don't express intent. Prefer explicit assertions, visual regression for appearance, and aria snapshots for structure.
+<Accordion title="Are snapshot tests good?">
+Only for small, stable, meaningful output. Large component snapshots break on any markup change, get approved without review, and don't express intent. Prefer explicit assertions, visual regression for appearance, and aria snapshots for structure.
+</Accordion>
 
-> [!question]- How do you run an A/B test with multiple variants on the frontend without hurting UX?
-> Define the hypothesis, primary metric, guardrails and sample size first. Assign variants deterministically (hash of user ID + experiment ID), stick to them, and check for sample ratio mismatch. Decide on the server or edge to avoid flicker and CLS, and code-split the variants. Analyse without early peeking, then delete the losing variant code. Test each variant by forcing it through a flag override.
+<Accordion title="How do you run an A/B test with multiple variants on the frontend without hurting UX?">
+Define the hypothesis, primary metric, guardrails and sample size first. Assign variants deterministically (hash of user ID + experiment ID), stick to them, and check for sample ratio mismatch. Decide on the server or edge to avoid flicker and CLS, and code-split the variants. Analyse without early peeking, then delete the losing variant code. Test each variant by forcing it through a flag override.
+</Accordion>
 
-> [!question]- How do you deal with flaky tests?
-> Find the source: timing (use auto-waiting and `findBy`, never sleeps), shared state (isolate data and contexts, reset MSW handlers and mocks), order dependence, real network or third parties (mock them), animations (disable them in tests), time and time zones (fake timers, fixed TZ). Quarantine and track flaky tests instead of blindly adding retries.
+<Accordion title="How do you deal with flaky tests?">
+Find the source: timing (use auto-waiting and `findBy`, never sleeps), shared state (isolate data and contexts, reset MSW handlers and mocks), order dependence, real network or third parties (mock them), animations (disable them in tests), time and time zones (fake timers, fixed TZ). Quarantine and track flaky tests instead of blindly adding retries.
+</Accordion>
 
 ## Related
-- [[Next.js Testing - Unit, Integration & E2E]] · [[Playwright Automation as a Cron Job]]
-- [[Accessibility Essentials]]
-- [[Design Systems]]
-- [[Build Tools & Bundlers]]
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[Server State - TanStack Query & RTK Query]]
-- [[Next.js 15 to 16.3]]
-- [[Modern Angular v17 to v22]]
-- [[AI in Frontend - MCP, WebMCP & Built-in AI]]
-- [[Case Study - Flight Search & Booking]]
-- [[Frontend Interview Concepts & Question Bank]]
+- [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E) · [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
+- [Case Study - Flight Search & Booking](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Flight%20Search%20%26%20Booking)
+- [Frontend Interview Concepts & Question Bank](/Software%20Engineering/Interviews/Frontend%20Interview%20Concepts%20%26%20Question%20Bank)
 
 ## Sources
 - Owner's notes: `Front End.md` Testing section (Jest, Cypress, A/B testing); `Interview.md` ("How do you approach A/B Testing with multiple variants?")

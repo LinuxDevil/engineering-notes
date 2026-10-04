@@ -1,12 +1,16 @@
 ---
+title: "Backtracking"
 tags: [dsa, dsa/patterns]
 aliases: [Backtracking pattern, Choose-Explore-Unchoose, Subsets pattern, Permutations pattern, Combinations pattern, N-Queens]
 updated: 2026-09-27
 ---
 # Backtracking
 
-> [!tldr] TL;DR
-> Backtracking builds a solution **one choice at a time**, recurses, and **undoes the choice** before trying the next one: **choose, explore, unchoose**. It is a DFS over a tree of partial solutions, used whenever the problem says "generate all" (subsets, permutations, combinations, boards) or "find any valid arrangement". The cost is exponential by nature (2^n subsets, n! permutations), so the craft is in **pruning** branches early.
+<Note>
+**TL;DR**
+
+Backtracking builds a solution **one choice at a time**, recurses, and **undoes the choice** before trying the next one: **choose, explore, unchoose**. It is a DFS over a tree of partial solutions, used whenever the problem says "generate all" (subsets, permutations, combinations, boards) or "find any valid arrangement". The cost is exponential by nature (2^n subsets, n! permutations), so the craft is in **pruning** branches early.
+</Note>
 
 ## The idea
 
@@ -24,7 +28,7 @@ subsets of [1, 2, 3]  (each node is recorded)
   [1,2,3]
 ```
 
-The general recipe is in [[Recursion & Backtracking]]. This note is the interview pattern: a reusable template plus the four families (subsets, combinations, permutations, constraint boards) and how to prune.
+The general recipe is in [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking). This note is the interview pattern: a reusable template plus the four families (subsets, combinations, permutations, constraint boards) and how to prune.
 
 ```mermaid
 flowchart TD
@@ -169,7 +173,7 @@ def subsets(nums: list[int]) -> list[list[int]]:
     return res
 ```
 
-Alternative without recursion: iterate masks `0 .. 2^n - 1` and include `nums[i]` when bit `i` is set (see [[Bit Manipulation]]).
+Alternative without recursion: iterate masks `0 .. 2^n - 1` and include `nums[i]` when bit `i` is set (see [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation)).
 
 ## More templates
 
@@ -389,9 +393,9 @@ def exist(board: list[list[str]], word: str) -> bool:
 
 - **"Return all ..."**: all subsets, permutations, combinations, partitions, valid parentheses, IP addresses, phone letter combinations.
 - **"Find any / count arrangements that satisfy constraints"**: N-Queens, Sudoku, crosswords, graph coloring.
-- **Small n** (roughly n <= 20 for subsets, n <= 10 for permutations). Tiny constraints are a strong hint that exponential search is expected.
+- **Small n** (roughly n &lt;= 20 for subsets, n &lt;= 10 for permutations). Tiny constraints are a strong hint that exponential search is expected.
 - **Path search on a grid** where a cell cannot be reused within one path (word search).
-- If the problem asks only for a **count or optimum** and subproblems repeat, backtracking plus memoization becomes [[Dynamic Programming]].
+- If the problem asks only for a **count or optimum** and subproblems repeat, backtracking plus memoization becomes [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
 
 ## Trade-offs & pitfalls
 
@@ -406,10 +410,10 @@ def exist(board: list[list[str]], word: str) -> bool:
 ## Senior perspective
 
 - **Real systems**: constraint solvers (SAT/SMT, CP-SAT), Sudoku and puzzle solvers, regex engines with backtracking (the cause of catastrophic ReDoS on patterns like `(a+)+$`), package version resolvers (pip, npm, Cargo resolve dependency constraints with backtracking search), and query planners enumerating join orders with pruning.
-- **ReDoS is a production incident class.** Backtracking regex engines (JS, Python `re`, Java) can take exponential time on crafted input. Linear-time engines such as RE2 avoid it; see [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] for input handling.
+- **ReDoS is a production incident class.** Backtracking regex engines (JS, Python `re`, Java) can take exponential time on crafted input. Linear-time engines such as RE2 avoid it; see [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) for input handling.
 - **Pruning beats micro-optimizing.** A good bound (branch and bound), symmetry breaking (N-Queens: only try half the first row), or ordering heuristics (most constrained variable first in Sudoku) cut orders of magnitude.
 - **Bitmasks** replace sets for speed on small boards: N-Queens with three integers is several times faster than with hash sets.
-- **Generators** fit well for streaming results without holding all of them in memory: `yield` each solution ([[Iterators, Generators & Iterator Helpers]]).
+- **Generators** fit well for streaming results without holding all of them in memory: `yield` each solution ([Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers)).
 - **In review**, ask: is the output size bounded? What stops a runaway search on bad input (timeouts, depth limits)? Is shared state restored on every path, including early returns and exceptions?
 - **In interviews**, draw the decision tree for a tiny input, name the family, write the template, then add pruning and duplicate handling. State the exponential complexity confidently and relate it to the output size.
 
@@ -428,29 +432,35 @@ Next steps: [90. Subsets II](https://leetcode.com/problems/subsets-ii/), [40. Co
 
 ## Interview questions
 
-> [!question]- What is backtracking and how does it differ from plain recursion or DFS?
-> It is DFS over a tree of partial solutions where you mutate one shared state: choose, recurse, then undo the choice. Plain recursion does not necessarily undo anything; backtracking specifically explores alternatives by reverting state, and prunes branches that cannot lead to a valid solution.
+<Accordion title="What is backtracking and how does it differ from plain recursion or DFS?">
+It is DFS over a tree of partial solutions where you mutate one shared state: choose, recurse, then undo the choice. Plain recursion does not necessarily undo anything; backtracking specifically explores alternatives by reverting state, and prunes branches that cannot lead to a valid solution.
+</Accordion>
 
-> [!question]- Why is the complexity of Subsets O(n · 2^n)?
-> There are 2^n subsets, each is a node in the tree, and copying each into the result costs up to O(n). You cannot do better because the output itself has that size.
+<Accordion title="Why is the complexity of Subsets O(n · 2^n)?">
+There are 2^n subsets, each is a node in the tree, and copying each into the result costs up to O(n). You cannot do better because the output itself has that size.
+</Accordion>
 
-> [!question]- How do you avoid duplicate results when the input has duplicates?
-> Sort the input, then at each tree level skip a candidate equal to the previous one: `if i > start and nums[i] == nums[i - 1]: continue`. For permutations, skip `nums[i]` if it equals `nums[i-1]` and `nums[i-1]` is not currently used.
+<Accordion title="How do you avoid duplicate results when the input has duplicates?">
+Sort the input, then at each tree level skip a candidate equal to the previous one: `if i > start and nums[i] == nums[i - 1]: continue`. For permutations, skip `nums[i]` if it equals `nums[i-1]` and `nums[i-1]` is not currently used.
+</Accordion>
 
-> [!question]- What is pruning? Give an example.
-> Cutting off a branch as soon as you know it cannot produce a valid answer. In Combination Sum, sort candidates and `break` when a candidate exceeds the remaining target. In N-Queens, skip columns and diagonals already attacked. In Combinations, stop when too few numbers remain to reach size k.
+<Accordion title="What is pruning? Give an example.">
+Cutting off a branch as soon as you know it cannot produce a valid answer. In Combination Sum, sort candidates and `break` when a candidate exceeds the remaining target. In N-Queens, skip columns and diagonals already attacked. In Combinations, stop when too few numbers remain to reach size k.
+</Accordion>
 
-> [!question]- When does backtracking become dynamic programming?
-> When you only need a count or an optimum (not the list of solutions) and the same subproblem is reached by different paths. Then you memoize the state (for example `(index, remaining)`) and it becomes top-down DP.
+<Accordion title="When does backtracking become dynamic programming?">
+When you only need a count or an optimum (not the list of solutions) and the same subproblem is reached by different paths. Then you memoize the state (for example `(index, remaining)`) and it becomes top-down DP.
+</Accordion>
 
-> [!question]- Word Search: why O(R · C · 3^L) and not 4^L?
-> From each cell after the first you never go back to the cell you came from (it is marked), so at most 3 new directions per step. You may start from each of the R · C cells.
+<Accordion title="Word Search: why O(R · C · 3^L) and not 4^L?">
+From each cell after the first you never go back to the cell you came from (it is marked), so at most 3 new directions per step. You may start from each of the R · C cells.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Recursion & Backtracking]] · [[Tree Traversal - DFS & BFS]] · [[Graph BFS-DFS patterns]]
-- [[Dynamic Programming]] (backtracking plus memoization) · [[Bit Manipulation]] (subsets via bitmask) · [[Tries]] (Word Search II)
-- [[Execution Context & Call Stack]] · [[Big-O & Complexity Analysis]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns)
+- [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (backtracking plus memoization) · [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation) (subsets via bitmask) · [Tries](/Software%20Engineering/DSA/02%20Data%20Structures/Tries) (Word Search II)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
 
 ## Sources
 - Cormen et al., *Introduction to Algorithms*, 4th ed., MIT Press 2022

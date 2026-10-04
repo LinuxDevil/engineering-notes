@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Chat System"
 tags: [system-design, system-design/case-study]
 aliases: [Chat System Design, WhatsApp Design, Messenger Design, Slack Design]
 updated: 2026-09-27
 ---
 # Case Study - Chat System
 
-> [!tldr] TL;DR
-> A chat system needs **persistent bidirectional connections** (WebSockets) held by a fleet of **stateful gateway servers**, a **routing layer** that knows which gateway each user is connected to, a **message store** partitioned by conversation and ordered by a per-conversation sequence, and **offline delivery** via push notifications and sync-on-reconnect. Key deep dives: ordering, delivery receipts, idempotent retries, group fan-out, presence, and (for consumer apps) end-to-end encryption.
+<Note>
+**TL;DR**
+
+A chat system needs **persistent bidirectional connections** (WebSockets) held by a fleet of **stateful gateway servers**, a **routing layer** that knows which gateway each user is connected to, a **message store** partitioned by conversation and ordered by a per-conversation sequence, and **offline delivery** via push notifications and sync-on-reconnect. Key deep dives: ordering, delivery receipts, idempotent retries, group fan-out, presence, and (for consumer apps) end-to-end encryption.
+</Note>
 
 ## 1. Requirements
 **Functional**: 1:1 and group chat (≤ 500 members), send/receive in real time, message history, online presence, delivered/read receipts, push notifications when offline, multi-device.
@@ -65,14 +69,14 @@ Flow: A sends → gateway 1 → chat service assigns `seq`, persists, acks to A 
 
 ## 6. Deep dives
 ### Connections and gateways
-- WebSockets over TLS; long polling / SSE as fallback ([[Networking - HTTP, Caching & Real-time]]).
+- WebSockets over TLS; long polling / SSE as fallback ([Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)).
 - Gateways are **stateful** (hold sockets) but should hold no durable state; if one dies, clients reconnect (with jittered backoff to avoid a reconnect storm) and resync.
 - L4 load balancing or least-connections; drain connections gradually during deploys.
 - Heartbeats (ping/pong every ~30 s) detect dead connections and keep NATs open.
 
 ### Ordering and idempotency
 - The server assigns a **per-conversation sequence** (single writer per conversation via partitioned Kafka / sequencer, or a DB counter). Clients order by `seq`, not timestamps.
-- Client generates `clientMsgId`; server dedupes retries on it (at-least-once from client → server). See [[Distributed Systems Patterns]].
+- Client generates `clientMsgId`; server dedupes retries on it (at-least-once from client → server). See [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns).
 - Gaps in `seq` on the client trigger a fetch of the missing range.
 
 ### Delivery receipts
@@ -89,7 +93,7 @@ Heartbeat-based: user online if a heartbeat arrived within ~60 s; store in Redis
 Session registry maps user → set of (device, gateway). Each device tracks its own sync cursor. With E2EE, each device has its own keys.
 
 ### End-to-end encryption
-Signal Protocol (X3DH / PQXDH key agreement + Double Ratchet) used by WhatsApp and Signal: server stores and forwards **ciphertext only**, so server-side search and moderation are not possible. Group E2EE uses sender keys or MLS (RFC 9420). See [[Cryptography Basics for Engineers]].
+Signal Protocol (X3DH / PQXDH key agreement + Double Ratchet) used by WhatsApp and Signal: server stores and forwards **ciphertext only**, so server-side search and moderation are not possible. Group E2EE uses sender keys or MLS (RFC 9420). See [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers).
 
 ## 7. Trade-offs and failure modes
 - Gateway failure: thousands of reconnects at once → jittered backoff, connection rate limits on gateways.
@@ -104,25 +108,30 @@ Signal Protocol (X3DH / PQXDH key agreement + Double Ratchet) used by WhatsApp a
 - Abuse/spam and moderation pipelines are major real-world concerns (and harder with E2EE).
 
 ## Interview questions
-> [!question]- How does the server know where to deliver a message?
-> A session registry (e.g. Redis) maps each user/device to the gateway server holding their connection, updated on connect/disconnect with TTL heartbeats. Delivery workers look it up and forward to that gateway, or fall back to push notifications.
+<Accordion title="How does the server know where to deliver a message?">
+A session registry (e.g. Redis) maps each user/device to the gateway server holding their connection, updated on connect/disconnect with TTL heartbeats. Delivery workers look it up and forward to that gateway, or fall back to push notifications.
+</Accordion>
 
-> [!question]- How do you guarantee message ordering?
-> Order per conversation using a server-assigned monotonically increasing sequence number from a single writer per conversation (partition by conv_id). Clients sort by sequence and fetch gaps. Global order is unnecessary.
+<Accordion title="How do you guarantee message ordering?">
+Order per conversation using a server-assigned monotonically increasing sequence number from a single writer per conversation (partition by conv_id). Clients sort by sequence and fetch gaps. Global order is unnecessary.
+</Accordion>
 
-> [!question]- How do you avoid duplicate messages on retry?
-> Clients attach a unique clientMsgId; the server dedupes (unique constraint or dedupe cache) and returns the original ack. Devices dedupe on server msgId too.
+<Accordion title="How do you avoid duplicate messages on retry?">
+Clients attach a unique clientMsgId; the server dedupes (unique constraint or dedupe cache) and returns the original ack. Devices dedupe on server msgId too.
+</Accordion>
 
-> [!question]- WebSocket vs long polling vs SSE?
-> WebSocket: full duplex, low overhead, best for chat. SSE: server → client only over HTTP, simple, auto-reconnect; pair with POST for sends. Long polling: works everywhere but more overhead and latency. Use WebSockets with a fallback.
+<Accordion title="WebSocket vs long polling vs SSE?">
+WebSocket: full duplex, low overhead, best for chat. SSE: server → client only over HTTP, simple, auto-reconnect; pair with POST for sends. Long polling: works everywhere but more overhead and latency. Use WebSockets with a fallback.
+</Accordion>
 
-> [!question]- How do offline users get messages?
-> Messages are persisted first; offline recipients get a push notification via APNs/FCM; on reconnect, the client asks for messages after its last seen sequence per conversation.
+<Accordion title="How do offline users get messages?">
+Messages are persisted first; offline recipients get a push notification via APNs/FCM; on reconnect, the client asks for messages after its last seen sequence per conversation.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[Message Queues & Event Streaming]] · [[Consistent Hashing]] · [[Unique ID Generation]] · [[Case Study - Notification System]] · [[Distributed Systems Patterns]]
-- [[Networking - HTTP, Caching & Real-time]] · [[Cryptography Basics for Engineers]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing) · [Unique ID Generation](/Software%20Engineering/System%20Design/Unique%20ID%20Generation) · [Case Study - Notification System](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Notification%20System) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers)
 
 ## Sources
 - Alex Xu, *System Design Interview*, vol. 1, ch. 12 "Design a Chat System"

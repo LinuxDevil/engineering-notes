@@ -1,17 +1,24 @@
 ---
+title: "Code Review Best Practices"
 tags: [career, career/code-review]
 aliases: [Code Review, Code Reviews, PR Review, Reviewing Pull Requests, Reviewing AI Code]
 updated: 2026-09-27
 ---
 # Code Review Best Practices
 
-> [!tldr] TL;DR
-> Code review exists to keep the **codebase healthy over time** and to share knowledge, not to prove who's smartest. Google's standard: approve a change once it **definitely improves the overall code health**, even if it isn't perfect. Authors send small, well-described changes; reviewers respond quickly, focus on design, correctness and tests before style, and write kind, specific comments with a clear severity. With AI generating more code in 2025–2026, review is now the main quality gate, so review AI-written code **more** carefully, not less.
+<Note>
+**TL;DR**
 
-> [!info]+ 🆕 2025–2026
-> - **2025-04-04**: GitHub Copilot code review became generally available for paid Copilot users; AI reviewers (Copilot, CodeRabbit, and others) are now common as a **first pass** ([GitHub changelog](https://github.blog/changelog/2025-04-04-copilot-code-review-now-generally-available/)).
-> - **2025**: DORA's *State of AI-assisted Software Development* found AI adoption linked to higher throughput **and** higher delivery instability; small batches and strong version control practices are among the capabilities that decide whether AI helps ([DORA 2025](https://dora.dev/dora-report-2025/)). Bigger AI-generated PRs make review the bottleneck.
-> - **2025**: Stack Overflow survey: 66% of developers cite AI answers that are "almost right, but not quite" as their top frustration ([survey](https://survey.stackoverflow.co/2025/ai)), which is exactly what reviewers must catch.
+Code review exists to keep the **codebase healthy over time** and to share knowledge, not to prove who's smartest. Google's standard: approve a change once it **definitely improves the overall code health**, even if it isn't perfect. Authors send small, well-described changes; reviewers respond quickly, focus on design, correctness and tests before style, and write kind, specific comments with a clear severity. With AI generating more code in 2025–2026, review is now the main quality gate, so review AI-written code **more** carefully, not less.
+</Note>
+
+<Info>
+**🆕 2025–2026**
+
+- **2025-04-04**: GitHub Copilot code review became generally available for paid Copilot users; AI reviewers (Copilot, CodeRabbit, and others) are now common as a **first pass** ([GitHub changelog](https://github.blog/changelog/2025-04-04-copilot-code-review-now-generally-available/)).
+- **2025**: DORA's *State of AI-assisted Software Development* found AI adoption linked to higher throughput **and** higher delivery instability; small batches and strong version control practices are among the capabilities that decide whether AI helps ([DORA 2025](https://dora.dev/dora-report-2025/)). Bigger AI-generated PRs make review the bottleneck.
+- **2025**: Stack Overflow survey: 66% of developers cite AI answers that are "almost right, but not quite" as their top frustration ([survey](https://survey.stackoverflow.co/2025/ai)), which is exactly what reviewers must catch.
+</Info>
 
 ## Why we review
 1. Catch defects and design problems early (cheaper than in production).
@@ -28,7 +35,7 @@ updated: 2026-09-27
 | 2 | **Functionality** | Does it do what the author intended, and is that what users need? Edge cases, concurrency, errors? |
 | 3 | **Complexity** | Can it be simpler? Over-engineering for hypothetical futures? |
 | 4 | **Tests** | Tests for the behaviour and edge cases? Would they fail if the code broke? |
-| 5 | **Security & data** | Input validation, authz checks, secrets, PII in logs, SQL built from strings ([[Backend Security Essentials]]) |
+| 5 | **Security & data** | Input validation, authz checks, secrets, PII in logs, SQL built from strings ([Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials)) |
 | 6 | **Operability** | Logs, metrics, feature flags, migrations safe to roll back, performance at scale |
 | 7 | **Naming & comments** | Clear names; comments explain *why*, not *what* |
 | 8 | **Style** | Automate it with formatters and linters; don't spend human attention here |
@@ -80,26 +87,32 @@ Extra DB write per payment (~2 ms p99 in staging).
 ## Reviewing AI-generated code
 AI output is plausible by construction, so errors hide in the details.
 
-> [!example] Checklist for AI-written changes
-> - **Does it solve the actual problem?** AI often solves a nearby problem or the general case with the wrong constraints.
-> - **Hallucinated APIs**: methods, options or packages that don't exist, or exist in a different version. Check imports and new dependencies (also for typosquats: "slopsquatting").
-> - **Edge cases and error paths**: empty inputs, nulls, timeouts, partial failures; AI tends to write the happy path.
-> - **Security**: string-built SQL, missing authz checks, disabled TLS verification, secrets inline, overly broad permissions.
-> - **Tests that test nothing**: tests asserting the implementation's current output, mocking everything, or modified to pass.
-> - **Duplication**: re-implementing helpers that already exist in the codebase.
-> - **Over-engineering**: unnecessary abstractions, config options, comments that restate the code.
-> - **Consistency**: project conventions, logging, error handling patterns.
-> - **Size**: ask for a split if the PR is too big to review properly.
+<Info>
+**Checklist for AI-written changes**
+
+- **Does it solve the actual problem?** AI often solves a nearby problem or the general case with the wrong constraints.
+- **Hallucinated APIs**: methods, options or packages that don't exist, or exist in a different version. Check imports and new dependencies (also for typosquats: "slopsquatting").
+- **Edge cases and error paths**: empty inputs, nulls, timeouts, partial failures; AI tends to write the happy path.
+- **Security**: string-built SQL, missing authz checks, disabled TLS verification, secrets inline, overly broad permissions.
+- **Tests that test nothing**: tests asserting the implementation's current output, mocking everything, or modified to pass.
+- **Duplication**: re-implementing helpers that already exist in the codebase.
+- **Over-engineering**: unnecessary abstractions, config options, comments that restate the code.
+- **Consistency**: project conventions, logging, error handling patterns.
+- **Size**: ask for a split if the PR is too big to review properly.
+</Info>
 
 Use AI reviewers as a first pass for obvious issues, but a human stays accountable for design and correctness.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Rubber-stamping ("LGTM") big PRs you didn't read.
-> - Nit-picking style that a formatter should handle.
-> - Reviews that sit for days, pushing authors to batch more into each PR.
-> - Rewriting the author's solution to your preferred one when theirs is fine.
-> - Treating review as the only quality gate (tests, CI, monitoring matter more).
+<Warning>
+**Common mistakes**
+
+- Rubber-stamping ("LGTM") big PRs you didn't read.
+- Nit-picking style that a formatter should handle.
+- Reviews that sit for days, pushing authors to batch more into each PR.
+- Rewriting the author's solution to your preferred one when theirs is fine.
+- Treating review as the only quality gate (tests, CI, monitoring matter more).
+</Warning>
 
 ## Senior perspective
 - Set team norms: review SLAs, PR size guidelines, severity labels, what's automated, who must review what (CODEOWNERS).
@@ -108,25 +121,30 @@ Use AI reviewers as a first pass for obvious issues, but a human stays accountab
 - Watch team metrics: time to first review, PR size, rework rate. Slow reviews are a delivery problem, not a personal one.
 
 ## Interview questions
-> [!question]- What do you look for in a code review?
-> In order: design and whether the change is needed, correctness and edge cases, simplicity, tests, security and operability, then naming and docs. Style is left to automated tools.
+<Accordion title="What do you look for in a code review?">
+In order: design and whether the change is needed, correctness and edge cases, simplicity, tests, security and operability, then naming and docs. Style is left to automated tools.
+</Accordion>
 
-> [!question]- How do you give critical feedback in a review without hurting the relationship?
-> Comment on the code, explain why, suggest an alternative, mark severity, ask questions when unsure, and acknowledge good parts. Move heated threads to a conversation.
+<Accordion title="How do you give critical feedback in a review without hurting the relationship?">
+Comment on the code, explain why, suggest an alternative, mark severity, ask questions when unsure, and acknowledge good parts. Move heated threads to a conversation.
+</Accordion>
 
-> [!question]- When should a reviewer approve a PR that isn't perfect?
-> When it clearly improves the codebase's overall health and has no blocking issues. Remaining nits can be optional or follow-ups; perfection blocks progress.
+<Accordion title="When should a reviewer approve a PR that isn't perfect?">
+When it clearly improves the codebase's overall health and has no blocking issues. Remaining nits can be optional or follow-ups; perfection blocks progress.
+</Accordion>
 
-> [!question]- How do you review AI-generated code?
-> Verify it solves the right problem, check every API and dependency exists and is correct, look hard at edge cases, error paths, security and test quality, and ensure the author understands and owns it. Ask for smaller PRs if needed.
+<Accordion title="How do you review AI-generated code?">
+Verify it solves the right problem, check every API and dependency exists and is correct, look hard at edge cases, error paths, security and test quality, and ensure the author understands and owns it. Ask for smaller PRs if needed.
+</Accordion>
 
-> [!question]- How do you keep reviews fast in a busy team?
-> Small PRs, review SLAs, automated formatting/linting/tests, clear descriptions, CODEOWNERS to route reviews, and treating reviews as higher priority than starting new work.
+<Accordion title="How do you keep reviews fast in a busy team?">
+Small PRs, review SLAs, automated formatting/linting/tests, clear descriptions, CODEOWNERS to route reviews, and treating reviews as higher priority than starting new work.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Senior Engineer in the AI Era]] · [[Communication & Influence for Engineers]] · [[Mentoring & Leading Without Authority]]
-- [[Working With Legacy Code]] · [[Secure SDLC & Threat Modeling]] · [[Frontend Testing]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era) · [Communication & Influence for Engineers](/Software%20Engineering/Career/Communication%20%26%20Influence%20for%20Engineers) · [Mentoring & Leading Without Authority](/Software%20Engineering/Career/Mentoring%20%26%20Leading%20Without%20Authority)
+- [Working With Legacy Code](/Software%20Engineering/Career/Working%20With%20Legacy%20Code) · [Secure SDLC & Threat Modeling](/Software%20Engineering/Security/Secure%20SDLC%20%26%20Threat%20Modeling) · [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
 
 ## Sources
 - [Google Engineering Practices: Code Review](https://google.github.io/eng-practices/review/) (reviewer and author guides)

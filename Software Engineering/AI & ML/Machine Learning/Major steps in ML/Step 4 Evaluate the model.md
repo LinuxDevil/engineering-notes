@@ -1,12 +1,16 @@
 ---
+title: "Step 4 Evaluate the model"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Evaluate the Model, ML Step 4, ML Metrics, Precision and Recall, F1 Score]
 updated: 2026-09-27
 ---
 # Step 4 Evaluate the model
 
-> [!tldr] TL;DR
-> After training, measure how well the model does **on data it has never seen** (the test set), using a metric that matches the problem. Classification uses accuracy, **precision**, **recall**, **F1** and **log loss**; regression uses **MAE**, **RMSE** and **R²**. Accuracy alone is misleading on imbalanced data. Compare training vs test performance to spot **overfitting**.
+<Note>
+**TL;DR**
+
+After training, measure how well the model does **on data it has never seen** (the test set), using a metric that matches the problem. Classification uses accuracy, **precision**, **recall**, **F1** and **log loss**; regression uses **MAE**, **RMSE** and **R²**. Accuracy alone is misleading on imbalanced data. Compare training vs test performance to spot **overfitting**.
+</Note>
 
 *After you've collected data and trained a model, you evaluate how well it performs. The metrics are usually very specific to the problem you defined; as you grow in ML you'll meet many more.*
 
@@ -25,8 +29,11 @@ recall    = TP / (TP + FN)     "of everything real, how much did I catch?"
 F1        = 2 · precision · recall / (precision + recall)
 ```
 
-> [!warning] Why accuracy can lie
-> If 99% of camera frames contain no spill, a model that always says "no spill" is 99% accurate and completely useless. On imbalanced data, look at precision, recall, F1, or PR/ROC curves. See [[Example 3 Detecting Spills]].
+<Warning>
+**Why accuracy can lie**
+
+If 99% of camera frames contain no spill, a model that always says "no spill" is 99% accurate and completely useless. On imbalanced data, look at precision, recall, F1, or PR/ROC curves. See [Example 3 Detecting Spills](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%203%20Detecting%20Spills).
+</Warning>
 
 ## Metrics tailored to the use case
 
@@ -48,10 +55,10 @@ Measures how **confident and correct** the predicted probabilities are, not just
 The **average absolute difference** between predicted and actual values in regression, in the same units as the target.
 *Example*: 10 houses, actual prices $200k, 250k, ..., 650k (step $50k); predicted $180k, 240k, 290k, 360k, 410k, 480k, 510k, 560k, 610k, 640k. The absolute errors are 20, 10, 10, 10, 10, 30, 10, 10, 10, 10 (thousand), sum 130k, so MAE = **$13,000**. *(The original note said $15,000; the arithmetic gives $13,000.)*
 
-Related: **RMSE** (root mean squared error) squares errors before averaging, so big misses count more. For the same houses RMSE = √(2.2×10⁹ / 10) ≈ **$14,800**. This is the "RMS" used in [[Example 1 Predicting Home Prices]].
+Related: **RMSE** (root mean squared error) squares errors before averaging, so big misses count more. For the same houses RMSE = √(2.2×10⁹ / 10) ≈ **$14,800**. This is the "RMS" used in [Example 1 Predicting Home Prices](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%201%20Predicting%20Home%20Prices).
 
 ### 5. Hinge loss
-Used for maximum-margin binary classifiers such as SVMs, with labels y ∈ {−1, +1} and a raw score f(x):
+Used for maximum-margin binary classifiers such as SVMs, with labels y ∈ \{−1, +1\} and a raw score f(x):
 
 ```text
 hinge = max(0, 1 − y · f(x))
@@ -105,37 +112,41 @@ It is ≥ 0, equals 0 only when the distributions match, and is **not symmetric*
 | | RMSE | large errors are especially bad |
 | | R² | explaining variance, comparing fits |
 | | Quantile loss | predicting ranges/percentiles |
-| Clustering | Silhouette | no labels ([[Example 2 Micro-genre Book Genre]]) |
+| Clustering | Silhouette | no labels ([Example 2 Micro-genre Book Genre](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%202%20Micro-genre%20Book%20Genre)) |
 
 ## Overfitting vs underfitting
 - **Underfitting** (high bias): poor on both train and test. The model is too simple.
-- **Overfitting** (high variance): great on train, poor on test. The model memorised noise. Fix with more data, regularisation, simpler models, early stopping. See [[Neural Networks & Deep Learning Basics]].
+- **Overfitting** (high variance): great on train, poor on test. The model memorised noise. Fix with more data, regularisation, simpler models, early stopping. See [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics).
 
 ## Senior perspective
 - Pick the **business metric first** (cost of a missed fraud vs a blocked customer), then the ML metric that tracks it.
 - Report metrics per **segment** (region, device, new vs returning users); a good average can hide a failing group, which is also how fairness issues show up.
 - Use **cross-validation** for small data, and a **time-based split** for anything time-dependent.
 - Offline metrics are a proxy. Confirm with an online test (A/B or shadow mode) before full rollout.
-- LLM systems need different evaluation (rubrics, LLM-as-judge, golden sets): see [[LLM Evaluation & Observability]].
+- LLM systems need different evaluation (rubrics, LLM-as-judge, golden sets): see [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability).
 
 ## Interview questions
 
-> [!question]- Precision vs recall: which would you optimise for a cancer screening model?
-> Recall: missing a real case (false negative) is far worse than a false alarm that leads to a follow-up test. You'd still watch precision so the follow-up load stays manageable.
+<Accordion title="Precision vs recall: which would you optimise for a cancer screening model?">
+Recall: missing a real case (false negative) is far worse than a false alarm that leads to a follow-up test. You'd still watch precision so the follow-up load stays manageable.
+</Accordion>
 
-> [!question]- Why is accuracy a bad metric for fraud detection?
-> Fraud is rare, so predicting "not fraud" every time gives very high accuracy while catching nothing. Use precision, recall, F1 or PR-AUC instead.
+<Accordion title="Why is accuracy a bad metric for fraud detection?">
+Fraud is rare, so predicting "not fraud" every time gives very high accuracy while catching nothing. Use precision, recall, F1 or PR-AUC instead.
+</Accordion>
 
-> [!question]- MAE vs RMSE?
-> Both in target units. RMSE squares errors, so it penalises large errors more and is more sensitive to outliers; MAE treats all errors linearly. RMSE ≥ MAE always.
+<Accordion title="MAE vs RMSE?">
+Both in target units. RMSE squares errors, so it penalises large errors more and is more sensitive to outliers; MAE treats all errors linearly. RMSE ≥ MAE always.
+</Accordion>
 
-> [!question]- How do you detect overfitting?
-> Training performance keeps improving while validation/test performance stalls or gets worse. A large train-test gap is the signal.
+<Accordion title="How do you detect overfitting?">
+Training performance keeps improving while validation/test performance stalls or gets worse. A large train-test gap is the signal.
+</Accordion>
 
 ## Related
-- [[Major steps in ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Step 3 Train the model]] · Next: [[Step 5 Use the model]]
-- [[LLM Evaluation & Observability]]
+- [Major steps in ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Major%20steps%20in%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model) · Next: [Step 5 Use the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%205%20Use%20the%20model)
+- [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

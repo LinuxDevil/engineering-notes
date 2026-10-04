@@ -1,14 +1,18 @@
 ---
+title: "Advanced Filtering Data"
 tags: [databases, databases/sql]
 aliases: [AND OR NOT IN, Logical Operators, Three-Valued Logic, NOT IN NULL, SQL Injection]
 updated: 2026-09-27
 ---
 # Advanced Filtering Data
 
-> [!tldr] TL;DR
-> Combine conditions with `AND`, `OR`, `NOT` and `IN`. `AND` binds tighter than `OR`, so **always use parentheses** when mixing them. SQL uses **three-valued logic** (TRUE, FALSE, UNKNOWN), which makes `NOT IN` return nothing if the list contains a `NULL`; prefer `NOT EXISTS`. And never paste user input into a `WHERE` clause: use parameterized queries.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 5 · Prev: [[Filtering Data]] · Next: [[Using Wildcard Filtering]]
+Combine conditions with `AND`, `OR`, `NOT` and `IN`. `AND` binds tighter than `OR`, so **always use parentheses** when mixing them. SQL uses **three-valued logic** (TRUE, FALSE, UNKNOWN), which makes `NOT IN` return nothing if the list contains a `NULL`; prefer `NOT EXISTS`. And never paste user input into a `WHERE` clause: use parameterized queries.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 5 · Prev: [Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Filtering%20Data) · Next: [Using Wildcard Filtering](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Wildcard%20Filtering)
 
 Combining `WHERE` with the `AND`, `OR`, `IN` and `NOT` operators.
 
@@ -66,8 +70,11 @@ WHERE (vend_id = 'DLL01' OR vend_id = 'BRS01')
 
 **Analysis:** parentheses have higher precedence than `AND` and `OR`, so the `OR` is evaluated first. Now it reads *products from `DLL01` or `BRS01` costing $10 or more*.
 
-> [!tip] Rule of thumb
-> Whenever a `WHERE` mixes `AND` and `OR`, add parentheses, even when you think precedence already does the right thing. It costs nothing and removes ambiguity for the next reader.
+<Tip>
+**Rule of thumb**
+
+Whenever a `WHERE` mixes `AND` and `OR`, add parentheses, even when you think precedence already does the right thing. It costs nothing and removes ambiguity for the next reader.
+</Tip>
 
 Precedence, highest first: parentheses, comparison operators, `NOT`, `AND`, `OR`.
 
@@ -97,7 +104,7 @@ Why use `IN`?
 1. With long lists, `IN` is much cleaner and easier to read.
 2. The order of evaluation is easier to manage when combined with `AND`/`OR`.
 3. `IN` is often at least as fast as a list of `OR`s (modern optimizers frequently rewrite one into the other).
-4. `IN` can contain another `SELECT` (a subquery), enabling dynamic `WHERE` clauses. See [[Working with Subqueries]].
+4. `IN` can contain another `SELECT` (a subquery), enabling dynamic `WHERE` clauses. See [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries).
 
 ## Using the `NOT` operator
 
@@ -193,30 +200,35 @@ For `IN` lists, pass an array (`WHERE id = ANY($1)` in PostgreSQL) instead of co
 
 - **`OR` across different columns** (`WHERE a = 1 OR b = 2`) often can't use a single index; databases may use a bitmap OR of two indexes, or you can rewrite as `UNION`. PostgreSQL 18 improved turning `OR` clauses into index-friendly array lookups.
 - **Long `IN` lists** (thousands of literals) bloat parse time and plan caches. Use `= ANY($1::int[])`, a temp table, or a `VALUES` list joined in.
-- **`NOT`/`<>` predicates are rarely selective**; an index won't help "everything except X". Consider a partial index on the rare case instead ([[SQL Indexes Deep Dive]]).
+- **`NOT`/`<>` predicates are rarely selective**; an index won't help "everything except X". Consider a partial index on the rare case instead ([SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive)).
 - In code review, flag any SQL built with `+`, template strings or `format()` using request data.
 
 ## Interview questions
 
-> [!question]- What's the precedence of AND and OR?
-> `AND` binds tighter than `OR` (and `NOT` tighter than both). `a OR b AND c` means `a OR (b AND c)`. Use parentheses.
+<Accordion title="What's the precedence of AND and OR?">
+`AND` binds tighter than `OR` (and `NOT` tighter than both). `a OR b AND c` means `a OR (b AND c)`. Use parentheses.
+</Accordion>
 
-> [!question]- Why can `NOT IN (subquery)` return no rows?
-> If the subquery returns a `NULL`, `x <> NULL` is UNKNOWN, so `x NOT IN (...)` is never TRUE. Use `NOT EXISTS` or filter `IS NOT NULL` in the subquery.
+<Accordion title="Why can `NOT IN (subquery)` return no rows?">
+If the subquery returns a `NULL`, `x <> NULL` is UNKNOWN, so `x NOT IN (...)` is never TRUE. Use `NOT EXISTS` or filter `IS NOT NULL` in the subquery.
+</Accordion>
 
-> [!question]- EXISTS or IN?
-> Semantically similar for positive checks, and modern optimizers plan both as semi-joins. For negation, `NOT EXISTS` is the safe default because of NULLs. `EXISTS` also reads naturally for correlated "has any" checks.
+<Accordion title="EXISTS or IN?">
+Semantically similar for positive checks, and modern optimizers plan both as semi-joins. For negation, `NOT EXISTS` is the safe default because of NULLs. `EXISTS` also reads naturally for correlated "has any" checks.
+</Accordion>
 
-> [!question]- How do you prevent SQL injection?
-> Parameterized queries / prepared statements for all values; whitelist dynamic identifiers; least-privilege DB users; ORMs/query builders that parameterize. Escaping by hand is fragile.
+<Accordion title="How do you prevent SQL injection?">
+Parameterized queries / prepared statements for all values; whitelist dynamic identifiers; least-privilege DB users; ORMs/query builders that parameterize. Escaping by hand is fragile.
+</Accordion>
 
-> [!question]- What is three-valued logic?
-> SQL predicates evaluate to TRUE, FALSE or UNKNOWN (when `NULL` is involved). `WHERE`, `HAVING` and `ON` keep only TRUE; `CHECK` constraints reject only FALSE, so `NULL` passes a check.
+<Accordion title="What is three-valued logic?">
+SQL predicates evaluate to TRUE, FALSE or UNKNOWN (when `NULL` is involved). `WHERE`, `HAVING` and `ON` keep only TRUE; `CHECK` constraints reject only FALSE, so `NULL` passes a check.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Filtering Data]] · [[Working with Subqueries]] · [[Using Wildcard Filtering]] · [[SQL Indexes Deep Dive]]
-- Security: [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] (the same "data vs code" idea on the client)
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Filtering%20Data) · [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries) · [Using Wildcard Filtering](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Wildcard%20Filtering) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive)
+- Security: [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) (the same "data vs code" idea on the client)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 5 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

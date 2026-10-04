@@ -1,3 +1,6 @@
+---
+title: "Microservices Study Plan (original)"
+---
 Study Plan
 
 1. Section 5 - Friday
@@ -39,6 +42,6 @@ Sunday
 - Design Patterns
 
 
-[[Docker]]
+[Docker](/Software%20Engineering/DevOps/Docker/Docker)
 
-[[Kubernetes]]
+[Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes)

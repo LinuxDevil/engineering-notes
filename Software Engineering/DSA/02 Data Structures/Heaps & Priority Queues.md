@@ -1,12 +1,16 @@
 ---
+title: "Heaps & Priority Queues"
 tags: [dsa, dsa/data-structures]
 aliases: [Heap, Heaps, Priority Queue, Binary Heap, Min Heap, Max Heap, heapq, Heap Sort]
 updated: 2026-09-27
 ---
 # Heaps & Priority Queues
 
-> [!tldr] TL;DR
-> A **priority queue** is an abstract type: insert items, and always remove the one with the highest priority. The usual implementation is a **binary heap**: a complete binary tree stored in a plain array, where every parent is <= its children (min-heap) or >= them (max-heap). You get O(1) peek, O(log n) push/pop, and O(n) build. Python ships `heapq` (a min-heap on lists, with public max-heap functions since 3.14); JavaScript has **no built-in heap**, so you write a small class.
+<Note>
+**TL;DR**
+
+A **priority queue** is an abstract type: insert items, and always remove the one with the highest priority. The usual implementation is a **binary heap**: a complete binary tree stored in a plain array, where every parent is &lt;= its children (min-heap) or >= them (max-heap). You get O(1) peek, O(log n) push/pop, and O(n) build. Python ships `heapq` (a min-heap on lists, with public max-heap functions since 3.14); JavaScript has **no built-in heap**, so you write a small class.
+</Note>
 
 ## The idea
 
@@ -15,7 +19,7 @@ A heap is **not** a sorted structure. It only promises that the smallest (min-he
 Two invariants:
 
 1. **Shape**: a *complete* binary tree (every level full except the last, filled left to right). This is what lets it live in an array with no pointers.
-2. **Heap order**: parent <= children (min-heap) or parent >= children (max-heap). Siblings have no order between them.
+2. **Heap order**: parent &lt;= children (min-heap) or parent >= children (max-heap). Siblings have no order between them.
 
 ```text
 Max-heap                     Min-heap
@@ -76,8 +80,11 @@ Worked checks in the 0-indexed layout:
 - Children of 100 (index 0): `2*0 + 1 = 1` (99) and `2*0 + 2 = 2` (80).
 - Children of 80 (index 2): indexes 5 (70) and 6 (29).
 
-> [!warning] Common bug
-> Using the 1-indexed formulas (`i / 2`, `2i`, `2i + 1`) on a 0-indexed array. With the root at 0, `2 * 0 = 0` makes the root its own child and the heap silently breaks. Pick one layout and stick to it.
+<Warning>
+**Common bug**
+
+Using the 1-indexed formulas (`i / 2`, `2i`, `2i + 1`) on a 0-indexed array. With the root at 0, `2 * 0 = 0` makes the root its own child and the heap silently breaks. Pick one layout and stick to it.
+</Warning>
 
 ## How it works
 
@@ -105,7 +112,7 @@ To build a heap from an unordered array, sift down every internal node from the 
 1. Build a max-heap in place, O(n).
 2. Repeat n - 1 times: swap the root (max) with the last item of the heap region, shrink the region by one, sift the new root down. O(n log n).
 
-In place, O(1) extra space, guaranteed O(n log n), but **not stable** and cache-unfriendly, which is why real libraries prefer quicksort/introsort or Timsort (see [[Sorting Algorithms]]).
+In place, O(1) extra space, guaranteed O(n log n), but **not stable** and cache-unfriendly, which is why real libraries prefer quicksort/introsort or Timsort (see [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms)).
 
 ## Complexity
 
@@ -289,16 +296,19 @@ heapq.heappush(pq, (1, next(counter), {"task": "plan"}))
 priority, _, task = heapq.heappop(pq)  # (1, 0, {'task': 'plan'})
 ```
 
-> [!info]+ 🆕 2025–2026
-> **Python 3.14 (released 2025-10-07)** added public max-heap functions to `heapq`: `heapify_max`, `heappush_max`, `heappop_max`, `heapreplace_max`, `heappushpop_max`. On 3.14+ you no longer need the negation trick for numbers:
-> ```python
-> import heapq  # Python 3.14+
-> mx = [3, 10, 5]
-> heapq.heapify_max(mx)
-> heapq.heappush_max(mx, 7)
-> print(heapq.heappop_max(mx))  # 10
-> ```
-> On LeetCode or older runtimes, keep using negation (or tuples with a negated key). Source: [What's new in Python 3.14](https://docs.python.org/3/whatsnew/3.14.html).
+<Info>
+**🆕 2025–2026**
+
+**Python 3.14 (released 2025-10-07)** added public max-heap functions to `heapq`: `heapify_max`, `heappush_max`, `heappop_max`, `heapreplace_max`, `heappushpop_max`. On 3.14+ you no longer need the negation trick for numbers:
+```python
+import heapq  # Python 3.14+
+mx = [3, 10, 5]
+heapq.heapify_max(mx)
+heapq.heappush_max(mx, 7)
+print(heapq.heappop_max(mx))  # 10
+```
+On LeetCode or older runtimes, keep using negation (or tuples with a negated key). Source: [What's new in Python 3.14](https://docs.python.org/3/whatsnew/3.14.html).
+</Info>
 
 ### Comparator-based heap in Python
 
@@ -376,7 +386,7 @@ def heap_sort(a: list[int]) -> list[int]:
 
 ### Top-K in one glance (LC 215)
 
-Keep a **min-heap of size k**; its root is the k-th largest. O(n log k). Full pattern in [[Top-K & Heaps pattern]].
+Keep a **min-heap of size k**; its root is the k-th largest. O(n log k). Full pattern in [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern).
 
 ```ts
 function findKthLargest(nums: number[], k: number): number {
@@ -433,29 +443,35 @@ def find_kth_largest(nums: list[int], k: int) -> int:
 
 ## Interview questions
 
-> [!question]- Why is a heap stored in an array, and what are the index formulas?
-> A heap is a complete binary tree, so there are no gaps and positions map to indexes directly, with no pointers and good locality. 0-indexed: parent `(i - 1) // 2`, children `2i + 1` and `2i + 2`. 1-indexed (index 0 unused): parent `i // 2`, children `2i` and `2i + 1`.
+<Accordion title="Why is a heap stored in an array, and what are the index formulas?">
+A heap is a complete binary tree, so there are no gaps and positions map to indexes directly, with no pointers and good locality. 0-indexed: parent `(i - 1) // 2`, children `2i + 1` and `2i + 2`. 1-indexed (index 0 unused): parent `i // 2`, children `2i` and `2i + 1`.
+</Accordion>
 
-> [!question]- Why is building a heap O(n) and not O(n log n)?
-> Bottom-up heapify sifts down each internal node. Sift-down cost is proportional to the node's height, and most nodes are near the bottom: half the nodes are leaves (cost 0), a quarter have height 1, and so on. The total is n times a converging series, so O(n).
+<Accordion title="Why is building a heap O(n) and not O(n log n)?">
+Bottom-up heapify sifts down each internal node. Sift-down cost is proportional to the node's height, and most nodes are near the bottom: half the nodes are leaves (cost 0), a quarter have height 1, and so on. The total is n times a converging series, so O(n).
+</Accordion>
 
-> [!question]- Heap vs sorted array vs BST for a priority queue?
-> Sorted array: O(1) min, O(n) insert. Balanced BST: O(log n) everything plus ordered iteration and arbitrary delete, but more memory and worse locality. Binary heap: O(1) peek, O(log n) push/pop, O(n) build, minimal memory. Use the heap when you only need the extreme element.
+<Accordion title="Heap vs sorted array vs BST for a priority queue?">
+Sorted array: O(1) min, O(n) insert. Balanced BST: O(log n) everything plus ordered iteration and arbitrary delete, but more memory and worse locality. Binary heap: O(1) peek, O(log n) push/pop, O(n) build, minimal memory. Use the heap when you only need the extreme element.
+</Accordion>
 
-> [!question]- How do you implement a max-heap with Python's heapq?
-> Before Python 3.14, push `-x` and negate on pop, or push `(-key, counter, item)`. On 3.14+, use `heapify_max`, `heappush_max`, `heappop_max` and friends.
+<Accordion title="How do you implement a max-heap with Python's heapq?">
+Before Python 3.14, push `-x` and negate on pop, or push `(-key, counter, item)`. On 3.14+, use `heapify_max`, `heappush_max`, `heappop_max` and friends.
+</Accordion>
 
-> [!question]- How would you find the k largest elements in a stream of 10^9 numbers?
-> Keep a min-heap of size k. For each number, if the heap has fewer than k items push it; else if it is larger than the root, replace the root. O(n log k) time, O(k) memory, single pass. The heap holds the answer at the end.
+<Accordion title="How would you find the k largest elements in a stream of 10^9 numbers?">
+Keep a min-heap of size k. For each number, if the heap has fewer than k items push it; else if it is larger than the root, replace the root. O(n log k) time, O(k) memory, single pass. The heap holds the answer at the end.
+</Accordion>
 
-> [!question]- How do you update the priority of an item already in the heap?
-> Either keep a map from item to array index and sift up or down after changing it (indexed priority queue, O(log n)), or use lazy deletion: push a new entry and mark or detect the old one as stale when popped. Dijkstra usually uses lazy deletion.
+<Accordion title="How do you update the priority of an item already in the heap?">
+Either keep a map from item to array index and sift up or down after changing it (indexed priority queue, O(log n)), or use lazy deletion: push a new entry and mark or detect the old one as stale when popped. Dijkstra usually uses lazy deletion.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Top-K & Heaps pattern]] · [[Graphs]] (Dijkstra, Prim) · [[Sorting Algorithms]] (heap sort)
-- [[Trees & Binary Search Trees]] (complete binary trees) · [[Stacks & Queues]] · [[Arrays & Strings]]
-- [[Big-O & Complexity Analysis]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) (Dijkstra, Prim) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) (heap sort)
+- [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) (complete binary trees) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022: ch. 6 (Heapsort, priority queues)

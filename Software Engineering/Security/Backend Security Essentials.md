@@ -1,12 +1,16 @@
 ---
+title: "Backend Security Essentials"
 tags: [security, security/backend]
 aliases: [Backend Security, Server-side Security, SQL Injection, SSRF, IDOR, Mass Assignment]
 updated: 2026-09-27
 ---
 # Backend Security Essentials
 
-> [!tldr] TL;DR
-> Most backend breaches come from a short list: **injection** (fixed with parameterised queries), **broken access control / IDOR** (fixed by checking ownership on every object), **SSRF** (fixed by controlling where the server may connect), **mass assignment** (fixed with explicit DTOs), leaked **secrets**, weak **input validation**, missing **security headers**, and **logging** that either misses attacks or leaks data. Treat every input as untrusted, deny by default, and put controls in shared code so each endpoint doesn't reinvent them.
+<Note>
+**TL;DR**
+
+Most backend breaches come from a short list: **injection** (fixed with parameterised queries), **broken access control / IDOR** (fixed by checking ownership on every object), **SSRF** (fixed by controlling where the server may connect), **mass assignment** (fixed with explicit DTOs), leaked **secrets**, weak **input validation**, missing **security headers**, and **logging** that either misses attacks or leaks data. Treat every input as untrusted, deny by default, and put controls in shared code so each endpoint doesn't reinvent them.
+</Note>
 
 ## Mental model: trust boundaries
 Every time data crosses a boundary (browser → API, API → DB, service → service, user file → parser), validate it on the receiving side and encode it for the next interpreter.
@@ -88,7 +92,7 @@ app.get('/orders/:id', auth, async (req, res) => {
 - Put authorization in one place (middleware, policy engine, repository layer that always filters by tenant) and test every role against every endpoint.
 - Multi-tenant apps: enforce tenant isolation in the data layer (e.g. PostgreSQL Row-Level Security) as a second line.
 
-See [[API Security]] for RBAC vs ABAC vs ReBAC.
+See [API Security](/Software%20Engineering/Security/API%20Security) for RBAC vs ABAC vs ReBAC.
 
 ## 3. SSRF (Server-Side Request Forgery)
 The server fetches a URL the attacker controls (webhooks, "import from URL", PDF renderers, image proxies) and reaches internal systems.
@@ -125,7 +129,7 @@ await User.update(req.params.id, req.body);
 const UpdateProfile = z.object({ name: z.string().max(100), bio: z.string().max(500).optional() }).strict();
 await User.update(req.user.id, UpdateProfile.parse(req.body));
 ```
-Java/Spring: use request DTOs, not JPA entities, in `@RequestBody`. Rails: strong parameters. It's API3:2023 (Broken Object Property Level Authorization) in [[API Security]].
+Java/Spring: use request DTOs, not JPA entities, in `@RequestBody`. Rails: strong parameters. It's API3:2023 (Broken Object Property Level Authorization) in [API Security](/Software%20Engineering/Security/API%20Security).
 
 ## 5. Input validation
 - Validate at the boundary with a schema (Zod, Joi, Bean Validation, Pydantic): type, length, range, format, allowed values.
@@ -136,14 +140,14 @@ Java/Spring: use request DTOs, not JPA entities, in `@RequestBody`. Rails: stron
 - Canonicalise before validating paths (`path.resolve`, then check it stays under the base dir) to stop `../` traversal.
 
 ## 6. Secrets
-Never in source code, images, logs or client bundles. Use a secrets manager or workload identity; rotate; scan commits. Full note: [[Secrets Management]].
+Never in source code, images, logs or client bundles. Use a secrets manager or workload identity; rotate; scan commits. Full note: [Secrets Management](/Software%20Engineering/Security/Secrets%20Management).
 
 ## 7. Authentication and sessions (backend side)
-- Hash passwords with Argon2id / scrypt / bcrypt ([[Cryptography Basics for Engineers]]).
+- Hash passwords with Argon2id / scrypt / bcrypt ([Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers)).
 - Rate-limit login, reset and OTP endpoints per account and per IP.
 - Session cookies: `HttpOnly; Secure; SameSite=Lax` (or `Strict`), rotate the session id on login, invalidate on logout and password change.
-- Validate JWTs fully: signature with an expected algorithm (reject `none`), `iss`, `aud`, `exp`; keep them short-lived. See [[OAuth 2.x & OpenID Connect]] and [[Authentication & Token Storage]].
-- Prefer passkeys/MFA ([[Passkeys, WebAuthn & MFA]]).
+- Validate JWTs fully: signature with an expected algorithm (reject `none`), `iss`, `aud`, `exp`; keep them short-lived. See [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) and [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).
+- Prefer passkeys/MFA ([Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA)).
 
 ## 8. Security headers (for APIs and pages)
 | Header | Value (typical) | Why |
@@ -155,55 +159,64 @@ Never in source code, images, logs or client bundles. Use a secrets manager or w
 | `Cache-Control` | `no-store` for sensitive responses | Don't cache personal data |
 | CORS headers | Specific origins, never `*` with credentials | Stop cross-origin data reads |
 
-Remove `X-Powered-By` and version banners. Browser-side details: [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+Remove `X-Powered-By` and version banners. Browser-side details: [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## 9. Error handling and logging
 - Return generic errors to clients (RFC 9457 Problem Details with an error id), log details server-side.
-- **Fail closed** on authorization errors ([[OWASP Top 10]] A10).
+- **Fail closed** on authorization errors ([OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010) A10).
 - Log security events: login success/failure, MFA changes, authorization denials, admin actions, input validation failures at scale. Include user id, request id, IP, and outcome.
 - Never log passwords, tokens, full card numbers, session cookies or secrets; redact at the logger level.
 - Send logs to a central, append-only store with retention and alerts (e.g. 50 failed logins for one account in 5 minutes).
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Validating on the client only.
-> - "It's an internal API, no auth needed": internal networks get breached; use service identity (mTLS, signed tokens).
-> - Escaping instead of parameterising SQL.
-> - Treating UUIDs as secrets.
-> - Returning full DB entities in responses (sensitive fields leak).
-> - Catch-all exception handlers that swallow errors and continue.
+<Warning>
+**Common mistakes**
+
+- Validating on the client only.
+- "It's an internal API, no auth needed": internal networks get breached; use service identity (mTLS, signed tokens).
+- Escaping instead of parameterising SQL.
+- Treating UUIDs as secrets.
+- Returning full DB entities in responses (sensitive fields leak).
+- Catch-all exception handlers that swallow errors and continue.
+</Warning>
 
 ## Senior perspective
 - Build **paved roads**: a shared auth middleware, a DB layer that always filters by tenant, a safe HTTP client with SSRF protections, a logger with redaction. Individual engineers then can't easily get it wrong.
 - In reviews, look at **data flow**: where does input enter, where is it interpreted (SQL, shell, HTML, URL fetch), and where is the authorization check?
-- Automate: SAST rules for raw queries and `exec`, DAST in staging, authorization tests per role ([[Secure SDLC & Threat Modeling]]).
+- Automate: SAST rules for raw queries and `exec`, DAST in staging, authorization tests per role ([Secure SDLC & Threat Modeling](/Software%20Engineering/Security/Secure%20SDLC%20%26%20Threat%20Modeling)).
 - Plan for breach: least privilege, segmentation, short-lived credentials and audit logs reduce the blast radius.
 
 ## Interview questions
-> [!question]- How do parameterised queries prevent SQL injection?
-> The query text is sent and parsed separately from the values; values are bound as data and can't change the query's structure. Identifiers can't be parameters, so allow-list them.
+<Accordion title="How do parameterised queries prevent SQL injection?">
+The query text is sent and parsed separately from the values; values are bound as data and can't change the query's structure. Identifiers can't be parameters, so allow-list them.
+</Accordion>
 
-> [!question]- What is IDOR/BOLA and how do you prevent it systematically?
-> Accessing another user's object by changing an id. Prevent by checking ownership or permission for every object access server-side, ideally via scoped queries or a central policy, plus automated tests that use a second user's token.
+<Accordion title="What is IDOR/BOLA and how do you prevent it systematically?">
+Accessing another user's object by changing an id. Prevent by checking ownership or permission for every object access server-side, ideally via scoped queries or a central policy, plus automated tests that use a second user's token.
+</Accordion>
 
-> [!question]- What is SSRF and how do you defend against it?
-> Making the server send requests to attacker-chosen destinations, often internal. Defend with destination allow-lists, blocking private/link-local IPs after resolution, network egress rules, IMDSv2, and re-validating redirects.
+<Accordion title="What is SSRF and how do you defend against it?">
+Making the server send requests to attacker-chosen destinations, often internal. Defend with destination allow-lists, blocking private/link-local IPs after resolution, network egress rules, IMDSv2, and re-validating redirects.
+</Accordion>
 
-> [!question]- What is mass assignment?
-> Automatically binding request fields to model properties, letting attackers set fields like `role` or `isVerified`. Use explicit DTOs or allow-listed schemas.
+<Accordion title="What is mass assignment?">
+Automatically binding request fields to model properties, letting attackers set fields like `role` or `isVerified`. Use explicit DTOs or allow-listed schemas.
+</Accordion>
 
-> [!question]- What should and shouldn't be logged?
-> Log security-relevant events with context (who, what, when, result, request id). Never log credentials, tokens, secrets or unnecessary personal data. Make logs tamper-resistant and alert on them.
+<Accordion title="What should and shouldn't be logged?">
+Log security-relevant events with context (who, what, when, result, request id). Never log credentials, tokens, secrets or unnecessary personal data. Make logs tamper-resistant and alert on them.
+</Accordion>
 
-> [!question]- Is input validation enough to prevent injection?
-> No. Validation reduces attack surface, but the fix for injection is context-correct handling at the interpreter: parameterised queries, argument arrays for commands, output encoding for HTML.
+<Accordion title="Is input validation enough to prevent injection?">
+No. Validation reduces attack surface, but the fix for injection is context-correct handling at the interpreter: parameterised queries, argument arrays for commands, output encoding for HTML.
+</Accordion>
 
 ## Related
-- [[Security Index]]
-- [[OWASP Top 10]] · [[API Security]] · [[Secrets Management]] · [[Secure SDLC & Threat Modeling]]
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] · [[Authentication & Token Storage]]
-- [[OAuth 2.x & OpenID Connect]] · [[Passkeys, WebAuthn & MFA]] · [[Cryptography Basics for Engineers]]
-- [[Backend Interview Questions]]
+- [Security Index](/Software%20Engineering/Security/Security%20Index)
+- [OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010) · [API Security](/Software%20Engineering/Security/API%20Security) · [Secrets Management](/Software%20Engineering/Security/Secrets%20Management) · [Secure SDLC & Threat Modeling](/Software%20Engineering/Security/Secure%20SDLC%20%26%20Threat%20Modeling)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) · [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage)
+- [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA) · [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers)
+- [Backend Interview Questions](/Software%20Engineering/Interviews/Backend%20Interview%20Questions)
 
 ## Sources
 - [OWASP SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)

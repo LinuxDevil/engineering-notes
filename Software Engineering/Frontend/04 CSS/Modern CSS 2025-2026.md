@@ -1,14 +1,18 @@
 ---
+title: "Modern CSS 2025-2026"
 tags: [frontend, frontend/css, frontend/new]
 aliases: [Modern CSS, New CSS, CSS 2026]
 updated: 2026-09-27
 ---
 # Modern CSS 2025-2026
 
-> [!tldr] TL;DR
-> CSS has taken over work that used to need JavaScript or preprocessors: nesting, parent selection (`:has`), scoping (`@scope`), cascade control (`@layer`), enter animations (`@starting-style`), tooltips and menus placed next to their trigger (anchor positioning), page transitions, scroll-linked animation, and even conditionals and functions (`if()`, `@function`). The skill now is knowing **what is Baseline** (safe everywhere) versus **what is Limited** (progressive enhancement only).
->
-> All statuses below come from webstatus.dev / web-features as of **2026-09-27**. "Newly" means it works in all core browsers since the date shown. "Widely" means it has been in all core browsers for at least 30 months. "Limited" means at least one core browser is missing it.
+<Note>
+**TL;DR**
+
+CSS has taken over work that used to need JavaScript or preprocessors: nesting, parent selection (`:has`), scoping (`@scope`), cascade control (`@layer`), enter animations (`@starting-style`), tooltips and menus placed next to their trigger (anchor positioning), page transitions, scroll-linked animation, and even conditionals and functions (`if()`, `@function`). The skill now is knowing **what is Baseline** (safe everywhere) versus **what is Limited** (progressive enhancement only).
+
+All statuses below come from webstatus.dev / web-features as of **2026-09-27**. "Newly" means it works in all core browsers since the date shown. "Widely" means it has been in all core browsers for at least 30 months. "Limited" means at least one core browser is missing it.
+</Note>
 
 ---
 
@@ -87,10 +91,10 @@ Scopes styles to a DOM subtree, with an optional **lower boundary** (a "donut sc
   :scope { padding: 1rem; }     /* :scope = the .card root */
 }
 ```
-It adds **scoping proximity** to the cascade: when specificity ties, the rule from the **closer** scope root wins. That is useful for nested light/dark themes. It is a native, lighter-weight alternative to CSS Modules or BEM for isolation. See [[Styling Approaches]].
+It adds **scoping proximity** to the cascade: when specificity ties, the rule from the **closer** scope root wins. That is useful for nested light/dark themes. It is a native, lighter-weight alternative to CSS Modules or BEM for isolation. See [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches).
 
 ### `@layer`
-Layers give you priority by architecture. See [[CSS Fundamentals - Cascade, Box Model & Contexts]] for the full rules.
+Layers give you priority by architecture. See [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts) for the full rules.
 ```css
 @layer reset, vendor, base, components, utilities;
 @import url("datepicker.css") layer(vendor);
@@ -113,7 +117,7 @@ Defines the "before" state for elements that just appeared (were inserted, or ch
 The same pattern animates `[popover]:popover-open` and `dialog[open]`. `transition-behavior: allow-discrete` lets `display` and `overlay` flip at the right moment.
 
 ### View Transitions (CSS side)
-- **Same-document** (SPA): Newly, 2025-10-14. JS triggers it with `document.startViewTransition(() => update())`. React 19.3 made `<ViewTransition>` stable (see [[React 19 to 19.3 & React Compiler]]).
+- **Same-document** (SPA): Newly, 2025-10-14. JS triggers it with `document.startViewTransition(() => update())`. React 19.3 made `<ViewTransition>` stable (see [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)).
 - **Cross-document** (MPA): Limited (Chrome 126, Safari 18.2).
 ```css
 @view-transition { navigation: auto; }                       /* opt in to MPA transitions (both pages) */
@@ -172,7 +176,7 @@ It pairs naturally with `popover`, which gives top layer, light dismiss and Esc.
 <button commandfor="confirm" command="show-modal">Book</button>   <!-- Newly 2025-12-12, no JS -->
 <dialog id="confirm" closedby="any">…</dialog>       <!-- closedby: Limited (Chrome 134, Firefox 141) -->
 ```
-`popover="hint"` (tooltips) and interest invokers (`interestfor`) are still Limited. See [[Accessibility Essentials]] for the accessibility behaviour.
+`popover="hint"` (tooltips) and interest invokers (`interestfor`) are still Limited. See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials) for the accessibility behaviour.
 
 ### Customizable `<select>` (Limited: Chrome 135, Safari 27; no Firefox)
 ```css
@@ -193,7 +197,7 @@ textarea, input.auto { field-sizing: content; min-block-size: 3lh; max-block-siz
 ## Queries
 
 ### Container size and style queries
-Size queries are Widely available, style queries Newly (2026-05-19). See [[Layout - Flexbox, Grid & Container Queries]].
+Size queries are Widely available, style queries Newly (2026-05-19). See [Layout - Flexbox, Grid & Container Queries](/Software%20Engineering/Frontend/04%20CSS/Layout%20-%20Flexbox%2C%20Grid%20%26%20Container%20Queries).
 
 ### Scroll-state container queries (Limited: Chrome 133 only)
 ```css
@@ -288,63 +292,81 @@ It makes keyboard (Tab) and reading order follow the **visual** order of a flex 
 
 ## What you can use today in production (Sept 2026)
 
-> [!success] Safe everywhere (Baseline): just use it
-> - **Nesting**, **`:has()`**, **`@layer`**, **container size queries** and `cq*` units (all Widely available).
-> - **`@starting-style`** + `transition-behavior: allow-discrete` for enter/exit animations.
-> - **Popover API**, **invoker commands** (`commandfor`/`command`), `<dialog>` + `requestClose()`, `:open`.
-> - **Same-document View Transitions** (as progressive motion).
-> - **`@scope`**, **container style queries**, name-only container queries (all Newly in 2026. Fine unless you support browser versions from before 2026; check your analytics).
-> - **`light-dark()`**, **`contrast-color()`**, **`field-sizing: content`**.
-> - Plus the older staples: subgrid, `aspect-ratio`, `gap` in flex, logical properties, `clamp()`, `svh`/`dvh`, media range syntax, `:focus-visible`, `accent-color`, `color-mix()`, `oklch()`.
+<Check>
+**Safe everywhere (Baseline): just use it**
 
-> [!warning] Progressive enhancement only (wrap in `@supports`, ship a fallback)
-> - **Anchor positioning**: in all three engines now, but webstatus still says Limited. Use it with a fallback for older versions.
-> - **Customizable select**, **cross-document view transitions**, **scroll-driven animations**, `text-box`, `interpolate-size`, `corner-shape`, typed `attr()`, `sibling-index()` (very new).
-> - These are fine because a missing feature means "no animation" or "a native select", not a broken page.
+- **Nesting**, **`:has()`**, **`@layer`**, **container size queries** and `cq*` units (all Widely available).
+- **`@starting-style`** + `transition-behavior: allow-discrete` for enter/exit animations.
+- **Popover API**, **invoker commands** (`commandfor`/`command`), `<dialog>` + `requestClose()`, `:open`.
+- **Same-document View Transitions** (as progressive motion).
+- **`@scope`**, **container style queries**, name-only container queries (all Newly in 2026. Fine unless you support browser versions from before 2026; check your analytics).
+- **`light-dark()`**, **`contrast-color()`**, **`field-sizing: content`**.
+- Plus the older staples: subgrid, `aspect-ratio`, `gap` in flex, logical properties, `clamp()`, `svh`/`dvh`, media range syntax, `:focus-visible`, `accent-color`, `color-mix()`, `oklch()`.
+</Check>
 
-> [!danger] Not yet (Chrome-only experiments)
-> `if()`, `@function`, `reading-flow`, scroll-state queries, scroll markers, `popover="hint"`, interest invokers. Prototype with them, but don't depend on them.
+<Warning>
+**Progressive enhancement only (wrap in `@supports`, ship a fallback)**
 
-> [!example] Feature-detect pattern
-> ```css
-> .menu { /* fallback: JS-positioned by Floating UI */ }
-> @supports (anchor-name: --a) {
->   .menu { position-anchor: --trigger; position-area: bottom; position-try-fallbacks: flip-block; }
-> }
-> @supports not (animation-timeline: view()) {
->   .card { opacity: 1; }   /* make sure content is visible without the animation */
-> }
-> ```
+- **Anchor positioning**: in all three engines now, but webstatus still says Limited. Use it with a fallback for older versions.
+- **Customizable select**, **cross-document view transitions**, **scroll-driven animations**, `text-box`, `interpolate-size`, `corner-shape`, typed `attr()`, `sibling-index()` (very new).
+- These are fine because a missing feature means "no animation" or "a native select", not a broken page.
+</Warning>
+
+<Warning>
+**Not yet (Chrome-only experiments)**
+
+`if()`, `@function`, `reading-flow`, scroll-state queries, scroll markers, `popover="hint"`, interest invokers. Prototype with them, but don't depend on them.
+</Warning>
+
+<Info>
+**Feature-detect pattern**
+
+```css
+.menu { /* fallback: JS-positioned by Floating UI */ }
+@supports (anchor-name: --a) {
+  .menu { position-anchor: --trigger; position-area: bottom; position-try-fallbacks: flip-block; }
+}
+@supports not (animation-timeline: view()) {
+  .card { opacity: 1; }   /* make sure content is visible without the animation */
+}
+```
+</Info>
 
 ## Interview questions
 
-> [!question]- What is Baseline, and how do you decide whether a CSS feature is production-ready?
-> Baseline (from the WebDX group, shown on MDN, caniuse and webstatus.dev) marks features as **Newly available** (in all core browsers: Chrome, Edge, Firefox and Safari, desktop and mobile) and **Widely available** (30 months after that). Compare it with your own browser analytics. Limited features can still ship as progressive enhancement when the fallback is acceptable (no animation, native select).
+<Accordion title="What is Baseline, and how do you decide whether a CSS feature is production-ready?">
+Baseline (from the WebDX group, shown on MDN, caniuse and webstatus.dev) marks features as **Newly available** (in all core browsers: Chrome, Edge, Firefox and Safari, desktop and mobile) and **Widely available** (30 months after that). Compare it with your own browser analytics. Limited features can still ship as progressive enhancement when the fallback is acceptable (no animation, native select).
+</Accordion>
 
-> [!question]- How does :has() change how we write CSS?
-> It selects an element based on its descendants or following siblings, which gives CSS a parent and previous-sibling selector. That removes lots of JS class toggling: form state styling (`form:has(:invalid)`), layout variants based on content (`.card:has(img)`), and page state (`body:has(dialog[open])`). Its specificity is that of its most specific argument. It is Widely available as of June 2026.
+<Accordion title="How does :has() change how we write CSS?">
+It selects an element based on its descendants or following siblings, which gives CSS a parent and previous-sibling selector. That removes lots of JS class toggling: form state styling (`form:has(:invalid)`), layout variants based on content (`.card:has(img)`), and page state (`body:has(dialog[open])`). Its specificity is that of its most specific argument. It is Widely available as of June 2026.
+</Accordion>
 
-> [!question]- @scope vs CSS Modules vs BEM?
-> All three avoid style leakage. BEM is a naming convention (human discipline). CSS Modules hash class names at build time (tooling). `@scope` is native: it limits selectors to a subtree, supports a lower boundary (donut scope) so styles don't leak into slotted content, and adds scoping proximity to the cascade. It became Newly available in March 2026.
+<Accordion title="@scope vs CSS Modules vs BEM?">
+All three avoid style leakage. BEM is a naming convention (human discipline). CSS Modules hash class names at build time (tooling). `@scope` is native: it limits selectors to a subtree, supports a lower boundary (donut scope) so styles don't leak into slotted content, and adds scoping proximity to the cascade. It became Newly available in March 2026.
+</Accordion>
 
-> [!question]- How do you animate an element appearing from display: none?
-> Use `@starting-style` to define the initial state, plus `transition-behavior: allow-discrete` (or `allow-discrete` in the shorthand) on `display` (and `overlay` for top-layer elements) so the discrete property flips at the right time. That gives enter and exit animations without JS or keeping the element mounted.
+<Accordion title="How do you animate an element appearing from display: none?">
+Use `@starting-style` to define the initial state, plus `transition-behavior: allow-discrete` (or `allow-discrete` in the shorthand) on `display` (and `overlay` for top-layer elements) so the discrete property flips at the right time. That gives enter and exit animations without JS or keeping the element mounted.
+</Accordion>
 
-> [!question]- How would you build a tooltip or dropdown in 2026?
-> Use `popover` (top layer, light dismiss, Esc, no z-index fights) triggered by `popovertarget` or invoker commands, positioned with CSS anchor positioning (`position-anchor`, `position-area`, `position-try-fallbacks`). Anchor positioning is in Chrome, Safari 26 and Firefox 147, but still flagged Limited by webstatus, so keep a fallback (Floating UI) behind `@supports` if you support older versions. For a select-like control, try the customizable `<select>` first, since it keeps native accessibility.
+<Accordion title="How would you build a tooltip or dropdown in 2026?">
+Use `popover` (top layer, light dismiss, Esc, no z-index fights) triggered by `popovertarget` or invoker commands, positioned with CSS anchor positioning (`position-anchor`, `position-area`, `position-try-fallbacks`). Anchor positioning is in Chrome, Safari 26 and Firefox 147, but still flagged Limited by webstatus, so keep a fallback (Floating UI) behind `@supports` if you support older versions. For a select-like control, try the customizable `<select>` first, since it keeps native accessibility.
+</Accordion>
 
-> [!question]- What's new in CSS for theming?
-> `light-dark()` with `color-scheme` switches values per scheme (Baseline). `contrast-color()` picks a readable black or white text colour (Newly, April 2026). Container style queries let variants be driven by a custom property (Newly, May 2026). `if()` and `@function` (Chrome-only) will allow conditional tokens and computed values in the future.
+<Accordion title="What's new in CSS for theming?">
+`light-dark()` with `color-scheme` switches values per scheme (Baseline). `contrast-color()` picks a readable black or white text colour (Newly, April 2026). Container style queries let variants be driven by a custom property (Newly, May 2026). `if()` and `@function` (Chrome-only) will allow conditional tokens and computed values in the future.
+</Accordion>
 
 ## Related
-- [[What's New in Frontend 2025-2026]]
-- [[CSS Fundamentals - Cascade, Box Model & Contexts]]
-- [[Layout - Flexbox, Grid & Container Queries]]
-- [[Styling Approaches]]
-- [[Accessibility Essentials]]
-- [[Modern Web Platform APIs 2025-2026]]
-- [[React 19 to 19.3 & React Compiler]]
-- [[Design Systems]]
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts)
+- [Layout - Flexbox, Grid & Container Queries](/Software%20Engineering/Frontend/04%20CSS/Layout%20-%20Flexbox%2C%20Grid%20%26%20Container%20Queries)
+- [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026)
+- [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
 
 ## Sources
 - Baseline data: [webstatus.dev](https://webstatus.dev), [web-features explorer: newly available](https://web-platform-dx.github.io/web-features-explorer/newly-available/)

@@ -1,12 +1,16 @@
 ---
+title: "Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands"
 tags: [frontend, frontend/architecture, frontend/rendering]
 aliases: [Rendering Patterns, SSR vs CSR, CSR vs SSR vs SSG, Hydration, Islands Architecture, Progressive Hydration]
 updated: 2026-09-27
 ---
 # Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands
 
-> [!tldr] TL;DR
-> A rendering pattern answers two questions: **where** HTML is produced (browser, server per request, build time, edge) and **how much JavaScript** the browser must run to make it interactive (full hydration, partial, islands, resumable, or none). CSR is simple but slow to first content; SSR/SSG send real HTML fast but pay a hydration cost; streaming, selective/progressive hydration, islands, resumability, React Server Components and Partial Prerendering are all ways to cut that cost. Modern frameworks let you mix patterns **per route or even per component**.
+<Note>
+**TL;DR**
+
+A rendering pattern answers two questions: **where** HTML is produced (browser, server per request, build time, edge) and **how much JavaScript** the browser must run to make it interactive (full hydration, partial, islands, resumable, or none). CSR is simple but slow to first content; SSR/SSG send real HTML fast but pay a hydration cost; streaming, selective/progressive hydration, islands, resumability, React Server Components and Partial Prerendering are all ways to cut that cost. Modern frameworks let you mix patterns **per route or even per component**.
+</Note>
 
 ## 1. The big picture
 
@@ -42,7 +46,7 @@ flowchart LR
 
 Since Angular, Ember and Backbone, front-end devs have rendered everything client-side. The server redirects every route to a single `index.html` that has no content (or just a loading screen). The browser downloads, parses and runs the JS, fetches data, then renders. Each route is created dynamically in the browser, with no full page reload on navigation.
 
-![[image 12.png]]
+![image 12](/Attachments/image%2012.png)
 
 ```mermaid
 sequenceDiagram
@@ -70,9 +74,9 @@ Years ago we built pages with e.g. PHP: the server compiled everything, included
 ### Universal / isomorphic apps
 What if the **first** load is server-rendered and later navigations are client-side, fetching only the data needed? React popularized this with `renderToString`. The same code runs on server and client. This is called a *universal* or *isomorphic* app (terms used interchangeably).
 
-![[Untitled 50.png]]
+![Untitled 50](/Attachments/Untitled%2050.png)
 
-![[image 13.png]]
+![image 13](/Attachments/image%2013.png)
 
 **How SSR works**
 1. The server reads the request and determines the content to load.
@@ -87,8 +91,11 @@ What if the **first** load is server-rendered and later navigations are client-s
 3. Better initial load experience: a fully populated page.
 4. Access to server resources (DB, secrets, internal APIs) while generating content.
 
-> [!note] Correction on TTFB
-> The original note said SSR "improves Time to First Byte". It's the reverse: rendering on the server usually makes **TTFB slower** than serving a static `index.html`, because the server must fetch data and render first. What SSR improves is **FCP/LCP** (content appears earlier). Streaming and caching (SSG/ISR/PPR) are how you win TTFB back.
+<Note>
+**Correction on TTFB**
+
+The original note said SSR "improves Time to First Byte". It's the reverse: rendering on the server usually makes **TTFB slower** than serving a static `index.html`, because the server must fetch data and render first. What SSR improves is **FCP/LCP** (content appears earlier). Streaming and caching (SSG/ISR/PPR) are how you win TTFB back.
+</Note>
 
 **Costs:** you must run a server (or serverless/edge functions), handle load and cold starts, and pay for hydration. Browser-only APIs (`window`, `localStorage`) can't run during the server render.
 
@@ -101,11 +108,14 @@ flowchart LR
   H["Server HTML visible (looks ready)"] --> D["Download JS"] --> E["Execute components"] --> A["Attach listeners"] --> I["Interactive"]
 ```
 
-> [!warning] Hydration pitfalls
-> - **Uncanny valley:** the page looks interactive before it is; clicks during hydration can be lost (Angular's event replay and React's selective hydration mitigate this).
-> - **Hydration mismatch:** server and client render different output (`Date.now()`, `Math.random()`, `typeof window` checks, locale formatting). Render client-only values in an effect / `afterNextRender`.
-> - **Double cost:** data fetched on the server must be serialized into the HTML so the client doesn't refetch; you download both HTML and the JS that describes the same UI.
-> - Heavy hydration hurts **INP** and Total Blocking Time. See [[Core Web Vitals]].
+<Warning>
+**Hydration pitfalls**
+
+- **Uncanny valley:** the page looks interactive before it is; clicks during hydration can be lost (Angular's event replay and React's selective hydration mitigate this).
+- **Hydration mismatch:** server and client render different output (`Date.now()`, `Math.random()`, `typeof window` checks, locale formatting). Render client-only values in an effect / `afterNextRender`.
+- **Double cost:** data fetched on the server must be serialized into the HTML so the client doesn't refetch; you download both HTML and the JS that describes the same UI.
+- Heavy hydration hurts **INP** and Total Blocking Time. See [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals).
+</Warning>
 
 ## 5. Static site generation (SSG) / pre-rendering
 
@@ -136,7 +146,7 @@ sequenceDiagram
   S-->>CDN: new HTML
 ```
 
-Trade-off vs SSG: fresh-enough content without full rebuilds, at the price of serving stale pages for one request and needing a server/runtime that supports it. In Next.js 16 caching is opt-in with Cache Components (`"use cache"`, `cacheLife`, `cacheTag`, `revalidateTag`, `updateTag`); Next.js 16.3's instant navigations improve ISR by showing a loading shell first, then prerendering in the background. See [[Next.js Rendering & Caching]].
+Trade-off vs SSG: fresh-enough content without full rebuilds, at the price of serving stale pages for one request and needing a server/runtime that supports it. In Next.js 16 caching is opt-in with Cache Components (`"use cache"`, `cacheLife`, `cacheTag`, `revalidateTag`, `updateTag`); Next.js 16.3's instant navigations improve ISR by showing a loading shell first, then prerendering in the background. See [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 
 ## 7. Streaming SSR and selective hydration
 
@@ -187,7 +197,7 @@ import PriceChart from '../components/PriceChart.svelte';
 <PriceChart client:visible />      <!-- hydrate when scrolled into view -->
 ```
 
-Angular's equivalent is **incremental hydration**: `@defer (hydrate on viewport) { ... }` (stable in v20). See [[Modern Angular v17 to v22]].
+Angular's equivalent is **incremental hydration**: `@defer (hydrate on viewport) { ... }` (stable in v20). See [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
 
 ## 9. Resumability (Qwik)
 
@@ -204,10 +214,13 @@ From the owner's Intermediate React notes: **SSR** renders the initial page and 
 | JS shipped | All component code | Only client components (`'use client'`) |
 | Re-runs on navigation | No (client takes over) | Yes, server components can be re-fetched |
 
-They're **complementary**: frameworks like Next.js App Router render the RSC tree and then SSR it to HTML for the first load. Deep dive: [[React Server Components & Server Functions]].
+They're **complementary**: frameworks like Next.js App Router render the RSC tree and then SSR it to HTML for the first load. Deep dive: [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions).
 
-> [!warning] Security note
-> RSC moved code to the server, and with it server attack surface. CVE-2025-55182 (Dec 3, 2025, CVSS 10) was an unauthenticated RCE through Server Function payload deserialization in `react-server-dom-*` 19.0 to 19.2.0; keep React/Next patched. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+<Warning>
+**Security note**
+
+RSC moved code to the server, and with it server attack surface. CVE-2025-55182 (Dec 3, 2025, CVSS 10) was an unauthenticated RCE through Server Function payload deserialization in `react-server-dom-*` 19.0 to 19.2.0; keep React/Next patched. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
+</Warning>
 
 ## 11. Partial Prerendering (PPR)
 
@@ -225,12 +238,15 @@ flowchart LR
   Server --> D2
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **React 19.2** (Oct 1, 2025): React DOM partial pre-rendering APIs: `prerender()` returns `{ prelude, postponed }`, then `resume()` or `resumeAndPrerender()`.
-> - **Next.js 16** (Oct 21, 2025): Cache Components (`cacheComponents: true`, `"use cache"`) complete PPR; the `experimental.ppr` flag was removed/renamed. Everything is dynamic by default and caching is opt-in.
-> - **React 19.3** (Sept 9, 2026): `browser()` from `react-dom`, used as `use(browser())`, opts a subtree out of SSR.
-> - **Angular v20** (May 2025): incremental hydration and route-level render mode (`Server`/`Client`/`Prerender` per route) stable.
-> - **Astro 7** (June 22, 2026): stable route caching; **Astro 6** added live content collections.
+<Info>
+**🆕 2025–2026**
+
+- **React 19.2** (Oct 1, 2025): React DOM partial pre-rendering APIs: `prerender()` returns `{ prelude, postponed }`, then `resume()` or `resumeAndPrerender()`.
+- **Next.js 16** (Oct 21, 2025): Cache Components (`cacheComponents: true`, `"use cache"`) complete PPR; the `experimental.ppr` flag was removed/renamed. Everything is dynamic by default and caching is opt-in.
+- **React 19.3** (Sept 9, 2026): `browser()` from `react-dom`, used as `use(browser())`, opts a subtree out of SSR.
+- **Angular v20** (May 2025): incremental hydration and route-level render mode (`Server`/`Client`/`Prerender` per route) stable.
+- **Astro 7** (June 22, 2026): stable route caching; **Astro 6** added live content collections.
+</Info>
 
 ## 12. Comparison
 
@@ -261,47 +277,56 @@ flowchart TD
 Rules of thumb:
 - **Mix per route.** Marketing pages SSG, search results streaming SSR, account area CSR. Next.js, Angular (`RenderMode` per route), Astro, SvelteKit and Nuxt all support this.
 - **Measure field data** (LCP, INP, CLS) before and after; SSR that ships the same JS bundle often improves LCP but worsens INP.
-- For a flight-search style product: SSG/ISR landing and destination pages, streaming SSR for results (slow supplier APIs behind Suspense), CSR for the booking funnel behind auth. See [[Case Study - Flight Search & Booking]].
+- For a flight-search style product: SSG/ISR landing and destination pages, streaming SSR for results (slow supplier APIs behind Suspense), CSR for the booking funnel behind auth. See [Case Study - Flight Search & Booking](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Flight%20Search%20%26%20Booking).
 
 ## Interview questions
 
-> [!question]- What is the difference between client-side and server-side rendering?
-> CSR builds each route in the browser with JS and navigates without full reloads, but shows a blank page (or spinner) until JS runs. SSR sends a fully populated page for any route on the first load, improving FCP/LCP and SEO, and then hydrates so later navigation is client-side.
+<Accordion title="What is the difference between client-side and server-side rendering?">
+CSR builds each route in the browser with JS and navigates without full reloads, but shows a blank page (or spinner) until JS runs. SSR sends a fully populated page for any route on the first load, improving FCP/LCP and SEO, and then hydrates so later navigation is client-side.
+</Accordion>
 
-> [!question]- What is a universal (isomorphic) app?
-> The same code renders on the server (first load, populated HTML) and on the client (hydration and subsequent navigation). It combines SSR's fast first paint with CSR's app-like navigation.
+<Accordion title="What is a universal (isomorphic) app?">
+The same code renders on the server (first load, populated HTML) and on the client (hydration and subsequent navigation). It combines SSR's fast first paint with CSR's app-like navigation.
+</Accordion>
 
-> [!question]- What is hydration, and how does it differ from rendering?
-> Rendering creates DOM from scratch. Hydration re-runs components against server-rendered DOM, reusing nodes and attaching event handlers and state. It must produce identical output, otherwise you get mismatch errors.
+<Accordion title="What is hydration, and how does it differ from rendering?">
+Rendering creates DOM from scratch. Hydration re-runs components against server-rendered DOM, reusing nodes and attaching event handlers and state. It must produce identical output, otherwise you get mismatch errors.
+</Accordion>
 
-> [!question]- How does SSG differ from SSR, and what does ISR add?
-> SSG renders at build time once for everyone (CDN-fast, stale until rebuild); SSR renders per request (fresh, personalized, costs server time). ISR regenerates SSG pages in the background after a revalidate window or on demand, trading one stale response for no full rebuilds.
+<Accordion title="How does SSG differ from SSR, and what does ISR add?">
+SSG renders at build time once for everyone (CDN-fast, stale until rebuild); SSR renders per request (fresh, personalized, costs server time). ISR regenerates SSG pages in the background after a revalidate window or on demand, trading one stale response for no full rebuilds.
+</Accordion>
 
-> [!question]- How does CSR impact performance and SEO?
-> Larger JS on the critical path, so slower FCP/LCP especially on low-end devices; content invisible to crawlers that don't run JS; one set of meta tags unless you prerender. Fine for authenticated apps where SEO doesn't matter.
+<Accordion title="How does CSR impact performance and SEO?">
+Larger JS on the critical path, so slower FCP/LCP especially on low-end devices; content invisible to crawlers that don't run JS; one set of meta tags unless you prerender. Fine for authenticated apps where SEO doesn't matter.
+</Accordion>
 
-> [!question]- What is streaming SSR and selective hydration?
-> The server flushes the shell immediately and streams each Suspense boundary's HTML as data resolves; each boundary then hydrates independently, prioritizing ones the user interacts with. This fixes all-or-nothing SSR.
+<Accordion title="What is streaming SSR and selective hydration?">
+The server flushes the shell immediately and streams each Suspense boundary's HTML as data resolves; each boundary then hydrates independently, prioritizing ones the user interacts with. This fixes all-or-nothing SSR.
+</Accordion>
 
-> [!question]- Islands vs progressive hydration vs resumability?
-> Progressive hydration: whole app, hydrated in pieces over time. Islands: only interactive widgets hydrate; static parts never ship JS. Resumability: no hydration at all; state is serialized and handlers load on first interaction (Qwik).
+<Accordion title="Islands vs progressive hydration vs resumability?">
+Progressive hydration: whole app, hydrated in pieces over time. Islands: only interactive widgets hydrate; static parts never ship JS. Resumability: no hydration at all; state is serialized and handlers load on first interaction (Qwik).
+</Accordion>
 
-> [!question]- Are SSR and React Server Components the same?
-> No. SSR produces HTML for the first load and then the client takes over; RSC run only on the server and ship no JS, producing a serialized tree that can be re-fetched. They are complementary: RSC output is typically SSR'd for the first paint.
+<Accordion title="Are SSR and React Server Components the same?">
+No. SSR produces HTML for the first load and then the client takes over; RSC run only on the server and ship no JS, producing a serialized tree that can be re-fetched. They are complementary: RSC output is typically SSR'd for the first paint.
+</Accordion>
 
-> [!question]- What is Partial Prerendering?
-> A static shell prerendered at build time plus dynamic Suspense holes streamed at request time, in one response. In Next.js 16 it is delivered through Cache Components; React 19.2 exposes `prerender`/`resume` primitives.
+<Accordion title="What is Partial Prerendering?">
+A static shell prerendered at build time plus dynamic Suspense holes streamed at request time, in one response. In Next.js 16 it is delivered through Cache Components; React 19.2 exposes `prerender`/`resume` primitives.
+</Accordion>
 
 ## Related
-- [[Next.js Rendering & Caching]]
-- [[Next.js App Router Fundamentals]]
-- [[React Server Components & Server Functions]]
-- [[Modern Angular v17 to v22]]
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Core Web Vitals]]
-- [[Other Frameworks - Vue, Svelte, Solid, Astro]]
-- [[Web Workers, Service Workers & PWAs]]
-- [[Intermediate React V6]]
+- [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
+- [Other Frameworks - Vue, Svelte, Solid, Astro](/Software%20Engineering/Frontend/09%20Architecture/Other%20Frameworks%20-%20Vue%2C%20Svelte%2C%20Solid%2C%20Astro)
+- [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs)
+- [Intermediate React V6](/Software%20Engineering/Frontend/Courses%20%26%20Books/FE%20Masters/Intermediate%20React%20V6)
 
 ## Sources
 - https://blog.logrocket.com/introduction-to-preact-a-smaller-faster-react-alternative-ad5532eb6d79

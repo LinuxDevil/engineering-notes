@@ -1,17 +1,21 @@
 ---
+title: "Unit 10 MongoDB CRUD Operations in Node.js"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB Node.js CRUD, MongoDB Transactions Node.js, withTransaction, MongoDB Unit 10]
 updated: 2026-09-27
 ---
 # Unit 10 MongoDB CRUD Operations in Node.js
 
-> [!tldr] TL;DR
-> In Node.js you work with plain JavaScript objects; the driver **serializes them to BSON** (MongoDB's storage and wire format) and back. CRUD methods mirror the shell (`insertOne`, `find`, `updateOne`, `deleteMany`, ...) and return promises with result objects (`insertedId`, `modifiedCount`, `deletedCount`). For all-or-nothing changes across documents, use a **multi-document transaction** with `session.withTransaction()`, passing `{ session }` to every operation. Transactions are limited to 60 s by default and cost more than single-document writes.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 10 · Prev: [[Unit 09 MongoDB CRUD Operations Modifying Query Results]] · Next: [[Unit 11 MongoDB Aggregation]]
+In Node.js you work with plain JavaScript objects; the driver **serializes them to BSON** (MongoDB's storage and wire format) and back. CRUD methods mirror the shell (`insertOne`, `find`, `updateOne`, `deleteMany`, ...) and return promises with result objects (`insertedId`, `modifiedCount`, `deletedCount`). For all-or-nothing changes across documents, use a **multi-document transaction** with `session.withTransaction()`, passing `{ session }` to every operation. Transactions are limited to 60 s by default and cost more than single-document writes.
+</Note>
+
+> Course: MongoDB University, Unit 10 · Prev: [Unit 09 MongoDB CRUD Operations Modifying Query Results](/Software%20Engineering/Databases/MongoDB/Unit%2009%20MongoDB%20CRUD%20Operations%20Modifying%20Query%20Results) · Next: [Unit 11 MongoDB Aggregation](/Software%20Engineering/Databases/MongoDB/Unit%2011%20MongoDB%20Aggregation)
 
 ## What this unit covers
-How BSON documents look in Node.js; inserting, querying, updating and deleting from a Node.js app; and creating a multi-document transaction. The examples use a `bank` database with `accounts` and `transfers` collections, and assume a shared `client` from [[Unit 06 Connecting to MongoDB in Node.js]].
+How BSON documents look in Node.js; inserting, querying, updating and deleting from a Node.js app; and creating a multi-document transaction. The examples use a `bank` database with `accounts` and `transfers` collections, and assume a shared `client` from [Unit 06 Connecting to MongoDB in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2006%20Connecting%20to%20MongoDB%20in%20Node.js).
 
 ## BSON in Node.js
 - **BSON is MongoDB's binary format** for storing documents and sending them over the wire. Node.js itself does not "use BSON to store data" (the original note's wording); you write JS objects and the driver (via the `bson` package) converts them.
@@ -424,8 +428,11 @@ await client.withSession(async (session) =>
 );
 ```
 
-> [!info]+ 🆕 2025–2026
-> **Node.js driver 7.0.0 (2025-11-06)** requires Node.js 20.19.0+, allocates sessions for cursors lazily, closes idle pooled connections even with `minPoolSize: 0`, and rejects non-boolean values for boolean options. Cursors also no longer send a default `batchSize` of 1000 on `getMore`. Check these when upgrading code like the examples above. ([release notes](https://www.mongodb.com/community/forums/t/mongodb-nodejs-driver-7-0-0-released/331061))
+<Info>
+**🆕 2025–2026**
+
+**Node.js driver 7.0.0 (2025-11-06)** requires Node.js 20.19.0+, allocates sessions for cursors lazily, closes idle pooled connections even with `minPoolSize: 0`, and rejects non-boolean values for boolean options. Cursors also no longer send a default `batchSize` of 1000 on `getMore`. Check these when upgrading code like the examples above. ([release notes](https://www.mongodb.com/community/forums/t/mongodb-nodejs-driver-7-0-0-released/331061))
+</Info>
 
 ## Senior perspective
 - **Prefer single-document atomicity**: model so most operations touch one document; transactions are the exception, not the default. They add latency (extra round trips, majority commit), hold locks/snapshots, and can abort with write conflicts under contention.
@@ -435,31 +442,37 @@ await client.withSession(async (session) =>
   - Read concern `"majority"` returns only majority-committed data; `"snapshot"` inside transactions; `"linearizable"` for strongest single-doc reads.
   - Read preference `primary` (default) vs `secondary*` trades freshness for offloading reads.
 - **Retryable writes** handle transient errors for single operations; transactions have their own retry labels handled by `withTransaction`.
-- **Sharded transactions** span shards with a two-phase commit coordinated by the router: more expensive. See [[Replication & 2PC 3PC]] and [[Transactions & ACID]].
+- **Sharded transactions** span shards with a two-phase commit coordinated by the router: more expensive. See [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) and [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID).
 - **Idempotency**: include a unique `transfer_id` with a unique index so a retried request can't create a second transfer.
 
 ## Interview questions
-> [!question]- What is BSON and how does the Node.js driver use it?
-> BSON is MongoDB's binary document format for storage and the wire protocol. The driver serializes JS objects to BSON when sending and deserializes responses into JS objects, mapping types like `Date`, `ObjectId`, `Decimal128` and `Long`.
+<Accordion title="What is BSON and how does the Node.js driver use it?">
+BSON is MongoDB's binary document format for storage and the wire protocol. The driver serializes JS objects to BSON when sending and deserializes responses into JS objects, mapping types like `Date`, `ObjectId`, `Decimal128` and `Long`.
+</Accordion>
 
-> [!question]- How do you run a multi-document transaction in Node.js?
-> Start a session, call `session.withTransaction(async () => { ... })`, pass `{ session }` to every operation inside, then `endSession()`. `withTransaction` commits on success, aborts on error, and retries transient errors.
+<Accordion title="How do you run a multi-document transaction in Node.js?">
+Start a session, call `session.withTransaction(async () => { ... })`, pass `{ session }` to every operation inside, then `endSession()`. `withTransaction` commits on success, aborts on error, and retries transient errors.
+</Accordion>
 
-> [!question]- What is the default time limit on a transaction and what happens when it's exceeded?
-> 60 seconds (`transactionLifetimeLimitSeconds`). The server aborts the transaction, and the commit fails.
+<Accordion title="What is the default time limit on a transaction and what happens when it's exceeded?">
+60 seconds (`transactionLifetimeLimitSeconds`). The server aborts the transaction, and the commit fails.
+</Accordion>
 
-> [!question]- Why should the withTransaction callback be idempotent?
-> The driver may re-run the whole callback on a `TransientTransactionError`. Side effects outside the database (emails, HTTP calls) would repeat.
+<Accordion title="Why should the withTransaction callback be idempotent?">
+The driver may re-run the whole callback on a `TransientTransactionError`. Side effects outside the database (emails, HTTP calls) would repeat.
+</Accordion>
 
-> [!question]- When do you need a transaction in MongoDB, and when can you avoid it?
-> Needed when an invariant spans multiple documents or collections (money transfer between two accounts, order + inventory). Avoid it by embedding data that changes together in one document, since single-document writes are atomic.
+<Accordion title="When do you need a transaction in MongoDB, and when can you avoid it?">
+Needed when an invariant spans multiple documents or collections (money transfer between two accounts, order + inventory). Avoid it by embedding data that changes together in one document, since single-document writes are atomic.
+</Accordion>
 
-> [!question]- Explain write concern, read concern and read preference.
-> Write concern: how many nodes must acknowledge a write (`w: 1`, `w: "majority"`, `j: true`). Read concern: what consistency level the data read has (`local`, `majority`, `snapshot`, `linearizable`). Read preference: which members serve reads (`primary`, `primaryPreferred`, `secondary`, `secondaryPreferred`, `nearest`).
+<Accordion title="Explain write concern, read concern and read preference.">
+Write concern: how many nodes must acknowledge a write (`w: 1`, `w: "majority"`, `j: true`). Read concern: what consistency level the data read has (`local`, `majority`, `snapshot`, `linearizable`). Read preference: which members serve reads (`primary`, `primaryPreferred`, `secondary`, `secondaryPreferred`, `nearest`).
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Transactions & ACID]] · [[Replication & 2PC 3PC]] · [[Connection Pooling]] · [[CAP Theorem]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem)
 
 ## Sources
 - [Node.js driver: CRUD operations](https://www.mongodb.com/docs/drivers/node/current/crud/)

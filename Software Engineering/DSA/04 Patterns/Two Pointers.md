@@ -1,16 +1,20 @@
 ---
+title: "Two Pointers"
 tags: [dsa, dsa/patterns]
 aliases: [Two Pointer, Two-Pointer Technique, Two pointer technique, Opposite Ends Pointers, Read Write Pointers]
 updated: 2026-09-27
 ---
 # Two Pointers
 
-> [!tldr] TL;DR
-> **Two pointers** walks an array or string with two indices instead of one, so a problem that looks like it needs nested loops (O(n²)) can be solved in a single pass (O(n)) with O(1) extra space. There are three shapes: pointers at **opposite ends** that move toward each other, pointers over **two different sequences** (merge), and **same-direction read/write** pointers (fast reader, slow writer). It almost always relies on some order (sorted input) or a monotonic rule that tells you which pointer to move.
+<Note>
+**TL;DR**
+
+**Two pointers** walks an array or string with two indices instead of one, so a problem that looks like it needs nested loops (O(n²)) can be solved in a single pass (O(n)) with O(1) extra space. There are three shapes: pointers at **opposite ends** that move toward each other, pointers over **two different sequences** (merge), and **same-direction read/write** pointers (fast reader, slow writer). It almost always relies on some order (sorted input) or a monotonic rule that tells you which pointer to move.
+</Note>
 
 ## The idea
 
-My original note, from the LeetCode Crash Course "Arrays and strings" chapter ([[LeetCode Crash Course]]):
+My original note, from the LeetCode Crash Course "Arrays and strings" chapter ([LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)):
 
 > There's a couple of ways to implement the two pointers technique:
 > 1. Start at the edge of the array, and move until they meet, this will move one pointer from the start and another pointer from the end of the array.
@@ -191,12 +195,12 @@ def two_sum(numbers: list[int], target: int) -> list[int]:
 - "Reverse in place", "partition", "move zeroes to the end", "remove duplicates **in place**", "O(1) extra space".
 - Two sorted inputs to **merge**, intersect, or check "is `s` a subsequence of `t`".
 - "Maximize area/width between two positions" (Container With Most Water).
-- If the question is about a **contiguous subarray** with a constraint, you probably want [[Sliding Window]] instead (which is a same-direction two-pointer variant).
+- If the question is about a **contiguous subarray** with a constraint, you probably want [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) instead (which is a same-direction two-pointer variant).
 
 ## Trade-offs & pitfalls
 
 - **`i < j` vs `i <= j`**: pairs need two distinct elements, so use `i < j`. Palindrome checks also use `i < j` (the middle char matches itself).
-- **Sorting destroys indices.** If the problem wants original indices (LC 1 Two Sum, unsorted), sorting + two pointers needs index tracking; a [[Hash Tables|hash map]] is simpler.
+- **Sorting destroys indices.** If the problem wants original indices (LC 1 Two Sum, unsorted), sorting + two pointers needs index tracking; a [hash map](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) is simpler.
 - **Duplicates in 3Sum/4Sum**: skip equal neighbours after a match and for the anchor, or you return repeated triplets.
 - **Forgetting to drain** leftovers in the merge variant.
 - **Merging in place** into the first array (LC 88) must go **from the back**, otherwise you overwrite unread values.
@@ -224,26 +228,31 @@ def two_sum(numbers: list[int], target: int) -> list[int]:
 
 ## Interview questions
 
-> [!question]- Why is it safe to move the shorter wall in Container With Most Water?
-> Area = `min(h[i], h[j]) * (j - i)`. If `h[i]` is the shorter wall, every other container using `i` with a right wall inside `(i, j)` has smaller width and height capped by `h[i]`, so it can't beat the current area. Discarding `i` loses nothing.
+<Accordion title="Why is it safe to move the shorter wall in Container With Most Water?">
+Area = `min(h[i], h[j]) * (j - i)`. If `h[i]` is the shorter wall, every other container using `i` with a right wall inside `(i, j)` has smaller width and height capped by `h[i]`, so it can't beat the current area. Discarding `i` loses nothing.
+</Accordion>
 
-> [!question]- Two Sum on an unsorted array: two pointers or hash map?
-> Hash map: O(n) time, O(n) space, keeps original indices. Two pointers needs a sort first (O(n log n)) and loses indices unless you sort pairs `(value, index)`. Two pointers wins when the input is already sorted and you need O(1) space (LC 167).
+<Accordion title="Two Sum on an unsorted array: two pointers or hash map?">
+Hash map: O(n) time, O(n) space, keeps original indices. Two pointers needs a sort first (O(n log n)) and loses indices unless you sort pairs `(value, index)`. Two pointers wins when the input is already sorted and you need O(1) space (LC 167).
+</Accordion>
 
-> [!question]- How do you merge two sorted arrays in place when `nums1` has extra space at the end?
-> Start three pointers at the ends: `i = m - 1`, `j = n - 1`, `k = m + n - 1`. Write the larger of `nums1[i]` and `nums2[j]` into `nums1[k]` and move back. Filling from the back never overwrites unread values. Copy the remaining `nums2` elements at the end.
+<Accordion title="How do you merge two sorted arrays in place when `nums1` has extra space at the end?">
+Start three pointers at the ends: `i = m - 1`, `j = n - 1`, `k = m + n - 1`. Write the larger of `nums1[i]` and `nums2[j]` into `nums1[k]` and move back. Filling from the back never overwrites unread values. Copy the remaining `nums2` elements at the end.
+</Accordion>
 
-> [!question]- What is the complexity of 3Sum and why can't two pointers make it O(n)?
-> O(n²): for each of n anchors you run an O(n) two-pointer scan. There are up to O(n²) distinct triplets in the output in the worst case, and the problem is believed to need about quadratic time in general (the "3SUM conjecture").
+<Accordion title="What is the complexity of 3Sum and why can't two pointers make it O(n)?">
+O(n²): for each of n anchors you run an O(n) two-pointer scan. There are up to O(n²) distinct triplets in the output in the worst case, and the problem is believed to need about quadratic time in general (the "3SUM conjecture").
+</Accordion>
 
-> [!question]- How is the read/write pattern different from the fast/slow pointer on linked lists?
-> Read/write moves both indices forward over an array to compact it; the writer lags when elements are dropped. [[Fast and Slow Pointer]] moves pointers at different speeds (1 and 2 steps) over a linked structure to find a middle or a cycle.
+<Accordion title="How is the read/write pattern different from the fast/slow pointer on linked lists?">
+Read/write moves both indices forward over an array to compact it; the writer lags when elements are dropped. [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) moves pointers at different speeds (1 and 2 steps) over a linked structure to find a middle or a cycle.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Arrays & Strings]] · [[Sliding Window]] · [[Fast and Slow Pointer]] · [[Binary Search]] · [[Sorting Algorithms]] · [[Hash Tables]]
-- [[Big-O & Complexity Analysis]]
-- Course: [[LeetCode Crash Course]] (chapter "Arrays and strings")
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Course: [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course) (chapter "Arrays and strings")
 
 ## Sources
 - [LeetCode's Interview Crash Course: Data Structures and Algorithms](https://leetcode.com/explore/interview/card/leetcodes-interview-crash-course-data-structures-and-algorithms/) (Arrays and strings, two pointers)

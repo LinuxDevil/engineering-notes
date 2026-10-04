@@ -1,12 +1,16 @@
 ---
+title: "Keyset Pagination vs Offset"
 tags: [databases, databases/performance]
 aliases: [Keyset Pagination, Seek Method, Cursor Pagination, Offset Pagination, Don't Use Offset, "Don’t Use Offset, Use limit and an index with it"]
 updated: 2026-09-27
 ---
 # Keyset Pagination vs Offset
 
-> [!tldr] TL;DR
-> `OFFSET n` makes the database **read and throw away n rows** on every page, so deep pages get slower and slower, and concurrent inserts/deletes cause **duplicated or skipped** rows. **Keyset (seek/cursor) pagination** remembers the last row's sort key and asks for rows *after* it: `WHERE (created_at, id) < ($1, $2) ORDER BY created_at DESC, id DESC LIMIT 20`. With a matching index, every page costs the same. Trade-off: no "jump to page 57".
+<Note>
+**TL;DR**
+
+`OFFSET n` makes the database **read and throw away n rows** on every page, so deep pages get slower and slower, and concurrent inserts/deletes cause **duplicated or skipped** rows. **Keyset (seek/cursor) pagination** remembers the last row's sort key and asks for rows *after* it: `WHERE (created_at, id) < ($1, $2) ORDER BY created_at DESC, id DESC LIMIT 20`. With a matching index, every page costs the same. Trade-off: no "jump to page 57".
+</Note>
 
 ## The problem with OFFSET
 
@@ -110,38 +114,45 @@ RETURNING id;   -- remember max(id) as the next $last_id
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Paginating on a **non-unique** column without a tie-breaker.
-> - Index columns/directions not matching `ORDER BY`, so the DB sorts everything anyway. Check with `EXPLAIN`.
-> - Filters that change between requests (the cursor must be tied to the same filter/sort).
-> - Using `OFFSET` for "deep" exports or background jobs: quadratic total work.
-> - Server-side cursors (`DECLARE CURSOR`) held open across HTTP requests: they pin a connection and a snapshot. Keyset pagination is stateless.
+<Warning>
+**Common pitfalls**
+
+- Paginating on a **non-unique** column without a tie-breaker.
+- Index columns/directions not matching `ORDER BY`, so the DB sorts everything anyway. Check with `EXPLAIN`.
+- Filters that change between requests (the cursor must be tied to the same filter/sort).
+- Using `OFFSET` for "deep" exports or background jobs: quadratic total work.
+- Server-side cursors (`DECLARE CURSOR`) held open across HTTP requests: they pin a connection and a snapshot. Keyset pagination is stateless.
+</Warning>
 
 ## Senior perspective
 
 - Default to cursor pagination in public APIs; offer offset only where "page 3 of 12" UX is required and data is small, and cap the maximum offset.
 - If users need "jump to page", consider approximate counts (`pg_class.reltuples`) and search-engine style limits (Google stops at a few hundred results).
-- Same idea in MongoDB: `find({_id: {$lt: lastId}}).sort({_id: -1}).limit(20)` instead of `.skip()` ([[Unit 09 MongoDB CRUD Operations Modifying Query Results]]).
+- Same idea in MongoDB: `find({_id: {$lt: lastId}}).sort({_id: -1}).limit(20)` instead of `.skip()` ([Unit 09 MongoDB CRUD Operations Modifying Query Results](/Software%20Engineering/Databases/MongoDB/Unit%2009%20MongoDB%20CRUD%20Operations%20Modifying%20Query%20Results)).
 - Frontend side: infinite scroll with cursors pairs with list virtualization.
 
 ## Interview questions
 
-> [!question]- Why is OFFSET slow for deep pages?
-> The database must produce and discard all the skipped rows (walking the index or sorting), so the cost grows linearly with the offset even though only a few rows are returned.
+<Accordion title="Why is OFFSET slow for deep pages?">
+The database must produce and discard all the skipped rows (walking the index or sorting), so the cost grows linearly with the offset even though only a few rows are returned.
+</Accordion>
 
-> [!question]- How does keyset pagination work and what does it need?
-> The client passes the sort key of the last row seen; the query filters `WHERE key < last_key ORDER BY key DESC LIMIT n`. It needs a unique (or tie-broken) sort key and an index matching the ORDER BY.
+<Accordion title="How does keyset pagination work and what does it need?">
+The client passes the sort key of the last row seen; the query filters `WHERE key < last_key ORDER BY key DESC LIMIT n`. It needs a unique (or tie-broken) sort key and an index matching the ORDER BY.
+</Accordion>
 
-> [!question]- What are the downsides of keyset pagination?
-> No random page access or easy total page count, cursors are tied to a specific sort and filter, and multi-column sorts with mixed directions complicate the predicate.
+<Accordion title="What are the downsides of keyset pagination?">
+No random page access or easy total page count, cursors are tied to a specific sort and filter, and multi-column sorts with mixed directions complicate the predicate.
+</Accordion>
 
-> [!question]- How would you paginate a feed sorted by `created_at` where timestamps can collide?
-> Sort by `(created_at DESC, id DESC)`, index both, and use a row comparison `(created_at, id) < ($ts, $id)` with the last row's values as the cursor.
+<Accordion title="How would you paginate a feed sorted by `created_at` where timestamps can collide?">
+Sort by `(created_at DESC, id DESC)`, index both, and use a row comparison `(created_at, id) < ($ts, $id)` with the last row's values as the cursor.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Database Indexes]] · [[Query Optimization & EXPLAIN]] · [[Using Cursors]] · [[Sorting Data]]
-- Frontend: [[Virtualization & Large Lists]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [Using Cursors](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Cursors) · [Sorting Data](/Software%20Engineering/Databases/SQL%20ANSI/Sorting%20Data)
+- Frontend: [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)
 
 ## Sources
 - Markus Winand, *Use The Index, Luke*: Paging Through Results (seek method): https://use-the-index-luke.com/sql/partial-results/fetch-next-page

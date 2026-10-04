@@ -1,12 +1,16 @@
 ---
+title: "OAuth 2.x & OpenID Connect"
 tags: [apis, apis/auth]
 aliases: [OAuth, OAuth 2.0, OAuth 2.1, OpenID Connect, OIDC, PKCE, DPoP, Authorization Code Flow, Client Credentials, Device Flow, SSO]
 updated: 2026-09-27
 ---
 # OAuth 2.x & OpenID Connect
 
-> [!tldr] TL;DR
-> **OAuth 2.0** lets a *client* app get a limited **access token** to call an API on behalf of a user (or itself) without ever seeing the user's password. **OpenID Connect (OIDC)** is a thin identity layer on top that adds an **ID token** so the client also learns *who* the user is (login / SSO). Today there is essentially **one flow for users (Authorization Code + PKCE)**, **one for machines (Client Credentials)**, and **Device Flow** for TVs/CLIs. Implicit and Password grants are deprecated. **OAuth 2.1** (still a draft in 2026) consolidates these rules; **RFC 9700** (Jan 2025) is the security baseline.
+<Note>
+**TL;DR**
+
+**OAuth 2.0** lets a *client* app get a limited **access token** to call an API on behalf of a user (or itself) without ever seeing the user's password. **OpenID Connect (OIDC)** is a thin identity layer on top that adds an **ID token** so the client also learns *who* the user is (login / SSO). Today there is essentially **one flow for users (Authorization Code + PKCE)**, **one for machines (Client Credentials)**, and **Device Flow** for TVs/CLIs. Implicit and Password grants are deprecated. **OAuth 2.1** (still a draft in 2026) consolidates these rules; **RFC 9700** (Jan 2025) is the security baseline.
+</Note>
 
 ## Roles and vocabulary
 
@@ -134,24 +138,30 @@ The resource server checks the proof signature, that its key matches the token's
 | Bearer token in query string allowed | **forbidden** (header or body only) |
 | Refresh tokens unconstrained | public clients: **rotate** or **sender-constrain** |
 
-> [!info]+ 🆕 2025–2026
-> - **2025-01:** **RFC 9700** "Best Current Practice for OAuth 2.0 Security" (BCP 240) published: PKCE for all, no implicit/password grants, exact redirect matching, sender-constrained or rotating refresh tokens, mix-up defences.
-> - **2025-04:** **RFC 9728** OAuth 2.0 Protected Resource Metadata published (APIs advertise their authorization servers; used by MCP).
-> - **2025-09:** OpenAPI 3.2 can describe the **device authorization flow** and OAuth metadata URLs.
-> - **2026-03-02:** **OAuth 2.1** reaches `draft-ietf-oauth-v2-1-15`. It is **still an Internet-Draft**, not an RFC, but major IdPs already implement its rules.
-> - **2026-07-28:** the **MCP** spec hardens its OAuth profile for AI agents: authorization servers must return `iss` (RFC 9207) and clients must validate it, client credentials are bound to their issuer, **Dynamic Client Registration is deprecated in favour of Client ID Metadata Documents (CIMD)**. See [[AI in Frontend - MCP, WebMCP & Built-in AI]].
-> - **2026-08:** **RFC 10017** "OAuth 2.0 for Browser-Based Applications" (BCP 212) published; it ranks **BFF** as the most secure SPA architecture, then token-mediating backend, then a pure browser client.
+<Info>
+**🆕 2025–2026**
+
+- **2025-01:** **RFC 9700** "Best Current Practice for OAuth 2.0 Security" (BCP 240) published: PKCE for all, no implicit/password grants, exact redirect matching, sender-constrained or rotating refresh tokens, mix-up defences.
+- **2025-04:** **RFC 9728** OAuth 2.0 Protected Resource Metadata published (APIs advertise their authorization servers; used by MCP).
+- **2025-09:** OpenAPI 3.2 can describe the **device authorization flow** and OAuth metadata URLs.
+- **2026-03-02:** **OAuth 2.1** reaches `draft-ietf-oauth-v2-1-15`. It is **still an Internet-Draft**, not an RFC, but major IdPs already implement its rules.
+- **2026-07-28:** the **MCP** spec hardens its OAuth profile for AI agents: authorization servers must return `iss` (RFC 9207) and clients must validate it, client credentials are bound to their issuer, **Dynamic Client Registration is deprecated in favour of Client ID Metadata Documents (CIMD)**. See [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
+- **2026-08:** **RFC 10017** "OAuth 2.0 for Browser-Based Applications" (BCP 212) published; it ranks **BFF** as the most secure SPA architecture, then token-mediating backend, then a pure browser client.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Using an **access token as proof of login** in the client, or accepting ID tokens at APIs. ID token → client; access token → API.
-> - Not validating `aud`: a token minted for API A accepted by API B.
-> - Missing or unchecked `state` (login CSRF) and `nonce`.
-> - Wildcard or prefix redirect URI matching → open redirect → code theft.
-> - Long-lived bearer tokens in `localStorage` in SPAs. Prefer a BFF ([[JWT vs Cookies]]).
-> - Over-broad scopes (`admin`, `*`) and never reviewing consent grants.
-> - Rolling your own OAuth server. Use a proven product or library.
+<Warning>
+**Common mistakes**
+
+- Using an **access token as proof of login** in the client, or accepting ID tokens at APIs. ID token → client; access token → API.
+- Not validating `aud`: a token minted for API A accepted by API B.
+- Missing or unchecked `state` (login CSRF) and `nonce`.
+- Wildcard or prefix redirect URI matching → open redirect → code theft.
+- Long-lived bearer tokens in `localStorage` in SPAs. Prefer a BFF ([JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies)).
+- Over-broad scopes (`admin`, `*`) and never reviewing consent grants.
+- Rolling your own OAuth server. Use a proven product or library.
+</Warning>
 
 ## Senior perspective
 
@@ -163,32 +173,39 @@ The resource server checks the proof signature, that its key matches the token's
 
 ## Interview questions
 
-> [!question]- OAuth vs OpenID Connect?
-> OAuth 2.x is delegated authorization: it gives a client an access token to call an API with limited scope. OIDC is an identity layer on OAuth that adds the ID token (a signed JWT about the authentication event), UserInfo and discovery, so clients can log users in and do SSO.
+<Accordion title="OAuth vs OpenID Connect?">
+OAuth 2.x is delegated authorization: it gives a client an access token to call an API with limited scope. OIDC is an identity layer on OAuth that adds the ID token (a signed JWT about the authentication event), UserInfo and discovery, so clients can log users in and do SSO.
+</Accordion>
 
-> [!question]- Explain Authorization Code + PKCE and why PKCE exists.
-> The client redirects the user to the AS with a code_challenge (hash of a random verifier). After login the AS redirects back with a one-time code. The client exchanges the code plus the original verifier at the token endpoint; the AS checks the hash. PKCE prevents an attacker who intercepts the code (malicious app, logs, referrer) from redeeming it, and also protects against CSRF-style code injection.
+<Accordion title="Explain Authorization Code + PKCE and why PKCE exists.">
+The client redirects the user to the AS with a code_challenge (hash of a random verifier). After login the AS redirects back with a one-time code. The client exchanges the code plus the original verifier at the token endpoint; the AS checks the hash. PKCE prevents an attacker who intercepts the code (malicious app, logs, referrer) from redeeming it, and also protects against CSRF-style code injection.
+</Accordion>
 
-> [!question]- Why were the Implicit and Password grants deprecated?
-> Implicit returns tokens in the URL fragment where they leak via history, referrers and scripts, and can't be sender-constrained or refreshed safely. Password grant exposes user credentials to the client, trains phishing and can't support MFA, passkeys or federated login. Auth Code + PKCE replaces both.
+<Accordion title="Why were the Implicit and Password grants deprecated?">
+Implicit returns tokens in the URL fragment where they leak via history, referrers and scripts, and can't be sender-constrained or refreshed safely. Password grant exposes user credentials to the client, trains phishing and can't support MFA, passkeys or federated login. Auth Code + PKCE replaces both.
+</Accordion>
 
-> [!question]- What is DPoP?
-> Demonstrating Proof of Possession (RFC 9449): the client holds a key pair, the AS binds the access token to its public key, and each API request carries a signed proof of method, URL and token hash. A stolen token can't be replayed without the private key.
+<Accordion title="What is DPoP?">
+Demonstrating Proof of Possession (RFC 9449): the client holds a key pair, the AS binds the access token to its public key, and each API request carries a signed proof of method, URL and token hash. A stolen token can't be replayed without the private key.
+</Accordion>
 
-> [!question]- Which flow for a CLI tool? For a cron job calling an API?
-> CLI: Device Authorization Grant (or Auth Code + PKCE with a loopback redirect). Cron/service with no user: Client Credentials, ideally with private_key_jwt or mTLS instead of a shared secret.
+<Accordion title="Which flow for a CLI tool? For a cron job calling an API?">
+CLI: Device Authorization Grant (or Auth Code + PKCE with a loopback redirect). Cron/service with no user: Client Credentials, ideally with private_key_jwt or mTLS instead of a shared secret.
+</Accordion>
 
-> [!question]- What is the status of OAuth 2.1?
-> Still an IETF Internet-Draft (draft-15, March 2026). It consolidates OAuth 2.0 plus later RFCs: mandatory PKCE, no implicit or password grants, exact redirect URI matching, no tokens in query strings, and rotated or sender-constrained refresh tokens for public clients. RFC 9700 already makes most of this best practice.
+<Accordion title="What is the status of OAuth 2.1?">
+Still an IETF Internet-Draft (draft-15, March 2026). It consolidates OAuth 2.0 plus later RFCs: mandatory PKCE, no implicit or password grants, exact redirect URI matching, no tokens in query strings, and rotated or sender-constrained refresh tokens for public clients. RFC 9700 already makes most of this best practice.
+</Accordion>
 
-> [!question]- How does an API validate an access token?
-> If JWT: verify signature with the AS's JWKS (pinned algorithms), check `iss`, `aud`, `exp`, `nbf`, `typ`, scopes, and for DPoP the proof binding. If opaque: call the introspection endpoint (RFC 7662) and cache the result briefly.
+<Accordion title="How does an API validate an access token?">
+If JWT: verify signature with the AS's JWKS (pinned algorithms), check `iss`, `aud`, `exp`, `nbf`, `typ`, scopes, and for DPoP the proof binding. If opaque: call the introspection endpoint (RFC 7662) and cache the result briefly.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[Authentication vs Authorization]] · [[JWT vs Cookies]] · [[Passkeys, WebAuthn & MFA]] · [[API Gateways & Reverse Proxies]] · [[API Security]]
-- Frontend: [[Authentication & Token Storage]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]]
-- Other domains: [[Security Index]] · [[Backend Security Essentials]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization) · [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) · [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [API Security](/Software%20Engineering/Security/API%20Security)
+- Frontend: [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
+- Other domains: [Security Index](/Software%20Engineering/Security/Security%20Index) · [Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials)
 
 ## Sources
 - [RFC 6749: OAuth 2.0](https://www.rfc-editor.org/rfc/rfc6749.html) · [RFC 7636: PKCE](https://www.rfc-editor.org/rfc/rfc7636.html)

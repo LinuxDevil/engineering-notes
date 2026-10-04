@@ -1,12 +1,16 @@
 ---
+title: "Infrastructure as Code"
 tags: [devops, devops/iac, devops/cloud]
 aliases: [IaC, Terraform, OpenTofu, Pulumi, Terraform vs OpenTofu]
 updated: 2026-09-27
 ---
 # Infrastructure as Code
 
-> [!tldr] TL;DR
-> **Infrastructure as Code (IaC)** describes servers, networks, databases, DNS and permissions in versioned files, and a tool makes the real world match them. **Terraform** and its open-source fork **OpenTofu** use declarative HCL, a **state file** and a **plan → apply** workflow; **Pulumi** uses general-purpose languages; cloud-native options include CloudFormation/CDK, Bicep and Crossplane. Terraform moved to the non-open-source **BSL** in 2023 (IBM now owns HashiCorp); OpenTofu (MPL 2.0, Linux Foundation, CNCF sandbox since 2025) is the drop-in open alternative.
+<Note>
+**TL;DR**
+
+**Infrastructure as Code (IaC)** describes servers, networks, databases, DNS and permissions in versioned files, and a tool makes the real world match them. **Terraform** and its open-source fork **OpenTofu** use declarative HCL, a **state file** and a **plan → apply** workflow; **Pulumi** uses general-purpose languages; cloud-native options include CloudFormation/CDK, Bicep and Crossplane. Terraform moved to the non-open-source **BSL** in 2023 (IBM now owns HashiCorp); OpenTofu (MPL 2.0, Linux Foundation, CNCF sandbox since 2025) is the drop-in open alternative.
+</Note>
 
 ## The idea
 
@@ -125,23 +129,29 @@ export const bucketName = bucket.id;
 - On PR: `fmt`, `validate`, `tflint`, security scanning (Checkov, Trivy config, tfsec successor), policy as code (OPA/Conftest, Sentinel), `plan` posted as a PR comment (Atlantis, Spacelift, env0, HCP Terraform, GitHub Actions).
 - On merge: `apply` the **reviewed plan**, using OIDC credentials scoped per environment.
 - Scheduled drift detection: `plan -detailed-exitcode` nightly; alert on changes.
-- Cost estimation on PRs (Infracost). See [[Cloud Fundamentals]] for FinOps.
+- Cost estimation on PRs (Infracost). See [Cloud Fundamentals](/Software%20Engineering/DevOps/Cloud%20Fundamentals) for FinOps.
 
-> [!info]+ 🆕 2025–2026
-> - **Licensing background**: on 2023-08-10 HashiCorp moved Terraform (from 1.6) to the **Business Source License 1.1**, which forbids competing commercial use. The community forked the last MPL version as **OpenTofu** (Linux Foundation). **IBM completed its acquisition of HashiCorp on 2025-02-27**. OpenTofu was **accepted into the CNCF as a Sandbox project on 2025-04-23**.
-> - **OpenTofu 1.10 (2025-06-24)**: OCI registry support for providers and modules, **native S3 state locking** (`use_lockfile`, no DynamoDB), experimental OpenTelemetry tracing. **1.11 (2025-12-09)**: ephemeral resources, write-only attributes, `enabled` meta-argument. **1.12 (2026-05-14)**; latest patch 1.12.6 (2026-08-19); **1.13 at RC1** (2026-09-17). OpenTofu has had **state encryption** since 1.7.
-> - **Terraform 1.14 (2025-11-19)**: `terraform query` with list resources in `*.tfquery.hcl` (find existing infra and generate import config) and a new top-level **`action` block** for provider-defined imperative operations (e.g. invoke a Lambda, invalidate CloudFront). **1.16.0 released 2026-08-26**; 1.17 in beta.
-> - The two tools remain largely compatible (HCL, state format, provider protocol) but are diverging feature by feature; pick one per codebase and test before switching.
+<Info>
+**🆕 2025–2026**
+
+- **Licensing background**: on 2023-08-10 HashiCorp moved Terraform (from 1.6) to the **Business Source License 1.1**, which forbids competing commercial use. The community forked the last MPL version as **OpenTofu** (Linux Foundation). **IBM completed its acquisition of HashiCorp on 2025-02-27**. OpenTofu was **accepted into the CNCF as a Sandbox project on 2025-04-23**.
+- **OpenTofu 1.10 (2025-06-24)**: OCI registry support for providers and modules, **native S3 state locking** (`use_lockfile`, no DynamoDB), experimental OpenTelemetry tracing. **1.11 (2025-12-09)**: ephemeral resources, write-only attributes, `enabled` meta-argument. **1.12 (2026-05-14)**; latest patch 1.12.6 (2026-08-19); **1.13 at RC1** (2026-09-17). OpenTofu has had **state encryption** since 1.7.
+- **Terraform 1.14 (2025-11-19)**: `terraform query` with list resources in `*.tfquery.hcl` (find existing infra and generate import config) and a new top-level **`action` block** for provider-defined imperative operations (e.g. invoke a Lambda, invalidate CloudFront). **1.16.0 released 2026-08-26**; 1.17 in beta.
+- The two tools remain largely compatible (HCL, state format, provider protocol) but are diverging feature by feature; pick one per codebase and test before switching.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Local state files, or remote state without locking: two applies corrupt state.
-> - One giant state for everything: slow plans, huge blast radius, everyone blocked on locks.
-> - Secrets in `.tfvars` committed to Git, or visible in state. Encrypt state, use secret managers, mark variables `sensitive`, use ephemeral/write-only values where supported.
-> - Clicking in the console to "fix quickly": drift, then the next apply reverts it.
-> - Unpinned provider/module versions: a minor bump changes behaviour during an incident.
-> - `terraform apply` without reviewing the plan, especially lines with `-/+` (replace) on databases.
+<Warning>
+**Common pitfalls**
+
+- Local state files, or remote state without locking: two applies corrupt state.
+- One giant state for everything: slow plans, huge blast radius, everyone blocked on locks.
+- Secrets in `.tfvars` committed to Git, or visible in state. Encrypt state, use secret managers, mark variables `sensitive`, use ephemeral/write-only values where supported.
+- Clicking in the console to "fix quickly": drift, then the next apply reverts it.
+- Unpinned provider/module versions: a minor bump changes behaviour during an incident.
+- `terraform apply` without reviewing the plan, especially lines with `-/+` (replace) on databases.
+</Warning>
 
 ## Senior perspective
 
@@ -152,23 +162,28 @@ export const bucketName = bucket.id;
 
 ## Interview questions
 
-> [!question]- What is Terraform state and why does it matter?
-> A JSON mapping of resources in configuration to real-world objects and their attributes. Terraform uses it to compute diffs. It must be shared (remote backend), locked during operations and protected because it can contain secrets.
+<Accordion title="What is Terraform state and why does it matter?">
+A JSON mapping of resources in configuration to real-world objects and their attributes. Terraform uses it to compute diffs. It must be shared (remote backend), locked during operations and protected because it can contain secrets.
+</Accordion>
 
-> [!question]- Terraform vs OpenTofu?
-> OpenTofu forked from Terraform 1.5 after the 2023 BSL licence change; it is MPL 2.0 under the Linux Foundation (CNCF sandbox since April 2025). Same HCL and providers; OpenTofu adds features like state encryption and OCI registries, while Terraform has HCP Terraform integration, `terraform query` and actions. Choose based on licence, features and support.
+<Accordion title="Terraform vs OpenTofu?">
+OpenTofu forked from Terraform 1.5 after the 2023 BSL licence change; it is MPL 2.0 under the Linux Foundation (CNCF sandbox since April 2025). Same HCL and providers; OpenTofu adds features like state encryption and OCI registries, while Terraform has HCP Terraform integration, `terraform query` and actions. Choose based on licence, features and support.
+</Accordion>
 
-> [!question]- How do you handle drift?
-> Detect it with scheduled `plan` runs; decide whether code or reality is right; either apply to revert, or update code (and `import` resources created manually). Prevent it with restricted console permissions and GitOps-style workflows.
+<Accordion title="How do you handle drift?">
+Detect it with scheduled `plan` runs; decide whether code or reality is right; either apply to revert, or update code (and `import` resources created manually). Prevent it with restricted console permissions and GitOps-style workflows.
+</Accordion>
 
-> [!question]- Terraform vs Ansible?
-> Terraform provisions and manages the lifecycle of infrastructure resources declaratively with state. Ansible configures systems and orchestrates procedures (install packages, edit files) and is stateless and mostly procedural. They are complementary.
+<Accordion title="Terraform vs Ansible?">
+Terraform provisions and manages the lifecycle of infrastructure resources declaratively with state. Ansible configures systems and orchestrates procedures (install packages, edit files) and is stateless and mostly procedural. They are complementary.
+</Accordion>
 
-> [!question]- How would you structure IaC for 20 teams?
-> Shared, versioned modules owned by a platform team; separate state per environment and component; policy as code in CI; plans on PR and applies on merge with OIDC credentials; templates for new services in the developer portal.
+<Accordion title="How would you structure IaC for 20 teams?">
+Shared, versioned modules owned by a platform team; separate state per environment and component; policy as code in CI; plans on PR and applies on merge with OIDC credentials; templates for new services in the developer portal.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Cloud Fundamentals]] · [[CI-CD Pipelines]] · [[GitOps - Argo CD & Flux]] · [[Platform Engineering & Internal Developer Platforms]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Cloud Fundamentals](/Software%20Engineering/DevOps/Cloud%20Fundamentals) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux) · [Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms)
 
 ## Sources
 - [HashiCorp: Terraform docs](https://developer.hashicorp.com/terraform/docs)

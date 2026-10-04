@@ -1,12 +1,16 @@
 ---
+title: "Docker Compose"
 tags: [devops, devops/docker]
 aliases: [Compose, docker-compose, compose.yaml]
 updated: 2026-09-27
 ---
 # Docker Compose
 
-> [!tldr] TL;DR
-> Docker Compose describes a **multi-container application** in one `compose.yaml` (services, networks, volumes, env, healthchecks) and runs it with `docker compose up`. Services on the same Compose network reach each other **by service name** via built-in DNS. It is the standard tool for local development and CI integration tests, and fine for single-host deployments; for multi-node production use [[Kubernetes]] or a managed container platform.
+<Note>
+**TL;DR**
+
+Docker Compose describes a **multi-container application** in one `compose.yaml` (services, networks, volumes, env, healthchecks) and runs it with `docker compose up`. Services on the same Compose network reach each other **by service name** via built-in DNS. It is the standard tool for local development and CI integration tests, and fine for single-host deployments; for multi-node production use [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) or a managed container platform.
+</Note>
 
 ## The idea
 
@@ -116,20 +120,26 @@ docker compose config                # print the fully resolved config (great fo
 | Learning curve | Low | High |
 | Best for | Local dev, CI integration tests, small single-VM apps | Production at scale |
 
-Converters such as Kompose exist, but most teams keep Compose for dev and write Kubernetes manifests or Helm charts for prod. Skaffold or Tilt give a Compose-like inner loop on Kubernetes (see [[Kubernetes Basics]]).
+Converters such as Kompose exist, but most teams keep Compose for dev and write Kubernetes manifests or Helm charts for prod. Skaffold or Tilt give a Compose-like inner loop on Kubernetes (see [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics)).
 
-> [!info]+ 🆕 2025–2026
-> - **Compose v5.0.0 "Mont Blanc" (2025-12-02)**: the internal builder was removed and **builds are delegated to Docker Bake**, and Compose can now be used officially as a **Go SDK** embedded in other tools. The team skipped v3 and v4 to avoid confusion with the obsolete `version: "3.x"` file formats. Also added: OCI and Git remote resources, `--wait` for `start`.
-> - Since **Compose v2.38 (2025)** a top-level `models:` element declares AI models (e.g. `llm: { model: ai/smollm2 }`) served by Docker Model Runner, so an app and its local LLM start together.
+<Info>
+**🆕 2025–2026**
+
+- **Compose v5.0.0 "Mont Blanc" (2025-12-02)**: the internal builder was removed and **builds are delegated to Docker Bake**, and Compose can now be used officially as a **Go SDK** embedded in other tools. The team skipped v3 and v4 to avoid confusion with the obsolete `version: "3.x"` file formats. Also added: OCI and Git remote resources, `--wait` for `start`.
+- Since **Compose v2.38 (2025)** a top-level `models:` element declares AI models (e.g. `llm: { model: ai/smollm2 }`) served by Docker Model Runner, so an app and its local LLM start together.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Using `localhost` to reach another service.
-> - Relying on `depends_on` without a healthcheck and getting "connection refused" on first boot.
-> - `docker compose down -v` in the wrong directory wiping a local database.
-> - Committing `.env` with real secrets. Commit a `.env.example` instead.
-> - Bind-mounting `node_modules` from a macOS/Windows host into a Linux container (native modules break). Use a named volume for `node_modules` or `develop.watch`.
+<Warning>
+**Common pitfalls**
+
+- Using `localhost` to reach another service.
+- Relying on `depends_on` without a healthcheck and getting "connection refused" on first boot.
+- `docker compose down -v` in the wrong directory wiping a local database.
+- Committing `.env` with real secrets. Commit a `.env.example` instead.
+- Bind-mounting `node_modules` from a macOS/Windows host into a Linux container (native modules break). Use a named volume for `node_modules` or `develop.watch`.
+</Warning>
 
 ## Senior perspective
 
@@ -139,21 +149,25 @@ Converters such as Kompose exist, but most teams keep Compose for dev and write 
 
 ## Interview questions
 
-> [!question]- How do containers in the same Compose project find each other?
-> Compose creates a user-defined network with embedded DNS. Each service is resolvable by its service name (and aliases), so `api` connects to `db:5432`.
+<Accordion title="How do containers in the same Compose project find each other?">
+Compose creates a user-defined network with embedded DNS. Each service is resolvable by its service name (and aliases), so `api` connects to `db:5432`.
+</Accordion>
 
-> [!question]- Does `depends_on` wait until the database is ready?
-> Not by default: it only orders container start. With `condition: service_healthy` and a healthcheck on the dependency, Compose waits for it to be healthy. Apps should still implement retries.
+<Accordion title="Does `depends_on` wait until the database is ready?">
+Not by default: it only orders container start. With `condition: service_healthy` and a healthcheck on the dependency, Compose waits for it to be healthy. Apps should still implement retries.
+</Accordion>
 
-> [!question]- Named volume vs bind mount?
-> A named volume is managed by Docker (stored in Docker's data dir) and is ideal for database data. A bind mount maps a host path into the container, ideal for live-editing source code in development.
+<Accordion title="Named volume vs bind mount?">
+A named volume is managed by Docker (stored in Docker's data dir) and is ideal for database data. A bind mount maps a host path into the container, ideal for live-editing source code in development.
+</Accordion>
 
-> [!question]- When would you not use Compose in production?
-> When you need multiple hosts, automatic failover, rolling or canary deploys, autoscaling or fine-grained RBAC. Then use Kubernetes, ECS, Cloud Run or similar.
+<Accordion title="When would you not use Compose in production?">
+When you need multiple hosts, automatic failover, rolling or canary deploys, autoscaling or fine-grained RBAC. Then use Kubernetes, ECS, Cloud Run or similar.
+</Accordion>
 
 ## Related
-- [[Docker]] · [[Docker Basics]] · [[Dockerfile Best Practices & Image Security]] · [[DevOps Index]]
-- [[Kubernetes]] · [[Containers vs VMs vs Serverless]] · [[Microservices Architecture]]
+- [Docker](/Software%20Engineering/DevOps/Docker/Docker) · [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) · [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security) · [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index)
+- [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) · [Containers vs VMs vs Serverless](/Software%20Engineering/DevOps/Containers%20vs%20VMs%20vs%20Serverless) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture)
 
 ## Sources
 - [Docker docs: Compose overview](https://docs.docker.com/compose/)

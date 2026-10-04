@@ -1,3 +1,6 @@
+---
+title: "Web Application Performance"
+---
 - JS
 - CSS
 - Images

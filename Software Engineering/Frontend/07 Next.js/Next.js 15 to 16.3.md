@@ -1,12 +1,16 @@
 ---
+title: "Next.js 15 to 16.3"
 tags: [frontend, frontend/nextjs, frontend/whats-new]
 aliases: [Next.js 16, Next.js 15, Next 16 upgrade, Next.js release notes]
 updated: 2026-09-27
 ---
 # Next.js 15 to 16.3
 
-> [!tldr] TL;DR
-> Next.js 15 (Oct 2024) made request APIs async and stopped caching by default. The 15.x line matured Turbopack and Node.js middleware. **Next 16 (Oct 21, 2025)** made Turbopack the default bundler, introduced **Cache Components** (`'use cache'`, opt-in caching, PPR built in), renamed `middleware.ts` to **`proxy.ts`**, removed synchronous request APIs, AMP and `next lint`. 16.1–16.3 focused on dev speed, memory, agent tooling and **Instant Navigations**. As of Sept 27, 2026 the current release is **16.3.6** (Sept 22, 2026), **16.3 is Active LTS** and **15.5 is Maintenance LTS**. Stay patched: there were critical RCEs in Dec 2025 (React Server Components) and Sept 2026 (`next/og` `ImageResponse`).
+<Note>
+**TL;DR**
+
+Next.js 15 (Oct 2024) made request APIs async and stopped caching by default. The 15.x line matured Turbopack and Node.js middleware. **Next 16 (Oct 21, 2025)** made Turbopack the default bundler, introduced **Cache Components** (`'use cache'`, opt-in caching, PPR built in), renamed `middleware.ts` to **`proxy.ts`**, removed synchronous request APIs, AMP and `next lint`. 16.1–16.3 focused on dev speed, memory, agent tooling and **Instant Navigations**. As of Sept 27, 2026 the current release is **16.3.6** (Sept 22, 2026), **16.3 is Active LTS** and **15.5 is Maintenance LTS**. Stay patched: there were critical RCEs in Dec 2025 (React Server Components) and Sept 2026 (`next/og` `ImageResponse`).
+</Note>
 
 ## Release timeline
 
@@ -39,9 +43,9 @@ flowchart LR
 
 **New**
 - **Turbopack is stable and the default** for `next dev` and `next build`. Opt out with `--webpack`.
-- **Cache Components** (`cacheComponents: true`) with the `'use cache'` directive. Caching is **opt-in**; everything is dynamic by default. This completes PPR; the `experimental.ppr` and `dynamicIO` flags were removed/renamed. See [[Next.js Rendering & Caching]].
+- **Cache Components** (`cacheComponents: true`) with the `'use cache'` directive. Caching is **opt-in**; everything is dynamic by default. This completes PPR; the `experimental.ppr` and `dynamicIO` flags were removed/renamed. See [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 - **`proxy.ts` replaces `middleware.ts`**, running on the Node.js runtime. `middleware.ts` still works for Edge but is deprecated.
-- **React Compiler support is stable** (`reactCompiler: true`), not on by default ([[React 19 to 19.3 & React Compiler]]).
+- **React Compiler support is stable** (`reactCompiler: true`), not on by default ([React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)).
 - **Next.js DevTools MCP**: an MCP server giving coding agents routes, logs and errors.
 - Routing: **layout deduplication** (a shared layout is fetched once across many prefetched links) and **incremental prefetching**.
 - Caching APIs: `revalidateTag(tag, profile)` now requires a `cacheLife` profile; new `updateTag()` (read-your-writes in Server Actions); new `refresh()`.
@@ -55,26 +59,29 @@ flowchart LR
 - `next/image` defaults changed: `quality` restricted to `[75]` by default, `minimumCacheTTL` 4 hours.
 - Parallel route slots need a **`default.js`**.
 
-> [!example] The two most common code changes
-> ```tsx
-> // BEFORE (Next 14 style)
-> export default function Page({ params }: { params: { id: string } }) {
->   const token = cookies().get("token");
->   return <Flight id={params.id} />;
-> }
->
-> // AFTER (Next 15 required-ish, Next 16 required)
-> export default async function Page({ params }: { params: Promise<{ id: string }> }) {
->   const { id } = await params;
->   const token = (await cookies()).get("token");
->   return <Flight id={id} />;
-> }
-> ```
-> ```ts
-> // middleware.ts  ->  proxy.ts
-> export function proxy(request: NextRequest) { /* same body as before */ }
-> export const config = { matcher: ["/account/:path*"] };
-> ```
+<Info>
+**The two most common code changes**
+
+```tsx
+// BEFORE (Next 14 style)
+export default function Page({ params }: { params: { id: string } }) {
+  const token = cookies().get("token");
+  return <Flight id={params.id} />;
+}
+
+// AFTER (Next 15 required-ish, Next 16 required)
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const token = (await cookies()).get("token");
+  return <Flight id={id} />;
+}
+```
+```ts
+// middleware.ts  ->  proxy.ts
+export function proxy(request: NextRequest) { /* same body as before */ }
+export const config = { matcher: ["/account/:path*"] };
+```
+</Info>
 
 ## Upgrade checklist (15.x → 16.x)
 
@@ -103,7 +110,7 @@ flowchart LR
 | **2026-09-22** | Critical **RCE in Node `ImageResponse`** (`next/og`), caused by Satori and upstream dependencies | Affects `>=16.2.0 <16.3.6` | Fixed in **16.3.6** |
 | 2026-09-23 | "Upcoming September Security Release" announced | Details pending at time of writing | Watch the Next.js blog and upgrade promptly |
 
-Takeaways for interviews and real life: Server Actions and RSC endpoints are public attack surface; authenticate inside every action; subscribe to framework advisories; automate dependency updates. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] and [[Supply Chain Security]].
+Takeaways for interviews and real life: Server Actions and RSC endpoints are public attack surface; authenticate inside every action; subscribe to framework advisories; automate dependency updates. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) and [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
 
 ## LTS scheme
 
@@ -118,7 +125,7 @@ Practical policy for a product team: stay on the Active LTS line, take every pat
 - **Next.js DevTools MCP** (16.0): an MCP server that exposes routes, logs and errors to coding agents; 16.1 added a `get_routes` tool.
 - **`AGENTS.md` in `create-next-app`** (16.2), and **version-matched bundled docs** written into `AGENTS.md` (16.3) so agents use APIs that match your installed version instead of stale training data.
 - `@next/playwright` `instant()` helper (16.3) for testing Instant Navigations.
-- Broader picture (WebMCP, built-in AI, Vercel AI SDK): [[AI in Frontend - MCP, WebMCP & Built-in AI]].
+- Broader picture (WebMCP, built-in AI, Vercel AI SDK): [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
 
 ## Other 16.x features worth knowing
 
@@ -126,45 +133,53 @@ Practical policy for a product team: stay on the Active LTS line, take every pat
 - **Root params** (16.3): `import { lang } from 'next/root-params'` reads params of the root segment (e.g. `[lang]`) from anywhere without prop drilling.
 - **`catchError` / `retry`** (experimental in 16.2, stable in 16.3) for error handling and recovery.
 - **Adapters API** stable (16.2): official way for platforms other than Vercel to deploy Next.js.
-- **TS 7** type checking in `next build` (16.3), see [[TypeScript 5.8 to 7.0]].
+- **TS 7** type checking in `next build` (16.3), see [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0).
 - Experimental **Rust React Compiler** (`experimental.turbopackRustReactCompiler`) and `experimental.useOffline` + `useOffline()` hook (16.3).
-- `import.meta.glob` in Turbopack (16.3). Turbopack/bundlers overview in [[Build Tools & Bundlers]].
+- `import.meta.glob` in Turbopack (16.3). Turbopack/bundlers overview in [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
 
-> [!warning] Common upgrade pitfalls
-> - Forgetting to await `params` in `generateMetadata` and `generateStaticParams` consumers, not just pages.
-> - Calling `revalidateTag` with one argument.
-> - Missing `default.tsx` in parallel slots (hard navigation 404s or build errors).
-> - Assuming `middleware.ts` still runs the same way; it's deprecated and Edge-only.
-> - Relying on `next build` to lint.
-> - Staying on a vulnerable minor (e.g. 16.2.x) after the Sept 2026 `ImageResponse` advisory.
+<Warning>
+**Common upgrade pitfalls**
+
+- Forgetting to await `params` in `generateMetadata` and `generateStaticParams` consumers, not just pages.
+- Calling `revalidateTag` with one argument.
+- Missing `default.tsx` in parallel slots (hard navigation 404s or build errors).
+- Assuming `middleware.ts` still runs the same way; it's deprecated and Edge-only.
+- Relying on `next build` to lint.
+- Staying on a vulnerable minor (e.g. 16.2.x) after the Sept 2026 `ImageResponse` advisory.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What were the biggest changes in Next.js 15?
-> Async request APIs (`params`, `searchParams`, `cookies()`, `headers()`), caching no longer on by default for `fetch`, GET route handlers and client page segments, React 19 support, Turbopack dev stable, `next/form`, and `after()`.
+<Accordion title="What were the biggest changes in Next.js 15?">
+Async request APIs (`params`, `searchParams`, `cookies()`, `headers()`), caching no longer on by default for `fetch`, GET route handlers and client page segments, React 19 support, Turbopack dev stable, `next/form`, and `after()`.
+</Accordion>
 
-> [!question]- What changed in Next.js 16?
-> Turbopack default for dev and build; Cache Components with `'use cache'` making caching opt-in and PPR built in; `proxy.ts` replacing `middleware.ts` on the Node runtime; stable React Compiler support; `revalidateTag(tag, profile)`, `updateTag`, `refresh`; removal of sync request APIs, AMP, `next lint` and runtime config; Node 20.9 minimum.
+<Accordion title="What changed in Next.js 16?">
+Turbopack default for dev and build; Cache Components with `'use cache'` making caching opt-in and PPR built in; `proxy.ts` replacing `middleware.ts` on the Node runtime; stable React Compiler support; `revalidateTag(tag, profile)`, `updateTag`, `refresh`; removal of sync request APIs, AMP, `next lint` and runtime config; Node 20.9 minimum.
+</Accordion>
 
-> [!question]- Why was middleware renamed to proxy?
-> To clarify its role: it sits in front of the app as a network boundary (redirects, rewrites, headers), running on Node by default, and it shouldn't be treated as a place for full business logic or sole authorization. The March 2025 bypass CVE reinforced that auth must also be enforced close to the data.
+<Accordion title="Why was middleware renamed to proxy?">
+To clarify its role: it sits in front of the app as a network boundary (redirects, rewrites, headers), running on Node by default, and it shouldn't be treated as a place for full business logic or sole authorization. The March 2025 bypass CVE reinforced that auth must also be enforced close to the data.
+</Accordion>
 
-> [!question]- How would you plan a Next 15 → 16 upgrade for a large app?
-> Upgrade Node/TS, run the official codemods, fix async request APIs, rename middleware to proxy, add `default.tsx` to slots, update `revalidateTag` calls, replace `next lint`, verify Turbopack builds, then adopt Cache Components incrementally per route behind tests and monitoring (Core Web Vitals, error rates).
+<Accordion title="How would you plan a Next 15 → 16 upgrade for a large app?">
+Upgrade Node/TS, run the official codemods, fix async request APIs, rename middleware to proxy, add `default.tsx` to slots, update `revalidateTag` calls, replace `next lint`, verify Turbopack builds, then adopt Cache Components incrementally per route behind tests and monitoring (Core Web Vitals, error rates).
+</Accordion>
 
-> [!question]- What was the December 2025 RSC vulnerability?
-> CVE-2025-55182: a CVSS 10 unauthenticated RCE through Server Function payload deserialization in React's RSC packages (19.0–19.2.0), affecting frameworks including Next.js (tracked as CVE-2025-66478), even for apps without explicit Server Functions. Fixed in React 19.0.1/19.1.2/19.2.1 and patched Next releases; follow-up DoS and source-exposure CVEs were fixed on Dec 11.
+<Accordion title="What was the December 2025 RSC vulnerability?">
+CVE-2025-55182: a CVSS 10 unauthenticated RCE through Server Function payload deserialization in React's RSC packages (19.0–19.2.0), affecting frameworks including Next.js (tracked as CVE-2025-66478), even for apps without explicit Server Functions. Fixed in React 19.0.1/19.1.2/19.2.1 and patched Next releases; follow-up DoS and source-exposure CVEs were fixed on Dec 11.
+</Accordion>
 
 ## Related
-- [[Next.js Index]] (all Next.js notes)
-- [[Next.js App Router Fundamentals]]
-- [[Next.js Rendering & Caching]]
-- [[React 19 to 19.3 & React Compiler]]
-- [[React Server Components & Server Functions]]
-- [[What's New in Frontend 2025-2026]]
-- [[Supply Chain Security]]
-- [[Build Tools & Bundlers]]
-- [[AI in Frontend - MCP, WebMCP & Built-in AI]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index) (all Next.js notes)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)
+- [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)
+- [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
 
 ## Sources
 - https://nextjs.org/blog/next-15

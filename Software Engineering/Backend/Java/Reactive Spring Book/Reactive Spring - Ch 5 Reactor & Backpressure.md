@@ -1,14 +1,18 @@
 ---
+title: "Reactive Spring - Ch 5 Reactor & Backpressure"
 tags: [backend, backend/java, book]
 aliases: [Backpressure, Flow control, Cooperative multithreading, Reactor signals, FlowAdapters]
 updated: 2026-09-27
 ---
 # Reactive Spring - Ch 5 Reactor & Backpressure
 
-> [!tldr] TL;DR
-> Reactive programming answers "how do we handle more users with the same threads?" through **cooperative multithreading**: code signals when it isn't using a thread, and **Reactor** (a scheduler plus operators) moves work between threads. **Backpressure** (flow control) lets the **subscriber** set the pace with `request(n)`, so a fast producer can't overwhelm it. Reactor's two publishers are **`Flux<T>`** (0..N) and **`Mono<T>`** (0..1); everything a stream emits is a **signal**.
+<Note>
+**TL;DR**
 
-*Part of [[Reactive Spring Book]] (book notes). Renamed from "Chapter 5". Hands-on Reactor details: [[Reactor - Mono & Flux]].*
+Reactive programming answers "how do we handle more users with the same threads?" through **cooperative multithreading**: code signals when it isn't using a thread, and **Reactor** (a scheduler plus operators) moves work between threads. **Backpressure** (flow control) lets the **subscriber** set the pace with `request(n)`, so a fast producer can't overwhelm it. Reactor's two publishers are **`Flux<T>`** (0..N) and **`Mono<T>`** (0..1); everything a stream emits is a **signal**.
+</Note>
+
+*Part of [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) (book notes). Renamed from "Chapter 5". Hands-on Reactor details: [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux).*
 
 ## Why: cooperative multithreading
 
@@ -82,31 +86,37 @@ flux.doOnSubscribe(s -> log.info("subscribed"))
 
 ## The four I/O models (recap)
 
-Repeated from the course (the insurance-company call-waiting example); full table in [[Java Reactive Course]]:
+Repeated from the course (the insurance-company call-waiting example); full table in [Java Reactive Course](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Java%20Reactive%20Course):
 
 1. Sync + blocking (default)
 2. Async (hire another thread so you're free; that thread still waits)
 3. Non-blocking (low-level polling)
 4. Non-blocking + async (the "hyped" approach: callbacks/events, nobody waits)
 
-> [!info]+ 🆕 Since the book
-> Spring Framework 7 (2025-11-13) still ships WebFlux and Reactor support, and adds core `@ConcurrencyLimit`/`@Retryable` that make blocking + virtual-thread code simpler to protect. Backpressure remains the main reason to pick reactive for streaming pipelines. See [[Spring Boot 3 to 4 - What's New]] and [[Java Concurrency & Virtual Threads]].
+<Info>
+**🆕 Since the book**
+
+Spring Framework 7 (2025-11-13) still ships WebFlux and Reactor support, and adds core `@ConcurrencyLimit`/`@Retryable` that make blocking + virtual-thread code simpler to protect. Backpressure remains the main reason to pick reactive for streaming pipelines. See [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New) and [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is backpressure?
-> Flow control where the consumer signals how much data it can handle (`request(n)`) and the producer respects it, so memory and downstream systems aren't overwhelmed.
+<Accordion title="What is backpressure?">
+Flow control where the consumer signals how much data it can handle (`request(n)`) and the producer respects it, so memory and downstream systems aren't overwhelmed.
+</Accordion>
 
-> [!question]- Why accept `Publisher<T>` but return `Flux`/`Mono`?
-> Accepting the minimal interface lets callers pass any Reactive Streams implementation (RxJava, Akka Streams, JDK Flow via adapters); returning Reactor types gives callers Reactor's operators and clear cardinality (0..1 vs 0..N).
+<Accordion title="Why accept `Publisher<T>` but return `Flux`/`Mono`?">
+Accepting the minimal interface lets callers pass any Reactive Streams implementation (RxJava, Akka Streams, JDK Flow via adapters); returning Reactor types gives callers Reactor's operators and clear cardinality (0..1 vs 0..N).
+</Accordion>
 
-> [!question]- What is a signal in Reactor?
-> Any event a stream emits: subscription, next item, error, completion (and cancellation). Operators like `doOnNext`, `doOnError`, `materialize` let you observe them.
+<Accordion title="What is a signal in Reactor?">
+Any event a stream emits: subscription, next item, error, completion (and cancellation). Operators like `doOnNext`, `doOnError`, `materialize` let you observe them.
+</Accordion>
 
 ## Related
-- [[Reactive Spring Book]] · [[Java & Spring Index]]
-- [[Reactor - Mono & Flux]] · [[Reactive Spring - Ch 4 IO & Reactive Streams]] · [[Java Reactive Course]]
-- [[Java Concurrency & Virtual Threads]] · [[Microservices Architecture]]
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux) · [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) · [Java Reactive Course](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Java%20Reactive%20Course)
+- [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture)
 
 ## Sources
 - Josh Long, *Reactive Spring* (2020), chapter 5

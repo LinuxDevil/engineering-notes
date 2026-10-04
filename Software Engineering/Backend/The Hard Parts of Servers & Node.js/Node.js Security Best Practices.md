@@ -1,12 +1,16 @@
 ---
+title: "Node.js Security Best Practices"
 tags: [backend, backend/node, security]
 aliases: [Node security, Node.js security, Node permission model, Express security]
 updated: 2026-09-27
 ---
 # Node.js Security Best Practices
 
-> [!tldr] TL;DR
-> Most Node breaches come from **untrusted input** (injection, path traversal, prototype pollution, ReDoS), **dependencies** (malicious or vulnerable npm packages), and **misconfiguration** (secrets in code, missing headers, no rate limits, verbose errors). Validate every input with a schema, use parameterised queries, never pass user input to a shell, keep dependencies pinned and audited, run on a supported LTS, and use the **permission model** as a seat belt, not a sandbox.
+<Note>
+**TL;DR**
+
+Most Node breaches come from **untrusted input** (injection, path traversal, prototype pollution, ReDoS), **dependencies** (malicious or vulnerable npm packages), and **misconfiguration** (secrets in code, missing headers, no rate limits, verbose errors). Validate every input with a schema, use parameterised queries, never pass user input to a shell, keep dependencies pinned and audited, run on a supported LTS, and use the **permission model** as a seat belt, not a sandbox.
+</Note>
 
 ## Threat map
 
@@ -84,8 +88,8 @@ app.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: 20 }));
 
 - Set timeouts (`server.headersTimeout`, `requestTimeout`) against Slowloris.
 - Return generic error messages; log details server-side (no stack traces in responses, `NODE_ENV=production`).
-- Cookies: `HttpOnly`, `Secure`, `SameSite=Lax/Strict`. Tokens and sessions: see [[Authentication & Token Storage]] and [[JWT vs Cookies]].
-- Browser-side defences (XSS, CSRF, CSP): [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- Cookies: `HttpOnly`, `Secure`, `SameSite=Lax/Strict`. Tokens and sessions: see [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) and [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies).
+- Browser-side defences (XSS, CSRF, CSP): [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## Authentication & crypto
 - Hash passwords with **argon2id**, **scrypt** or **bcrypt** (async variants; they use the thread pool). Never plain SHA-256.
@@ -103,7 +107,7 @@ app.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: 20 }));
 - `npm audit`, Dependabot/Renovate, Socket or Snyk for known CVEs and suspicious packages.
 - Disable or review install scripts (`npm ci --ignore-scripts`, pnpm's default of not running dependency build scripts unless allowed).
 - Prefer packages with provenance (`npm publish --provenance`) and pin versions; watch for typosquats.
-- Full background: [[Supply Chain Security]].
+- Full background: [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
 
 ## Runtime
 - Run a **supported LTS** (24 or 22 as of Sept 2026; Node 20 reached EOL in 2026). EOL versions get no security fixes.
@@ -124,12 +128,15 @@ if (!process.permission.has('fs.write', '/etc')) console.log('cannot write /etc'
 - Without flags, `--permission` blocks fs access, child processes, workers, native addons, WASI (and network in newer versions) unless allowed.
 - Node's docs call it a **seat belt**: it stops *trusted* code from accidentally touching things it shouldn't. It does **not** protect against **malicious** code, which can bypass it. Use OS/container isolation for untrusted code.
 
-> [!info]+ 🆕 2025–2026
-> - Permission model **stable** in Node **23.5.0 / 22.13.0** (Dec 2024 / Jan 2025); **Node 24.0.0** (2025-05-06) renamed the flag from `--experimental-permission` to `--permission`.
-> - **Node 25.0.0** (2025-10-15) added `--allow-net` (network gating) and `--allow-inspector`. Current docs also list `--permission-audit` (log instead of deny) and `process.permission.drop()` to give up access after startup.
-> - **Node 24** runtime-deprecated `url.parse()` (use WHATWG `URL`, which avoids parser-differential bugs).
-> - **Node 20 reached end-of-life in 2026**; Node 26 becomes LTS in Oct 2026. See [[Node.js 22 to 24+ - What's New]].
-> - npm supply-chain attacks were a major 2025 theme: the **chalk/debug** compromise (2025-09-08) and the self-replicating **Shai-Hulud** worm (2025-09-14), followed by npm's plan (2025-09-22) for 2FA-only publishing, short-lived tokens and trusted publishing. Details and defences in [[Supply Chain Security]]. Backend impact is worse than frontend: install scripts run on build servers with cloud credentials.
+<Info>
+**🆕 2025–2026**
+
+- Permission model **stable** in Node **23.5.0 / 22.13.0** (Dec 2024 / Jan 2025); **Node 24.0.0** (2025-05-06) renamed the flag from `--experimental-permission` to `--permission`.
+- **Node 25.0.0** (2025-10-15) added `--allow-net` (network gating) and `--allow-inspector`. Current docs also list `--permission-audit` (log instead of deny) and `process.permission.drop()` to give up access after startup.
+- **Node 24** runtime-deprecated `url.parse()` (use WHATWG `URL`, which avoids parser-differential bugs).
+- **Node 20 reached end-of-life in 2026**; Node 26 becomes LTS in Oct 2026. See [Node.js 22 to 24+ - What's New](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%2022%20to%2024%2B%20-%20What's%20New).
+- npm supply-chain attacks were a major 2025 theme: the **chalk/debug** compromise (2025-09-08) and the self-replicating **Shai-Hulud** worm (2025-09-14), followed by npm's plan (2025-09-22) for 2FA-only publishing, short-lived tokens and trusted publishing. Details and defences in [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security). Backend impact is worse than frontend: install scripts run on build servers with cloud credentials.
+</Info>
 
 ## Pitfalls
 - Trusting `X-Forwarded-For` without configuring `trust proxy` correctly (rate limits bypassed or all users share one IP).
@@ -145,25 +152,30 @@ if (!process.permission.has('fs.write', '/etc')) console.log('cannot write /etc'
 
 ## Interview questions
 
-> [!question]- How do you prevent SQL/NoSQL injection in Node?
-> Parameterised queries or a query builder/ORM that parameterises, and schema validation that ensures fields are the expected types (blocking Mongo operator objects like `{"$ne": null}`).
+<Accordion title="How do you prevent SQL/NoSQL injection in Node?">
+Parameterised queries or a query builder/ORM that parameterises, and schema validation that ensures fields are the expected types (blocking Mongo operator objects like `{"$ne": null}`).
+</Accordion>
 
-> [!question]- What is prototype pollution?
-> Injecting properties into `Object.prototype` via keys like `__proto__` in merged user input, which changes behaviour of every object (auth bypass, DoS, sometimes RCE). Prevent with schema validation, safe merges, `Object.create(null)`/`Map`, and `--disable-proto`.
+<Accordion title="What is prototype pollution?">
+Injecting properties into `Object.prototype` via keys like `__proto__` in merged user input, which changes behaviour of every object (auth bypass, DoS, sometimes RCE). Prevent with schema validation, safe merges, `Object.create(null)`/`Map`, and `--disable-proto`.
+</Accordion>
 
-> [!question]- What is ReDoS and why is it worse in Node?
-> A regex with catastrophic backtracking takes exponential time on crafted input. Because Node runs JS on one thread, one request can block all others. Use safe patterns, input length limits, or RE2.
+<Accordion title="What is ReDoS and why is it worse in Node?">
+A regex with catastrophic backtracking takes exponential time on crafted input. Because Node runs JS on one thread, one request can block all others. Use safe patterns, input length limits, or RE2.
+</Accordion>
 
-> [!question]- Is Node's permission model a sandbox for untrusted code?
-> No. It's a seat belt for trusted code; the docs state malicious code can bypass it. Use containers, separate processes/users, or isolates with strict boundaries.
+<Accordion title="Is Node's permission model a sandbox for untrusted code?">
+No. It's a seat belt for trusted code; the docs state malicious code can bypass it. Use containers, separate processes/users, or isolates with strict boundaries.
+</Accordion>
 
-> [!question]- How do you secure npm dependencies?
-> Lockfiles with `npm ci`, automated updates, audits and malware scanning, restricting install scripts, preferring provenance-signed packages, minimal dependencies, and reviewing new additions.
+<Accordion title="How do you secure npm dependencies?">
+Lockfiles with `npm ci`, automated updates, audits and malware scanning, restricting install scripts, preferring provenance-signed packages, minimal dependencies, and reviewing new additions.
+</Accordion>
 
 ## Related
-- [[Node.js Index]]
-- [[Supply Chain Security]] · [[Authentication & Token Storage]] · [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] · [[JWT vs Cookies]] · [[Authentication vs Authorization]]
-- [[Building HTTP Servers - Express, Fastify & Hono]] · [[Node.js 22 to 24+ - What's New]]
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) · [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) · [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization)
+- [Building HTTP Servers - Express, Fastify & Hono](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Building%20HTTP%20Servers%20-%20Express%2C%20Fastify%20%26%20Hono) · [Node.js 22 to 24+ - What's New](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%2022%20to%2024%2B%20-%20What's%20New)
 
 ## Sources
 - [Node.js: Security best practices](https://nodejs.org/en/learn/getting-started/security-best-practices)

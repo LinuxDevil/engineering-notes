@@ -1,14 +1,18 @@
 ---
+title: "MVC"
 tags: [principles, principles/architecture]
 aliases: [Model View Controller, Model-View-Controller, MVP, MVVM, MVI, Presentation Patterns]
 updated: 2026-09-27
 ---
 # MVC
 
-> [!tldr] TL;DR
-> **Model–View–Controller** separates an application into the **model** (data and business rules), the **view** (presentation) and the **controller** (input handling that coordinates the two). It began in Smalltalk-79 as "Thing Model View Editor" and became the default shape of server-side web frameworks (Rails, Spring MVC, ASP.NET MVC, Laravel, Django's MTV). Its descendants **MVP, MVVM and MVI** move the same separation to rich clients. MVC is a *presentation* pattern: it says nothing about how to structure the business core behind the model.
+<Note>
+**TL;DR**
 
-![[Untitled 18.png]]
+**Model–View–Controller** separates an application into the **model** (data and business rules), the **view** (presentation) and the **controller** (input handling that coordinates the two). It began in Smalltalk-79 as "Thing Model View Editor" and became the default shape of server-side web frameworks (Rails, Spring MVC, ASP.NET MVC, Laravel, Django's MTV). Its descendants **MVP, MVVM and MVI** move the same separation to rich clients. MVC is a *presentation* pattern: it says nothing about how to structure the business core behind the model.
+</Note>
+
+![Untitled 18](/Attachments/Untitled%2018.png)
 
 ## The idea
 
@@ -34,7 +38,7 @@ The intermediary. It does not implement business rules; it tells the model what 
 
 ## How a request flows (web MVC)
 
-![[Untitled 19.png]]
+![Untitled 19](/Attachments/Untitled%2019.png)
 
 1. The browser sends a request for a page; the router sends it to a **controller**.
 2. The controller asks the **model** for the data it needs (or to change data).
@@ -63,7 +67,7 @@ sequenceDiagram
 4. The controller invokes a view template that builds the response (a welcome screen).
 5. The interface waits for further interaction and the cycle repeats.
 
-![[314622_4_En_1_Fig1_HTML.jpeg]]
+![314622_4_En_1_Fig1_HTML](/Attachments/314622_4_En_1_Fig1_HTML.jpeg)
 
 ### Worked example (Rails)
 
@@ -122,45 +126,53 @@ flowchart LR
   end
 ```
 
-Modern frontend frameworks (React, Angular with signals, SwiftUI, Compose) are mostly MVVM or unidirectional. See [[State Management Overview]] and [[Frontend Design Patterns]].
+Modern frontend frameworks (React, Angular with signals, SwiftUI, Compose) are mostly MVVM or unidirectional. See [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview) and [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns).
 
 ## Pitfalls
 
-> [!warning] Common MVC problems
-> - **Fat controllers**: validation, business rules and persistence inside controller actions. Hard to test and reuse.
-> - **Fat models**: moving everything into ActiveRecord models ("fat model, skinny controller") just relocates the mess; models reach thousands of lines mixing persistence, rules, emails and API calls.
-> - **Logic in views/templates**: conditionals and formatting that should be in a presenter/view model.
-> - **Treating MVC as the whole architecture**: MVC organises the delivery layer. Complex domains need a structured core (services, use cases, domain model). See [[Rails Clean Architecture]], [[Design Patterns#Application-level patterns (Rails and friends)]] and [[Software Architecture Styles]].
+<Warning>
+**Common MVC problems**
+
+- **Fat controllers**: validation, business rules and persistence inside controller actions. Hard to test and reuse.
+- **Fat models**: moving everything into ActiveRecord models ("fat model, skinny controller") just relocates the mess; models reach thousands of lines mixing persistence, rules, emails and API calls.
+- **Logic in views/templates**: conditionals and formatting that should be in a presenter/view model.
+- **Treating MVC as the whole architecture**: MVC organises the delivery layer. Complex domains need a structured core (services, use cases, domain model). See [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture), [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns#application-level-patterns-rails-and-friends) and [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
+</Warning>
 
 ## Senior perspective
 
 - Keep controllers as **adapters**: parse input, call one use case / service, map the result to a response. Anything more is a smell.
-- Extract service objects, form objects, query objects and presenters when models or controllers grow (see [[Design Patterns]]).
+- Extract service objects, form objects, query objects and presenters when models or controllers grow (see [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)).
 - In API-only backends, the "view" is a serializer or DTO mapper. Keep API response shapes separate from persistence models so the database schema can change without breaking clients.
 - In hexagonal terms, controllers and views are **driving adapters**; the model splits into the domain core and **driven adapters** (repositories).
-- Server-rendered MVC is back in fashion via HTML-over-the-wire (Hotwire/Turbo, htmx, Phoenix LiveView) and server components. See [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]].
+- Server-rendered MVC is back in fashion via HTML-over-the-wire (Hotwire/Turbo, htmx, Phoenix LiveView) and server components. See [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands).
 
 ## Interview questions
 
-> [!question]- Explain MVC and the responsibility of each part.
-> Model: data and business rules, persistence. View: presentation. Controller: handles input, invokes the model, chooses and feeds the view. The separation lets you change UI without touching rules and test rules without a UI.
+<Accordion title="Explain MVC and the responsibility of each part.">
+Model: data and business rules, persistence. View: presentation. Controller: handles input, invokes the model, chooses and feeds the view. The separation lets you change UI without touching rules and test rules without a UI.
+</Accordion>
 
-> [!question]- Can the view talk to the model directly?
-> In classic Smalltalk MVC yes: the view observes the model and redraws on change. In web MVC (Rails, Spring MVC) the controller passes data to the view, and the view doesn't query the model on its own (it may read the objects it was given).
+<Accordion title="Can the view talk to the model directly?">
+In classic Smalltalk MVC yes: the view observes the model and redraws on change. In web MVC (Rails, Spring MVC) the controller passes data to the view, and the view doesn't query the model on its own (it may read the objects it was given).
+</Accordion>
 
-> [!question]- MVC vs MVP vs MVVM?
-> MVC: controller handles input and selects the view. MVP: a presenter drives a passive view through an interface, which makes views easy to fake in tests. MVVM: the view binds declaratively to observable state and commands on a ViewModel, with no reference from ViewModel to view.
+<Accordion title="MVC vs MVP vs MVVM?">
+MVC: controller handles input and selects the view. MVP: a presenter drives a passive view through an interface, which makes views easy to fake in tests. MVVM: the view binds declaratively to observable state and commands on a ViewModel, with no reference from ViewModel to view.
+</Accordion>
 
-> [!question]- What is "fat model, skinny controller" and what's wrong with it?
-> Rails advice to move non-HTTP logic out of controllers into models. It improves controllers but creates huge models with many responsibilities. Better: extract service/use-case objects, form objects, query objects, value objects and policies.
+<Accordion title="What is &quot;fat model, skinny controller&quot; and what's wrong with it?">
+Rails advice to move non-HTTP logic out of controllers into models. It improves controllers but creates huge models with many responsibilities. Better: extract service/use-case objects, form objects, query objects, value objects and policies.
+</Accordion>
 
-> [!question]- Where does business logic belong in an MVC app?
-> In the model layer, broadly: domain objects plus services/use cases. Not in controllers (delivery) or views (presentation).
+<Accordion title="Where does business logic belong in an MVC app?">
+In the model layer, broadly: domain objects plus services/use cases. Not in controllers (delivery) or views (presentation).
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Design Patterns]] · [[Behavioral Patterns]] (Observer) · [[Software Architecture Styles]] · [[Rails Clean Architecture]]
-- Frontend: [[Frontend Design Patterns]] · [[State Management Overview]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns) (Observer) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)
+- Frontend: [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) · [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview)
 
 ## Sources
 - [Trygve Reenskaug: MVC, its origins (Xerox PARC 1978–79)](https://folk.universitetetioslo.no/trygver/themes/mvc/mvc-index.html)

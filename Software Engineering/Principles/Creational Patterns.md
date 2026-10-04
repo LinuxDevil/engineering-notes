@@ -1,18 +1,22 @@
 ---
+title: "Creational Patterns"
 tags: [principles, principles/patterns]
 aliases: [Creational Design Patterns, Singleton, Factory Method, Abstract Factory, Builder Pattern, Prototype Pattern, Factory Pattern]
 updated: 2026-09-27
 ---
 # Creational Patterns
 
-> [!tldr] TL;DR
-> Creational patterns control **how objects get created** so that client code doesn't hard-wire concrete classes or deal with complex construction. The five GoF patterns: **Singleton** (one instance), **Factory Method** (defer the choice of class), **Abstract Factory** (families of related objects), **Builder** (step-by-step construction) and **Prototype** (clone an existing object). In modern code, **dependency injection** and plain factory functions replace most of them; Builder remains very common.
+<Note>
+**TL;DR**
 
-Overview and the other groups: [[Design Patterns]] · [[Structural Patterns]] · [[Behavioral Patterns]].
+Creational patterns control **how objects get created** so that client code doesn't hard-wire concrete classes or deal with complex construction. The five GoF patterns: **Singleton** (one instance), **Factory Method** (defer the choice of class), **Abstract Factory** (families of related objects), **Builder** (step-by-step construction) and **Prototype** (clone an existing object). In modern code, **dependency injection** and plain factory functions replace most of them; Builder remains very common.
+</Note>
+
+Overview and the other groups: [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Structural Patterns](/Software%20Engineering/Principles/Structural%20Patterns) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns).
 
 ## Why creation needs patterns
 
-`new ConcreteClass(...)` inside business logic couples it to one implementation, one set of constructor arguments and one lifecycle. Creational patterns move that decision somewhere else: a factory, a builder, or the composition root (see [[Dependency Injection & Inversion of Control]]).
+`new ConcreteClass(...)` inside business logic couples it to one implementation, one set of constructor arguments and one lifecycle. Creational patterns move that decision somewhere else: a factory, a builder, or the composition root (see [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control)).
 
 ## Singleton
 
@@ -41,8 +45,11 @@ public final class Registry {
 export const logger = createLogger({ level: "info" });
 ```
 
-> [!warning] Singleton is the most criticised GoF pattern
-> It's **global mutable state** with a nice name: hidden dependencies (you can't see from a constructor that a class uses it), hard to replace in tests, and a concurrency hazard. Prefer: create one instance at startup and **inject** it (a "singleton scope" in Spring/NestJS/Angular DI). Keep true singletons for stateless or read-only things.
+<Warning>
+**Singleton is the most criticised GoF pattern**
+
+It's **global mutable state** with a nice name: hidden dependencies (you can't see from a constructor that a class uses it), hard to replace in tests, and a concurrency hazard. Prefer: create one instance at startup and **inject** it (a "singleton scope" in Spring/NestJS/Angular DI). Keep true singletons for stateless or read-only things.
+</Warning>
 
 ## Factory Method
 
@@ -144,7 +151,7 @@ function createServer({ port = 8080, tls = false, cors = [] as string[] } = {}) 
 createServer({ port: 3000, tls: true });
 ```
 
-**Test Data Builder** is a big win in tests: `anOrder().withItems(3).paid().build()` keeps tests focused on what matters. See [[Test-Driven Development (TDD)]].
+**Test Data Builder** is a big win in tests: `anOrder().withItems(3).paid().build()` keeps tests focused on what matters. See [Test-Driven Development (TDD)](/Software%20Engineering/Principles/Test-Driven%20Development%20(TDD)).
 
 ## Prototype
 
@@ -188,26 +195,31 @@ Pitfall: **shallow vs deep copy**. Java's `Cloneable`/`clone()` is widely consid
 
 ## Interview questions
 
-> [!question]- How do you implement a thread-safe singleton in Java?
-> An `enum` with one constant (serialization- and reflection-safe), or the lazy holder idiom (static nested class holds the instance; JVM class init is thread-safe). Double-checked locking also works with a `volatile` field but is more error-prone. Often better: let the DI container manage a single instance.
+<Accordion title="How do you implement a thread-safe singleton in Java?">
+An `enum` with one constant (serialization- and reflection-safe), or the lazy holder idiom (static nested class holds the instance; JVM class init is thread-safe). Double-checked locking also works with a `volatile` field but is more error-prone. Often better: let the DI container manage a single instance.
+</Accordion>
 
-> [!question]- Why is Singleton considered an anti-pattern by many?
-> It introduces global state and hidden dependencies, makes testing hard (can't substitute easily, state leaks between tests), and couples code to a concrete class. Dependency injection with a singleton scope gives one instance without these problems.
+<Accordion title="Why is Singleton considered an anti-pattern by many?">
+It introduces global state and hidden dependencies, makes testing hard (can't substitute easily, state leaks between tests), and couples code to a concrete class. Dependency injection with a singleton scope gives one instance without these problems.
+</Accordion>
 
-> [!question]- Factory Method vs Abstract Factory?
-> Factory Method creates one product and lets subclasses or parameters choose the concrete class. Abstract Factory is an object with several factory methods that create a family of related products that must be used together.
+<Accordion title="Factory Method vs Abstract Factory?">
+Factory Method creates one product and lets subclasses or parameters choose the concrete class. Abstract Factory is an object with several factory methods that create a family of related products that must be used together.
+</Accordion>
 
-> [!question]- When would you use a Builder?
-> For objects with many optional parameters, when construction requires validation across fields, or to build immutable objects readably. Also for test data. In Kotlin/Python/TS, named/default parameters often make it unnecessary.
+<Accordion title="When would you use a Builder?">
+For objects with many optional parameters, when construction requires validation across fields, or to build immutable objects readably. Also for test data. In Kotlin/Python/TS, named/default parameters often make it unnecessary.
+</Accordion>
 
-> [!question]- What's the difference between a shallow and a deep copy in Prototype?
-> A shallow copy duplicates the top-level object but shares nested references; changing a nested object affects both copies. A deep copy duplicates the whole graph (`structuredClone` in JS; copy constructors in Java).
+<Accordion title="What's the difference between a shallow and a deep copy in Prototype?">
+A shallow copy duplicates the top-level object but shares nested references; changing a nested object affects both copies. A deep copy duplicates the whole graph (`structuredClone` in JS; copy constructors in Java).
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Design Patterns]] · [[Structural Patterns]] · [[Behavioral Patterns]]
-- [[Dependency Injection & Inversion of Control]] · [[Immutability Across Languages]] · [[OOP]]
-- Frontend: [[Prototypes, Classes & Inheritance]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Structural Patterns](/Software%20Engineering/Principles/Structural%20Patterns) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns)
+- [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control) · [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages) · [OOP](/Software%20Engineering/Principles/OOP)
+- Frontend: [Prototypes, Classes & Inheritance](/Software%20Engineering/Frontend/01%20JavaScript/Prototypes%2C%20Classes%20%26%20Inheritance)
 
 ## Sources
 - Gamma et al., *Design Patterns* (1994), chapter 3 "Creational Patterns"

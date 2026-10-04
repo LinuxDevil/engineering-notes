@@ -1,14 +1,18 @@
 ---
+title: "Argo Rollouts - Canary & Blue-Green"
 tags: [devops, devops/gitops]
 aliases: [Argo Rollouts, Rollouts, Canary Deployment, Blue-Green Deployment, Progressive Delivery, AnalysisTemplate, Argo Workflows, Argo Events]
 updated: 2026-09-27
 ---
 # Argo Rollouts - Canary & Blue-Green
 
-> [!tldr] TL;DR
-> A Kubernetes `Deployment` can only do a rolling update: it swaps pods by count, can't split traffic by percentage, and never checks your metrics before finishing. **Argo Rollouts** adds a `Rollout` CRD (a drop-in for Deployment) with **canary** (shift 5% → 20% → 50% → 100% of traffic with pauses) and **blue-green** (run the new version beside the old, switch at once). An **AnalysisTemplate** queries Prometheus during the rollout and **aborts automatically** if error rate or latency get worse. In Acme Shop, `orders-api` goes canary through the Gateway API, `checkout` goes blue-green, and Argo CD applies both from Git.
+<Note>
+**TL;DR**
 
-Part of the delivery story in [[Kubernetes Delivery Platform - End to End]]. The GitOps side (how the Rollout gets into the cluster) is in [[Argo CD in Practice]]; probes, resources, HPA and PDB basics are in [[Kubernetes Workloads in Production]].
+A Kubernetes `Deployment` can only do a rolling update: it swaps pods by count, can't split traffic by percentage, and never checks your metrics before finishing. **Argo Rollouts** adds a `Rollout` CRD (a drop-in for Deployment) with **canary** (shift 5% → 20% → 50% → 100% of traffic with pauses) and **blue-green** (run the new version beside the old, switch at once). An **AnalysisTemplate** queries Prometheus during the rollout and **aborts automatically** if error rate or latency get worse. In Acme Shop, `orders-api` goes canary through the Gateway API, `checkout` goes blue-green, and Argo CD applies both from Git.
+</Note>
+
+Part of the delivery story in [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End). The GitOps side (how the Rollout gets into the cluster) is in [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice); probes, resources, HPA and PDB basics are in [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production).
 
 ## 1. Why RollingUpdate isn't enough
 
@@ -57,7 +61,7 @@ brew install argoproj/tap/kubectl-argo-rollouts
 
 ## 3. Traffic management with the Gateway API
 
-ingress-nginx was retired in March 2026 ([[Kubernetes Networking - Services, Ingress & Gateway API]]), and Acme Shop routes through a Gateway API `Gateway`. Rollouts supports it through the **Gateway API traffic router plugin** (`argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi`, v0.17.0 on 2026-09-01), which rewrites `backendRefs[].weight` in an `HTTPRoute` (also GRPCRoute, TCPRoute, TLSRoute).
+ingress-nginx was retired in March 2026 ([Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)), and Acme Shop routes through a Gateway API `Gateway`. Rollouts supports it through the **Gateway API traffic router plugin** (`argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi`, v0.17.0 on 2026-09-01), which rewrites `backendRefs[].weight` in an `HTTPRoute` (also GRPCRoute, TCPRoute, TLSRoute).
 
 Register the plugin once (the controller downloads it at start-up; pin the version, or bake it into a custom image for air-gapped clusters):
 
@@ -256,7 +260,7 @@ spec:
           targetLabel: rollouts_pod_template_hash
 ```
 
-`orders-api` exposes `http_request_duration_seconds` (histogram with `method`, `route`, `status_code` labels) via `fastify-metrics`; see [[Deploying Node.js Apps to Kubernetes]].
+`orders-api` exposes `http_request_duration_seconds` (histogram with `method`, `route`, `status_code` labels) via `fastify-metrics`; see [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes).
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -316,7 +320,7 @@ Use a **ClusterAnalysisTemplate** for shared checks (every service's error rate)
 
 ## 6. Blue-green for `checkout`
 
-`checkout` is a Next.js zone. A canary would serve some users HTML from v2 while their browser still fetches JS chunks that only v1 has, unless you have skew protection and sticky routing. Blue-green avoids that: the new version is fully up and tested on a **preview** Service, then the **active** Service flips all at once. See [[Deploying Next.js Micro-frontends to Kubernetes]].
+`checkout` is a Next.js zone. A canary would serve some users HTML from v2 while their browser still fetches JS chunks that only v1 has, unless you have skew protection and sticky routing. Blue-green avoids that: the new version is fully up and tested on a **preview** Service, then the **active** Service flips all at once. See [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes).
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -431,7 +435,7 @@ kubectl argo rollouts dashboard                                     # local UI o
 
 - **Health**: Argo CD has built-in Rollout health: `Progressing` while stepping, `Suspended` while paused, `Healthy` when fully promoted, `Degraded` after abort. App health follows it, so Slack alerts work without extra config.
 - **Actions**: in the Argo CD UI (and via `argocd app actions run`), a Rollout has `resume`, `promote-full`, `abort`, `retry`, `restart`. Grant them with `action/argoproj.io/Rollout/*` in the AppProject role. The **Rollout extension** for the Argo CD UI (argoproj-labs/rollout-extension) shows the step view inside Argo CD.
-- **Weights diff**: the plugin edits `HTTPRoute` weights that are also in Git, so add `ignoreDifferences` on `.spec.rules[].backendRefs[].weight` with `RespectIgnoreDifferences=true` (see [[Argo CD in Practice]]). Otherwise self-heal resets weights mid-canary.
+- **Weights diff**: the plugin edits `HTTPRoute` weights that are also in Git, so add `ignoreDifferences` on `.spec.rules[].backendRefs[].weight` with `RespectIgnoreDifferences=true` (see [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)). Otherwise self-heal resets weights mid-canary.
 - **Sync during a rollout**: a new commit while a canary is running makes Rollouts abandon that canary and start again from step 0 with the newest version. Normal, but surprising the first time.
 - **Hooks**: Argo CD PostSync hooks wait for the app to be Healthy, which for a Rollout means fully promoted. Canary-time checks belong in AnalysisTemplates, not PostSync.
 - **Auto-sync and aborts**: after an abort the app stays `Degraded` until Git changes. That's by design: the alert keeps nagging until someone reverts or fixes.
@@ -449,24 +453,30 @@ Argo Workflows reached 4.0 on 2026-02-04 (4.1 on 2026-08-11); Argo Events is on 
 
 ## 10. What changed in 2025–2026
 
-> [!info]+ 🆕 2025–2026
-> - **Rollouts 1.8.0 (2025-01-30)**: canary **step plugins**, `consecutiveSuccessLimit` for analysis, Prometheus range-query support, multi-account Datadog, `build_info` metric, pprof in the controller.
-> - **Rollouts 1.9.0 (2026-03-20)**: available-replica threshold for promotion, `scaleDownDelaySeconds` exposed for experiments, an inconclusive background analysis no longer lets a rollout promote, CRDs drop `preserveUnknownFields` (fixes a long-standing Argo CD OutOfSync), dashboard error notifications, Kayenta fixes.
-> - **Rollouts 1.10.0 (2026-08-27)**: breaking: default Traefik API group is now v3; traffic plugins can implement mirroring and ping-pong (not only Istio/ALB); job analysis with image-pull errors no longer counts as success, infrastructure errors become Inconclusive; blue-green analysis no longer succeeds prematurely; big controller memory reductions; configurable Datadog timeout; fix for CVE-2026-35469.
-> - **Gateway API plugin** kept a fast cadence (0.13 → 0.17.0 between April and September 2026); combined with the March 2026 ingress-nginx retirement it is the default traffic router for new setups.
-> - **Argo Workflows 4.0 (2026-02-04)** and 4.1 (2026-08-11).
+<Info>
+**🆕 2025–2026**
+
+- **Rollouts 1.8.0 (2025-01-30)**: canary **step plugins**, `consecutiveSuccessLimit` for analysis, Prometheus range-query support, multi-account Datadog, `build_info` metric, pprof in the controller.
+- **Rollouts 1.9.0 (2026-03-20)**: available-replica threshold for promotion, `scaleDownDelaySeconds` exposed for experiments, an inconclusive background analysis no longer lets a rollout promote, CRDs drop `preserveUnknownFields` (fixes a long-standing Argo CD OutOfSync), dashboard error notifications, Kayenta fixes.
+- **Rollouts 1.10.0 (2026-08-27)**: breaking: default Traefik API group is now v3; traffic plugins can implement mirroring and ping-pong (not only Istio/ALB); job analysis with image-pull errors no longer counts as success, infrastructure errors become Inconclusive; blue-green analysis no longer succeeds prematurely; big controller memory reductions; configurable Datadog timeout; fix for CVE-2026-35469.
+- **Gateway API plugin** kept a fast cadence (0.13 → 0.17.0 between April and September 2026); combined with the March 2026 ingress-nginx retirement it is the default traffic router for new setups.
+- **Argo Workflows 4.0 (2026-02-04)** and 4.1 (2026-08-11).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Low traffic = no signal.** At 5% of a quiet service the canary may get a handful of requests; `len(result) == 0 || isNaN(...)` passes silently. Add a minimum-request-count metric, run longer pauses at night, or use `setHeaderRoute` + synthetic traffic.
-> - **Queries that don't isolate the canary.** Measuring the whole service's error rate hides a bad 5% canary. Filter on the pod-template hash or the canary Service.
-> - **Database migrations** are not rolled back by an abort. Keep them backward compatible (expand, deploy, contract later).
-> - **Mixed-version bugs**: during a canary v1 and v2 serve simultaneously (shared caches, message formats, API contracts with the frontend).
-> - **Capacity**: blue-green doubles pods; without cluster headroom the green pods sit Pending and the rollout times out.
-> - Forgetting `ignoreDifferences` on route weights → Argo CD self-heal fights the canary.
-> - Using `kubectl argo rollouts undo`/`set image` in a GitOps setup and wondering why it "comes back".
-> - Plugin download at controller start from GitHub: a GitHub outage or egress rule breaks traffic routing. Mirror the binary.
+<Warning>
+**Common pitfalls**
+
+- **Low traffic = no signal.** At 5% of a quiet service the canary may get a handful of requests; `len(result) == 0 || isNaN(...)` passes silently. Add a minimum-request-count metric, run longer pauses at night, or use `setHeaderRoute` + synthetic traffic.
+- **Queries that don't isolate the canary.** Measuring the whole service's error rate hides a bad 5% canary. Filter on the pod-template hash or the canary Service.
+- **Database migrations** are not rolled back by an abort. Keep them backward compatible (expand, deploy, contract later).
+- **Mixed-version bugs**: during a canary v1 and v2 serve simultaneously (shared caches, message formats, API contracts with the frontend).
+- **Capacity**: blue-green doubles pods; without cluster headroom the green pods sit Pending and the rollout times out.
+- Forgetting `ignoreDifferences` on route weights → Argo CD self-heal fights the canary.
+- Using `kubectl argo rollouts undo`/`set image` in a GitOps setup and wondering why it "comes back".
+- Plugin download at controller start from GitHub: a GitHub outage or egress rule breaks traffic routing. Mirror the binary.
+</Warning>
 
 ## Senior perspective
 
@@ -479,29 +489,35 @@ Argo Workflows reached 4.0 on 2026-02-04 (4.1 on 2026-08-11); Argo Events is on 
 
 ## Interview questions
 
-> [!question]- Why use Argo Rollouts instead of a Deployment's RollingUpdate?
-> RollingUpdate controls pod counts only; it cannot send an exact traffic percentage, pause for analysis, or roll back based on metrics. Rollouts integrates with a traffic router for precise weights, runs AnalysisRuns against Prometheus between steps, and aborts automatically, returning traffic to the stable version in seconds.
+<Accordion title="Why use Argo Rollouts instead of a Deployment's RollingUpdate?">
+RollingUpdate controls pod counts only; it cannot send an exact traffic percentage, pause for analysis, or roll back based on metrics. Rollouts integrates with a traffic router for precise weights, runs AnalysisRuns against Prometheus between steps, and aborts automatically, returning traffic to the stable version in seconds.
+</Accordion>
 
-> [!question]- Canary vs blue-green: when would you pick each?
-> Canary when you can serve two versions at once and have good per-version metrics: blast radius is small and grows gradually. Blue-green when versions must not mix (frontends with asset coupling, some stateful protocols) or you want pre-release testing on a preview Service and an atomic switch, at the cost of double capacity.
+<Accordion title="Canary vs blue-green: when would you pick each?">
+Canary when you can serve two versions at once and have good per-version metrics: blast radius is small and grows gradually. Blue-green when versions must not mix (frontends with asset coupling, some stateful protocols) or you want pre-release testing on a preview Service and an atomic switch, at the cost of double capacity.
+</Accordion>
 
-> [!question]- How does an AnalysisTemplate decide to abort?
-> Each metric runs a provider query on an interval; the result is evaluated against `successCondition`/`failureCondition`. When failures exceed `failureLimit` (or errors exceed `consecutiveErrorLimit`) the AnalysisRun fails and the Rollout aborts: traffic goes back to stable and the canary scales down.
+<Accordion title="How does an AnalysisTemplate decide to abort?">
+Each metric runs a provider query on an interval; the result is evaluated against `successCondition`/`failureCondition`. When failures exceed `failureLimit` (or errors exceed `consecutiveErrorLimit`) the AnalysisRun fails and the Rollout aborts: traffic goes back to stable and the canary scales down.
+</Accordion>
 
-> [!question]- How do Argo CD and Argo Rollouts divide the work?
-> Argo CD applies the desired Rollout spec from Git and reports its health. Rollouts executes the rollout: ReplicaSets, traffic weights, analysis, abort. You need `ignoreDifferences` for fields Rollouts mutates (route weights), and permanent rollbacks happen in Git, not with `kubectl argo rollouts undo`.
+<Accordion title="How do Argo CD and Argo Rollouts divide the work?">
+Argo CD applies the desired Rollout spec from Git and reports its health. Rollouts executes the rollout: ReplicaSets, traffic weights, analysis, abort. You need `ignoreDifferences` for fields Rollouts mutates (route weights), and permanent rollbacks happen in Git, not with `kubectl argo rollouts undo`.
+</Accordion>
 
-> [!question]- What happens to a DB schema change when a canary is aborted?
-> Nothing: aborts only move traffic and pods. That's why migrations must be backward compatible (expand/contract) and run separately (e.g. an Argo CD PreSync hook), so the stable version keeps working with the new schema.
+<Accordion title="What happens to a DB schema change when a canary is aborted?">
+Nothing: aborts only move traffic and pods. That's why migrations must be backward compatible (expand/contract) and run separately (e.g. an Argo CD PreSync hook), so the stable version keeps working with the new schema.
+</Accordion>
 
-> [!question]- How do you make the canary query only measure canary pods?
-> Use the `rollouts-pod-template-hash` pod label, relabeled into Prometheus, and pass `podTemplateHashValue: Latest` as an analysis arg; or measure traffic through the canary Service. Optionally compare against the stable hash for a relative check.
+<Accordion title="How do you make the canary query only measure canary pods?">
+Use the `rollouts-pod-template-hash` pod label, relabeled into Prometheus, and pass `podTemplateHashValue: Latest` as an analysis arg; or measure traffic through the canary Service. Optionally compare against the stable hash for a relative check.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]] · [[Argo CD in Practice]] · [[GitOps - Argo CD & Flux]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Deploying Next.js Micro-frontends to Kubernetes]] · [[Grafana & the LGTM Stack]]
-- [[Kubernetes Networking - Services, Ingress & Gateway API]] · [[Kubernetes Workloads in Production]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]]
-- [[Observability - Logs, Metrics & Traces]] · [[Site Reliability Engineering & Incident Management]] · [[Jenkins - Pipelines as Code]] · [[Micro-frontends & Module Federation]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)
+- [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)
+- [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) · [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) · [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
 
 ## Sources
 - [Argo Rollouts documentation](https://argo-rollouts.readthedocs.io/en/stable/) · [Canary strategy](https://argo-rollouts.readthedocs.io/en/stable/features/canary/) · [Blue-green strategy](https://argo-rollouts.readthedocs.io/en/stable/features/bluegreen/)

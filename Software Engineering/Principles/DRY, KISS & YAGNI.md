@@ -1,12 +1,16 @@
 ---
+title: "DRY, KISS & YAGNI"
 tags: [principles, principles/clean-code]
 aliases: [DRY, KISS, YAGNI, Dry & Kiss, Don't Repeat Yourself, Keep It Simple Stupid, You Aren't Gonna Need It, Rule of Three, WET, AHA]
 updated: 2026-09-27
 ---
 # DRY, KISS & YAGNI
 
-> [!tldr] TL;DR
-> **DRY** (Don't Repeat Yourself): every piece of *knowledge* should have one authoritative home. **KISS** (Keep It Simple, Stupid): prefer the simplest design that works. **YAGNI** (You Aren't Gonna Need It): don't build for requirements you don't have yet. They pull against each other: over-DRY code creates the wrong abstraction, and "flexible" code violates YAGNI. Seniors apply them with the **rule of three** and a bias toward code that is easy to change later.
+<Note>
+**TL;DR**
+
+**DRY** (Don't Repeat Yourself): every piece of *knowledge* should have one authoritative home. **KISS** (Keep It Simple, Stupid): prefer the simplest design that works. **YAGNI** (You Aren't Gonna Need It): don't build for requirements you don't have yet. They pull against each other: over-DRY code creates the wrong abstraction, and "flexible" code violates YAGNI. Seniors apply them with the **rule of three** and a bias toward code that is easy to change later.
+</Note>
 
 | Principle | Origin | Core question |
 |---|---|---|
@@ -52,7 +56,7 @@ function formatPrice(p: number, forInvoice = false, hideCurrency = false, legacy
 Heuristics:
 - **Rule of three**: tolerate duplication twice; extract on the third occurrence, when the real shared shape is visible.
 - **AHA** (Avoid Hasty Abstractions, Kent C. Dodds) and **WET** ("write everything twice") are the same idea.
-- Only merge code that changes **for the same reason** (see SRP in [[SOLID]]).
+- Only merge code that changes **for the same reason** (see SRP in [SOLID](/Software%20Engineering/Principles/SOLID)).
 - If an abstraction has become wrong, **inline it back** into callers, then re-extract what is truly shared.
 
 ## KISS: Keep It Simple, Stupid
@@ -98,8 +102,11 @@ public String weekday3(int day) {
 
 Version 3 is the KISS winner: no custom logic, localisation for free. (The original note used C#'s `InvalidOperationException` and `string[]`; in Java these are `IllegalArgumentException` and `String[]`.)
 
-> [!note] Simple is not the same as easy
-> Rich Hickey's talk *Simple Made Easy* (2011): **simple** means "not intertwined" (one concept, one role); **easy** means "familiar, near at hand". A framework may be easy to start with but complex (many interleaved concerns). KISS aims at *simple*.
+<Note>
+**Simple is not the same as easy**
+
+Rich Hickey's talk *Simple Made Easy* (2011): **simple** means "not intertwined" (one concept, one role); **easy** means "familiar, near at hand". A framework may be easy to start with but complex (many interleaved concerns). KISS aims at *simple*.
+</Note>
 
 ## YAGNI: You Aren't Gonna Need It
 
@@ -137,36 +144,44 @@ flowchart LR
 | "We might support other databases one day" | YAGNI; but keep SQL behind a repository so it's not scattered |
 | A clever one-liner vs a clear 5-line loop | KISS: the loop, unless the one-liner is idiomatic |
 
-> [!info]+ 🆕 2025–2026: AI assistants and duplication
-> GitClear's analysis of 211 million changed lines (report published **February 2025**) found that in 2024 duplicated blocks of 5+ lines grew about 8×, "moved" (refactored) lines fell by about 40%, and copy/pasted lines exceeded moved lines for the first time. Their explanation: assistants make inserting new code cheaper than finding and reusing existing code. The **2025 DORA report** (September 2025, ~5,000 respondents) similarly found AI raises throughput but also instability, acting as an "amplifier" of existing practices. Practical takeaway: in AI-assisted codebases, review specifically for re-implemented helpers, near-duplicate functions and speculative extras the prompt never asked for. Both studies are correlational, so treat them as a warning sign, not proof.
+<Info>
+**🆕 2025–2026: AI assistants and duplication**
+
+GitClear's analysis of 211 million changed lines (report published **February 2025**) found that in 2024 duplicated blocks of 5+ lines grew about 8×, "moved" (refactored) lines fell by about 40%, and copy/pasted lines exceeded moved lines for the first time. Their explanation: assistants make inserting new code cheaper than finding and reusing existing code. The **2025 DORA report** (September 2025, ~5,000 respondents) similarly found AI raises throughput but also instability, acting as an "amplifier" of existing practices. Practical takeaway: in AI-assisted codebases, review specifically for re-implemented helpers, near-duplicate functions and speculative extras the prompt never asked for. Both studies are correlational, so treat them as a warning sign, not proof.
+</Info>
 
 ## Senior perspective
 
 - In review ask: "Where else does this rule live?" (DRY), "What's the simplest version?" (KISS), "Which requirement needs this?" (YAGNI).
 - Duplication **across service boundaries** is often correct: sharing a "common" library between microservices couples their release cycles. Prefer duplicating small code and sharing **contracts** (schemas) instead.
-- Simplicity is a system property: fewer moving parts (services, queues, caches) usually beats cleverness inside any one part. See [[Software Architecture Styles]].
-- Keep a log of deliberate shortcuts so YAGNI decisions don't turn into forgotten debt. See [[Architecture Decision Records (ADRs) & Technical Debt]].
+- Simplicity is a system property: fewer moving parts (services, queues, caches) usually beats cleverness inside any one part. See [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
+- Keep a log of deliberate shortcuts so YAGNI decisions don't turn into forgotten debt. See [Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt).
 
 ## Interview questions
 
-> [!question]- What does DRY actually mean? Is all duplicated code a DRY violation?
-> DRY is about knowledge: each rule or fact should have one authoritative representation. Similar-looking code that encodes different rules (and will change for different reasons) is not a violation, and merging it creates coupling. Conversely, one rule written in three languages is a violation.
+<Accordion title="What does DRY actually mean? Is all duplicated code a DRY violation?">
+DRY is about knowledge: each rule or fact should have one authoritative representation. Similar-looking code that encodes different rules (and will change for different reasons) is not a violation, and merging it creates coupling. Conversely, one rule written in three languages is a violation.
+</Accordion>
 
-> [!question]- What is "the wrong abstraction" and how do you fix it?
-> A shared function created too early that accumulates flags and branches as callers diverge. Fix by inlining it back into each caller, deleting unused paths, and re-extracting only what is genuinely common. The rule of three helps avoid it.
+<Accordion title="What is &quot;the wrong abstraction&quot; and how do you fix it?">
+A shared function created too early that accumulates flags and branches as callers diverge. Fix by inlining it back into each caller, deleting unused paths, and re-extracting only what is genuinely common. The rule of three helps avoid it.
+</Accordion>
 
-> [!question]- Explain YAGNI. Doesn't it lead to rewrites?
-> Build only what current requirements need. Speculative features have build, delay, carry and repair costs, and guesses are often wrong. YAGNI relies on tests and refactoring to keep code easy to extend later, so extending when the need is real is cheap.
+<Accordion title="Explain YAGNI. Doesn't it lead to rewrites?">
+Build only what current requirements need. Speculative features have build, delay, carry and repair costs, and guesses are often wrong. YAGNI relies on tests and refactoring to keep code easy to extend later, so extending when the need is real is cheap.
+</Accordion>
 
-> [!question]- How do KISS and YAGNI differ?
-> KISS is about how you implement what you need (choose the simplest design). YAGNI is about what you build at all (don't build unrequested capabilities). You can violate KISS while obeying YAGNI (a convoluted solution to a real need) and vice versa.
+<Accordion title="How do KISS and YAGNI differ?">
+KISS is about how you implement what you need (choose the simplest design). YAGNI is about what you build at all (don't build unrequested capabilities). You can violate KISS while obeying YAGNI (a convoluted solution to a real need) and vice versa.
+</Accordion>
 
-> [!question]- Should microservices share a common library to stay DRY?
-> Usually only for stable, generic concerns (logging, auth clients) and with careful versioning. Sharing domain code couples deployments and teams. Prefer sharing schemas/contracts and accept some duplication.
+<Accordion title="Should microservices share a common library to stay DRY?">
+Usually only for stable, generic concerns (logging, auth clients) and with careful versioning. Sharing domain code couples deployments and teams. Prefer sharing schemas/contracts and accept some duplication.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Clean Code & Refactoring]] · [[SOLID]] · [[Coupling, Cohesion & Modularity]] · [[Architecture Decision Records (ADRs) & Technical Debt]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity) · [Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt)
 
 ## Sources
 - Andrew Hunt & David Thomas, *The Pragmatic Programmer*, 20th Anniversary ed. (2019): DRY

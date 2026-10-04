@@ -1,14 +1,18 @@
 ---
+title: "Working with Stored Procedures"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [Stored Procedures, CREATE PROCEDURE, CALL, PL/pgSQL, Procedures vs Functions]
 updated: 2026-09-27
 ---
 # Working with Stored Procedures
 
-> [!tldr] TL;DR
-> A stored procedure is a named, saved block of SQL (plus procedural logic) that runs inside the database. It encapsulates multi-step operations, can enforce security and consistency, and saves round trips. Syntax is almost completely **non-portable** (T-SQL, PL/SQL, PL/pgSQL, MySQL). In PostgreSQL, **functions** return values and run inside the caller's transaction, while **procedures** (PostgreSQL 11+) are invoked with `CALL` and can `COMMIT`/`ROLLBACK` inside.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 19 · Prev: [[Using Views]] · Next: [[Managing Transaction Processing]]
+A stored procedure is a named, saved block of SQL (plus procedural logic) that runs inside the database. It encapsulates multi-step operations, can enforce security and consistency, and saves round trips. Syntax is almost completely **non-portable** (T-SQL, PL/SQL, PL/pgSQL, MySQL). In PostgreSQL, **functions** return values and run inside the caller's transaction, while **procedures** (PostgreSQL 11+) are invoked with `CALL` and can `COMMIT`/`ROLLBACK` inside.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 19 · Prev: [Using Views](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Views) · Next: [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing)
 
 ## Understanding stored procedures
 
@@ -20,7 +24,11 @@ Most real operations need several statements. Processing an order, for example:
 
 **Stored procedure:** a collection of one or more SQL statements saved for future use. Think of it as a batch file, though it's more than that: variables, conditions, loops and error handling.
 
-> [!note] SQLite does not support stored procedures. (Use application code or triggers.)
+<Note>
+**SQLite does not support stored procedures. (Use application code or triggers.)**
+
+
+</Note>
 
 ## Why use stored procedures
 
@@ -32,8 +40,9 @@ Most real operations need several statements. Processing an order, for example:
 6. **Performance:** the DBMS can cache the plan, and one `CALL` replaces many client-server round trips.
 7. **Power:** procedural features (variables, loops, exception handling) not available in single statements.
 
-> [!note]
-> Stored procedure syntax varies **dramatically** between DBMSs; truly portable procedures are close to impossible. Keep the *calls* (names and parameters) stable so client code survives a DBMS change.
+<Note>
+Stored procedure syntax varies **dramatically** between DBMSs; truly portable procedures are close to impossible. Keep the *calls* (names and parameters) stable so client code survives a DBMS change.
+</Note>
 
 ### Advantages vs disadvantages
 
@@ -112,8 +121,11 @@ RETURN @order_num;
 
 **Analysis:** creates a new order. It takes one parameter, the customer ID; the order number and date are generated inside. It finds the current highest order number with `MAX()`, adds 1, inserts the order with the current date (`GETDATE()`) and returns the new number. Note the comments: always comment stored procedures.
 
-> [!warning] `MAX() + 1` is a race condition
-> Two sessions running `NewOrder` at the same time can read the same `MAX` and insert the same number (one then fails on the primary key, or worse, if there's no PK). Use an identity column or sequence and return the generated value (`SCOPE_IDENTITY()` / `OUTPUT inserted.order_num` in SQL Server, `RETURNING` in PostgreSQL).
+<Warning>
+**`MAX() + 1` is a race condition**
+
+Two sessions running `NewOrder` at the same time can read the same `MAX` and insert the same number (one then fails on the primary key, or worse, if there's no PK). Use an identity column or sequence and return the generated value (`SCOPE_IDENTITY()` / `OUTPUT inserted.order_num` in SQL Server, `RETURNING` in PostgreSQL).
+</Warning>
 
 ## Stored procedures in PostgreSQL
 
@@ -162,7 +174,7 @@ INSERT INTO accounts (name, balance) VALUES ('Bob', 400000);
 SELECT * FROM accounts;
 ```
 
-![[image-7_1600384369c.png]]
+![image-7_1600384369c](/Attachments/image-7_1600384369c.png)
 
 **Step 3:** create a procedure `prac_transfer` that moves an amount from one account to another.
 
@@ -210,7 +222,7 @@ If either `UPDATE` fails (for example the `CHECK (balance >= 0)` constraint is v
 CALL prac_transfer(1, 2, 1000);
 ```
 
-![[image-9_1600406d03b.png]]
+![image-9_1600406d03b](/Attachments/image-9_1600406d03b.png)
 
 **Step 5:** verify.
 
@@ -218,12 +230,15 @@ CALL prac_transfer(1, 2, 1000);
 SELECT * FROM accounts;
 ```
 
-![[image-10_160041025f2.png]]
+![image-10_160041025f2](/Attachments/image-10_160041025f2.png)
 
 Don now has 399,000 and Bob 401,000.
 
-> [!warning] Concurrency
-> Two concurrent transfers from the same account are safe here because `balance = balance - amount` is evaluated against the latest committed row under a row lock. Reading the balance into a variable first and then writing it back would **not** be safe. When moving money between two rows, lock them in a consistent order (e.g. by id) to avoid deadlocks.
+<Warning>
+**Concurrency**
+
+Two concurrent transfers from the same account are safe here because `balance = balance - amount` is evaluated against the latest committed row under a row lock. Reading the balance into a variable first and then writing it back would **not** be safe. When moving money between two rows, lock them in a consistent order (e.g. by id) to avoid deadlocks.
+</Warning>
 
 ## PostgreSQL procedures vs functions
 
@@ -294,21 +309,25 @@ SELECT @n;
 
 ## Interview questions
 
-> [!question]- What's the difference between a stored procedure and a function in PostgreSQL?
-> Functions return values, can be used in queries, and always run inside the caller's transaction. Procedures (PG 11+) are invoked with `CALL`, can't be used in expressions, and can `COMMIT`/`ROLLBACK` internally.
+<Accordion title="What's the difference between a stored procedure and a function in PostgreSQL?">
+Functions return values, can be used in queries, and always run inside the caller's transaction. Procedures (PG 11+) are invoked with `CALL`, can't be used in expressions, and can `COMMIT`/`ROLLBACK` internally.
+</Accordion>
 
-> [!question]- Pros and cons of stored procedures?
-> Pros: fewer round trips, shared logic for all clients, security via `EXECUTE` grants, atomic multi-step operations. Cons: vendor lock-in, harder testing/versioning/debugging, logic hidden from app developers, and it loads the hardest-to-scale tier.
+<Accordion title="Pros and cons of stored procedures?">
+Pros: fewer round trips, shared logic for all clients, security via `EXECUTE` grants, atomic multi-step operations. Cons: vendor lock-in, harder testing/versioning/debugging, logic hidden from app developers, and it loads the hardest-to-scale tier.
+</Accordion>
 
-> [!question]- What's wrong with generating IDs with `SELECT MAX(id) + 1`?
-> Concurrent callers can read the same max and collide. Use sequences/identity columns and return the generated key.
+<Accordion title="What's wrong with generating IDs with `SELECT MAX(id) + 1`?">
+Concurrent callers can read the same max and collide. Use sequences/identity columns and return the generated key.
+</Accordion>
 
-> [!question]- How do you avoid SQL injection in dynamic SQL inside a procedure?
-> Pass values as bind parameters (`EXECUTE ... USING` in PL/pgSQL, `sp_executesql` with parameters in SQL Server), quote identifiers with `format('%I')`/`QUOTENAME`, and never concatenate user input.
+<Accordion title="How do you avoid SQL injection in dynamic SQL inside a procedure?">
+Pass values as bind parameters (`EXECUTE ... USING` in PL/pgSQL, `sp_executesql` with parameters in SQL Server), quote identifiers with `format('%I')`/`QUOTENAME`, and never concatenate user input.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Managing Transaction Processing]] · [[SQL Trigger Functions]] · [[Understanding Advanced SQL Features]] · [[Transactions & ACID]] · [[Advanced Filtering Data]] (SQL injection)
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) · [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data) (SQL injection)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 19 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

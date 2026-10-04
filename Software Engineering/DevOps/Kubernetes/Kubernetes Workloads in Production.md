@@ -1,12 +1,16 @@
 ---
+title: "Kubernetes Workloads in Production"
 tags: [devops, devops/kubernetes]
 aliases: [K8s in Production, Kubernetes Probes, Requests and Limits, HPA, ConfigMaps and Secrets, Kubernetes RBAC]
 updated: 2026-09-27
 ---
 # Kubernetes Workloads in Production
 
-> [!tldr] TL;DR
-> A Deployment that works on a laptop is not production-ready. Production workloads need **probes** (startup, readiness, liveness), **resource requests and limits**, **autoscaling** (HPA, and VPA/cluster autoscaler), configuration via **ConfigMaps and Secrets**, **graceful shutdown**, **PodDisruptionBudgets**, a hardened **securityContext**, and least-privilege **RBAC**. Recent releases made **sidecars** (v1.33) and **in-place Pod resize** (v1.35) stable and brought **HPA scale-to-zero** to beta (v1.37).
+<Note>
+**TL;DR**
+
+A Deployment that works on a laptop is not production-ready. Production workloads need **probes** (startup, readiness, liveness), **resource requests and limits**, **autoscaling** (HPA, and VPA/cluster autoscaler), configuration via **ConfigMaps and Secrets**, **graceful shutdown**, **PodDisruptionBudgets**, a hardened **securityContext**, and least-privilege **RBAC**. Recent releases made **sidecars** (v1.33) and **in-place Pod resize** (v1.35) stable and brought **HPA scale-to-zero** to beta (v1.37).
+</Note>
 
 ## The production checklist
 
@@ -110,8 +114,11 @@ spec:
 
 Probe types: `httpGet`, `tcpSocket`, `exec`, `grpc`.
 
-> [!warning] Liveness probes that check dependencies
-> If `/healthz` checks the database and the DB blips, **every** Pod fails liveness and restarts at once, turning a small incident into an outage. Liveness should check only the process itself. Put dependency checks (carefully) in readiness.
+<Warning>
+**Liveness probes that check dependencies**
+
+If `/healthz` checks the database and the DB blips, **every** Pod fails liveness and restarts at once, turning a small incident into an outage. Liveness should check only the process itself. Put dependency checks (carefully) in readiness.
+</Warning>
 
 ### Graceful shutdown
 
@@ -245,22 +252,28 @@ kubectl auth can-i list secrets --as=system:serviceaccount:orders:orders-api -n 
 - **NetworkPolicy**: by default every Pod can talk to every Pod. Start with default-deny per namespace, then allow specific flows (requires a CNI that enforces policies, e.g. Cilium, Calico).
 - Admission policies (Kyverno, OPA Gatekeeper, built-in `ValidatingAdmissionPolicy` with CEL) enforce rules such as "no `latest` tags" or "must set requests".
 
-> [!info]+ 🆕 2025–2026 Kubernetes releases that matter for workloads
-> - **v1.33 "Octarine" (2025-04-23)**: **native sidecar containers GA**; in-place Pod resize reached beta.
-> - **v1.34 (2025-08-27)**: no deprecations or removals. **Dynamic Resource Allocation (DRA) core GA** (GPUs and other devices), Linux **swap** support GA, `preStop` **sleep** action GA, kubelet and API server **OpenTelemetry tracing** GA; `trafficDistribution: PreferSameZone/PreferSameNode` beta; **Pod certificates** for mTLS introduced (alpha).
-> - **v1.35 "Timbernetes" (2025-12-17)**: **in-place Pod resize GA** (change CPU/memory of a running Pod, often without restart; memory-limit decreases now allowed). The kubelet now **refuses to start on cgroup v1 nodes by default** (`failCgroupV1: true`, temporary override possible; full removal later). **Last release supporting containerd 1.x**: move to containerd 2.x before v1.36. kube-proxy **`ipvs` mode deprecated** in favour of `nftables` (off by default by v1.40, removed by v1.43).
-> - **v1.36 "Haru" (2026-04-22)**: **User Namespaces GA** (container root is not host root), **Mutating Admission Policies GA** (CEL, no webhook), fine-grained kubelet API authorization GA, faster SELinux volume labelling GA. The **`gitRepo` volume plugin is permanently disabled**; Service `.spec.externalIPs` deprecated (removal planned for v1.43).
-> - **v1.37 "Garhwal" (2026-08-26)**: **HPA scale to zero beta and on by default** (`minReplicas: 0` with object/external metrics only, since a Pod-less workload reports no CPU); **Pod certificates and ClusterTrustBundles GA**; KYAML and the `metrics.k8s.io` API GA; memory QoS (cgroup v2) beta; scheduler preemption for in-place resize (alpha); `kube-dns` deprecated (use CoreDNS); static Pods can no longer reference Secrets/ConfigMaps. v1.37 end of life is planned for 2027-10-28.
+<Info>
+**🆕 2025–2026 Kubernetes releases that matter for workloads**
+
+- **v1.33 "Octarine" (2025-04-23)**: **native sidecar containers GA**; in-place Pod resize reached beta.
+- **v1.34 (2025-08-27)**: no deprecations or removals. **Dynamic Resource Allocation (DRA) core GA** (GPUs and other devices), Linux **swap** support GA, `preStop` **sleep** action GA, kubelet and API server **OpenTelemetry tracing** GA; `trafficDistribution: PreferSameZone/PreferSameNode` beta; **Pod certificates** for mTLS introduced (alpha).
+- **v1.35 "Timbernetes" (2025-12-17)**: **in-place Pod resize GA** (change CPU/memory of a running Pod, often without restart; memory-limit decreases now allowed). The kubelet now **refuses to start on cgroup v1 nodes by default** (`failCgroupV1: true`, temporary override possible; full removal later). **Last release supporting containerd 1.x**: move to containerd 2.x before v1.36. kube-proxy **`ipvs` mode deprecated** in favour of `nftables` (off by default by v1.40, removed by v1.43).
+- **v1.36 "Haru" (2026-04-22)**: **User Namespaces GA** (container root is not host root), **Mutating Admission Policies GA** (CEL, no webhook), fine-grained kubelet API authorization GA, faster SELinux volume labelling GA. The **`gitRepo` volume plugin is permanently disabled**; Service `.spec.externalIPs` deprecated (removal planned for v1.43).
+- **v1.37 "Garhwal" (2026-08-26)**: **HPA scale to zero beta and on by default** (`minReplicas: 0` with object/external metrics only, since a Pod-less workload reports no CPU); **Pod certificates and ClusterTrustBundles GA**; KYAML and the `metrics.k8s.io` API GA; memory QoS (cgroup v2) beta; scheduler preemption for in-place resize (alpha); `kube-dns` deprecated (use CoreDNS); static Pods can no longer reference Secrets/ConfigMaps. v1.37 end of life is planned for 2027-10-28.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - No requests: the scheduler over-packs nodes, then noisy neighbours and evictions.
-> - Memory limit far above request: nodes over-commit and the kernel OOM killer chooses victims.
-> - Liveness probe too aggressive (short timeouts, no startupProbe): restart loops under load, which increase load further.
-> - Secrets committed to Git as base64 "because they are encoded".
-> - `cluster-admin` bound to CI service accounts.
-> - Single replica + PDB `minAvailable: 1`: node drains hang forever.
+<Warning>
+**Common pitfalls**
+
+- No requests: the scheduler over-packs nodes, then noisy neighbours and evictions.
+- Memory limit far above request: nodes over-commit and the kernel OOM killer chooses victims.
+- Liveness probe too aggressive (short timeouts, no startupProbe): restart loops under load, which increase load further.
+- Secrets committed to Git as base64 "because they are encoded".
+- `cluster-admin` bound to CI service accounts.
+- Single replica + PDB `minAvailable: 1`: node drains hang forever.
+</Warning>
 
 ## Senior perspective
 
@@ -271,30 +284,37 @@ kubectl auth can-i list secrets --as=system:serviceaccount:orders:orders-api -n 
 
 ## Interview questions
 
-> [!question]- Readiness vs liveness vs startup probes?
-> Readiness controls whether the Pod receives traffic (failing removes it from endpoints). Liveness decides whether to restart the container. Startup delays both for slow-booting apps. Liveness should not depend on external systems.
+<Accordion title="Readiness vs liveness vs startup probes?">
+Readiness controls whether the Pod receives traffic (failing removes it from endpoints). Liveness decides whether to restart the container. Startup delays both for slow-booting apps. Liveness should not depend on external systems.
+</Accordion>
 
-> [!question]- What happens when a container exceeds its CPU limit vs its memory limit?
-> CPU: it is throttled by the CFS quota and gets slower. Memory: it is OOMKilled and restarted (exit code 137).
+<Accordion title="What happens when a container exceeds its CPU limit vs its memory limit?">
+CPU: it is throttled by the CFS quota and gets slower. Memory: it is OOMKilled and restarted (exit code 137).
+</Accordion>
 
-> [!question]- How does the HPA decide the number of replicas?
-> desiredReplicas = ceil(currentReplicas × currentMetric / targetMetric), computed about every 15 s, bounded by min/max and smoothed by `behavior` stabilization windows. For resource metrics, utilisation is measured relative to requests.
+<Accordion title="How does the HPA decide the number of replicas?">
+desiredReplicas = ceil(currentReplicas × currentMetric / targetMetric), computed about every 15 s, bounded by min/max and smoothed by `behavior` stabilization windows. For resource metrics, utilisation is measured relative to requests.
+</Accordion>
 
-> [!question]- Are Kubernetes Secrets secure?
-> Only partially. They are base64-encoded, stored in etcd (encrypt at rest with KMS), and access is controlled by RBAC. Anyone who can create Pods in the namespace can mount them. Use external secret managers, tight RBAC and audit logging.
+<Accordion title="Are Kubernetes Secrets secure?">
+Only partially. They are base64-encoded, stored in etcd (encrypt at rest with KMS), and access is controlled by RBAC. Anyone who can create Pods in the namespace can mount them. Use external secret managers, tight RBAC and audit logging.
+</Accordion>
 
-> [!question]- What is a PodDisruptionBudget?
-> A policy that limits how many Pods of a set can be down at once during voluntary disruptions (drains, upgrades, autoscaler scale-down). It does not protect against node crashes.
+<Accordion title="What is a PodDisruptionBudget?">
+A policy that limits how many Pods of a set can be down at once during voluntary disruptions (drains, upgrades, autoscaler scale-down). It does not protect against node crashes.
+</Accordion>
 
-> [!question]- What changed with native sidecars?
-> Since v1.33 (GA), a sidecar is an init container with `restartPolicy: Always`: it starts before app containers, runs for the Pod's lifetime, is terminated after them and does not block Job completion.
+<Accordion title="What changed with native sidecars?">
+Since v1.33 (GA), a sidecar is an init container with `restartPolicy: Always`: it starts before app containers, runs for the Pod's lifetime, is terminated after them and does not block Job completion.
+</Accordion>
 
-> [!question]- Role vs ClusterRole?
-> A Role grants permissions within one namespace. A ClusterRole is cluster-scoped: it can grant access to cluster-wide resources (nodes, CRDs) or be bound per namespace via a RoleBinding for reuse.
+<Accordion title="Role vs ClusterRole?">
+A Role grants permissions within one namespace. A ClusterRole is cluster-scoped: it can grant access to cluster-wide resources (nodes, CRDs) or be bound per namespace via a RoleBinding for reuse.
+</Accordion>
 
 ## Related
-- [[Kubernetes]] · [[Kubernetes Basics]] · [[Kubernetes Networking - Services, Ingress & Gateway API]] · [[Helm & Kustomize]] · [[DevOps Index]]
-- [[Observability - Logs, Metrics & Traces]] · [[Site Reliability Engineering & Incident Management]] · [[Dockerfile Best Practices & Image Security]]
+- [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) · [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize) · [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index)
+- [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) · [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management) · [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security)
 
 ## Sources
 - [Kubernetes docs: Liveness, readiness and startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)

@@ -1,18 +1,22 @@
 ---
+title: "Replication & 2PC 3PC"
 tags: [databases, databases/distributed, databases/postgres]
 aliases: [Replication, Master-Slave, Leader-Follower, Primary-Replica, Multi-Master, Synchronous Replication, Asynchronous Replication, Replication Lag, 2PC, Two-Phase Commit, 3PC, Three-Phase Commit, Distributed Transactions, Saga]
 updated: 2026-09-27
 ---
 # Replication & 2PC 3PC
 
-> [!tldr] TL;DR
-> **Replication** keeps copies of the same data on several nodes for availability, lower read latency and read scaling. Three shapes: **single-leader** (one primary takes writes, followers copy its log), **multi-leader** (several nodes take writes, conflicts must be resolved) and **leaderless** (any node takes writes, quorums). Copies are **synchronous** (safe, slower) or **asynchronous** (fast, can lose recent writes, followers lag). **Distributed transactions** across nodes need an atomic commit protocol: **2PC** is correct but blocks if the coordinator dies; **3PC** avoids blocking only under unrealistic network assumptions. In practice, microservices use **sagas** and the **outbox pattern** instead.
+<Note>
+**TL;DR**
+
+**Replication** keeps copies of the same data on several nodes for availability, lower read latency and read scaling. Three shapes: **single-leader** (one primary takes writes, followers copy its log), **multi-leader** (several nodes take writes, conflicts must be resolved) and **leaderless** (any node takes writes, quorums). Copies are **synchronous** (safe, slower) or **asynchronous** (fast, can lose recent writes, followers lag). **Distributed transactions** across nodes need an atomic commit protocol: **2PC** is correct but blocks if the coordinator dies; **3PC** avoids blocking only under unrealistic network assumptions. In practice, microservices use **sagas** and the **outbox pattern** instead.
+</Note>
 
 This note merges the course notes with the original *Overview 1* (a summary of Kleppmann, *DDIA* ch. 5 and 12) and the distributed-database part of *Overview* (Silberschatz).
 
 ## Replication
 
-Replication means keeping multiple copies of a database and sharing changes between those duplicate instances to keep them consistent. A set of replicated nodes is usually called a **cluster** (see [[Clustering and Scaling]]).
+Replication means keeping multiple copies of a database and sharing changes between those duplicate instances to keep them consistent. A set of replicated nodes is usually called a **cluster** (see [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling)).
 
 **Why replicate?**
 
@@ -29,15 +33,15 @@ Also called master-slave, primary-replica, active/passive, master/backup, or one
 - Reads can be distributed across replicas to increase throughput, while writes go to the master.
 - If the leader fails, a follower is **promoted** (by an orchestrator or a vote). Until then writes are unavailable: the leader is a single point of failure for writes.
 
-![[Screenshot_2023-07-29_at_3.54.08_PM.png]]
+![Screenshot_2023-07-29_at_3.54.08_PM](/Attachments/Screenshot_2023-07-29_at_3.54.08_PM.png)
 
-![[Screenshot_2023-07-29_at_3.55.51_PM.png]]
+![Screenshot_2023-07-29_at_3.55.51_PM](/Attachments/Screenshot_2023-07-29_at_3.55.51_PM.png)
 
-![[Screenshot_2023-07-24_at_2.16.59_PM.png]]
+![Screenshot_2023-07-24_at_2.16.59_PM](/Attachments/Screenshot_2023-07-24_at_2.16.59_PM.png)
 
 When requests overwhelm one server, send **writes to the master** and **reads to the replicas**:
 
-![[Screenshot_2023-07-24_at_2.23.47_PM.png]]
+![Screenshot_2023-07-24_at_2.23.47_PM](/Attachments/Screenshot_2023-07-24_at_2.23.47_PM.png)
 
 **How the change stream is shipped**: statement-based (fragile: `now()`, random), **physical WAL shipping** (Postgres streaming replication: byte-identical copy, same major version), or **logical/row-based** (MySQL row binlog, Postgres logical replication: can replicate a subset and across versions, which enables zero-downtime upgrades).
 
@@ -84,7 +88,7 @@ The catch: **you must resolve write conflicts** (the same row edited in two plac
 
 ## Leaderless (peer-to-peer) replication
 
-All nodes are equal and any node can accept writes, which must reach the others. Clients (or a coordinator node) write to W replicas and read from R replicas; with **R + W > N** reads see at least one up-to-date copy. Stale copies are fixed by **read repair**, **hinted handoff** and **anti-entropy** (Merkle trees). Examples: Cassandra, ScyllaDB, Riak, Dynamo-style systems. See [[CAP Theorem]].
+All nodes are equal and any node can accept writes, which must reach the others. Clients (or a coordinator node) write to W replicas and read from R replicas; with **R + W > N** reads see at least one up-to-date copy. Stale copies are fixed by **read repair**, **hinted handoff** and **anti-entropy** (Merkle trees). Examples: Cassandra, ScyllaDB, Riak, Dynamo-style systems. See [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem).
 
 ## Hands-on: Postgres streaming replication with Docker (course lab)
 
@@ -125,15 +129,18 @@ synchronous_standby_names = 'first 1 (standby1)'
 
 Start both and check `SELECT * FROM pg_stat_replication;` on the primary.
 
-> [!tip] The modern shortcut
-> Instead of copying the data directory with the server stopped, run `pg_basebackup -h primary -U replicator -D /var/lib/postgresql/data -R -X stream -C -S replica1` on the empty replica. `-R` writes `primary_conninfo` and `standby.signal` for you; `-C -S` creates a replication slot. Use a dedicated role with the `REPLICATION` attribute rather than the superuser.
+<Tip>
+**The modern shortcut**
+
+Instead of copying the data directory with the server stopped, run `pg_basebackup -h primary -U replicator -D /var/lib/postgresql/data -R -X stream -C -S replica1` on the empty replica. `-R` writes `primary_conninfo` and `standby.signal` for you; `-C -S` creates a replication slot. Use a dedicated role with the `REPLICATION` attribute rather than the superuser.
+</Tip>
 
 ## Distributed databases (textbook view)
 
 A **distributed database** is several interconnected databases at different sites that coordinate over a network and appear to the user as one database.
 
 - **Transparency**: users shouldn't need to know where data lives (location transparency), that it's split (fragmentation transparency) or copied (replication transparency).
-- **Data fragmentation**: **horizontal** (rows split across sites, i.e. sharding), **vertical** (columns split), or **hybrid**. See [[Sharding & Partitioning]].
+- **Data fragmentation**: **horizontal** (rows split across sites, i.e. sharding), **vertical** (columns split), or **hybrid**. See [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
 - **Data replication**: copies at several sites for reliability, availability and fault tolerance.
 - **Distributed query processing**: the optimizer also minimises data shipped between sites (e.g. semi-joins).
 - **Global serializability**: executing all transactions across all sites must be equivalent to some serial order, typically via distributed 2PL or timestamp ordering plus an atomic commit protocol.
@@ -165,17 +172,17 @@ sequenceDiagram
 
 **Why we need it (the Careem burger example)**: ordering food needs two independent steps: the restaurant accepts the order, and a driver is assigned. Without atomic commitment, one can succeed and the other fail: food prepared with no driver, or a driver sent to a restaurant that never accepted.
 
-![[Screenshot_2023-07-24_at_2.34.47_PM.png]]
+![Screenshot_2023-07-24_at_2.34.47_PM](/Attachments/Screenshot_2023-07-24_at_2.34.47_PM.png)
 
 2PC splits the flow: the **prepare phase reserves** (hold the food slot, hold a driver), and the **commit phase books** both.
 
-![[Screenshot_2023-07-24_at_2.36.35_PM.png]]
+![Screenshot_2023-07-24_at_2.36.35_PM](/Attachments/Screenshot_2023-07-24_at_2.36.35_PM.png)
 
 If both reservations fail, the transaction fails; if one succeeds and the other fails, the successful reservation is cancelled and the whole transaction aborts.
 
-![[Screenshot_2023-07-24_at_2.44.10_PM.png]]
+![Screenshot_2023-07-24_at_2.44.10_PM](/Attachments/Screenshot_2023-07-24_at_2.44.10_PM.png)
 
-![[Screenshot_2023-07-24_at_2.44.21_PM.png]]
+![Screenshot_2023-07-24_at_2.44.21_PM](/Attachments/Screenshot_2023-07-24_at_2.44.21_PM.png)
 
 **Advantages**: atomic commit across nodes; combined with locking, isolation of the distributed transaction.
 
@@ -185,7 +192,7 @@ If both reservations fail, the transaction fails; if one succeeds and the other 
 - **Slow**: multiple round trips and forced log writes (fsyncs) on every node.
 - Locks held across the network amplify contention and deadlocks.
 
-Postgres supports being a 2PC participant with `PREPARE TRANSACTION 'id'` / `COMMIT PREPARED 'id'` (`max_prepared_transactions` must be > 0). Forgotten prepared transactions hold locks and block VACUUM ([[MVCC & Vacuum]]). XA is the standard interface used by Java transaction managers.
+Postgres supports being a 2PC participant with `PREPARE TRANSACTION 'id'` / `COMMIT PREPARED 'id'` (`max_prepared_transactions` must be > 0). Forgotten prepared transactions hold locks and block VACUUM ([MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum)). XA is the standard interface used by Java transaction managers.
 
 ## Three-phase commit (3PC)
 
@@ -212,12 +219,15 @@ The catch: 3PC assumes a **synchronous network with bounded delays** and fail-st
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Reading from async replicas right after writing (stale reads) without read-your-writes handling.
-> - Replication slots for dead replicas making the primary's disk fill with WAL.
-> - Assuming synchronous replication means zero downtime: if the only sync standby dies, writes block.
-> - Using 2PC across microservices owned by different teams: availability of every service multiplies, locks span the network.
-> - Split brain after a partition in DIY failover.
+<Warning>
+**Common pitfalls**
+
+- Reading from async replicas right after writing (stale reads) without read-your-writes handling.
+- Replication slots for dead replicas making the primary's disk fill with WAL.
+- Assuming synchronous replication means zero downtime: if the only sync standby dies, writes block.
+- Using 2PC across microservices owned by different teams: availability of every service multiplies, locks span the network.
+- Split brain after a partition in DIY failover.
+</Warning>
 
 ## Senior perspective
 
@@ -226,35 +236,44 @@ The catch: 3PC assumes a **synchronous network with bounded delays** and fail-st
 - Replace distributed transactions with sagas + outbox + idempotency; keep 2PC for tightly coupled resources inside one system.
 - Review questions: What's the RPO on leader failure? How are clients redirected? What happens to in-flight transactions? Is every cross-service operation idempotent and compensatable?
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)**: logical replication slots survive `pg_upgrade`, failover control for logical slots, and `pg_createsubscriber` converts a physical standby into a logical replica.
-> - **PostgreSQL 18 (2025-09-25)**: logical replication write conflicts are logged and counted in `pg_stat_subscription_stats`; `CREATE SUBSCRIPTION` streams large transactions in parallel by default; idle replication slots can be invalidated automatically (`idle_replication_slot_timeout`) to stop WAL piling up; `pg_createsubscriber --all`.
-> - **PostgreSQL 19 (beta, GA expected ~October 2026)**: logical replication of **sequences**, `CREATE PUBLICATION ... EXCEPT`, enabling logical replication without a restart, and a `WAIT FOR` command for read-your-writes on standbys.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)**: logical replication slots survive `pg_upgrade`, failover control for logical slots, and `pg_createsubscriber` converts a physical standby into a logical replica.
+- **PostgreSQL 18 (2025-09-25)**: logical replication write conflicts are logged and counted in `pg_stat_subscription_stats`; `CREATE SUBSCRIPTION` streams large transactions in parallel by default; idle replication slots can be invalidated automatically (`idle_replication_slot_timeout`) to stop WAL piling up; `pg_createsubscriber --all`.
+- **PostgreSQL 19 (beta, GA expected ~October 2026)**: logical replication of **sequences**, `CREATE PUBLICATION ... EXCEPT`, enabling logical replication without a restart, and a `WAIT FOR` command for read-your-writes on standbys.
+</Info>
 
 ## Interview questions
 
-> [!question]- Synchronous vs asynchronous replication: trade-offs?
-> Sync: a commit waits for replicas, so no data loss on leader failure but higher latency and writes stall if the sync replica is unavailable. Async: fast commits, but replicas lag and recent writes can be lost on failover.
+<Accordion title="Synchronous vs asynchronous replication: trade-offs?">
+Sync: a commit waits for replicas, so no data loss on leader failure but higher latency and writes stall if the sync replica is unavailable. Async: fast commits, but replicas lag and recent writes can be lost on failover.
+</Accordion>
 
-> [!question]- How do you give users read-your-writes consistency with read replicas?
-> Route a user's reads to the primary for a short window after they write, or track the write's LSN/timestamp and only read from replicas that have replayed past it (Postgres 19's `WAIT FOR` supports this), or pin sessions.
+<Accordion title="How do you give users read-your-writes consistency with read replicas?">
+Route a user's reads to the primary for a short window after they write, or track the write's LSN/timestamp and only read from replicas that have replayed past it (Postgres 19's `WAIT FOR` supports this), or pin sessions.
+</Accordion>
 
-> [!question]- Explain two-phase commit and its main weakness.
-> The coordinator asks all participants to prepare (make durable, hold locks, vote); if all vote yes it tells them to commit, otherwise abort. Weakness: it's blocking. If the coordinator fails after votes, prepared participants hold locks indefinitely until it recovers. It's also slow.
+<Accordion title="Explain two-phase commit and its main weakness.">
+The coordinator asks all participants to prepare (make durable, hold locks, vote); if all vote yes it tells them to commit, otherwise abort. Weakness: it's blocking. If the coordinator fails after votes, prepared participants hold locks indefinitely until it recovers. It's also slow.
+</Accordion>
 
-> [!question]- Why isn't 3PC used much?
-> It avoids blocking only if the network has bounded delays and no partitions; under real partitions it can lead to inconsistent decisions. Consensus-based commit (Paxos/Raft) solves the problem properly.
+<Accordion title="Why isn't 3PC used much?">
+It avoids blocking only if the network has bounded delays and no partitions; under real partitions it can lead to inconsistent decisions. Consensus-based commit (Paxos/Raft) solves the problem properly.
+</Accordion>
 
-> [!question]- How would you implement "place order + charge card + assign driver" across services?
-> A saga: local transactions per service, each emitting events via an outbox, with compensations (refund, cancel order) if a later step fails, idempotency keys on every step, and an orchestrator or workflow engine to track state.
+<Accordion title="How would you implement &quot;place order + charge card + assign driver&quot; across services?">
+A saga: local transactions per service, each emitting events via an outbox, with compensations (refund, cancel order) if a later step fails, idempotency keys on every step, and an orchestrator or workflow engine to track state.
+</Accordion>
 
-> [!question]- Single-leader vs multi-leader vs leaderless?
-> Single-leader is simplest and consistent for writes but the leader is a write bottleneck and failover point. Multi-leader allows writes in several regions/offline but needs conflict resolution. Leaderless offers high availability with quorums and tunable consistency, at the cost of anomalies and repair mechanisms.
+<Accordion title="Single-leader vs multi-leader vs leaderless?">
+Single-leader is simplest and consistent for writes but the leader is a write bottleneck and failover point. Multi-leader allows writes in several regions/offline but needs conflict resolution. Leaderless offers high availability with quorums and tunable consistency, at the cost of anomalies and repair mechanisms.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Clustering and Scaling]] · [[CAP Theorem]] · [[Sharding & Partitioning]] · [[Transactions & ACID]] · [[Locking & Concurrency Control]]
-- [[Database Backup]] · [[Connection Pooling]] · [[NoSQL Database Types]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control)
+- [Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling) · [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types)
 - Original notes: `_Archive/Overview 1 - Replication & Data Systems (original)`, `_Archive/Overview - Locking & Distributed DB (original)`
 
 ## Sources

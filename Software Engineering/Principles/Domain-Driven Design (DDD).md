@@ -1,12 +1,16 @@
 ---
+title: "Domain-Driven Design (DDD)"
 tags: [principles, principles/ddd]
 aliases: [DDD, Domain Driven Design, Bounded Context, Ubiquitous Language, Aggregate, Value Object, Entity, Domain Events, Context Map, Anti-Corruption Layer]
 updated: 2026-09-27
 ---
 # Domain-Driven Design (DDD)
 
-> [!tldr] TL;DR
-> **DDD** (Eric Evans, 2003) is an approach to complex software where the code's structure and language mirror the business domain, built in close collaboration with domain experts. **Strategic DDD** splits a big domain into **bounded contexts**, each with its own **ubiquitous language** and model, and maps how they relate (**context map**). **Tactical DDD** gives building blocks inside a context: **entities, value objects, aggregates, domain events, repositories, domain services**. Use the strategic part almost everywhere; use the tactical patterns where business rules are genuinely complex (the **core domain**), not for CRUD.
+<Note>
+**TL;DR**
+
+**DDD** (Eric Evans, 2003) is an approach to complex software where the code's structure and language mirror the business domain, built in close collaboration with domain experts. **Strategic DDD** splits a big domain into **bounded contexts**, each with its own **ubiquitous language** and model, and maps how they relate (**context map**). **Tactical DDD** gives building blocks inside a context: **entities, value objects, aggregates, domain events, repositories, domain services**. Use the strategic part almost everywhere; use the tactical patterns where business rules are genuinely complex (the **core domain**), not for CRUD.
+</Note>
 
 ## Why DDD
 
@@ -50,7 +54,7 @@ flowchart LR
 
 "Order" in Ordering is a cart with prices; in Dispatch the relevant concept is a *Delivery* with locations; in Billing it's an *Invoice*. Forcing one shared `Order` class across all three creates a bloated model everyone is afraid to touch.
 
-Bounded contexts are the natural boundaries for **modules in a modular monolith**, **microservices** and **team ownership** (see [[Software Architecture Styles]] and [[Coupling, Cohesion & Modularity]]). A context usually belongs to one team; a team may own several.
+Bounded contexts are the natural boundaries for **modules in a modular monolith**, **microservices** and **team ownership** (see [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) and [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)). A context usually belongs to one team; a team may own several.
 
 ### Context maps
 
@@ -62,7 +66,7 @@ A context map documents how bounded contexts (and their teams) relate:
 | **Shared Kernel** | Small shared model/code both depend on (use sparingly) |
 | **Customer–Supplier** | Upstream supplies what downstream needs; downstream has a say in priorities |
 | **Conformist** | Downstream simply adopts the upstream model (no leverage) |
-| **Anti-Corruption Layer (ACL)** | Downstream translates the upstream model into its own, protecting its language ([[Structural Patterns#Adapter\|Adapter]]/Facade at context scale) |
+| **Anti-Corruption Layer (ACL)** | Downstream translates the upstream model into its own, protecting its language ([Adapter](/Software%20Engineering/Principles/Structural%20Patterns#adapter)/Facade at context scale) |
 | **Open Host Service** | Upstream offers a well-defined protocol/API for many consumers |
 | **Published Language** | A documented shared exchange format (e.g. event schemas, iCal, a JSON schema) |
 | **Separate Ways** | No integration; duplicate instead |
@@ -108,7 +112,7 @@ export class Money {
 }
 ```
 
-Others: `EmailAddress`, `Address`, `DateRange`, `Quantity`, `OrderId`. In Java/Kotlin these are ideal as **records/data classes** (see [[Immutability Across Languages]]).
+Others: `EmailAddress`, `Address`, `DateRange`, `Quantity`, `OrderId`. In Java/Kotlin these are ideal as **records/data classes** (see [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages)).
 
 ### Entities
 
@@ -171,7 +175,7 @@ To publish reliably with the database write, use the **transactional outbox**: s
 
 ### Repositories
 
-A collection-like interface to load and save **whole aggregates** by ID, hiding persistence. Defined in the domain (a *port*), implemented in infrastructure (an *adapter*); see [[SOLID]] (DIP).
+A collection-like interface to load and save **whole aggregates** by ID, hiding persistence. Defined in the domain (a *port*), implemented in infrastructure (an *adapter*); see [SOLID](/Software%20Engineering/Principles/SOLID) (DIP).
 
 ```ts
 export interface OrderRepository {
@@ -186,7 +190,7 @@ One repository per aggregate root, not per table.
 
 - **Domain service**: domain logic that doesn't naturally belong to one entity (`DeliveryFeeCalculator` using distance and surge rules). Stateless, in domain language.
 - **Application service / use case**: orchestrates a user intent: load aggregate, call domain methods, save, publish events. No business rules.
-- **Factory**: encapsulates complex creation of aggregates (see [[Creational Patterns]]).
+- **Factory**: encapsulates complex creation of aggregates (see [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns)).
 
 ```ts
 export class PlaceOrder {                                 // application service
@@ -212,7 +216,7 @@ flowchart TB
   INF["Infrastructure<br/>(ORM, broker, HTTP clients, repository impls)"] --> DOM
 ```
 
-The domain depends on nothing; infrastructure depends on the domain. This is the core of clean/hexagonal/onion architecture ([[Software Architecture Styles]], [[Rails Clean Architecture]]).
+The domain depends on nothing; infrastructure depends on the domain. This is the core of clean/hexagonal/onion architecture ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles), [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)).
 
 ## When DDD fits (and when it doesn't)
 
@@ -227,13 +231,16 @@ Even for simple systems, **bounded contexts and ubiquitous language** are cheap 
 
 ## Pitfalls
 
-> [!warning] Common DDD mistakes
-> - **Tactical-only DDD**: entities/repositories everywhere, no bounded contexts or conversations with experts. All ceremony, little benefit.
-> - **Anemic domain model**: aggregates are data bags, rules live in services (fine for CRUD, not for the core domain).
-> - **Huge aggregates** (a `Customer` containing all orders): lock contention, slow loads. Keep them small; reference by ID.
-> - **One canonical enterprise model** shared by all services: the opposite of bounded contexts.
-> - **Microservice per entity** (`OrderService`, `OrderLineService`): chatty, distributed-monolith architecture. Split by bounded context, not by noun.
-> - Leaking ORM annotations and framework types throughout the domain (a pragmatic compromise sometimes, but a conscious one).
+<Warning>
+**Common DDD mistakes**
+
+- **Tactical-only DDD**: entities/repositories everywhere, no bounded contexts or conversations with experts. All ceremony, little benefit.
+- **Anemic domain model**: aggregates are data bags, rules live in services (fine for CRUD, not for the core domain).
+- **Huge aggregates** (a `Customer` containing all orders): lock contention, slow loads. Keep them small; reference by ID.
+- **One canonical enterprise model** shared by all services: the opposite of bounded contexts.
+- **Microservice per entity** (`OrderService`, `OrderLineService`): chatty, distributed-monolith architecture. Split by bounded context, not by noun.
+- Leaking ORM annotations and framework types throughout the domain (a pragmatic compromise sometimes, but a conscious one).
+</Warning>
 
 ## Senior perspective
 
@@ -245,31 +252,38 @@ Even for simple systems, **bounded contexts and ubiquitous language** are cheap 
 
 ## Interview questions
 
-> [!question]- What is a bounded context and why does it matter?
-> An explicit boundary within which one model and ubiquitous language apply consistently. It lets different parts of the business use the same term with different meanings without a bloated shared model, and it's the natural unit for modules, services and team ownership.
+<Accordion title="What is a bounded context and why does it matter?">
+An explicit boundary within which one model and ubiquitous language apply consistently. It lets different parts of the business use the same term with different meanings without a bloated shared model, and it's the natural unit for modules, services and team ownership.
+</Accordion>
 
-> [!question]- Entity vs value object?
-> An entity has an identity that persists as attributes change (equality by ID, e.g. Order #123). A value object has no identity, is defined by its attributes, is immutable and replaceable (Money, Address).
+<Accordion title="Entity vs value object?">
+An entity has an identity that persists as attributes change (equality by ID, e.g. Order #123). A value object has no identity, is defined by its attributes, is immutable and replaceable (Money, Address).
+</Accordion>
 
-> [!question]- What is an aggregate? How big should it be?
-> A cluster of domain objects treated as one consistency boundary, changed only through its root, with invariants enforced in each transaction. As small as the true invariants allow; reference other aggregates by ID and use domain events for eventual consistency between them.
+<Accordion title="What is an aggregate? How big should it be?">
+A cluster of domain objects treated as one consistency boundary, changed only through its root, with invariants enforced in each transaction. As small as the true invariants allow; reference other aggregates by ID and use domain events for eventual consistency between them.
+</Accordion>
 
-> [!question]- What is an anti-corruption layer?
-> A translation layer between your bounded context and another (often legacy or third-party) system, converting their model into yours so their concepts don't leak into your domain.
+<Accordion title="What is an anti-corruption layer?">
+A translation layer between your bounded context and another (often legacy or third-party) system, converting their model into yours so their concepts don't leak into your domain.
+</Accordion>
 
-> [!question]- Why one aggregate per transaction?
-> Multi-aggregate transactions create contention and couple aggregates, and they don't scale to distributed systems. If a use case changes several aggregates, update one and react to its domain event to update the others (eventually consistent), or reconsider the boundaries.
+<Accordion title="Why one aggregate per transaction?">
+Multi-aggregate transactions create contention and couple aggregates, and they don't scale to distributed systems. If a use case changes several aggregates, update one and react to its domain event to update the others (eventually consistent), or reconsider the boundaries.
+</Accordion>
 
-> [!question]- How do microservices relate to DDD?
-> Bounded contexts are a good first cut for service boundaries (one context → one or a few services, never one service spanning several contexts). Domain events become integration events between services. Many teams start with a modular monolith using the same boundaries.
+<Accordion title="How do microservices relate to DDD?">
+Bounded contexts are a good first cut for service boundaries (one context → one or a few services, never one service spanning several contexts). Domain events become integration events between services. Many teams start with a modular monolith using the same boundaries.
+</Accordion>
 
-> [!question]- When would you not use DDD?
-> For simple CRUD, reporting, or generic subdomains, and when there's no access to domain experts. Strategic ideas (contexts, language) still help; the tactical patterns would be overhead.
+<Accordion title="When would you not use DDD?">
+For simple CRUD, reporting, or generic subdomains, and when there's no access to domain experts. Strategic ideas (contexts, language) still help; the tactical patterns would be overhead.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Software Architecture Styles]] · [[Coupling, Cohesion & Modularity]] · [[Behavior-Driven Development (BDD)]]
-- [[OOP]] · [[Immutability Across Languages]] · [[Design Patterns]] · [[Rails Clean Architecture]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity) · [Behavior-Driven Development (BDD)](/Software%20Engineering/Principles/Behavior-Driven%20Development%20(BDD))
+- [OOP](/Software%20Engineering/Principles/OOP) · [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)
 
 ## Sources
 - Eric Evans, *Domain-Driven Design: Tackling Complexity in the Heart of Software* (Addison-Wesley, 2003) · [DDD Reference (free PDF, 2015)](https://www.domainlanguage.com/ddd/reference/)

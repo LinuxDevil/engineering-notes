@@ -1,12 +1,16 @@
 ---
+title: "Closures & Memory Model"
 tags: [frontend, frontend/javascript]
 aliases: [Closures, Closure, Backpack, COVE, Closure Memory Model, Memoization]
 updated: 2026-09-27
 ---
 # Closures & Memory Model
 
-> [!tldr] TL;DR
-> A **closure** is a function bundled with a live reference to the environment it was defined in. It's why a function can keep reading and updating variables from its outer scope **after the outer function has returned**: it carries a "**backpack**" of that data. Closures are a direct result of [[Scope & Lexical Environment|lexical scoping]]; the captured variables live on the **heap** and are garbage collected only when no closure can reach them anymore.
+<Note>
+**TL;DR**
+
+A **closure** is a function bundled with a live reference to the environment it was defined in. It's why a function can keep reading and updating variables from its outer scope **after the outer function has returned**: it carries a "**backpack**" of that data. Closures are a direct result of [lexical scoping](/Software%20Engineering/Frontend/01%20JavaScript/Scope%20%26%20Lexical%20Environment); the captured variables live on the **heap** and are garbage collected only when no closure can reach them anymore.
+</Note>
 
 ## The idea
 
@@ -16,7 +20,6 @@ updated: 2026-09-27
 - A closure is a function combined with references to the variables defined outside of it; closures *enclose* those variables.
 - Closures do **not freeze** the values of outer variables at creation time. They keep a **reference** to the variables (the bindings) throughout the closure's lifetime, so they always see the latest value.
 
-> [!quote] Will Sentance's framing ([[Closures]])
 > *Scope is just really what data is available for me on the exact line I'm running.*
 >
 > JS uses **lexical/static** scoping: where I save my function determines, for the rest of its life, what data it has access to (not where I run it; that's dynamic scoping). So even when I return the function, it grabs that surrounding data and keeps it.
@@ -27,9 +30,9 @@ Technically every JS function is a closure (it always captures its defining envi
 
 ## Walkthrough 1: a function that returns a function
 
-![[Screenshot_2023-08-29_at_10.27.33_PM.png]]
+![Screenshot_2023-08-29_at_10.27.33_PM](/Attachments/Screenshot_2023-08-29_at_10.27.33_PM.png)
 
-![[Screenshot_2023-08-30_at_11.11.04_PM.png]]
+![Screenshot_2023-08-30_at_11.11.04_PM](/Attachments/Screenshot_2023-08-30_at_11.11.04_PM.png)
 
 ```js
 function createFunction() {
@@ -94,7 +97,7 @@ Nothing surprising yet: the inner function runs while `outer`'s context is still
 
 ## Walkthrough 3: returning the inner function (the backpack)
 
-![[Screenshot_2023-08-31_at_8.27.13_PM.png]]
+![Screenshot_2023-08-31_at_8.27.13_PM](/Attachments/Screenshot_2023-08-31_at_8.27.13_PM.png)
 
 ```js
 function outer() {
@@ -173,11 +176,14 @@ When you call `counter()`:
 - resolves `count` by walking its `[[Environment]]` pointer,
 - increments it and returns it.
 
-> [!note]+ Why are closed-over variables on the heap, not the stack?
-> The heap is long-term memory; the stack is a temporary scratchpad for execution.
-> - The stack is for ephemeral ("short-lived") execution contexts.
-> - When a function returns, its stack frame is popped off.
-> - A variable that lives in the heap can survive until the last closure referencing it dies.
+<Note>
+**Why are closed-over variables on the heap, not the stack?**
+
+The heap is long-term memory; the stack is a temporary scratchpad for execution.
+- The stack is for ephemeral ("short-lived") execution contexts.
+- When a function returns, its stack frame is popped off.
+- A variable that lives in the heap can survive until the last closure referencing it dies.
+</Note>
 
 ### How V8 actually does it
 
@@ -204,113 +210,129 @@ flowchart LR
 
 ### When is the backpack garbage collected?
 
-When the closure itself becomes **unreachable** (no variable, listener, timer, cache or DOM property references it), its Context becomes unreachable too, and the mark-and-sweep GC reclaims both. See [[Memory Management & Garbage Collection]].
+When the closure itself becomes **unreachable** (no variable, listener, timer, cache or DOM property references it), its Context becomes unreachable too, and the mark-and-sweep GC reclaims both. See [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection).
 
 ## What closures are used for
 
 | Use | Example |
 |---|---|
 | **Data privacy / encapsulation** | counters, module pattern, factories returning an API |
-| **Function factories / partial application** | `makeAdder(5)`, currying ([[Functions - HOF, Callbacks & Currying]]) |
+| **Function factories / partial application** | `makeAdder(5)`, currying ([Functions - HOF, Callbacks & Currying](/Software%20Engineering/Frontend/01%20JavaScript/Functions%20-%20HOF%2C%20Callbacks%20%26%20Currying)) |
 | **Once / run-limited functions** | `once(fn)` remembers whether it ran |
 | **Memoization** | cache results of slow work |
-| **Iterators & generators state** | [[Iterators, Generators & Iterator Helpers]] |
+| **Iterators & generators state** | [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers) |
 | **Async callbacks** | event handlers, `setTimeout`, promise callbacks remember their context |
 | **React hooks** | every render's handlers close over that render's props/state |
 
-> [!example] `once`: a function with persistent memory
-> ```js
-> function once(fn) {
->   let called = false, value;
->   return function (...args) {
->     if (!called) { called = true; value = fn.apply(this, args); }
->     return value;
->   };
-> }
-> const init = once(() => console.log('init!'));
-> init(); init(); // logs once
-> ```
+<Info>
+**`once`: a function with persistent memory**
+
+```js
+function once(fn) {
+  let called = false, value;
+  return function (...args) {
+    if (!called) { called = true; value = fn.apply(this, args); }
+    return value;
+  };
+}
+const init = once(() => console.log('init!'));
+init(); init(); // logs once
+```
+</Info>
 
 ### Memoization
 
 Memoization is the go-to practice to **not repeat calculations/tasks that have been run before**: caching the result of a slow task, keyed by its input. A closure gives the cache a private, persistent home.
 
-> [!example] `memoize`
-> ```js
-> function memoize(fn) {
->   const cache = new Map();                 // lives in the backpack
->   return function (arg) {
->     if (cache.has(arg)) return cache.get(arg);
->     const result = fn(arg);
->     cache.set(arg, result);
->     return result;
->   };
-> }
->
-> const slowSquare = n => { for (let i = 0; i < 1e8; i++); return n * n; };
-> const fastSquare = memoize(slowSquare);
-> fastSquare(9); // slow the first time
-> fastSquare(9); // instant: from the cache
-> ```
-> Caveats: only for **pure** functions; the cache grows forever unless bounded (LRU) or keyed weakly (`WeakMap` for object keys; see [[Collections - Map, Set, WeakMap & WeakRef]]).
+<Info>
+**`memoize`**
+
+```js
+function memoize(fn) {
+  const cache = new Map();                 // lives in the backpack
+  return function (arg) {
+    if (cache.has(arg)) return cache.get(arg);
+    const result = fn(arg);
+    cache.set(arg, result);
+    return result;
+  };
+}
+
+const slowSquare = n => { for (let i = 0; i < 1e8; i++); return n * n; };
+const fastSquare = memoize(slowSquare);
+fastSquare(9); // slow the first time
+fastSquare(9); // instant: from the cache
+```
+Caveats: only for **pure** functions; the cache grows forever unless bounded (LRU) or keyed weakly (`WeakMap` for object keys; see [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> **1. Loops with `var`**: all callbacks share one binding.
-> ```js
-> for (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3
-> // fixes: use let, or an IIFE: (j => setTimeout(() => console.log(j)))(i)
-> ```
-> **2. Stale closures in React**: a callback created in render N keeps render N's state.
-> ```jsx
-> const [count, setCount] = useState(0);
-> useEffect(() => {
->   const id = setInterval(() => setCount(count + 1), 1000); // always 0 + 1
->   return () => clearInterval(id);
-> }, []);
-> // fix: functional update setCount(c => c + 1), or correct deps / useEffectEvent
-> ```
-> See [[Hooks Reference]].
->
-> **3. Memory leaks**: a long-lived closure (event listener, interval, global cache, detached DOM handler) keeps its whole Context alive, including large objects you no longer need. Remove listeners, clear timers, null out big references, and use `AbortController` to remove groups of listeners.
->
-> **4. Shared context retention (V8)**: a big object captured by *one* inner function is retained by *all* closures from that scope.
+<Warning>
+**Common pitfalls**
+
+**1. Loops with `var`**: all callbacks share one binding.
+```js
+for (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3
+// fixes: use let, or an IIFE: (j => setTimeout(() => console.log(j)))(i)
+```
+**2. Stale closures in React**: a callback created in render N keeps render N's state.
+```jsx
+const [count, setCount] = useState(0);
+useEffect(() => {
+  const id = setInterval(() => setCount(count + 1), 1000); // always 0 + 1
+  return () => clearInterval(id);
+}, []);
+// fix: functional update setCount(c => c + 1), or correct deps / useEffectEvent
+```
+See [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference).
+
+**3. Memory leaks**: a long-lived closure (event listener, interval, global cache, detached DOM handler) keeps its whole Context alive, including large objects you no longer need. Remove listeners, clear timers, null out big references, and use `AbortController` to remove groups of listeners.
+
+**4. Shared context retention (V8)**: a big object captured by *one* inner function is retained by *all* closures from that scope.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is a closure?
-> A function together with a reference to the lexical environment in which it was created. It lets the function access and update outer variables even after the outer function returned. It's a consequence of lexical scoping plus functions being first-class values.
+<Accordion title="What is a closure?">
+A function together with a reference to the lexical environment in which it was created. It lets the function access and update outer variables even after the outer function returned. It's a consequence of lexical scoping plus functions being first-class values.
+</Accordion>
 
-> [!question]- Does a closure capture values or variables?
-> Variables (bindings), by reference. If the outer variable changes later, the closure sees the new value. That's why the `var` loop prints the final value.
+<Accordion title="Does a closure capture values or variables?">
+Variables (bindings), by reference. If the outer variable changes later, the closure sees the new value. That's why the `var` loop prints the final value.
+</Accordion>
 
-> [!question]- Where do closed-over variables live? When are they freed?
-> In a heap-allocated environment (V8 "Context") referenced by the function's `[[Environment]]` slot. Uncaptured variables stay on the stack/registers. The context is garbage collected once no reachable function references it.
+<Accordion title="Where do closed-over variables live? When are they freed?">
+In a heap-allocated environment (V8 "Context") referenced by the function's `[[Environment]]` slot. Uncaptured variables stay on the stack/registers. The context is garbage collected once no reachable function references it.
+</Accordion>
 
-> [!question]- Give practical uses of closures.
-> Private state (module pattern, counters), factories and partial application/currying, `once`/`debounce`/`throttle`, memoization caches, iterators, event handlers and React hooks.
+<Accordion title="Give practical uses of closures.">
+Private state (module pattern, counters), factories and partial application/currying, `once`/`debounce`/`throttle`, memoization caches, iterators, event handlers and React hooks.
+</Accordion>
 
-> [!question]- How can closures cause memory leaks?
-> A reachable closure keeps its whole environment alive. Long-lived listeners, intervals, caches or global references that capture large objects or DOM nodes keep them from being collected. In V8, sibling closures share one context, so one capture retains data for all.
+<Accordion title="How can closures cause memory leaks?">
+A reachable closure keeps its whole environment alive. Long-lived listeners, intervals, caches or global references that capture large objects or DOM nodes keep them from being collected. In V8, sibling closures share one context, so one capture retains data for all.
+</Accordion>
 
-> [!question]- Implement a `counter` with private state and `inc`/`dec`/`value`.
-> ```js
-> function createCounter() {
->   let n = 0;
->   return { inc: () => ++n, dec: () => --n, value: () => n };
-> }
-> ```
+<Accordion title="Implement a `counter` with private state and `inc`/`dec`/`value`.">
+```js
+function createCounter() {
+  let n = 0;
+  return { inc: () => ++n, dec: () => --n, value: () => n };
+}
+```
+</Accordion>
 
-> [!question]- What's a stale closure in React and how do you fix it?
-> A callback/effect that captured state from an earlier render and keeps using old values. Fix with correct dependency arrays, functional state updates (`setX(x => x + 1)`), refs, or `useEffectEvent` (React 19.2) for non-reactive logic.
+<Accordion title="What's a stale closure in React and how do you fix it?">
+A callback/effect that captured state from an earlier render and keeps using old values. Fix with correct dependency arrays, functional state updates (`setX(x => x + 1)`), refs, or `useEffectEvent` (React 19.2) for non-reactive logic.
+</Accordion>
 
 ## Related
-- [[JavaScript Index]]
-- [[Scope & Lexical Environment]] · [[Execution Context & Call Stack]] · [[Functions - HOF, Callbacks & Currying]] · [[Memory Management & Garbage Collection]] · [[Collections - Map, Set, WeakMap & WeakRef]]
-- React: [[Hooks Reference]] · [[React Performance]]
-- Course notes: [[Closures]] · [[JavaScript the hard parts v2]] · [[JS the hard parts v3]]
-- [[JavaScript Interview Questions]] · [[Output Questions & Tricky Snippets]]
+- [JavaScript Index](/Software%20Engineering/Frontend/01%20JavaScript/JavaScript%20Index)
+- [Scope & Lexical Environment](/Software%20Engineering/Frontend/01%20JavaScript/Scope%20%26%20Lexical%20Environment) · [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Functions - HOF, Callbacks & Currying](/Software%20Engineering/Frontend/01%20JavaScript/Functions%20-%20HOF%2C%20Callbacks%20%26%20Currying) · [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection) · [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)
+- React: [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference) · [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)
+- Course notes: [Closures](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Closures) · [JavaScript the hard parts v2](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/JavaScript%20the%20hard%20parts%20v2) · [JS the hard parts v3](/Software%20Engineering/Frontend/Courses%20%26%20Books/JS%20the%20hard%20parts%20v3)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions) · [Output Questions & Tricky Snippets](/Software%20Engineering/Frontend/17%20Interview%20Prep/Output%20Questions%20%26%20Tricky%20Snippets)
 
 ## Sources
 - [MDN: Closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures)

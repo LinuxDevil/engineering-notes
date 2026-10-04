@@ -1,12 +1,16 @@
 ---
+title: "Problem Solving"
 tags: [dsa, dsa/foundations, interview]
 aliases: [Problem Solving Framework, UMPIRE, Coding Interview Framework, How to Approach a Coding Problem, Coding Interview Strategy]
 updated: 2026-09-27
 ---
 # Problem Solving
 
-> [!tldr] TL;DR
-> A coding interview grades **how you think**, not just whether the code passes. Use a repeatable framework such as **UMPIRE** (Understand, Match, Plan, Implement, Review, Evaluate): clarify the problem and edge cases, match it to a known [[DSA Index#Patterns → problems|pattern]], state a brute force, optimize it, code cleanly while talking, then test by hand and give the complexity. Since 2025 some companies (Meta, Canva) run AI-assisted rounds that add debugging and verifying AI output to the same core skills.
+<Note>
+**TL;DR**
+
+A coding interview grades **how you think**, not just whether the code passes. Use a repeatable framework such as **UMPIRE** (Understand, Match, Plan, Implement, Review, Evaluate): clarify the problem and edge cases, match it to a known [pattern](/Software%20Engineering/DSA/DSA%20Index#patterns-problems), state a brute force, optimize it, code cleanly while talking, then test by hand and give the complexity. Since 2025 some companies (Meta, Canva) run AI-assisted rounds that add debugging and verifying AI output to the same core skills.
+</Note>
 
 ## The idea
 Most interview problems are variations of ~15 patterns. The hard part isn't knowing the patterns, it's reliably getting from a vague prompt to a correct, explained solution under time pressure. A framework removes the "blank page" moment and makes sure you hit every signal the interviewer is scoring:
@@ -47,25 +51,25 @@ Use the constraints and keywords as signals:
 
 | Signal in the problem | Try |
 |---|---|
-| Sorted array, "find pair/triplet" | [[Two Pointers]], [[Binary Search]] |
-| Contiguous subarray/substring, "longest/shortest with condition" | [[Sliding Window]] |
-| "Sum of subarray", range queries | [[Prefix Sum]] (+ hash map) |
-| "Have I seen this before?", counts, pairs summing to target | [[Hash Tables]] |
-| Linked list cycle or middle | [[Fast and Slow Pointer]] |
-| "Next greater/smaller", histogram | [[Monotonic Stack & Queue]] |
-| "k largest/smallest/most frequent", streaming median | [[Top-K & Heaps pattern]] |
-| Overlapping ranges, meetings, calendars | [[Intervals]] |
-| Grid, islands, shortest steps, dependencies | [[Graph BFS-DFS patterns]], [[Graphs]] |
-| Tree questions | [[Tree Traversal - DFS & BFS]] |
-| "All combinations/permutations/subsets" | [[Backtracking]] |
-| "Min/max ways/cost", choices with overlapping subproblems | [[Dynamic Programming]] |
-| Locally best choice seems to work, intervals by end | [[Greedy]] |
-| Prefix lookups, autocomplete, word dictionary | [[Tries]] |
-| Connectivity, merging groups | [[Union-Find]] |
-| "Without extra space", XOR, powers of two | [[Bit Manipulation]] |
-| Monotonic answer ("minimum capacity such that...") | [[Binary Search]] on the answer |
+| Sorted array, "find pair/triplet" | [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers), [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) |
+| Contiguous subarray/substring, "longest/shortest with condition" | [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) |
+| "Sum of subarray", range queries | [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) (+ hash map) |
+| "Have I seen this before?", counts, pairs summing to target | [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) |
+| Linked list cycle or middle | [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) |
+| "Next greater/smaller", histogram | [Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) |
+| "k largest/smallest/most frequent", streaming median | [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) |
+| Overlapping ranges, meetings, calendars | [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals) |
+| Grid, islands, shortest steps, dependencies | [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns), [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) |
+| Tree questions | [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) |
+| "All combinations/permutations/subsets" | [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) |
+| "Min/max ways/cost", choices with overlapping subproblems | [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) |
+| Locally best choice seems to work, intervals by end | [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) |
+| Prefix lookups, autocomplete, word dictionary | [Tries](/Software%20Engineering/DSA/02%20Data%20Structures/Tries) |
+| Connectivity, merging groups | [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find) |
+| "Without extra space", XOR, powers of two | [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation) |
+| Monotonic answer ("minimum capacity such that...") | [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) on the answer |
 
-Use `n` to guess the target complexity (see [[Big-O & Complexity Analysis#What input size can I afford?]]).
+Use `n` to guess the target complexity (see [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis#what-input-size-can-i-afford)).
 
 ### 3. Plan (brute force → optimize)
 1. **State the brute force** and its complexity out loud, even if it's obviously slow. It proves you understand the problem and gives you a fallback.
@@ -101,7 +105,7 @@ Use `n` to guess the target complexity (see [[Big-O & Complexity Analysis#What i
 > Given `nums` and `target`, return indices of two numbers that add up to `target`.
 
 1. **Understand**: exactly one solution? (yes) can I use the same element twice? (no) return order? (any). Example: `[2,7,11,15], 9 → [0,1]`.
-2. **Match**: "pair that sums to target" + unsorted → hash map (or sort + [[Two Pointers]], but that loses indices).
+2. **Match**: "pair that sums to target" + unsorted → hash map (or sort + [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers), but that loses indices).
 3. **Plan**: brute force is all pairs, O(n²). Bottleneck: for each `x` we search for `target - x` linearly. Use a map `value → index` to make that lookup O(1).
 4. **Implement**:
 
@@ -160,38 +164,47 @@ def two_sum(nums: list[int], target: int) -> list[int]:
 - Code quality signals seniority: small functions, meaningful names, input validation where it matters, no clever one-liners that hide bugs.
 - Know when *not* to hand-roll: in real code you'd use a library heap, a database index, or a sorted container, and you should say so while still being able to implement it.
 
-> [!info]+ 🆕 2025–2026: coding interviews and AI
-> - **Meta** told employees in July 2025 it was building an "AI-enabled" coding interview where candidates have an AI assistant, calling it closer to the real developer environment and a way to make LLM-based cheating less effective ([404 Media](https://www.404media.co/meta-is-going-to-let-job-candidates-use-ai-during-coding-tests/)). The pilot started in **October 2025**: 60 minutes in CoderPad with a built-in assistant and a multi-file codebase, working through bug fixing, implementing a feature and optimizing it; it replaces one of the two onsite coding rounds ([Hello Interview](https://www.hellointerview.com/blog/meta-ai-enabled-coding)).
-> - **Canva** (engineering blog, 2025-06-11) replaced its Computer Science Fundamentals screen with an **AI-Assisted Coding** interview where candidates must use tools like Copilot, Cursor or Claude on larger, ambiguous problems, and are judged on breaking down requirements, reviewing and fixing AI-generated code, and production quality ([Canva](https://www.canva.dev/blog/engineering/yes-you-can-use-ai-in-our-interviews/)).
-> - **Amazon** (2025) told recruiters candidates can be disqualified for using GenAI tools in interviews unless explicitly permitted ([GeekWire](https://www.geekwire.com/2025/is-it-cheating-ai-use-during-job-interviews-sparks-debate-over-whether-to-restrict-emerging-tools/)). **Anthropic** lets applicants use Claude to polish application materials but not in live interviews or take-homes unless told otherwise ([Fortune, 2025-07-21](https://fortune.com/2025/07/21/billion-dollar-giant-anthropic-ai-ban-hiring-policy-change-job-seekers-interview-process)).
-> - **Google**'s CEO said in 2025 that Google is reintroducing at least one in-person interview round, partly to make sure candidates have the fundamentals ([Business Standard, 2025-08-26](https://www.business-standard.com/companies/news/google-ai-cheating-job-interviews-in-person-hiring-shift-sundar-pichai-125082600492_1.html)).
->
-> **What this means for prep**: policies differ per company, so always ask what's allowed. The same UMPIRE skills apply in AI-enabled rounds, with more weight on **reading unfamiliar code, debugging, writing tests, and verifying** what the assistant produces instead of accepting it. Practice fixing bugs in someone else's code, not just writing from scratch.
+<Info>
+**🆕 2025–2026: coding interviews and AI**
+
+- **Meta** told employees in July 2025 it was building an "AI-enabled" coding interview where candidates have an AI assistant, calling it closer to the real developer environment and a way to make LLM-based cheating less effective ([404 Media](https://www.404media.co/meta-is-going-to-let-job-candidates-use-ai-during-coding-tests/)). The pilot started in **October 2025**: 60 minutes in CoderPad with a built-in assistant and a multi-file codebase, working through bug fixing, implementing a feature and optimizing it; it replaces one of the two onsite coding rounds ([Hello Interview](https://www.hellointerview.com/blog/meta-ai-enabled-coding)).
+- **Canva** (engineering blog, 2025-06-11) replaced its Computer Science Fundamentals screen with an **AI-Assisted Coding** interview where candidates must use tools like Copilot, Cursor or Claude on larger, ambiguous problems, and are judged on breaking down requirements, reviewing and fixing AI-generated code, and production quality ([Canva](https://www.canva.dev/blog/engineering/yes-you-can-use-ai-in-our-interviews/)).
+- **Amazon** (2025) told recruiters candidates can be disqualified for using GenAI tools in interviews unless explicitly permitted ([GeekWire](https://www.geekwire.com/2025/is-it-cheating-ai-use-during-job-interviews-sparks-debate-over-whether-to-restrict-emerging-tools/)). **Anthropic** lets applicants use Claude to polish application materials but not in live interviews or take-homes unless told otherwise ([Fortune, 2025-07-21](https://fortune.com/2025/07/21/billion-dollar-giant-anthropic-ai-ban-hiring-policy-change-job-seekers-interview-process)).
+- **Google**'s CEO said in 2025 that Google is reintroducing at least one in-person interview round, partly to make sure candidates have the fundamentals ([Business Standard, 2025-08-26](https://www.business-standard.com/companies/news/google-ai-cheating-job-interviews-in-person-hiring-shift-sundar-pichai-125082600492_1.html)).
+
+**What this means for prep**: policies differ per company, so always ask what's allowed. The same UMPIRE skills apply in AI-enabled rounds, with more weight on **reading unfamiliar code, debugging, writing tests, and verifying** what the assistant produces instead of accepting it. Practice fixing bugs in someone else's code, not just writing from scratch.
+</Info>
 
 ## Interview questions
 
-> [!question]- What should you do in the first five minutes of a coding interview?
-> Restate the problem, ask clarifying questions about input size, types, edge cases and expected output, and write 2–3 examples including an edge case. Don't code yet.
+<Accordion title="What should you do in the first five minutes of a coding interview?">
+Restate the problem, ask clarifying questions about input size, types, edge cases and expected output, and write 2–3 examples including an edge case. Don't code yet.
+</Accordion>
 
-> [!question]- Why state a brute-force solution if you know it's too slow?
-> It shows you understand the problem, gives a correctness baseline and a fallback, and makes the bottleneck visible, which is usually where the optimization comes from.
+<Accordion title="Why state a brute-force solution if you know it's too slow?">
+It shows you understand the problem, gives a correctness baseline and a fallback, and makes the bottleneck visible, which is usually where the optimization comes from.
+</Accordion>
 
-> [!question]- How do you use input constraints to pick an approach?
-> Map `n` to an affordable complexity: n ≤ 20 allows O(2ⁿ) backtracking, n ≤ 10⁴ allows O(n²), n ≤ 10⁶ needs O(n log n) or O(n). Then pick patterns with that complexity.
+<Accordion title="How do you use input constraints to pick an approach?">
+Map `n` to an affordable complexity: n ≤ 20 allows O(2ⁿ) backtracking, n ≤ 10⁴ allows O(n²), n ≤ 10⁶ needs O(n log n) or O(n). Then pick patterns with that complexity.
+</Accordion>
 
-> [!question]- How do you test your solution without running it?
-> Trace it on a small example, tracking variable values in a table, then walk through edge cases (empty, one element, duplicates, negatives, extremes). Look specifically for off-by-one and pointer-update bugs.
+<Accordion title="How do you test your solution without running it?">
+Trace it on a small example, tracking variable values in a table, then walk through edge cases (empty, one element, duplicates, negatives, extremes). Look specifically for off-by-one and pointer-update bugs.
+</Accordion>
 
-> [!question]- What do you do when you're stuck?
-> Say what you're thinking, go back to a concrete example and solve it by hand, try a simpler version (sorted input, smaller n), list candidate data structures, and ask whether a hint is available. Don't go silent.
+<Accordion title="What do you do when you're stuck?">
+Say what you're thinking, go back to a concrete example and solve it by hand, try a simpler version (sorted input, smaller n), list candidate data structures, and ask whether a hint is available. Don't go silent.
+</Accordion>
 
-> [!question]- How would you approach an AI-assisted coding interview?
-> Same framework: clarify and plan yourself, then use the assistant for well-scoped tasks (boilerplate, a helper, a test), read and verify every suggestion, run tests, and explain why you accept or reject its output. Interviewers score your judgment and verification, not the prompt.
+<Accordion title="How would you approach an AI-assisted coding interview?">
+Same framework: clarify and plan yourself, then use the assistant for well-scoped tasks (boilerplate, a helper, a test), read and verify every suggestion, run tests, and explain why you accept or reject its output. Interviewers score your judgment and verification, not the prompt.
+</Accordion>
 
 ## Related
-- [[DSA Index]] · [[Big-O & Complexity Analysis]]
-- Patterns: [[Two Pointers]] · [[Sliding Window]] · [[Prefix Sum]] · [[Binary Search]] · [[Fast and Slow Pointer]] · [[Monotonic Stack & Queue]] · [[Top-K & Heaps pattern]] · [[Intervals]] · [[Graph BFS-DFS patterns]] · [[Backtracking]] · [[Greedy]] · [[Bit Manipulation]]
-- [[LeetCode Crash Course]] · [[Frontend System Design Index]] (for system design rounds)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index) · [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Patterns: [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) · [Fast and Slow Pointer](/Software%20Engineering/DSA/04%20Patterns/Fast%20and%20Slow%20Pointer) · [Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) · [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) · [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns) · [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) · [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) · [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) (for system design rounds)
 
 ## Sources
 - [CodePath: UMPIRE Interview Strategy](https://guides.codepath.org/compsci/UMPIRE-Interview-Strategy)

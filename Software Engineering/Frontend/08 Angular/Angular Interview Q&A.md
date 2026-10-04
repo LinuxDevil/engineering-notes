@@ -1,506 +1,573 @@
 ---
+title: "Angular Interview Q&A"
 tags: [frontend, frontend/angular, interview]
 aliases: [Angular interview questions, Angular Q&A]
 updated: 2026-09-27
 ---
 # Angular Interview Q&A
 
-> [!tldr] TL;DR
-> Every question from the original `Angular.md` and `Interview Questions Angular.md`, grouped by theme as collapsible callouts. Answers that were outdated (NgModules, View Engine, Protractor, differential loading, `@angular/http`, `multicast`, noop zone...) are rewritten and marked **(updated 2026)**. Try answering out loud before expanding each one. Deeper explanations live in [[Angular Fundamentals]], [[Angular Change Detection, Zones & Signals]] and [[Modern Angular v17 to v22]].
+<Note>
+**TL;DR**
+
+Every question from the original `Angular.md` and `Interview Questions Angular.md`, grouped by theme as collapsible callouts. Answers that were outdated (NgModules, View Engine, Protractor, differential loading, `@angular/http`, `multicast`, noop zone...) are rewritten and marked **(updated 2026)**. Try answering out loud before expanding each one. Deeper explanations live in [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals), [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals) and [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
+</Note>
 
 ## 1. Core building blocks
 
-![[Untitled 43.png]]
+![Untitled 43](/Attachments/Untitled%2043.png)
 
-> [!question]- What are the key building blocks of an Angular application?
-> - **Components**: the basic UI building blocks; a class + template + styles controlling a piece of the view.
-> - **Templates**: the HTML views with Angular binding syntax.
-> - **Directives**: add behaviour to existing elements.
-> - **Pipes**: transform values for display.
-> - **Services**: shared logic and state, delivered by dependency injection.
-> - **Metadata / decorators**: tell the compiler how to treat a class (`@Component`, `@Injectable`...).
-> - **Modules (NgModules)**: groups of components/directives/pipes/providers. **(updated 2026)** Optional since standalone components (default since v19); most new code has no NgModules.
+<Accordion title="What are the key building blocks of an Angular application?">
+- **Components**: the basic UI building blocks; a class + template + styles controlling a piece of the view.
+- **Templates**: the HTML views with Angular binding syntax.
+- **Directives**: add behaviour to existing elements.
+- **Pipes**: transform values for display.
+- **Services**: shared logic and state, delivered by dependency injection.
+- **Metadata / decorators**: tell the compiler how to treat a class (`@Component`, `@Injectable`...).
+- **Modules (NgModules)**: groups of components/directives/pipes/providers. **(updated 2026)** Optional since standalone components (default since v19); most new code has no NgModules.
+</Accordion>
 
-> [!question]- What is a component?
-> The most basic UI building block. Components form a tree. They are a subset of directives: unlike directives they always have a template, and only one component can match a given element.
-> ```ts
-> @Component({
->   selector: 'my-app',
->   template: `<h1>{{ title }}</h1><div>Learn Angular with examples</div>`,
-> })
-> export class AppComponent {
->   title = 'Welcome to Angular world';
-> }
-> ```
-> **(updated 2026)** Components are standalone by default (v19+) and list their template dependencies in `imports`.
+<Accordion title="What is a component?">
+The most basic UI building block. Components form a tree. They are a subset of directives: unlike directives they always have a template, and only one component can match a given element.
+```ts
+@Component({
+  selector: 'my-app',
+  template: `<h1>{{ title }}</h1><div>Learn Angular with examples</div>`,
+})
+export class AppComponent {
+  title = 'Welcome to Angular world';
+}
+```
+**(updated 2026)** Components are standalone by default (v19+) and list their template dependencies in `imports`.
+</Accordion>
 
-> [!question]- What is a template?
-> The HTML view where you display data by binding to component properties. It can be inline (`template: '...'`, using backticks for multi-line) or in a separate file (`templateUrl: './app.component.html'`). Both compile the same way ahead of time.
+<Accordion title="What is a template?">
+The HTML view where you display data by binding to component properties. It can be inline (`template: '...'`, using backticks for multi-line) or in a separate file (`templateUrl: './app.component.html'`). Both compile the same way ahead of time.
+</Accordion>
 
-> [!question]- What is a module (NgModule)? (updated 2026)
-> A logical boundary that groups components, directives, pipes and providers. The root `AppModule`:
-> ```ts
-> @NgModule({
->   imports: [BrowserModule],
->   declarations: [AppComponent],
->   bootstrap: [AppComponent],
->   providers: [],
-> })
-> export class AppModule {}
-> ```
-> - `imports`: other modules whose exported declarables you need (`BrowserModule` for browser apps).
-> - `declarations`: components/directives/pipes that belong to this module.
-> - `bootstrap`: root component(s) to start.
-> - `providers`: services registered in this module's injector.
-> - `entryComponents`: **(updated 2026)** obsolete since Ivy (v9); dynamically created components no longer need to be listed, and the option is gone.
->
-> **(updated 2026)** New apps don't use NgModules: components are standalone and the app starts with `bootstrapApplication(AppComponent, { providers: [...] })`. NgModules still work for legacy code and some libraries.
+<Accordion title="What is a module (NgModule)? (updated 2026)">
+A logical boundary that groups components, directives, pipes and providers. The root `AppModule`:
+```ts
+@NgModule({
+  imports: [BrowserModule],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent],
+  providers: [],
+})
+export class AppModule {}
+```
+- `imports`: other modules whose exported declarables you need (`BrowserModule` for browser apps).
+- `declarations`: components/directives/pipes that belong to this module.
+- `bootstrap`: root component(s) to start.
+- `providers`: services registered in this module's injector.
+- `entryComponents`: **(updated 2026)** obsolete since Ivy (v9); dynamically created components no longer need to be listed, and the option is gone.
 
-> [!question]- What is a bootstrapping module? (updated 2026)
-> The root module you bootstrap to launch the app, usually `AppModule`, generated by the CLI with `BrowserModule`, `FormsModule`, `HttpClientModule` in `imports` and `bootstrap: [AppComponent]`, started via `platformBrowserDynamic().bootstrapModule(AppModule)`.
->
-> **(updated 2026)** Modern apps have no bootstrapping module:
-> ```ts
-> bootstrapApplication(AppComponent, {
->   providers: [provideRouter(routes), provideHttpClient(), provideZonelessChangeDetection()],
-> });
-> ```
-> `HttpClientModule` is replaced by `provideHttpClient()`.
+**(updated 2026)** New apps don't use NgModules: components are standalone and the app starts with `bootstrapApplication(AppComponent, { providers: [...] })`. NgModules still work for legacy code and some libraries.
+</Accordion>
 
-> [!question]- What is metadata? What kinds of decorators exist?
-> Metadata configures a class's expected behaviour and is expressed with decorators:
-> - **Class decorators**: `@Component`, `@Directive`, `@Pipe`, `@Injectable`, `@NgModule` (and `@Service()` in v22).
-> - **Property decorators**: `@Input`, `@Output`, `@ViewChild`, `@HostBinding`.
-> - **Method decorators**: `@HostListener('click', ['$event'])`.
-> - **Parameter decorators**: `@Inject(MyService)`, `@Optional()`, `@Self()`, `@SkipSelf()`, `@Host()`.
-> ```ts
-> @Component({ selector: 'my-component', template: '<div>Method decorator</div>' })
-> export class MyComponent {
->   @Input() title!: string;
->   @HostListener('click', ['$event'])
->   onHostClick(event: Event) { /* clicked */ }
->   constructor(@Inject(MyService) myService: MyService) { console.log(myService); }
-> }
-> ```
-> **(updated 2026)** Modern equivalents are functions: `input()`, `output()`, `viewChild()`, `inject()`, and the `host: {}` metadata instead of `@HostListener`/`@HostBinding`.
+<Accordion title="What is a bootstrapping module? (updated 2026)">
+The root module you bootstrap to launch the app, usually `AppModule`, generated by the CLI with `BrowserModule`, `FormsModule`, `HttpClientModule` in `imports` and `bootstrap: [AppComponent]`, started via `platformBrowserDynamic().bootstrapModule(AppModule)`.
 
-> [!question]- What is the Angular template DSL?
-> A domain-specific language on top of HTML that Angular's compiler turns into DOM instructions:
-> - `()` for outputs and DOM events.
-> - `[]` for inputs and DOM properties/attributes.
-> - `[()]` for two-way binding.
-> - `*` for structural directives (`*ngIf`, `*ngFor`) that change DOM structure. **(updated 2026)** The built-in ones are replaced by `@if`/`@for`/`@switch` block syntax (v17+) and were deprecated in v20.
-> - `{{ }}` for interpolation, `#ref` for template variables, `@let` for local variables.
+**(updated 2026)** Modern apps have no bootstrapping module:
+```ts
+bootstrapApplication(AppComponent, {
+  providers: [provideRouter(routes), provideHttpClient(), provideZonelessChangeDetection()],
+});
+```
+`HttpClientModule` is replaced by `provideHttpClient()`.
+</Accordion>
 
-> [!question]- What is the purpose of the `hidden` property?
-> `[hidden]="expr"` toggles the HTML `hidden` attribute, like `ng-show` in AngularJS. The element stays in the DOM (unlike `@if`), so its component keeps state and keeps running.
-> ```html
-> <div [hidden]="!user.name">My name is: {{ user.name }}</div>
-> ```
-> Gotcha: a CSS rule like `display: flex` on the element overrides `hidden`.
+<Accordion title="What is metadata? What kinds of decorators exist?">
+Metadata configures a class's expected behaviour and is expressed with decorators:
+- **Class decorators**: `@Component`, `@Directive`, `@Pipe`, `@Injectable`, `@NgModule` (and `@Service()` in v22).
+- **Property decorators**: `@Input`, `@Output`, `@ViewChild`, `@HostBinding`.
+- **Method decorators**: `@HostListener('click', ['$event'])`.
+- **Parameter decorators**: `@Inject(MyService)`, `@Optional()`, `@Self()`, `@SkipSelf()`, `@Host()`.
+```ts
+@Component({ selector: 'my-component', template: '<div>Method decorator</div>' })
+export class MyComponent {
+  @Input() title!: string;
+  @HostListener('click', ['$event'])
+  onHostClick(event: Event) { /* clicked */ }
+  constructor(@Inject(MyService) myService: MyService) { console.log(myService); }
+}
+```
+**(updated 2026)** Modern equivalents are functions: `input()`, `output()`, `viewChild()`, `inject()`, and the `host: {}` metadata instead of `@HostListener`/`@HostBinding`.
+</Accordion>
 
-> [!question]- What are dynamic components?
-> Components whose location isn't known at build time: they aren't in any template but are created at runtime, e.g. `viewContainerRef.createComponent(MyComponent)`, the `NgComponentOutlet` directive, or `@defer`/routes loading them lazily. **(updated 2026)** No `entryComponents` needed since Ivy.
+<Accordion title="What is the Angular template DSL?">
+A domain-specific language on top of HTML that Angular's compiler turns into DOM instructions:
+- `()` for outputs and DOM events.
+- `[]` for inputs and DOM properties/attributes.
+- `[()]` for two-way binding.
+- `*` for structural directives (`*ngIf`, `*ngFor`) that change DOM structure. **(updated 2026)** The built-in ones are replaced by `@if`/`@for`/`@switch` block syntax (v17+) and were deprecated in v20.
+- `{{ }}` for interpolation, `#ref` for template variables, `@let` for local variables.
+</Accordion>
+
+<Accordion title="What is the purpose of the `hidden` property?">
+`[hidden]="expr"` toggles the HTML `hidden` attribute, like `ng-show` in AngularJS. The element stays in the DOM (unlike `@if`), so its component keeps state and keeps running.
+```html
+<div [hidden]="!user.name">My name is: {{ user.name }}</div>
+```
+Gotcha: a CSS rule like `display: flex` on the element overrides `hidden`.
+</Accordion>
+
+<Accordion title="What are dynamic components?">
+Components whose location isn't known at build time: they aren't in any template but are created at runtime, e.g. `viewContainerRef.createComponent(MyComponent)`, the `NgComponentOutlet` directive, or `@defer`/routes loading them lazily. **(updated 2026)** No `entryComponents` needed since Ivy.
+</Accordion>
 
 ## 2. Directives and pipes
 
-> [!question]- What are directives? What categories exist?
-> Directives add behaviour to an existing DOM element or component. Three categories:
-> 1. **Components**: directives with a template.
-> 2. **Attribute directives**: change appearance/behaviour (`ngClass`, `ngStyle`, custom `[myHighlight]`).
-> 3. **Structural directives**: add/remove DOM (`*ngIf`, `*ngFor`).
-> ```ts
-> @Directive({ selector: '[myHighlight]' })
-> export class HighlightDirective {
->   constructor(el: ElementRef) { el.nativeElement.style.backgroundColor = 'yellow'; }
-> }
-> // <p myHighlight>Highlight me!</p>
-> ```
-> **(updated 2026)** Prefer host bindings (`host: { '[style.backgroundColor]': 'color()' }`) or `Renderer2` over touching `nativeElement`, so it works with SSR.
+<Accordion title="What are directives? What categories exist?">
+Directives add behaviour to an existing DOM element or component. Three categories:
+1. **Components**: directives with a template.
+2. **Attribute directives**: change appearance/behaviour (`ngClass`, `ngStyle`, custom `[myHighlight]`).
+3. **Structural directives**: add/remove DOM (`*ngIf`, `*ngFor`).
+```ts
+@Directive({ selector: '[myHighlight]' })
+export class HighlightDirective {
+  constructor(el: ElementRef) { el.nativeElement.style.backgroundColor = 'yellow'; }
+}
+// <p myHighlight>Highlight me!</p>
+```
+**(updated 2026)** Prefer host bindings (`host: { '[style.backgroundColor]': 'color()' }`) or `Renderer2` over touching `nativeElement`, so it works with SSR.
+</Accordion>
 
-> [!question]- How do you create a custom directive?
-> Annotate a class with `@Directive` and an attribute selector:
-> ```ts
-> @Directive({ selector: '[ccCardHover]' })
-> export class CardHoverDirective {
->   private el = inject(ElementRef);
->   @HostListener('mouseenter') onEnter() { this.el.nativeElement.classList.add('hover'); }
->   @HostListener('mouseleave') onLeave() { this.el.nativeElement.classList.remove('hover'); }
-> }
-> ```
-> Then add it to the component's `imports` and use `<div ccCardHover>`. Use `input()` to accept configuration and `hostDirectives` to compose directives into components.
+<Accordion title="How do you create a custom directive?">
+Annotate a class with `@Directive` and an attribute selector:
+```ts
+@Directive({ selector: '[ccCardHover]' })
+export class CardHoverDirective {
+  private el = inject(ElementRef);
+  @HostListener('mouseenter') onEnter() { this.el.nativeElement.classList.add('hover'); }
+  @HostListener('mouseleave') onLeave() { this.el.nativeElement.classList.remove('hover'); }
+}
+```
+Then add it to the component's `imports` and use `<div ccCardHover>`. Use `input()` to accept configuration and `hostDirectives` to compose directives into components.
+</Accordion>
 
-> [!question]- What are the differences between a component and a directive?
-> A component is a directive with a template.
->
-> | Component | Directive |
-> |---|---|
-> | `@Component` | `@Directive` |
-> | Creates UI widgets | Adds behaviour to an existing element |
-> | Breaks the app into smaller parts | Reusable behaviour |
-> | Only one per DOM element | Many per element |
-> | `template`/`templateUrl` required | No view |
+<Accordion title="What are the differences between a component and a directive?">
+A component is a directive with a template.
 
-> [!question]- What is the difference between pipes and directives?
-> A pipe manipulates **data** (input → transformed output for display). A directive manipulates the **DOM element** it's attached to.
+| Component | Directive |
+|---|---|
+| `@Component` | `@Directive` |
+| Creates UI widgets | Adds behaviour to an existing element |
+| Breaks the app into smaller parts | Reusable behaviour |
+| Only one per DOM element | Many per element |
+| `template`/`templateUrl` required | No view |
+</Accordion>
 
-> [!question]- How does Angular find components, directives and pipes?
-> The compiler matches a component or directive when its **selector** matches an element in a template (and it's in scope via `imports` or the NgModule). It finds a pipe when the pipe's **name** appears in pipe syntax (`value | name`).
+<Accordion title="What is the difference between pipes and directives?">
+A pipe manipulates **data** (input → transformed output for display). A directive manipulates the **DOM element** it's attached to.
+</Accordion>
 
-> [!question]- What are pipes, and how do you create a custom pipe?
-> Pipes are simple functions used in template expressions to transform input into display output:
-> ```ts
-> @Component({ selector: 'app-birthday', template: `<p>Birthday is {{ birthday | date }}</p>` })
-> export class BirthdayComponent { birthday = new Date(1987, 5, 18); } // June 18, 1987 (months are 0-based)
-> ```
-> A custom pipe is a class decorated with `@Pipe({ name })` that implements `PipeTransform.transform(value, ...args)`. The name must be a valid JS identifier.
-> ```ts
-> @Pipe({ name: 'myCustomPipe' })
-> export class MyCustomPipe implements PipeTransform {
->   transform(value: string, suffix = ''): string { return value.trim() + suffix; }
-> }
-> // {{ someInputValue | myCustomPipe: someOtherValue }}
-> ```
+<Accordion title="How does Angular find components, directives and pipes?">
+The compiler matches a component or directive when its **selector** matches an element in a template (and it's in scope via `imports` or the NgModule). It finds a pipe when the pipe's **name** appears in pipe syntax (`value | name`).
+</Accordion>
 
-> [!question]- How do you chain pipes?
-> Left to right: `{{ birthday | date:'fullDate' | uppercase }}` → `THURSDAY, JUNE 18, 1987`.
+<Accordion title="What are pipes, and how do you create a custom pipe?">
+Pipes are simple functions used in template expressions to transform input into display output:
+```ts
+@Component({ selector: 'app-birthday', template: `<p>Birthday is {{ birthday | date }}</p>` })
+export class BirthdayComponent { birthday = new Date(1987, 5, 18); } // June 18, 1987 (months are 0-based)
+```
+A custom pipe is a class decorated with `@Pipe({ name })` that implements `PipeTransform.transform(value, ...args)`. The name must be a valid JS identifier.
+```ts
+@Pipe({ name: 'myCustomPipe' })
+export class MyCustomPipe implements PipeTransform {
+  transform(value: string, suffix = ''): string { return value.trim() + suffix; }
+}
+// {{ someInputValue | myCustomPipe: someOtherValue }}
+```
+</Accordion>
 
-> [!question]- Pure vs impure pipes?
-> A **pure** pipe runs only when Angular detects a change in the input value or its arguments: a new primitive value (string, number, boolean, symbol) or a new object reference (Date, Array, Function, Object). An **impure** pipe (`pure: false`) runs on every change detection cycle, potentially on every keystroke or mouse move (`async` and `json` are impure).
+<Accordion title="How do you chain pipes?">
+Left to right: `{{ birthday | date:'fullDate' | uppercase }}` → `THURSDAY, JUNE 18, 1987`.
+</Accordion>
+
+<Accordion title="Pure vs impure pipes?">
+A **pure** pipe runs only when Angular detects a change in the input value or its arguments: a new primitive value (string, number, boolean, symbol) or a new object reference (Date, Array, Function, Object). An **impure** pipe (`pure: false`) runs on every change detection cycle, potentially on every keystroke or mouse move (`async` and `json` are impure).
+</Accordion>
 
 ## 3. Lifecycle
 
-> [!question]- What lifecycle hooks are available?
-> ![[lifecycle.png]]
-> 1. `ngOnChanges`: when a data-bound input changes (before `ngOnInit`, then on each change).
-> 2. `ngOnInit`: once, after Angular first sets the inputs.
-> 3. `ngDoCheck`: every CD run; detect changes Angular can't or won't detect itself.
-> 4. `ngAfterContentInit`: after projected content is initialised.
-> 5. `ngAfterContentChecked`: after projected content is checked.
-> 6. `ngAfterViewInit`: after the component's view and child views are initialised.
-> 7. `ngAfterViewChecked`: after the view and child views are checked.
-> 8. `ngOnDestroy`: cleanup just before destruction.
->
-> **(updated 2026)** Also `DestroyRef` / `takeUntilDestroyed()` for cleanup and `afterNextRender` / `afterEveryRender` for browser-only DOM work.
+<Accordion title="What lifecycle hooks are available?">
+![lifecycle](/Attachments/lifecycle.png)
+1. `ngOnChanges`: when a data-bound input changes (before `ngOnInit`, then on each change).
+2. `ngOnInit`: once, after Angular first sets the inputs.
+3. `ngDoCheck`: every CD run; detect changes Angular can't or won't detect itself.
+4. `ngAfterContentInit`: after projected content is initialised.
+5. `ngAfterContentChecked`: after projected content is checked.
+6. `ngAfterViewInit`: after the component's view and child views are initialised.
+7. `ngAfterViewChecked`: after the view and child views are checked.
+8. `ngOnDestroy`: cleanup just before destruction.
 
-> [!question]- What is the difference between the constructor and `ngOnInit`?
-> The **constructor** is plain TypeScript, executed when the class is instantiated. Angular's injector analyses its parameters, finds matching providers and passes them in. Use it only for DI and field initialisation, not real work. **`ngOnInit`** is a lifecycle hook Angular calls after the first `ngOnChanges`, when inputs are resolved, so it's the place to start work such as an HTTP call.
-> ```ts
-> export class App implements OnInit {
->   constructor(private myService: MyService) { /* called first, before ngOnInit */ }
->   ngOnInit() { /* after the constructor and the first ngOnChanges: e.g. http call */ }
-> }
-> ```
+**(updated 2026)** Also `DestroyRef` / `takeUntilDestroyed()` for cleanup and `afterNextRender` / `afterEveryRender` for browser-only DOM work.
+</Accordion>
+
+<Accordion title="What is the difference between the constructor and `ngOnInit`?">
+The **constructor** is plain TypeScript, executed when the class is instantiated. Angular's injector analyses its parameters, finds matching providers and passes them in. Use it only for DI and field initialisation, not real work. **`ngOnInit`** is a lifecycle hook Angular calls after the first `ngOnChanges`, when inputs are resolved, so it's the place to start work such as an HTTP call.
+```ts
+export class App implements OnInit {
+  constructor(private myService: MyService) { /* called first, before ngOnInit */ }
+  ngOnInit() { /* after the constructor and the first ngOnChanges: e.g. http call */ }
+}
+```
+</Accordion>
 
 ## 4. Dependency injection and services
 
-> [!question]- What is a service? (updated 2026)
-> A class that provides common functionality to many components or features, improving separation of concerns and modularity.
-> ```ts
-> @Injectable({ providedIn: 'root' })   // app-wide singleton, tree-shakable
-> export class RepoService {
->   private http = inject(HttpClient);
->   fetchAll() { return this.http.get('https://api.github.com/repositories'); }
-> }
-> ```
-> **(updated 2026)** The original example used `Http` from `@angular/http`, which was deprecated in v5 and removed in v8; use `HttpClient`. `providedIn: 'root'` registers the service with the root injector (not "the AppModule"). v22 adds `@Service()` as a shorthand.
+<Accordion title="What is a service? (updated 2026)">
+A class that provides common functionality to many components or features, improving separation of concerns and modularity.
+```ts
+@Injectable({ providedIn: 'root' })   // app-wide singleton, tree-shakable
+export class RepoService {
+  private http = inject(HttpClient);
+  fetchAll() { return this.http.get('https://api.github.com/repositories'); }
+}
+```
+**(updated 2026)** The original example used `Http` from `@angular/http`, which was deprecated in v5 and removed in v8; use `HttpClient`. `providedIn: 'root'` registers the service with the root injector (not "the AppModule"). v22 adds `@Service()` as a shorthand.
+</Accordion>
 
-> [!question]- What is dependency injection in Angular?
-> A design pattern where a class asks for its dependencies from an external source (the injector) instead of creating them. Angular's DI framework resolves services and values so services can depend on other services throughout the app, and implementations can be swapped (e.g. in tests).
+<Accordion title="What is dependency injection in Angular?">
+A design pattern where a class asks for its dependencies from an external source (the injector) instead of creating them. Angular's DI framework resolves services and values so services can depend on other services throughout the app, and implementations can be swapped (e.g. in tests).
+</Accordion>
 
-> [!question]- How is the dependency (injector) hierarchy formed?
-> Angular has **two injector hierarchies**:
->
-> ![[injector hierarchies.png]]
->
-> - **Module / environment injector hierarchy**: at startup Angular creates the **root injector** holding `providedIn: 'root'` services and providers from eagerly loaded modules (or `bootstrapApplication` providers), so they are available app-wide. Lazy-loaded modules/routes get **child** injectors. Above root is the **platform injector** (created by `platformBrowserDynamic()` / `platformBrowser()` in `main.ts`) with platform services like `DomSanitizer`. At the very top is the **NullInjector**, which throws unless the dependency is `@Optional()`, in which case it returns `null`.
->
-> ![[hierarchy diagram.png]]
->
-> - **ElementInjector hierarchy**: created implicitly for every element hosting a component or directive, configured through `providers`/`viewProviders` in `@Component`/`@Directive`. It mirrors the DOM tree.
->
-> ![[element injector hieracrhy.png]]
->
-> Resolution walks the element injectors up the tree first, then the environment injectors, and the first match wins. **(updated 2026)** "Module injector" is now called **environment injector**, because standalone apps and lazy routes (`providers` on a route) create them without NgModules.
+<Accordion title="How is the dependency (injector) hierarchy formed?">
+Angular has **two injector hierarchies**:
+
+![injector hierarchies](/Attachments/injector%20hierarchies.png)
+
+- **Module / environment injector hierarchy**: at startup Angular creates the **root injector** holding `providedIn: 'root'` services and providers from eagerly loaded modules (or `bootstrapApplication` providers), so they are available app-wide. Lazy-loaded modules/routes get **child** injectors. Above root is the **platform injector** (created by `platformBrowserDynamic()` / `platformBrowser()` in `main.ts`) with platform services like `DomSanitizer`. At the very top is the **NullInjector**, which throws unless the dependency is `@Optional()`, in which case it returns `null`.
+
+![hierarchy diagram](/Attachments/hierarchy%20diagram.png)
+
+- **ElementInjector hierarchy**: created implicitly for every element hosting a component or directive, configured through `providers`/`viewProviders` in `@Component`/`@Directive`. It mirrors the DOM tree.
+
+![element injector hieracrhy](/Attachments/element%20injector%20hieracrhy.png)
+
+Resolution walks the element injectors up the tree first, then the environment injectors, and the first match wins. **(updated 2026)** "Module injector" is now called **environment injector**, because standalone apps and lazy routes (`providers` on a route) create them without NgModules.
+</Accordion>
 
 ## 5. Component communication
 
-> [!question]- How do you share data between components?
-> Five ways:
-> 1. **Parent → child**: `@Input()` / `input()`.
-> 2. **Child → parent**: `@Output()` + `EventEmitter` / `output()`.
-> 3. **Siblings**: via the shared parent, or a shared service.
-> 4. **`@ViewChild` / `viewChild()`**: the parent reads the child instance directly.
-> 5. **Unrelated components**: a shared service holding a `BehaviorSubject` or (2026) a signal.
+<Accordion title="How do you share data between components?">
+Five ways:
+1. **Parent → child**: `@Input()` / `input()`.
+2. **Child → parent**: `@Output()` + `EventEmitter` / `output()`.
+3. **Siblings**: via the shared parent, or a shared service.
+4. **`@ViewChild` / `viewChild()`**: the parent reads the child instance directly.
+5. **Unrelated components**: a shared service holding a `BehaviorSubject` or (2026) a signal.
+</Accordion>
 
-> [!question]- How do you update data sent from a parent to a child, from the child?
-> `@Input()` is one-way. For two-way binding add an `@Output()` with the same name plus a `Change` suffix:
-> ```ts
-> @Input() getSearchStatus!: boolean;
-> @Output() getSearchStatusChange = new EventEmitter<boolean>();
-> // publish: this.getSearchStatusChange.emit(newValue);
-> ```
-> The parent uses banana-in-a-box: `[(getSearchStatus)]="myBoundProperty"`, or binds both sides to run a callback: `[getSearchStatus]="myBoundProperty" (getSearchStatusChange)="myCrazyCallback($event)"`.
-> **(updated 2026)** `getSearchStatus = model(false)` does both in one line (v17.2+).
+<Accordion title="How do you update data sent from a parent to a child, from the child?">
+`@Input()` is one-way. For two-way binding add an `@Output()` with the same name plus a `Change` suffix:
+```ts
+@Input() getSearchStatus!: boolean;
+@Output() getSearchStatusChange = new EventEmitter<boolean>();
+// publish: this.getSearchStatusChange.emit(newValue);
+```
+The parent uses banana-in-a-box: `[(getSearchStatus)]="myBoundProperty"`, or binds both sides to run a callback: `[getSearchStatus]="myBoundProperty" (getSearchStatusChange)="myCrazyCallback($event)"`.
+**(updated 2026)** `getSearchStatus = model(false)` does both in one line (v17.2+).
+</Accordion>
 
 ## 6. Routing and lazy loading
 
-> [!question]- What is lazy loading and how does it relate to bundling? (updated 2026)
-> Lazy loading downloads parts of the app in separate chunks instead of one big bundle, loaded when a route is visited. The bundler creates a chunk per dynamic `import()`.
-> ```ts
-> const routes: Routes = [
->   { path: 'customers', loadChildren: () => import('./customers/customers.module').then(m => m.CustomersModule) },
->   { path: 'orders', loadChildren: () => import('./orders/orders.module').then(m => m.OrdersModule) },
->   { path: '', redirectTo: '', pathMatch: 'full' },
-> ];
-> ```
-> **(updated 2026)** With standalone APIs: `loadComponent: () => import('./orders.component').then(m => m.OrdersComponent)` or `loadChildren: () => import('./orders/routes')` exporting a `Routes` array. `@defer` adds lazy loading *within* a template. Note: the original `{ path: '', redirectTo: '' }` redirects to itself; it should point to a real route, e.g. `redirectTo: 'customers'`.
+<Accordion title="What is lazy loading and how does it relate to bundling? (updated 2026)">
+Lazy loading downloads parts of the app in separate chunks instead of one big bundle, loaded when a route is visited. The bundler creates a chunk per dynamic `import()`.
+```ts
+const routes: Routes = [
+  { path: 'customers', loadChildren: () => import('./customers/customers.module').then(m => m.CustomersModule) },
+  { path: 'orders', loadChildren: () => import('./orders/orders.module').then(m => m.OrdersModule) },
+  { path: '', redirectTo: '', pathMatch: 'full' },
+];
+```
+**(updated 2026)** With standalone APIs: `loadComponent: () => import('./orders.component').then(m => m.OrdersComponent)` or `loadChildren: () => import('./orders/routes')` exporting a `Routes` array. `@defer` adds lazy loading *within* a template. Note: the original `{ path: '', redirectTo: '' }` redirects to itself; it should point to a real route, e.g. `redirectTo: 'customers'`.
+</Accordion>
 
-> [!question]- What is router state?
-> `RouterState` is a tree of activated routes. Each node knows the consumed URL segments, extracted params and resolved data. Access it anywhere via the `Router` service's `routerState`.
-> ```ts
-> const state: RouterState = inject(Router).routerState;
-> const root: ActivatedRoute = state.root;
-> const id$ = root.firstChild!.params.pipe(map(p => p['id']));   // RxJS 6+: pipe(map())
-> ```
-> **(updated 2026)** The original used `child.params.map(...)` (RxJS 5 patch style). Today prefer `withComponentInputBinding()` so the `id` param arrives as a component input.
+<Accordion title="What is router state?">
+`RouterState` is a tree of activated routes. Each node knows the consumed URL segments, extracted params and resolved data. Access it anywhere via the `Router` service's `routerState`.
+```ts
+const state: RouterState = inject(Router).routerState;
+const root: ActivatedRoute = state.root;
+const id$ = root.firstChild!.params.pipe(map(p => p['id']));   // RxJS 6+: pipe(map())
+```
+**(updated 2026)** The original used `child.params.map(...)` (RxJS 5 patch style). Today prefer `withComponentInputBinding()` so the `id` param arrives as a component input.
+</Accordion>
 
-> [!question]- What are router events?
-> During each navigation the `Router.events` Observable emits, in order: `NavigationStart`, `RouteConfigLoadStart`, `RouteConfigLoadEnd`, `RoutesRecognized`, `GuardsCheckStart`, `ChildActivationStart`, `ActivationStart`, `GuardsCheckEnd`, `ResolveStart`, `ResolveEnd`, `ActivationEnd`, `ChildActivationEnd`, then **one of** `NavigationEnd` / `NavigationCancel` / `NavigationError`, and finally `Scroll`. (There's also `NavigationSkipped`.)
+<Accordion title="What are router events?">
+During each navigation the `Router.events` Observable emits, in order: `NavigationStart`, `RouteConfigLoadStart`, `RouteConfigLoadEnd`, `RoutesRecognized`, `GuardsCheckStart`, `ChildActivationStart`, `ActivationStart`, `GuardsCheckEnd`, `ResolveStart`, `ResolveEnd`, `ActivationEnd`, `ChildActivationEnd`, then **one of** `NavigationEnd` / `NavigationCancel` / `NavigationError`, and finally `Scroll`. (There's also `NavigationSkipped`.)
+</Accordion>
 
 ## 7. HTTP, interceptors and auth
 
-> [!question]- How do requests and responses work with HttpClient?
-> You call `HttpClient` (`get`, `post`...) and get back a cold Observable; the request is sent when you subscribe (or `await firstValueFrom(...)`, the `async` pipe, `toSignal`). It completes after one response. **(updated 2026)** `httpResource()` (stable in v22) exposes the response as signals, and HttpClient uses `fetch` by default in v22.
+<Accordion title="How do requests and responses work with HttpClient?">
+You call `HttpClient` (`get`, `post`...) and get back a cold Observable; the request is sent when you subscribe (or `await firstValueFrom(...)`, the `async` pipe, `toSignal`). It completes after one response. **(updated 2026)** `httpResource()` (stable in v22) exposes the response as signals, and HttpClient uses `fetch` by default in v22.
+</Accordion>
 
-> [!question]- What are HTTP interceptors? (updated 2026)
-> Part of `@angular/common/http`; they inspect and transform outgoing requests and incoming responses for cross-cutting tasks: auth headers, logging, retries, error handling, caching.
->
-> Classic (class-based):
-> ```ts
-> @Injectable()
-> export class MyInterceptor implements HttpInterceptor {
->   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
->     return next.handle(req);
->   }
-> }
-> // NgModule providers: [{ provide: HTTP_INTERCEPTORS, useClass: MyInterceptor, multi: true }]
-> ```
-> **(updated 2026)** Prefer functional interceptors (v15+):
-> ```ts
-> export const myInterceptor: HttpInterceptorFn = (req, next) => next(req);
-> provideHttpClient(withInterceptors([myInterceptor]));
-> ```
-> Class interceptors still work through `withInterceptorsFromDi()`.
+<Accordion title="What are HTTP interceptors? (updated 2026)">
+Part of `@angular/common/http`; they inspect and transform outgoing requests and incoming responses for cross-cutting tasks: auth headers, logging, retries, error handling, caching.
 
-> [!question]- How do you handle a JWT token? (updated 2026)
-> Original answer: with an interceptor, store the JWT in `sessionStorage` or IndexedDB and attach it to every request.
->
-> **(updated 2026)** The interceptor part is right, but storage readable by JavaScript is exposed to XSS. Better: have the server set the token in an **HttpOnly, Secure, SameSite** cookie (the browser sends it; the interceptor adds a CSRF header, which `HttpClient` supports via `withXsrfConfiguration`), or keep a short-lived access token **in memory** and refresh via an HttpOnly refresh cookie. Handle 401s in the interceptor (refresh then retry once). See [[Authentication & Token Storage]].
+Classic (class-based):
+```ts
+@Injectable()
+export class MyInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    return next.handle(req);
+  }
+}
+// NgModule providers: [{ provide: HTTP_INTERCEPTORS, useClass: MyInterceptor, multi: true }]
+```
+**(updated 2026)** Prefer functional interceptors (v15+):
+```ts
+export const myInterceptor: HttpInterceptorFn = (req, next) => next(req);
+provideHttpClient(withInterceptors([myInterceptor]));
+```
+Class interceptors still work through `withInterceptorsFromDi()`.
+</Accordion>
+
+<Accordion title="How do you handle a JWT token? (updated 2026)">
+Original answer: with an interceptor, store the JWT in `sessionStorage` or IndexedDB and attach it to every request.
+
+**(updated 2026)** The interceptor part is right, but storage readable by JavaScript is exposed to XSS. Better: have the server set the token in an **HttpOnly, Secure, SameSite** cookie (the browser sends it; the interceptor adds a CSRF header, which `HttpClient` supports via `withXsrfConfiguration`), or keep a short-lived access token **in memory** and refresh via an HttpOnly refresh cookie. Handle 401s in the interceptor (refresh then retry once). See [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).
+</Accordion>
 
 ## 8. RxJS
 
-> [!question]- What is RxJS?
-> A library for composing async and callback-based code in a functional, reactive style using Observables. Many Angular APIs (HttpClient, Router, reactive forms) produce Observables and use operators:
-> ```ts
-> import { Observable, throwError } from 'rxjs';
-> import { catchError, retry } from 'rxjs/operators';   // RxJS 7.2+: import from 'rxjs' directly
-> ```
+<Accordion title="What is RxJS?">
+A library for composing async and callback-based code in a functional, reactive style using Observables. Many Angular APIs (HttpClient, Router, reactive forms) produce Observables and use operators:
+```ts
+import { Observable, throwError } from 'rxjs';
+import { catchError, retry } from 'rxjs/operators';   // RxJS 7.2+: import from 'rxjs' directly
+```
+</Accordion>
 
-> [!question]- What is the difference between a Promise and an Observable?
->
-> | Observable | Promise |
-> |---|---|
-> | Declarative/lazy: computation starts on subscription | Executes immediately on creation |
-> | Many values over time | One value |
-> | Errors handled in `subscribe`/`catchError`, centralized | Errors pushed down to child promises (`.catch`) |
-> | Operators + subscription for complex flows, cancellable via `unsubscribe()` | Only `.then()` chaining, not cancellable |
+<Accordion title="What is the difference between a Promise and an Observable?">
+| Observable | Promise |
+|---|---|
+| Declarative/lazy: computation starts on subscription | Executes immediately on creation |
+| Many values over time | One value |
+| Errors handled in `subscribe`/`catchError`, centralized | Errors pushed down to child promises (`.catch`) |
+| Operators + subscription for complex flows, cancellable via `unsubscribe()` | Only `.then()` chaining, not cancellable |
+</Accordion>
 
-> [!question]- What is multicasting? (updated 2026)
-> Broadcasting to a list of subscribers in a **single execution**. Original example (RxJS 5):
-> ```js
-> const source = Rx.Observable.from([1, 2, 3]);
-> const subject = new Rx.Subject();
-> const multicasted = source.multicast(subject);
-> multicasted.subscribe({ next: v => console.log('observerA: ' + v) });
-> multicasted.subscribe({ next: v => console.log('observerB: ' + v) });
-> multicasted.connect();   // starts the shared execution
-> ```
-> **(updated 2026)** `multicast()` is deprecated in RxJS 7. Use `share()`, `shareReplay({ bufferSize: 1, refCount: true })` or `connectable()`:
-> ```ts
-> const shared$ = from([1, 2, 3]).pipe(share());
-> ```
+<Accordion title="What is multicasting? (updated 2026)">
+Broadcasting to a list of subscribers in a **single execution**. Original example (RxJS 5):
+```js
+const source = Rx.Observable.from([1, 2, 3]);
+const subject = new Rx.Subject();
+const multicasted = source.multicast(subject);
+multicasted.subscribe({ next: v => console.log('observerA: ' + v) });
+multicasted.subscribe({ next: v => console.log('observerB: ' + v) });
+multicasted.connect();   // starts the shared execution
+```
+**(updated 2026)** `multicast()` is deprecated in RxJS 7. Use `share()`, `shareReplay({ bufferSize: 1, refCount: true })` or `connectable()`:
+```ts
+const shared$ = from([1, 2, 3]).pipe(share());
+```
+</Accordion>
 
 ## 9. Change detection and zones
 
-> [!question]- What is a Zone?
-> An execution context that persists across async tasks. Angular relies on zone.js to run change detection when native async operations (events, timers, XHR, promises) complete. **(updated 2026)** New apps are zoneless by default since v21; see [[Angular Change Detection, Zones & Signals]].
+<Accordion title="What is a Zone?">
+An execution context that persists across async tasks. Angular relies on zone.js to run change detection when native async operations (events, timers, XHR, promises) complete. **(updated 2026)** New apps are zoneless by default since v21; see [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals).
+</Accordion>
 
-> [!question]- What is NgZone?
-> A service that creates a zone named `angular` and automatically triggers change detection when a (sync or async) task has run **and** no microtasks are left scheduled (`onMicrotaskEmpty`). It also offers `runOutsideAngular()` to avoid CD for noisy work and `run()` to re-enter.
+<Accordion title="What is NgZone?">
+A service that creates a zone named `angular` and automatically triggers change detection when a (sync or async) task has run **and** no microtasks are left scheduled (`onMicrotaskEmpty`). It also offers `runOutsideAngular()` to avoid CD for noisy work and `run()` to re-enter.
+</Accordion>
 
-> [!question]- What is the noop zone? (updated 2026)
-> Zone is loaded by default and tells Angular when to run CD. You could remove it by deleting the `zone.js` import from `polyfills.ts` and bootstrapping with `platformBrowserDynamic().bootstrapModule(AppModule, { ngZone: 'noop' })`, then triggering CD yourself.
->
-> **(updated 2026)** Use `provideZonelessChangeDetection()` (stable since v20.2, default for new apps in v21) and remove `zone.js` from the `polyfills` in `angular.json`. Angular then runs CD on signal changes, template events, `markForCheck()` and the `async` pipe, so you don't trigger it manually.
+<Accordion title="What is the noop zone? (updated 2026)">
+Zone is loaded by default and tells Angular when to run CD. You could remove it by deleting the `zone.js` import from `polyfills.ts` and bootstrapping with `platformBrowserDynamic().bootstrapModule(AppModule, { ngZone: 'noop' })`, then triggering CD yourself.
+
+**(updated 2026)** Use `provideZonelessChangeDetection()` (stable since v20.2, default for new apps in v21) and remove `zone.js` from the `polyfills` in `angular.json`. Angular then runs CD on signal changes, template events, `markForCheck()` and the `async` pipe, so you don't trigger it manually.
+</Accordion>
 
 ## 10. Compilation: JIT, AOT, Ivy
 
-> [!question]- What is JIT?
-> Just-in-Time compilation compiles the app **in the browser at runtime**. It was the default for dev builds until Angular 8; AOT has been the default for all builds since v9. The `aot` option in `angular.json` controls it and defaults to `true`.
+<Accordion title="What is JIT?">
+Just-in-Time compilation compiles the app **in the browser at runtime**. It was the default for dev builds until Angular 8; AOT has been the default for all builds since v9. The `aot` option in `angular.json` controls it and defaults to `true`.
+</Accordion>
 
-> [!question]- What is AOT and what are its benefits?
-> Ahead-of-Time compilation compiles templates **at build time** (default since v9). Phases:
-> 1. **Code analysis**: the compiler records a representation of the source.
-> 2. **Code generation**: interprets the representation and enforces restrictions on what it can interpret.
-> 3. **Validation**: the template type-checker uses TypeScript to validate binding expressions.
->
-> Configure it via `angularCompilerOptions` in `tsconfig.json` and via decorator metadata.
->
-> Benefits: faster rendering (no in-browser compile), fewer async requests (external templates/CSS inlined), smaller download (no compiler shipped), template errors caught at build, better security (no runtime template evaluation, fewer injection risks). **(updated 2026)** v22 enables `strictTemplates` by default, so type-checking is strict out of the box.
+<Accordion title="What is AOT and what are its benefits?">
+Ahead-of-Time compilation compiles templates **at build time** (default since v9). Phases:
+1. **Code analysis**: the compiler records a representation of the source.
+2. **Code generation**: interprets the representation and enforces restrictions on what it can interpret.
+3. **Validation**: the template type-checker uses TypeScript to validate binding expressions.
 
-> [!question]- What is folding? (updated 2026)
-> In the View Engine era, the metadata collector could only reference **exported** symbols. Non-exported values were "folded": the collector evaluated the expression and recorded the result in `.metadata.json`.
-> ```ts
-> let selector = 'app-root';
-> @Component({ selector: selector })   // folded into selector: 'app-root'
-> ```
-> It couldn't fold everything: spreads on arrays, `new` objects, and function calls.
->
-> **(updated 2026)** `.metadata.json` and the collector disappeared with View Engine (removed in v13). Ivy's compiler statically evaluates decorator expressions itself (including local consts), but decorator metadata must still be statically analyzable: no arbitrary function calls or runtime values.
+Configure it via `angularCompilerOptions` in `tsconfig.json` and via decorator metadata.
 
-> [!question]- What is Angular Ivy? (updated 2026)
-> The rendering engine and compiler that replaced View Engine. It was an opt-in preview in v8 (`ng new --enable-ivy`, or `"enableIvy": true` in `angularCompilerOptions`), became the **default in v9**, and View Engine was **removed in v13**. The `enableIvy` flag no longer exists. Each component compiles to a self-contained definition with template instructions, which enables tree-shaking and per-file compilation.
+Benefits: faster rendering (no in-browser compile), fewer async requests (external templates/CSS inlined), smaller download (no compiler shipped), template errors caught at build, better security (no runtime template evaluation, fewer injection risks). **(updated 2026)** v22 enables `strictTemplates` by default, so type-checking is strict out of the box.
+</Accordion>
 
-> [!question]- What features did the Ivy preview include?
-> Generated code that is easier to read and debug at runtime, faster rebuilds, smaller payloads, and improved template type checking. All of these are now standard.
+<Accordion title="What is folding? (updated 2026)">
+In the View Engine era, the metadata collector could only reference **exported** symbols. Non-exported values were "folded": the collector evaluated the expression and recorded the result in `.metadata.json`.
+```ts
+let selector = 'app-root';
+@Component({ selector: selector })   // folded into selector: 'app-root'
+```
+It couldn't fold everything: spreads on arrays, `new` objects, and function calls.
 
-> [!question]- What is the purpose of differential loading in the CLI? (updated 2026)
-> From Angular 8, the CLI built **two bundles**: modern ES2015+ (fewer polyfills, smaller) and legacy ES5 (all polyfills) for old browsers, and each browser loaded only what it needed via `type="module"`/`nomodule`.
->
-> **(updated 2026)** Removed. Angular 13 dropped IE11, so the CLI only emits modern bundles; the build targets browsers from your `browserslist`.
+**(updated 2026)** `.metadata.json` and the collector disappeared with View Engine (removed in v13). Ivy's compiler statically evaluates decorator expressions itself (including local consts), but decorator metadata must still be statically analyzable: no arbitrary function calls or runtime values.
+</Accordion>
 
-> [!question]- What is a schematics collection?
-> A set of related schematics (code generators/transformers) published as an npm package. `@schematics/angular` powers `ng generate`; Angular also ships migration schematics under `@angular/core` (e.g. `ng g @angular/core:control-flow`). You can write your own collection to scaffold code in your org's conventions.
+<Accordion title="What is Angular Ivy? (updated 2026)">
+The rendering engine and compiler that replaced View Engine. It was an opt-in preview in v8 (`ng new --enable-ivy`, or `"enableIvy": true` in `angularCompilerOptions`), became the **default in v9**, and View Engine was **removed in v13**. The `enableIvy` flag no longer exists. Each component compiles to a self-contained definition with template instructions, which enables tree-shaking and per-file compilation.
+</Accordion>
+
+<Accordion title="What features did the Ivy preview include?">
+Generated code that is easier to read and debug at runtime, faster rebuilds, smaller payloads, and improved template type checking. All of these are now standard.
+</Accordion>
+
+<Accordion title="What is the purpose of differential loading in the CLI? (updated 2026)">
+From Angular 8, the CLI built **two bundles**: modern ES2015+ (fewer polyfills, smaller) and legacy ES5 (all polyfills) for old browsers, and each browser loaded only what it needed via `type="module"`/`nomodule`.
+
+**(updated 2026)** Removed. Angular 13 dropped IE11, so the CLI only emits modern bundles; the build targets browsers from your `browserslist`.
+</Accordion>
+
+<Accordion title="What is a schematics collection?">
+A set of related schematics (code generators/transformers) published as an npm package. `@schematics/angular` powers `ng generate`; Angular also ships migration schematics under `@angular/core` (e.g. `ng g @angular/core:control-flow`). You can write your own collection to scaffold code in your org's conventions.
+</Accordion>
 
 ## 11. Security
 
-> [!question]- What is Angular's security model for preventing XSS?
-> Angular treats all values as untrusted by default. When a value is inserted into the DOM from a template via property, attribute, style or class binding, or interpolation, Angular sanitizes and escapes it. `DomSanitizer.bypassSecurityTrust*` opts out (use sparingly). Combine with CSP and Trusted Types.
+<Accordion title="What is Angular's security model for preventing XSS?">
+Angular treats all values as untrusted by default. When a value is inserted into the DOM from a template via property, attribute, style or class binding, or interpolation, Angular sanitizes and escapes it. `DomSanitizer.bypassSecurityTrust*` opts out (use sparingly). Combine with CSP and Trusted Types.
+</Accordion>
 
-> [!question]- What happens if you use a `<script>` tag inside a template?
-> Angular marks the value as unsafe and sanitizes it: the `<script>` is removed but safe content (like its text) is kept, and a warning appears in the console. With `[innerHTML]` binding:
-> ```ts
-> export class InnerHtmlBindingComponent {
->   // e.g. an attacker-controlled value from a URL
->   htmlSnippet = 'Template <script>alert("0wned")</script> <b>Syntax</b>';
-> }
-> // <p [innerHTML]="htmlSnippet"></p>  renders "Template Syntax" with <b>, no script
-> ```
+<Accordion title="What happens if you use a `<script>` tag inside a template?">
+Angular marks the value as unsafe and sanitizes it: the `<script>` is removed but safe content (like its text) is kept, and a warning appears in the console. With `[innerHTML]` binding:
+```ts
+export class InnerHtmlBindingComponent {
+  // e.g. an attacker-controlled value from a URL
+  htmlSnippet = 'Template <script>alert("0wned")</script> <b>Syntax</b>';
+}
+// <p [innerHTML]="htmlSnippet"></p>  renders "Template Syntax" with <b>, no script
+```
+</Accordion>
 
 ## 12. Angular Elements and custom elements
 
-> [!question]- What are Angular Elements?
-> Angular components packaged as **custom elements** (the web standard for defining new HTML tags framework-agnostically). They bridge the component's data and logic to standard DOM APIs, so Angular components can be used in non-Angular pages (e.g. a React or CMS page, or a micro-frontend). See [[Web Components & Shadow DOM]].
+<Accordion title="What are Angular Elements?">
+Angular components packaged as **custom elements** (the web standard for defining new HTML tags framework-agnostically). They bridge the component's data and logic to standard DOM APIs, so Angular components can be used in non-Angular pages (e.g. a React or CMS page, or a micro-frontend). See [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM).
+</Accordion>
 
-> [!question]- What is the browser support for Angular Elements? (updated 2026)
-> Same as custom elements. **(updated 2026)** Autonomous custom elements are supported natively in all modern browsers (Chrome, Edge, Firefox, Safari); no polyfill needed. Safari still doesn't support *customized built-in* elements (`is="..."`), which Angular Elements don't use.
+<Accordion title="What is the browser support for Angular Elements? (updated 2026)">
+Same as custom elements. **(updated 2026)** Autonomous custom elements are supported natively in all modern browsers (Chrome, Edge, Firefox, Safari); no polyfill needed. Safari still doesn't support *customized built-in* elements (`is="..."`), which Angular Elements don't use.
+</Accordion>
 
-> [!question]- What are custom elements?
-> A web platform feature that extends HTML: you define a tag whose content is created and controlled by JavaScript. The browser keeps a `CustomElementRegistry` mapping a class to a tag name.
+<Accordion title="What are custom elements?">
+A web platform feature that extends HTML: you define a tag whose content is created and controlled by JavaScript. The browser keeps a `CustomElementRegistry` mapping a class to a tag name.
+</Accordion>
 
-> [!question]- Do I need to bootstrap custom elements?
-> No. They bootstrap automatically when added to the DOM and are destroyed when removed. Once registered they behave like any HTML element and need no Angular knowledge from the host page.
+<Accordion title="Do I need to bootstrap custom elements?">
+No. They bootstrap automatically when added to the DOM and are destroyed when removed. Once registered they behave like any HTML element and need no Angular knowledge from the host page.
+</Accordion>
 
-> [!question]- How do custom elements work internally?
-> 1. **App registers the custom element** with the browser, using `createCustomElement()` to turn a component into a registrable class.
-> 2. **App adds the element to the DOM** like any built-in element.
-> 3. **Browser instantiates** the component-based class.
-> 4. **The instance renders its content** with data binding and change detection.
->
-> ![[customElement.png]]
+<Accordion title="How do custom elements work internally?">
+1. **App registers the custom element** with the browser, using `createCustomElement()` to turn a component into a registrable class.
+2. **App adds the element to the DOM** like any built-in element.
+3. **Browser instantiates** the component-based class.
+4. **The instance renders its content** with data binding and change detection.
 
-> [!question]- How do you transform a component into a custom element?
-> 1. **Build the class**: `createCustomElement(Component, { injector })` converts a component and its dependencies into a class implementing `NgElementConstructor`, producing a self-bootstrapping instance.
-> 2. **Register it**: `customElements.define('my-tag', ElementClass)` adds it to the browser's `CustomElementRegistry`; when the browser meets the tag it uses the constructor.
->
-> ![[createElement.png]]
-> ```ts
-> const app = await createApplication({ providers: [] });
-> customElements.define('flight-widget', createCustomElement(FlightWidgetComponent, { injector: app.injector }));
-> ```
+![customElement](/Attachments/customElement.png)
+</Accordion>
 
-> [!question]- What are the mapping rules between an Angular component and a custom element?
-> - Inputs map to properties and dash-cased attributes: `@Input('myInputProp')` becomes attribute `my-input-prop`.
-> - Outputs are dispatched as DOM **CustomEvents** named after the output: `@Output() valueChanged = new EventEmitter()` dispatches `valueChanged` with the value in `event.detail`.
+<Accordion title="How do you transform a component into a custom element?">
+1. **Build the class**: `createCustomElement(Component, { injector })` converts a component and its dependencies into a class implementing `NgElementConstructor`, producing a self-bootstrapping instance.
+2. **Register it**: `customElements.define('my-tag', ElementClass)` adds it to the browser's `CustomElementRegistry`; when the browser meets the tag it uses the constructor.
 
-> [!question]- How do you type custom elements?
-> Use `NgElement` and `WithProperties` from `@angular/elements`:
-> ```ts
-> @Component(/* ... */)
-> class MyContainer { @Input() message!: string; }
->
-> const container = document.createElement('my-container') as NgElement & WithProperties<{ message: string }>;
-> container.message = 'Welcome to Angular elements!';
-> container.message = true;   // ERROR: should be a string
-> container.greet = 'News';   // ERROR: no `greet` property
-> ```
+![createElement](/Attachments/createElement.png)
+```ts
+const app = await createApplication({ providers: [] });
+customElements.define('flight-widget', createCustomElement(FlightWidgetComponent, { injector: app.injector }));
+```
+</Accordion>
+
+<Accordion title="What are the mapping rules between an Angular component and a custom element?">
+- Inputs map to properties and dash-cased attributes: `@Input('myInputProp')` becomes attribute `my-input-prop`.
+- Outputs are dispatched as DOM **CustomEvents** named after the output: `@Output() valueChanged = new EventEmitter()` dispatches `valueChanged` with the value in `event.detail`.
+</Accordion>
+
+<Accordion title="How do you type custom elements?">
+Use `NgElement` and `WithProperties` from `@angular/elements`:
+```ts
+@Component(/* ... */)
+class MyContainer { @Input() message!: string; }
+
+const container = document.createElement('my-container') as NgElement & WithProperties<{ message: string }>;
+container.message = 'Welcome to Angular elements!';
+container.message = true;   // ERROR: should be a string
+container.greet = 'News';   // ERROR: no `greet` property
+```
+</Accordion>
 
 ## 13. Libraries, reuse and PWA
 
-> [!question]- What is an Angular library?
-> An Angular project that can't run on its own; it must be imported by an app (`ng generate library`, built with ng-packagr). E.g. `@angular/service-worker` turns an app into a PWA. You can build and publish your own library to npm.
+<Accordion title="What is an Angular library?">
+An Angular project that can't run on its own; it must be imported by an app (`ng generate library`, built with ng-packagr). E.g. `@angular/service-worker` turns an app into a PWA. You can build and publish your own library to npm.
+</Accordion>
 
-> [!question]- How do you reuse components?
-> Within one project: shared standalone components imported where needed (**(updated 2026)** the original "shared module" approach is optional now). Across independent projects not in a monorepo: publish a component library (versioned on npm) and document it in **Storybook**. In a monorepo (Nx), use a shared `libs/` package built from source. See [[Design Systems]] and [[Monorepos]].
+<Accordion title="How do you reuse components?">
+Within one project: shared standalone components imported where needed (**(updated 2026)** the original "shared module" approach is optional now). Across independent projects not in a monorepo: publish a component library (versioned on npm) and document it in **Storybook**. In a monorepo (Nx), use a shared `libs/` package built from source. See [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems) and [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos).
+</Accordion>
 
-> [!question]- Is it possible to include CSS stylesheets in libraries?
-> Yes. Component styles are bundled with their components. Global styles, themes and Sass partials can be shipped as assets (`"assets"` in `ng-package.json`) and consumers import them (e.g. `@use 'my-lib/theme'`). Prefer CSS custom properties (design tokens) for theming.
+<Accordion title="Is it possible to include CSS stylesheets in libraries?">
+Yes. Component styles are bundled with their components. Global styles, themes and Sass partials can be shipped as assets (`"assets"` in `ng-package.json`) and consumers import them (e.g. `@use 'my-lib/theme'`). Prefer CSS custom properties (design tokens) for theming.
+</Accordion>
 
-> [!question]- What is a service worker and its role in Angular?
-> A script running in the browser that manages caching and network requests for the app. Since v5 Angular ships `@angular/service-worker` (`ng add @angular/pwa`, configured in `ngsw-config.json`). It improves the experience on slow or unreliable networks while minimizing the risk of serving outdated content. See [[Web Workers, Service Workers & PWAs]].
+<Accordion title="What is a service worker and its role in Angular?">
+A script running in the browser that manages caching and network requests for the app. Since v5 Angular ships `@angular/service-worker` (`ng add @angular/pwa`, configured in `ngsw-config.json`). It improves the experience on slow or unreliable networks while minimizing the risk of serving outdated content. See [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs).
+</Accordion>
 
-> [!question]- What are the design goals of Angular's service worker?
-> - Caches the app like installing a native app.
-> - A running app keeps using the same version of all files, never mixing incompatible versions.
-> - Refreshing loads the latest fully cached version.
-> - New versions are downloaded in the background after publishing.
-> - Saves bandwidth by downloading resources only when they changed.
+<Accordion title="What are the design goals of Angular's service worker?">
+- Caches the app like installing a native app.
+- A running app keeps using the same version of all files, never mixing incompatible versions.
+- Refreshing loads the latest fully cached version.
+- New versions are downloaded in the background after publishing.
+- Saves bandwidth by downloading resources only when they changed.
+</Accordion>
 
 ## 14. Testing
 
-> [!question]- What is TestBed? (updated 2026)
-> Angular's API for unit tests: it creates a testing module/environment to instantiate components, configure DI, handle async behaviour and interact with the DOM. Historically tests ran with Jasmine on Karma.
->
-> **(updated 2026)** Karma is deprecated; **Vitest is the default test runner for new projects since v21** (`ng g @schematics/angular:refactor-jasmine-vitest` migrates specs). TestBed itself is unchanged.
+<Accordion title="What is TestBed? (updated 2026)">
+Angular's API for unit tests: it creates a testing module/environment to instantiate components, configure DI, handle async behaviour and interact with the DOM. Historically tests ran with Jasmine on Karma.
 
-> [!question]- What is Protractor? (updated 2026)
-> Protractor was the end-to-end framework for Angular and AngularJS (`npm install -g protractor`), driving a real browser like a user.
->
-> **(updated 2026)** Deprecated in Angular 12 and **end-of-life since 2023**. New projects don't include it; use **Playwright** (or Cypress / WebdriverIO) via `ng e2e` integrations. See [[Frontend Testing]].
+**(updated 2026)** Karma is deprecated; **Vitest is the default test runner for new projects since v21** (`ng g @schematics/angular:refactor-jasmine-vitest` migrates specs). TestBed itself is unchanged.
+</Accordion>
+
+<Accordion title="What is Protractor? (updated 2026)">
+Protractor was the end-to-end framework for Angular and AngularJS (`npm install -g protractor`), driving a real browser like a user.
+
+**(updated 2026)** Deprecated in Angular 12 and **end-of-life since 2023**. New projects don't include it; use **Playwright** (or Cypress / WebdriverIO) via `ng e2e` integrations. See [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
+</Accordion>
 
 ## 15. Extra modern-Angular questions (2026)
 
-> [!question]- What are signals and why did Angular add them?
-> Reactive values (`signal`, `computed`, `effect`) that track their readers, so Angular knows exactly which views to refresh. They enable zoneless apps, simpler state than RxJS for sync state, and fine-grained change detection.
+<Accordion title="What are signals and why did Angular add them?">
+Reactive values (`signal`, `computed`, `effect`) that track their readers, so Angular knows exactly which views to refresh. They enable zoneless apps, simpler state than RxJS for sync state, and fine-grained change detection.
+</Accordion>
 
-> [!question]- What are standalone components?
-> Components that declare their own dependencies in `imports` and don't need an NgModule. Default since v19. Apps boot with `bootstrapApplication`.
+<Accordion title="What are standalone components?">
+Components that declare their own dependencies in `imports` and don't need an NgModule. Default since v19. Apps boot with `bootstrapApplication`.
+</Accordion>
 
-> [!question]- What is `@defer`?
-> A template block that lazy-loads its content on a trigger (viewport, interaction, idle, timer, condition) with `@placeholder`, `@loading` and `@error` states. With SSR, `hydrate on ...` enables incremental hydration.
+<Accordion title="What is `@defer`?">
+A template block that lazy-loads its content on a trigger (viewport, interaction, idle, timer, condition) with `@placeholder`, `@loading` and `@error` states. With SSR, `hydrate on ...` enables incremental hydration.
+</Accordion>
 
-> [!question]- What's the difference between Eager and OnPush, and what's the default today?
-> Eager (formerly `Default`) is checked on every CD pass; OnPush only when marked dirty (input reference change, template event, async pipe, signal read, `markForCheck`). **OnPush is the default since v22.**
+<Accordion title="What's the difference between Eager and OnPush, and what's the default today?">
+Eager (formerly `Default`) is checked on every CD pass; OnPush only when marked dirty (input reference change, template event, async pipe, signal read, `markForCheck`). **OnPush is the default since v22.**
+</Accordion>
 
 ## Related
-- [[Angular Index]]
-- [[Angular Fundamentals]]
-- [[Angular Change Detection, Zones & Signals]]
-- [[Modern Angular v17 to v22]]
-- [[Interview Questions Angular]] (original)
-- [[JavaScript Interview Questions]]
-- [[React Interview Questions]]
+- [Angular Index](/Software%20Engineering/Frontend/08%20Angular/Angular%20Index)
+- [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals)
+- [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [Interview Questions Angular](/Software%20Engineering/Interviews/Interview%20Questions%20Angular) (original)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions)
+- [React Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/React%20Interview%20Questions)
 
 ## Sources
 - https://github.com/sudheerj/angular-interview-questions

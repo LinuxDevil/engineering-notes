@@ -1,12 +1,16 @@
 ---
+title: "Component Patterns"
 tags: [frontend, frontend/react, frontend/patterns]
 aliases: [React Patterns, HOC, Render Props, Compound Components, Error Boundaries, Portals, Suspense, React component types]
 updated: 2026-09-27
 ---
 # Component Patterns
 
-> [!tldr] TL;DR
-> React is about **composition**. Components should be **pure** functions of props, state and context. Most reuse today comes from **custom hooks** plus **composition** (`children`, slot props, compound components). HOCs and render props are older patterns you'll still meet in codebases and interviews. React ships a few built-in components for structure (`Fragment`), escape hatches (`createPortal`), async UI (`Suspense`, `lazy`), dev checks (`StrictMode`, `Profiler`) and errors (Error Boundaries, still class-based).
+<Note>
+**TL;DR**
+
+React is about **composition**. Components should be **pure** functions of props, state and context. Most reuse today comes from **custom hooks** plus **composition** (`children`, slot props, compound components). HOCs and render props are older patterns you'll still meet in codebases and interviews. React ships a few built-in components for structure (`Fragment`), escape hatches (`createPortal`), async UI (`Suspense`, `lazy`), dev checks (`StrictMode`, `Profiler`) and errors (Error Boundaries, still class-based).
+</Note>
 
 ## 1. Pure components (the rule behind everything)
 - **React assumes every component is a pure function**: the same inputs give the same JSX.
@@ -15,18 +19,21 @@ updated: 2026-09-27
 - Rendering must always be **pure**. Components only *return* JSX. They never *change* pre-existing objects during render.
 - **StrictMode** calls components twice in development to catch impurity.
 
-> [!example] Impure vs pure
-> ```jsx
-> let guest = 0;
-> function Cup() { guest = guest + 1; return <h2>Tea cup for guest #{guest}</h2>; } // ❌ mutates outer variable
->
-> function Cup({ guest }) { return <h2>Tea cup for guest #{guest}</h2>; }          // ✅ pure
-> function TeaGathering() {
->   const cups = [];                                                                // ✅ local mutation
->   for (let i = 1; i <= 12; i++) cups.push(<Cup key={i} guest={i} />);
->   return cups;
-> }
-> ```
+<Info>
+**Impure vs pure**
+
+```jsx
+let guest = 0;
+function Cup() { guest = guest + 1; return <h2>Tea cup for guest #{guest}</h2>; } // ❌ mutates outer variable
+
+function Cup({ guest }) { return <h2>Tea cup for guest #{guest}</h2>; }          // ✅ pure
+function TeaGathering() {
+  const cups = [];                                                                // ✅ local mutation
+  for (let i = 1; i <= 12; i++) cups.push(<Cup key={i} guest={i} />);
+  return cups;
+}
+```
+</Info>
 
 ## 2. Component types
 
@@ -34,12 +41,12 @@ updated: 2026-09-27
 |---|---|---|
 | **Pure** | Same props/state give the same output. `React.PureComponent` (class) or `React.memo` (function) **shallow-compare** props/state and skip the re-render if nothing changed | "Pure" means two things. (1) Every component *should* be pure (no side effects in render). (2) `PureComponent`/`memo` is an *optimisation* that skips re-renders |
 | **Static** | No state, no lifecycle/effects. Always renders the same content for the same props | e.g. `<Logo />`, `<Footer />` |
-| **Controlled** | **React** controls the value of form elements through state and props | See [[Forms & Actions in React]] |
+| **Controlled** | **React** controls the value of form elements through state and props | See [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) |
 | **Uncontrolled** | The **DOM** holds the value. React reads it through a `ref` or `FormData` | `defaultValue`, `ref`, form Actions |
 | **Stateful** (Container) | Keeps its own state and the logic to change it | |
 | **Stateless** (Presentational) | Doesn't manage its own state. Renders from props | Easy to test and reuse |
 
-![[Untitled 46.png]]
+![Untitled 46](/Attachments/Untitled%2046.png)
 
 ## 3. Container / presentational
 - **Container** (stateful): fetches data, holds state and handlers.
@@ -100,7 +107,7 @@ function MouseTracker({ children }) {
 
 ## 6. Composition: children and slot props
 - **`children` is just a prop.** Passing JSX as `children` or as other props ("slots") avoids prop drilling.
-- It also **prevents re-renders**: elements created by the parent keep their identity when the wrapper's state changes. See [[How React Renders - Reconciliation & Fiber]] (Advanced React, ch. 2).
+- It also **prevents re-renders**: elements created by the parent keep their identity when the wrapper's state changes. See [How React Renders - Reconciliation & Fiber](/Software%20Engineering/Frontend/05%20React/How%20React%20Renders%20-%20Reconciliation%20%26%20Fiber) (Advanced React, ch. 2).
 
 ```jsx
 function Layout({ header, sidebar, children }) {
@@ -183,7 +190,7 @@ function Modal({ open, onClose, children }) {
   );
 }
 ```
-Also consider native `<dialog>` and the Popover API. See [[Modern Web Platform APIs 2025-2026]] and [[Accessibility Essentials]].
+Also consider native `<dialog>` and the Popover API. See [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026) and [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
 
 ### `Suspense` and `lazy` (code splitting)
 - `<Suspense>` shows a **fallback until its children have finished loading**. That includes `lazy` components, `use(promise)`, and framework data.
@@ -204,7 +211,7 @@ export default function App() {
 - Put boundaries where a loading state makes sense to the user.
 - Nested boundaries reveal progressively.
 - A transition (`startTransition`) keeps the old UI on screen instead of flashing back to a fallback that was already shown.
-- More in [[React Performance]] and [[React Server Components & Server Functions]] (streaming).
+- More in [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance) and [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions) (streaming).
 
 ### `StrictMode`
 Development-only checks:
@@ -238,7 +245,7 @@ function onRender(id, phase, actualDuration, baseDuration, startTime, commitTime
   <App />
 </Profiler>
 ```
-Production profiling needs a profiling build. For interactive work, use the React DevTools Profiler or **Performance Tracks (19.2)**. See [[React Performance]].
+Production profiling needs a profiling build. For interactive work, use the React DevTools Profiler or **Performance Tracks (19.2)**. See [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance).
 
 ## 10. Error Boundaries
 - Components that **catch errors in their child tree**, log them, and show a **fallback UI** instead of the crashed tree.
@@ -281,7 +288,7 @@ import { ErrorBoundary } from 'react-error-boundary';
   - by **update frequency** (theme vs cursor position),
   - **state vs dispatch**: `dispatch` is stable, so components that only dispatch don't re-render.
 - **Memoize the value object.** `value={{ user, login }}` is a new object every render, so every consumer re-renders. Use `useMemo`, or rely on the Compiler.
-- **Don't use context as a global store for fast-changing data.** Every consumer re-renders on every change, and there are no selectors. Use Zustand/Redux (built on `useSyncExternalStore`) or TanStack Query. See [[State Management Overview]].
+- **Don't use context as a global store for fast-changing data.** Every consumer re-renders on every change, and there are no selectors. Use Zustand/Redux (built on `useSyncExternalStore`) or TanStack Query. See [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview).
 - **Compound components** use a private context (section 7).
 
 ```tsx
@@ -299,34 +306,42 @@ export function CartProvider({ children }) {
 ```
 
 ## Interview questions
-> [!question]- What makes a component "pure", and what is `PureComponent`/`memo`?
-> A pure component has no side effects during render and returns the same JSX for the same props, state and context. React relies on that for every component. `PureComponent`/`memo` is a separate *optimisation*: it shallow-compares props (and state) and skips re-rendering when they're equal.
+<Accordion title="What makes a component &quot;pure&quot;, and what is `PureComponent`/`memo`?">
+A pure component has no side effects during render and returns the same JSX for the same props, state and context. React relies on that for every component. `PureComponent`/`memo` is a separate *optimisation*: it shallow-compares props (and state) and skips re-rendering when they're equal.
+</Accordion>
 
-> [!question]- HOC vs render props vs custom hooks?
-> All three share logic. HOCs wrap a component and inject props. Render props pass state to a function the caller renders. Hooks share stateful logic directly inside the component, with no extra tree nodes, and they're the modern default. HOCs are still used for cross-cutting wrappers (auth, feature flags).
+<Accordion title="HOC vs render props vs custom hooks?">
+All three share logic. HOCs wrap a component and inject props. Render props pass state to a function the caller renders. Hooks share stateful logic directly inside the component, with no extra tree nodes, and they're the modern default. HOCs are still used for cross-cutting wrappers (auth, feature flags).
+</Accordion>
 
-> [!question]- How do Error Boundaries work, and what don't they catch?
-> A class component with `getDerivedStateFromError` (renders a fallback) and/or `componentDidCatch` (logs) catches errors thrown while rendering its descendants. It doesn't catch event-handler errors, async errors outside React's render, SSR errors, or its own errors. `react-error-boundary` adds reset support and a hook for async errors.
+<Accordion title="How do Error Boundaries work, and what don't they catch?">
+A class component with `getDerivedStateFromError` (renders a fallback) and/or `componentDidCatch` (logs) catches errors thrown while rendering its descendants. It doesn't catch event-handler errors, async errors outside React's render, SSR errors, or its own errors. `react-error-boundary` adds reset support and a hook for async errors.
+</Accordion>
 
-> [!question]- Why use a Portal? Do events bubble through it?
-> To render outside the parent's DOM (modals, tooltips) and escape overflow or z-index. Events bubble through the **React** tree, so a click inside a portal still reaches handlers on its React ancestors, and context still works.
+<Accordion title="Why use a Portal? Do events bubble through it?">
+To render outside the parent's DOM (modals, tooltips) and escape overflow or z-index. Events bubble through the **React** tree, so a click inside a portal still reaches handlers on its React ancestors, and context still works.
+</Accordion>
 
-> [!question]- What does StrictMode do?
-> In development only: it double-invokes render functions, reducers and effects (mount → unmount → mount), and ref callbacks, to find impure code and missing cleanups. It also warns about deprecated APIs. It does nothing in production.
+<Accordion title="What does StrictMode do?">
+In development only: it double-invokes render functions, reducers and effects (mount → unmount → mount), and ref callbacks, to find impure code and missing cleanups. It also warns about deprecated APIs. It does nothing in production.
+</Accordion>
 
-> [!question]- How does code splitting with `lazy` work?
-> `lazy(() => import('./X'))` creates a component that loads its module on first render and suspends until then. The bundler puts `X` in its own chunk. A `<Suspense>` boundary shows a fallback while it loads.
+<Accordion title="How does code splitting with `lazy` work?">
+`lazy(() => import('./X'))` creates a component that loads its module on first render and suspends until then. The bundler puts `X` in its own chunk. A `<Suspense>` boundary shows a fallback while it loads.
+</Accordion>
 
-> [!question]- What are compound components? Give an example.
-> A set of components that share implicit state through context and are used together declaratively, like `<Tabs><Tabs.Tab/><Tabs.Panel/></Tabs>` or `<select>`/`<option>`. They give flexible markup without prop explosion.
+<Accordion title="What are compound components? Give an example.">
+A set of components that share implicit state through context and are used together declaratively, like `<Tabs><Tabs.Tab/><Tabs.Panel/></Tabs>` or `<select>`/`<option>`. They give flexible markup without prop explosion.
+</Accordion>
 
-> [!question]- When is context the wrong tool?
-> For high-frequency or large global state. Every consumer re-renders on every change and there are no selectors. Use composition first, split contexts, or use an external store with selectors.
+<Accordion title="When is context the wrong tool?">
+For high-frequency or large global state. Every consumer re-renders on every change and there are no selectors. Use composition first, split contexts, or use an external store with selectors.
+</Accordion>
 
 ## Related
-- [[How React Renders - Reconciliation & Fiber]] · [[Hooks Reference]] · [[State, Props & Data Flow]] · [[Forms & Actions in React]] · [[React Performance]]
-- [[Frontend Design Patterns]] · [[Design Systems]] · [[Design Patterns]] · [[SOLID]]
-- [[Accessibility Essentials]] (dialogs, tabs roles)
+- [How React Renders - Reconciliation & Fiber](/Software%20Engineering/Frontend/05%20React/How%20React%20Renders%20-%20Reconciliation%20%26%20Fiber) · [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference) · [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow) · [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)
+- [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) · [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [SOLID](/Software%20Engineering/Principles/SOLID)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials) (dialogs, tabs roles)
 
 ## Sources
 - react.dev: [Keeping Components Pure](https://react.dev/learn/keeping-components-pure) · [Fragment](https://react.dev/reference/react/Fragment) · [createPortal](https://react.dev/reference/react-dom/createPortal) · [Suspense](https://react.dev/reference/react/Suspense) · [lazy](https://react.dev/reference/react/lazy) · [StrictMode](https://react.dev/reference/react/StrictMode) · [Profiler](https://react.dev/reference/react/Profiler) · [Catching rendering errors with an error boundary](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) · [memo](https://react.dev/reference/react/memo)

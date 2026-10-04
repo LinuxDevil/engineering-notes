@@ -1,12 +1,16 @@
 ---
+title: "Layout - Flexbox, Grid & Container Queries"
 tags: [frontend, frontend/css, frontend/layout]
 aliases: [Flexbox, CSS Grid, Container Queries, Centering, Responsive Layout]
 updated: 2026-09-27
 ---
 # Layout - Flexbox, Grid & Container Queries
 
-> [!tldr] TL;DR
-> **Flexbox** lays items out along **one axis** and is driven by the content (items decide their size, then share leftover space). **Grid** lays out in **two dimensions** and is driven by the container (the container defines tracks and items are placed into them). **Container queries** make components respond to the space *they* get instead of the viewport. That is what lets a design-system component work in a sidebar and in a main column. Media queries are still for page-level decisions and user preferences.
+<Note>
+**TL;DR**
+
+**Flexbox** lays items out along **one axis** and is driven by the content (items decide their size, then share leftover space). **Grid** lays out in **two dimensions** and is driven by the container (the container defines tracks and items are placed into them). **Container queries** make components respond to the space *they* get instead of the viewport. That is what lets a design-system component work in a sidebar and in a main column. Media queries are still for page-level decisions and user preferences.
+</Note>
 
 ```mermaid
 flowchart TD
@@ -52,25 +56,31 @@ The `flex` shorthand is `flex: <grow> <shrink> <basis>`:
 | `flex: 1` | `1 1 0%` | ignore content size and share **all** space equally |
 | `flex: none` | `0 0 auto` | rigid |
 
-> [!example] Why `flex: 1` and `flex: auto` give different widths
-> Two items: "Hi" (content 40px) and "Hello world, long label" (content 200px), in a 440px container.
-> - `flex: auto`: the bases are 40 and 200, so free space is 200. Each gets +100, giving **140px and 300px**.
-> - `flex: 1`: both bases are 0, so free space is 440. Each gets 220, giving **220px and 220px** (equal columns).
->
-> Shrinking is weighted by `flex-shrink × flex-basis`, so bigger items give up more pixels.
+<Info>
+**Why `flex: 1` and `flex: auto` give different widths**
 
-> [!warning] The `min-width: 0` gotcha
-> Flex items have `min-width: auto`, which means they won't shrink below their **min-content** width. A long URL, a `<pre>`, or a nested `text-overflow: ellipsis` will overflow the container.
-> ```css
-> .row  { display: flex; gap: 1rem; }
-> .main { flex: 1; min-width: 0; }                                   /* allow shrinking */
-> .main .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-> ```
-> The same thing happens in grid with `1fr` tracks: use `minmax(0, 1fr)`.
+Two items: "Hi" (content 40px) and "Hello world, long label" (content 200px), in a 440px container.
+- `flex: auto`: the bases are 40 and 200, so free space is 200. Each gets +100, giving **140px and 300px**.
+- `flex: 1`: both bases are 0, so free space is 440. Each gets 220, giving **220px and 220px** (equal columns).
+
+Shrinking is weighted by `flex-shrink × flex-basis`, so bigger items give up more pixels.
+</Info>
+
+<Warning>
+**The `min-width: 0` gotcha**
+
+Flex items have `min-width: auto`, which means they won't shrink below their **min-content** width. A long URL, a `<pre>`, or a nested `text-overflow: ellipsis` will overflow the container.
+```css
+.row  { display: flex; gap: 1rem; }
+.main { flex: 1; min-width: 0; }                                   /* allow shrinking */
+.main .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+```
+The same thing happens in grid with `1fr` tracks: use `minmax(0, 1fr)`.
+</Warning>
 
 Other flex tips:
 - `margin-inline-start: auto` on one item pushes it and everything after it to the end. Example: the "Sign in" button on the right of a nav.
-- Change the **visual** order with `order` or `row-reverse` sparingly: focus and screen-reader order still follow the DOM (WCAG 1.3.2 and 2.4.3). The new `reading-flow` property addresses this, but is Chrome-only for now. See [[Modern CSS 2025-2026]].
+- Change the **visual** order with `order` or `row-reverse` sparingly: focus and screen-reader order still follow the DOM (WCAG 1.3.2 and 2.4.3). The new `reading-flow` property addresses this, but is Chrome-only for now. See [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026).
 
 ## 2. Grid
 
@@ -123,17 +133,20 @@ Each string is a row. A `.` marks an empty cell. Areas must be rectangles.
 ### Subgrid
 A nested grid can **reuse its parent's tracks** with `grid-template-columns: subgrid` (or rows). This fixes the classic "card titles, prices and buttons don't line up across cards" problem. It has been Baseline in all major browsers since 2023.
 
-> [!example] Aligned flight result cards
-> ```css
-> .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-> .card {
->   display: grid;
->   grid-row: span 4;                /* card occupies 4 of the parent's row tracks */
->   grid-template-rows: subgrid;     /* its children align to those shared rows */
-> }
-> /* airline / times / price / CTA now line up across every card in the row,
->    even when one airline name wraps to two lines */
-> ```
+<Info>
+**Aligned flight result cards**
+
+```css
+.results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.card {
+  display: grid;
+  grid-row: span 4;                /* card occupies 4 of the parent's row tracks */
+  grid-template-rows: subgrid;     /* its children align to those shared rows */
+}
+/* airline / times / price / CTA now line up across every card in the row,
+   even when one airline name wraps to two lines */
+```
+</Info>
 
 ### Grid features to know
 - `justify-items`/`align-items` align items inside their cells. `place-items: center` sets both.
@@ -188,7 +201,7 @@ Vertical alignment of **inline** content (icons next to text) uses `vertical-ali
 ## 5. Floats (legacy, still useful)
 - `float: left | right | inline-start | inline-end` takes a box out of normal flow so inline content **wraps around** it. That is still the right tool for text wrapping around an image (and `shape-outside` can wrap around a circle).
 - A float's parent collapses unless it creates a BFC. `display: flow-root` fixes that; the old fix was the clearfix. `clear: both` pushes an element below floats.
-- Never use floats for page layout any more. Flex and grid ignore `float` on their items. See [[CSS Fundamentals - Cascade, Box Model & Contexts]] (BFC section).
+- Never use floats for page layout any more. Flex and grid ignore `float` on their items. See [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts) (BFC section).
 
 ## 6. Responsive design: viewport, media queries, container queries
 
@@ -223,7 +236,7 @@ Use `rem`/`em` breakpoints so they respect the user's font size. Design **mobile
 ```
 - `container-type: inline-size` is almost always what you want. `size` also needs a fixed block size (it applies size containment).
 - A container **cannot query itself**, only its descendants can. Put the container on a wrapper.
-- `container-type` creates a containing block and a stacking context (see [[CSS Fundamentals - Cascade, Box Model & Contexts]]).
+- `container-type` creates a containing block and a stacking context (see [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts)).
 
 ### Container style queries
 They query **custom property values** of a container. Any element can be a style container; no `container-type` is needed.
@@ -235,14 +248,17 @@ They query **custom property values** of a container. Any element can be a style
 ```
 Style queries are a clean way to do theme and variant switches in a design system without extra classes.
 
-> [!info]+ 🆕 2025–2026 status (webstatus.dev, 2026-09-27)
-> | Feature | Baseline |
-> |---|---|
-> | Container **size** queries (and `cq*` units) | **Widely available** since 2025-08-14 |
-> | Container **style** queries | **Newly available 2026-05-19** (Firefox 151 completed support). An Interop 2026 focus area |
-> | **Name-only** container queries (`@container card { … }` with no condition) | Newly available 2026-05-07 |
-> | **Scroll-state** container queries (`stuck`, `snapped`, `scrollable`) | Limited: Chrome 133 only. See [[Modern CSS 2025-2026]] |
-> | `reading-flow` (visual order matches reading order in flex/grid) | Limited: Chrome 137 only |
+<Info>
+**🆕 2025–2026 status (webstatus.dev, 2026-09-27)**
+
+| Feature | Baseline |
+|---|---|
+| Container **size** queries (and `cq*` units) | **Widely available** since 2025-08-14 |
+| Container **style** queries | **Newly available 2026-05-19** (Firefox 151 completed support). An Interop 2026 focus area |
+| **Name-only** container queries (`@container card { … }` with no condition) | Newly available 2026-05-07 |
+| **Scroll-state** container queries (`stuck`, `snapped`, `scrollable`) | Limited: Chrome 133 only. See [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026) |
+| `reading-flow` (visual order matches reading order in flex/grid) | Limited: Chrome 137 only |
+</Info>
 
 ### Media vs container queries
 
@@ -254,34 +270,41 @@ Style queries are a clean way to do theme and variant switches in a design syste
 
 ## Interview questions
 
-> [!question]- Flexbox vs Grid: how do you choose?
-> Flex is one-dimensional and content-out: great for rows or columns of items whose size comes from their content (toolbars, nav, chips). Grid is two-dimensional and layout-in: the container defines tracks, so items align across rows and columns (page shells, galleries, forms). They are complementary and usually nested. Use subgrid when nested content must align with the outer grid.
+<Accordion title="Flexbox vs Grid: how do you choose?">
+Flex is one-dimensional and content-out: great for rows or columns of items whose size comes from their content (toolbars, nav, chips). Grid is two-dimensional and layout-in: the container defines tracks, so items align across rows and columns (page shells, galleries, forms). They are complementary and usually nested. Use subgrid when nested content must align with the outer grid.
+</Accordion>
 
-> [!question]- What's the difference between flex: 1 and flex: auto?
-> `flex: 1` is `1 1 0%`: the basis is zero, so all space is shared equally and you get equal widths regardless of content. `flex: auto` is `1 1 auto`: items start at their content size, and only the leftover space is shared, so bigger content stays bigger.
+<Accordion title="What's the difference between flex: 1 and flex: auto?">
+`flex: 1` is `1 1 0%`: the basis is zero, so all space is shared equally and you get equal widths regardless of content. `flex: auto` is `1 1 auto`: items start at their content size, and only the leftover space is shared, so bigger content stays bigger.
+</Accordion>
 
-> [!question]- Why does my flex item overflow instead of shrinking?
-> Flex items default to `min-width: auto`, which resolves to their min-content size (a long word, URL or nowrap text). Set `min-width: 0` (or `overflow: hidden`) on the item. In grid, use `minmax(0, 1fr)` instead of `1fr`.
+<Accordion title="Why does my flex item overflow instead of shrinking?">
+Flex items default to `min-width: auto`, which resolves to their min-content size (a long word, URL or nowrap text). Set `min-width: 0` (or `overflow: hidden`) on the item. In grid, use `minmax(0, 1fr)` instead of `1fr`.
+</Accordion>
 
-> [!question]- auto-fill vs auto-fit?
-> Both create as many tracks as fit. `auto-fill` keeps the empty tracks, so items keep the `minmax` size. `auto-fit` collapses empty tracks to 0, so existing items stretch to fill the row. They only differ when there are fewer items than would fit.
+<Accordion title="auto-fill vs auto-fit?">
+Both create as many tracks as fit. `auto-fill` keeps the empty tracks, so items keep the `minmax` size. `auto-fit` collapses empty tracks to 0, so existing items stretch to fill the row. They only differ when there are fewer items than would fit.
+</Accordion>
 
-> [!question]- How do you center a div? Give three ways.
-> `display: grid; place-items: center` on the parent. `display: flex; justify-content: center; align-items: center`. Or `position: absolute; inset: 50% auto auto 50%; translate: -50% -50%`. Horizontally only: `margin-inline: auto` with a width. In block layout, `align-content: center` now works too.
+<Accordion title="How do you center a div? Give three ways.">
+`display: grid; place-items: center` on the parent. `display: flex; justify-content: center; align-items: center`. Or `position: absolute; inset: 50% auto auto 50%; translate: -50% -50%`. Horizontally only: `margin-inline: auto` with a width. In block layout, `align-content: center` now works too.
+</Accordion>
 
-> [!question]- Why container queries instead of media queries for components?
-> A component doesn't know where it will be placed. The same card can sit in a 300px sidebar or a 900px main column on the same viewport. Container queries respond to the space the component actually gets, so the component carries its own responsive rules. Size queries are Baseline Widely available, and style queries became Newly available in May 2026.
+<Accordion title="Why container queries instead of media queries for components?">
+A component doesn't know where it will be placed. The same card can sit in a 300px sidebar or a 900px main column on the same viewport. Container queries respond to the space the component actually gets, so the component carries its own responsive rules. Size queries are Baseline Widely available, and style queries became Newly available in May 2026.
+</Accordion>
 
-> [!question]- What is subgrid and what problem does it solve?
-> `grid-template-rows/columns: subgrid` makes a nested grid use its parent's tracks, so content inside separate cards (titles, prices, buttons) lines up across the row even when content lengths differ, with no fixed heights or JS measuring.
+<Accordion title="What is subgrid and what problem does it solve?">
+`grid-template-rows/columns: subgrid` makes a nested grid use its parent's tracks, so content inside separate cards (titles, prices, buttons) lines up across the row even when content lengths differ, with no fixed heights or JS measuring.
+</Accordion>
 
 ## Related
-- [[CSS Fundamentals - Cascade, Box Model & Contexts]]
-- [[Modern CSS 2025-2026]]
-- [[Styling Approaches]]
-- [[Design Systems]]
-- [[Accessibility Essentials]]
-- [[Virtualization & Large Lists]]
+- [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)
 
 ## Sources
 - MDN: [Flexbox](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Flexbox), [Controlling ratios of flex items](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Controlling_ratios_of_flex_items_along_the_main_axis), [Grid layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout), [Subgrid](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Subgrid), [Container queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries), [Floats](https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Floats), [Media queries](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries)

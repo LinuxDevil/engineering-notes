@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Autocomplete"
 tags: [frontend, frontend/system-design, interview, case-study]
 aliases: [Autocomplete, Typeahead, Design an autocomplete]
 updated: 2026-09-27
 ---
 # Case Study - Autocomplete
 
-> [!tldr] TL;DR
-> A reusable autocomplete (typeahead) component: the user types, suggestions appear, they pick one with mouse or keyboard. It is a **component design** question, so the focus is the **config/props API**, **network efficiency** (debounce, cache, cancel stale requests), **correctness under races**, and the **ARIA combobox pattern**. Great warm-up for the [[RADIO Framework]].
+<Note>
+**TL;DR**
+
+A reusable autocomplete (typeahead) component: the user types, suggestions appear, they pick one with mouse or keyboard. It is a **component design** question, so the focus is the **config/props API**, **network efficiency** (debounce, cache, cancel stale requests), **correctness under races**, and the **ARIA combobox pattern**. Great warm-up for the [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework).
+</Note>
 
 ## R: Requirements
 **Functional**
@@ -49,7 +53,7 @@ Pieces:
 - **Fetcher**: cancels stale requests; only the latest query can update results.
 - **Listbox/Option**: rendering, highlight, virtualization if the list is long.
 
-Splitting a **headless hook** (logic + ARIA props) from the **default UI** is what makes it reusable (the same pattern as Downshift, React Aria, Angular Aria). See [[Component Patterns]].
+Splitting a **headless hook** (logic + ARIA props) from the **default UI** is what makes it reusable (the same pattern as Downshift, React Aria, Angular Aria). See [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns).
 
 ## D: Data model
 
@@ -116,18 +120,21 @@ type AutocompleteProps<T> = {
 - **Throttle**: fire at most once every N ms while typing. Useful if you want suggestions *during* fast typing.
 - Typical: debounce 200–300 ms; skip queries shorter than `minQueryLength`; skip if the trimmed query is unchanged.
 
-> [!example] Debounce from scratch (a classic follow-up)
-> ```js
-> function debounce(fn, wait) {
->   let timer;
->   function debounced(...args) {
->     clearTimeout(timer);
->     timer = setTimeout(() => fn.apply(this, args), wait);
->   }
->   debounced.cancel = () => clearTimeout(timer);
->   return debounced;
-> }
-> ```
+<Info>
+**Debounce from scratch (a classic follow-up)**
+
+```js
+function debounce(fn, wait) {
+  let timer;
+  function debounced(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  }
+  debounced.cancel = () => clearTimeout(timer);
+  return debounced;
+}
+```
+</Info>
 
 ### 2. Race conditions and cancellation
 User types "d", "du", "dub". Requests go out for each; the response for "du" might arrive **after** "dub" and overwrite the correct results.
@@ -150,38 +157,41 @@ Fixes (use both):
 1. **Abort** the previous request with `AbortController` when a new one starts (saves bandwidth, and `fetch` rejects with `AbortError`).
 2. **Latest-wins guard**: compare a request id or the echoed `query` with the current one before setting state.
 
-> [!example] `useSuggestions` hook
-> ```tsx
-> function useSuggestions<T>(query: string, fetcher: Props<T>['fetchSuggestions'], { debounceMs = 250, minLength = 1, ttl = 300_000 } = {}) {
->   const [state, setState] = useState<{ status: Status; results: Suggestion<T>[] }>({ status: 'idle', results: [] });
->
->   useEffect(() => {
->     const q = query.trim().toLowerCase();
->     if (q.length < minLength) { setState({ status: 'idle', results: [] }); return; }
->
->     const hit = cache.get(q);
->     if (hit && Date.now() - hit.at < ttl) { setState({ status: 'success', results: hit.results as Suggestion<T>[] }); return; }
->
->     const controller = new AbortController();
->     const timer = setTimeout(async () => {
->       setState(s => ({ ...s, status: 'loading' }));
->       try {
->         const results = await fetcher!(q, controller.signal);
->         cache.set(q, { at: Date.now(), results });
->         setState({ status: 'success', results });
->       } catch (e) {
->         if ((e as Error).name !== 'AbortError') setState({ status: 'error', results: [] });
->       }
->     }, debounceMs);
->
->     // cleanup runs when query changes: clears the pending debounce AND aborts the in-flight request
->     return () => { clearTimeout(timer); controller.abort(); };
->   }, [query, fetcher, debounceMs, minLength, ttl]);
->
->   return state;
-> }
-> ```
-> The effect cleanup gives both debounce and "latest wins" for free: an old request is aborted before its result can land.
+<Info>
+**`useSuggestions` hook**
+
+```tsx
+function useSuggestions<T>(query: string, fetcher: Props<T>['fetchSuggestions'], { debounceMs = 250, minLength = 1, ttl = 300_000 } = {}) {
+  const [state, setState] = useState<{ status: Status; results: Suggestion<T>[] }>({ status: 'idle', results: [] });
+
+  useEffect(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < minLength) { setState({ status: 'idle', results: [] }); return; }
+
+    const hit = cache.get(q);
+    if (hit && Date.now() - hit.at < ttl) { setState({ status: 'success', results: hit.results as Suggestion<T>[] }); return; }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setState(s => ({ ...s, status: 'loading' }));
+      try {
+        const results = await fetcher!(q, controller.signal);
+        cache.set(q, { at: Date.now(), results });
+        setState({ status: 'success', results });
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') setState({ status: 'error', results: [] });
+      }
+    }, debounceMs);
+
+    // cleanup runs when query changes: clears the pending debounce AND aborts the in-flight request
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [query, fetcher, debounceMs, minLength, ttl]);
+
+  return state;
+}
+```
+The effect cleanup gives both debounce and "latest wins" for free: an old request is aborted before its result can land.
+</Info>
 
 ### 3. Caching
 - In-memory `Map` keyed by the **normalized** query (trim, lowercase, maybe strip diacritics). Limit size (LRU: delete the oldest key when over 100 entries; a `Map` keeps insertion order).
@@ -262,7 +272,7 @@ Other a11y details: announce result count with a polite live region (debounced),
 
 ### 7. Positioning the dropdown
 - Simple case: absolutely positioned under the input.
-- Inside scroll containers/modals it gets clipped → render in a portal or, in modern browsers, the Popover API (top layer) + CSS anchor positioning. Anchor positioning shipped in Chrome 125, Safari 26 and Firefox 147 but webstatus still lists it as Limited, so keep a JS fallback (Floating UI). See [[Modern CSS 2025-2026]].
+- Inside scroll containers/modals it gets clipped → render in a portal or, in modern browsers, the Popover API (top layer) + CSS anchor positioning. Anchor positioning shipped in Chrome 125, Safari 26 and Firefox 147 but webstatus still lists it as Limited, so keep a JS fallback (Floating UI). See [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026).
 
 ### 8. Performance
 - Long lists: cap results (8–10) or virtualize.
@@ -278,28 +288,34 @@ Other a11y details: announce result count with a polite live region (debounced),
 - Selected value vs typed text: after selection, the input shows the label but the form submits the id (hidden input or form state).
 
 ## Interview questions
-> [!question]- How do you avoid showing stale results when requests return out of order?
-> Cancel the previous request with `AbortController` when the query changes, and only commit results whose query matches the current one (request id or echoed query). In React the effect cleanup is the natural place to abort.
+<Accordion title="How do you avoid showing stale results when requests return out of order?">
+Cancel the previous request with `AbortController` when the query changes, and only commit results whose query matches the current one (request id or echoed query). In React the effect cleanup is the natural place to abort.
+</Accordion>
 
-> [!question]- Debounce or throttle for autocomplete?
-> Debounce: fire once the user pauses (200–300 ms). Throttle if you need results during continuous typing. Both reduce requests; debounce reduces them most.
+<Accordion title="Debounce or throttle for autocomplete?">
+Debounce: fire once the user pauses (200–300 ms). Throttle if you need results during continuous typing. Both reduce requests; debounce reduces them most.
+</Accordion>
 
-> [!question]- What ARIA roles does a combobox need?
-> Input with `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-autocomplete="list"`, `aria-activedescendant`; a `role="listbox"` popup with `role="option"` children using `aria-selected`. Focus stays in the input; a polite live region announces the result count.
+<Accordion title="What ARIA roles does a combobox need?">
+Input with `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-autocomplete="list"`, `aria-activedescendant`; a `role="listbox"` popup with `role="option"` children using `aria-selected`. Focus stays in the input; a polite live region announces the result count.
+</Accordion>
 
-> [!question]- How would you cache suggestions?
-> In-memory LRU `Map` keyed by the normalized query with a TTL, reuse a complete prefix result set for longer queries, and HTTP cache headers so the CDN serves popular prefixes.
+<Accordion title="How would you cache suggestions?">
+In-memory LRU `Map` keyed by the normalized query with a TTL, reuse a complete prefix result set for longer queries, and HTTP cache headers so the CDN serves popular prefixes.
+</Accordion>
 
-> [!question]- When would you filter on the client instead of the server?
-> When the dataset is small and static (countries, a market's airports): ship it once and filter instantly. Use the server for large data, ranking, typo tolerance and personalization; combine both for the best UX.
+<Accordion title="When would you filter on the client instead of the server?">
+When the dataset is small and static (countries, a market's airports): ship it once and filter instantly. Use the server for large data, ranking, typo tolerance and personalization; combine both for the best UX.
+</Accordion>
 
-> [!question]- How do you make the component reusable across very different use cases?
-> Headless hook for logic and ARIA props plus a default UI; `fetchSuggestions` or `items`; `renderItem`/`renderEmpty`/`renderError` slots; controlled/uncontrolled value; configurable debounce, min length, max results and cache.
+<Accordion title="How do you make the component reusable across very different use cases?">
+Headless hook for logic and ARIA props plus a default UI; `fetchSuggestions` or `items`; `renderItem`/`renderEmpty`/`renderError` slots; controlled/uncontrolled value; configurable debounce, min length, max results and cache.
+</Accordion>
 
 ## Related
-- [[RADIO Framework]] · [[Frontend System Design Index]] · [[Case Study - Flight Search & Booking]] (airport picker)
-- [[Promises, Async-Await & Cancellation]] · [[Functions - HOF, Callbacks & Currying]] (debounce/throttle)
-- [[Accessibility Essentials]] · [[Component Patterns]] · [[Hooks Reference]]
+- [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) · [Case Study - Flight Search & Booking](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Flight%20Search%20%26%20Booking) (airport picker)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) · [Functions - HOF, Callbacks & Currying](/Software%20Engineering/Frontend/01%20JavaScript/Functions%20-%20HOF%2C%20Callbacks%20%26%20Currying) (debounce/throttle)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials) · [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns) · [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference)
 
 ## Sources
 - WAI-ARIA APG combobox pattern: https://www.w3.org/WAI/ARIA/apg/patterns/combobox/

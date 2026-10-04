@@ -1,12 +1,16 @@
 ---
+title: "Architecture Decision Records (ADRs) & Technical Debt"
 tags: [principles, principles/architecture]
 aliases: [ADR, ADRs, Architecture Decision Record, Technical Debt, Tech Debt, Technical Debt Quadrant, MADR, Design Docs, RFC]
 updated: 2026-09-27
 ---
 # Architecture Decision Records (ADRs) & Technical Debt
 
-> [!tldr] TL;DR
-> An **ADR** is a short, immutable document that records one significant decision: its **context, the decision, and its consequences**, stored next to the code. ADRs stop teams from re-arguing old decisions and let newcomers (and AI assistants) learn *why* the system looks the way it does. **Technical debt** is the future cost of choosing an easier solution now; like financial debt it can be a smart investment if it's **deliberate, visible and paid down**. ADRs are where deliberate debt gets written down.
+<Note>
+**TL;DR**
+
+An **ADR** is a short, immutable document that records one significant decision: its **context, the decision, and its consequences**, stored next to the code. ADRs stop teams from re-arguing old decisions and let newcomers (and AI assistants) learn *why* the system looks the way it does. **Technical debt** is the future cost of choosing an easier solution now; like financial debt it can be a smart investment if it's **deliberate, visible and paid down**. ADRs are where deliberate debt gets written down.
+</Note>
 
 ## Part 1: Architecture Decision Records
 
@@ -70,8 +74,11 @@ stateDiagram-v2
 - Write it **when** the decision is made, including the options you rejected and why.
 - Link ADRs from code comments at the places they explain ("see ADR-0012 for why we retry here").
 
-> [!info]+ 🆕 2025–2026: decision records as AI context
-> AI coding agents read repository docs to follow project conventions. **AGENTS.md** (released August 2025, "a README for agents") was contributed with MCP to the Linux Foundation's new **Agentic AI Foundation** on 2025-12-09, and spec-driven toolkits like GitHub **Spec Kit** (2025-09-02) keep a project "constitution" of non-negotiable principles for agents. Linking your ADRs and key constraints from these files lets assistants respect past decisions instead of silently re-deciding them. Keep the files short and current; stale instructions mislead agents as much as humans.
+<Info>
+**🆕 2025–2026: decision records as AI context**
+
+AI coding agents read repository docs to follow project conventions. **AGENTS.md** (released August 2025, "a README for agents") was contributed with MCP to the Linux Foundation's new **Agentic AI Foundation** on 2025-12-09, and spec-driven toolkits like GitHub **Spec Kit** (2025-09-02) keep a project "constitution" of non-negotiable principles for agents. Linking your ADRs and key constraints from these files lets assistants respect past decisions instead of silently re-deciding them. Keep the files short and current; stale instructions mislead agents as much as humans.
+</Info>
 
 ## Part 2: Technical debt
 
@@ -108,8 +115,8 @@ Prudent-deliberate debt is a legitimate business tool. Prudent-inadvertent debt 
 
 1. **Make it visible**: a debt register (issues with a `tech-debt` label) with an owner, the **interest** (what it slows down, incidents it causes) and a rough principal. ADRs reference debt they knowingly create.
 2. **Prioritise by interest, not by ugliness**: combine change frequency (git churn) with complexity to find hotspots. Fix debt where you're about to work.
-3. **Pay continuously**: preparatory refactoring inside features ([[Clean Code & Refactoring]]), the Boy Scout rule, plus a steady capacity allocation (many teams reserve roughly 10–20% of each iteration; tune by evidence).
-4. **Pay in larger chunks** for architecture debt with a plan: strangler fig, parallel change, migration epics with milestones ([[Software Architecture Styles]]).
+3. **Pay continuously**: preparatory refactoring inside features ([Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring)), the Boy Scout rule, plus a steady capacity allocation (many teams reserve roughly 10–20% of each iteration; tune by evidence).
+4. **Pay in larger chunks** for architecture debt with a plan: strangler fig, parallel change, migration epics with milestones ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles)).
 5. **Prevent reckless debt**: code review, CI quality gates (lint, types, tests), fitness functions for architecture rules, dependency update automation (Renovate/Dependabot).
 6. **Talk business**: "this area causes 40% of our incidents and every feature there takes twice as long" gets prioritised; "the code is ugly" doesn't.
 
@@ -125,13 +132,16 @@ Plan: Q3, after dispatch v2 lands. Owner: billing team
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - ADRs written after the fact to justify a decision, or never written at all.
-> - Editing old ADRs instead of superseding them, which erases history.
-> - ADRs for trivial choices, so nobody reads them.
-> - "Tech debt" as a catch-all label for any code someone dislikes; without interest, it's not a priority.
-> - A dedicated "tech debt sprint" once a year instead of continuous payment.
-> - Rewrites to "pay off all debt at once", which tend to create new debt and stall delivery.
+<Warning>
+**Common mistakes**
+
+- ADRs written after the fact to justify a decision, or never written at all.
+- Editing old ADRs instead of superseding them, which erases history.
+- ADRs for trivial choices, so nobody reads them.
+- "Tech debt" as a catch-all label for any code someone dislikes; without interest, it's not a priority.
+- A dedicated "tech debt sprint" once a year instead of continuous payment.
+- Rewrites to "pay off all debt at once", which tend to create new debt and stall delivery.
+</Warning>
 
 ## Senior perspective
 
@@ -142,28 +152,34 @@ Plan: Q3, after dispatch v2 lands. Owner: billing team
 
 ## Interview questions
 
-> [!question]- What is an ADR and what does it contain?
-> A short document recording one architecturally significant decision: title, status, date, context (forces and constraints), the decision, consequences (positive and negative), and often alternatives considered. Stored with the code, immutable once accepted, superseded by newer ADRs.
+<Accordion title="What is an ADR and what does it contain?">
+A short document recording one architecturally significant decision: title, status, date, context (forces and constraints), the decision, consequences (positive and negative), and often alternatives considered. Stored with the code, immutable once accepted, superseded by newer ADRs.
+</Accordion>
 
-> [!question]- Why keep ADRs immutable?
-> They're a log of reasoning at a point in time. Editing them hides how thinking evolved. When a decision changes, a new ADR supersedes the old one and both link to each other.
+<Accordion title="Why keep ADRs immutable?">
+They're a log of reasoning at a point in time. Editing them hides how thinking evolved. When a decision changes, a new ADR supersedes the old one and both link to each other.
+</Accordion>
 
-> [!question]- What is technical debt? Is it always bad?
-> The future cost of choosing an expedient solution now: extra effort (interest) on every change until the shortcut is fixed (principal). Deliberate, prudent, recorded debt can be a good business decision (hit a launch date); reckless or invisible debt is the problem.
+<Accordion title="What is technical debt? Is it always bad?">
+The future cost of choosing an expedient solution now: extra effort (interest) on every change until the shortcut is fixed (principal). Deliberate, prudent, recorded debt can be a good business decision (hit a launch date); reckless or invisible debt is the problem.
+</Accordion>
 
-> [!question]- How do you prioritise technical debt?
-> By interest: how often the code changes and how much the debt slows those changes or causes incidents. Hotspot analysis (churn × complexity), incident data and upcoming roadmap work guide it. Fix debt in areas you're about to change; leave debt in stable code.
+<Accordion title="How do you prioritise technical debt?">
+By interest: how often the code changes and how much the debt slows those changes or causes incidents. Hotspot analysis (churn × complexity), incident data and upcoming roadmap work guide it. Fix debt in areas you're about to change; leave debt in stable code.
+</Accordion>
 
-> [!question]- How do you convince product managers to invest in debt?
-> Translate it into outcomes they care about: slower delivery of specific features, incident counts, onboarding time, security or compliance risk. Propose incremental plans tied to upcoming work, with measurable before/after.
+<Accordion title="How do you convince product managers to invest in debt?">
+Translate it into outcomes they care about: slower delivery of specific features, incident counts, onboarding time, security or compliance risk. Propose incremental plans tied to upcoming work, with measurable before/after.
+</Accordion>
 
-> [!question]- Explain Fowler's technical debt quadrant.
-> Two axes: deliberate vs inadvertent and reckless vs prudent. Prudent-deliberate: "ship now, fix later" consciously. Prudent-inadvertent: "now we know better" after learning. Reckless-deliberate: "no time for design". Reckless-inadvertent: not knowing good practice.
+<Accordion title="Explain Fowler's technical debt quadrant.">
+Two axes: deliberate vs inadvertent and reckless vs prudent. Prudent-deliberate: "ship now, fix later" consciously. Prudent-inadvertent: "now we know better" after learning. Reckless-deliberate: "no time for design". Reckless-inadvertent: not knowing good practice.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Software Architecture Styles]] · [[Clean Code & Refactoring]] · [[DRY, KISS & YAGNI]] · [[Coupling, Cohesion & Modularity]]
-- [[AI in Frontend - MCP, WebMCP & Built-in AI]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring) · [DRY, KISS & YAGNI](/Software%20Engineering/Principles/DRY%2C%20KISS%20%26%20YAGNI) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)
+- [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
 
 ## Sources
 - [Michael Nygard: Documenting Architecture Decisions (2011)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)

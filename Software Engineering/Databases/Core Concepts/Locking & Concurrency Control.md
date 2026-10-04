@@ -1,12 +1,16 @@
 ---
+title: "Locking & Concurrency Control"
 tags: [databases, databases/transactions, databases/postgres]
 aliases: [Locks, Database Locks, Two-Phase Locking, 2PL, Deadlocks, Optimistic Locking, Pessimistic Locking, SELECT FOR UPDATE, Advisory Locks]
 updated: 2026-09-27
 ---
 # Locking & Concurrency Control
 
-> [!tldr] TL;DR
-> Concurrency control keeps the database correct when many transactions touch the same data at once. **Pessimistic** control takes **locks** (shared for reading, exclusive for writing) and makes others wait; **two-phase locking (2PL)** guarantees serializability, and **strict 2PL** (hold locks until commit) is what real databases do. **Optimistic** control lets everyone proceed and aborts on conflict at commit. Postgres combines **MVCC** (readers never block writers) with row locks for writers, eight table-level lock modes, and advisory locks for application-level mutual exclusion.
+<Note>
+**TL;DR**
+
+Concurrency control keeps the database correct when many transactions touch the same data at once. **Pessimistic** control takes **locks** (shared for reading, exclusive for writing) and makes others wait; **two-phase locking (2PL)** guarantees serializability, and **strict 2PL** (hold locks until commit) is what real databases do. **Optimistic** control lets everyone proceed and aborts on conflict at commit. Postgres combines **MVCC** (readers never block writers) with row locks for writers, eight table-level lock modes, and advisory locks for application-level mutual exclusion.
+</Note>
 
 This note merges the locking parts of the original *Overview* (Silberschatz ch. 18, Concurrency Control), *ACID Overview* and *Transactions & ACID*.
 
@@ -58,8 +62,11 @@ COMMIT;                                            -- shrinking phase: lock rele
 
 The second transaction unblocks after the first commits. Under Read Committed it re-reads the row, sees `isbooked = 1`, and can report "already booked".
 
-> [!tip] Lock waits and timeouts
-> By default a Postgres transaction waits indefinitely for a row lock. You can bound it with `SET lock_timeout = '2s'`, or skip the wait with `FOR UPDATE NOWAIT` (error immediately) or `FOR UPDATE SKIP LOCKED` (ignore locked rows, great for job queues). Oracle offers `FOR UPDATE WAIT n`.
+<Tip>
+**Lock waits and timeouts**
+
+By default a Postgres transaction waits indefinitely for a row lock. You can bound it with `SET lock_timeout = '2s'`, or skip the wait with `FOR UPDATE NOWAIT` (error immediately) or `FOR UPDATE SKIP LOCKED` (ignore locked rows, great for job queues). Oracle offers `FOR UPDATE WAIT n`.
+</Tip>
 
 ## Deadlocks
 
@@ -110,7 +117,7 @@ Inside the database, **optimistic concurrency control** (validation-based protoc
 
 - **Timestamp-based protocols**: each transaction gets a timestamp; conflicting operations must happen in timestamp order, otherwise the late transaction is aborted and restarted.
 - **Validation-based (optimistic) protocol**: read phase, validation phase, write phase.
-- **Multiversion concurrency control (MVCC)**: keep several versions of each item so readers get a consistent snapshot without blocking writers. See [[MVCC & Vacuum]].
+- **Multiversion concurrency control (MVCC)**: keep several versions of each item so readers get a consistent snapshot without blocking writers. See [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum).
 
 ## Lock granularity
 
@@ -129,26 +136,32 @@ Granularity is the size of the thing locked: database, table, page, row, or even
 
 ### Explicit vs implicit locking
 
-> [!note]+ Implicit locking
-> The system acquires and releases locks automatically, hiding the complexity.
-> 1. **Row-level**: any `UPDATE` or `DELETE` locks the affected rows until the transaction ends.
-> 2. **Table-level**: every command takes a table lock mode appropriate to it. `SELECT` takes ACCESS SHARE; `UPDATE`/`DELETE`/`INSERT` take ROW EXCLUSIVE, which conflicts with things like `ALTER TABLE` but not with each other.
-> 3. **Page-level**: short-term share/exclusive locks on buffer pages while reading/writing them (released right after the access, not held to commit).
-> 4. **Tuple-level**: an update marks the old row version as locked/deleted by the updating transaction.
-> 5. **Shared and exclusive**: shared for reads, exclusive for writes.
+<Note>
+**Implicit locking**
 
-> [!note]+ Explicit locking
-> You acquire the lock yourself to override default behaviour. Finer control, more responsibility.
-> ```sql
-> BEGIN;
-> LOCK TABLE table_name IN SHARE ROW EXCLUSIVE MODE;
-> -- CODE
-> COMMIT;   -- table locks are always released at transaction end
-> ```
+The system acquires and releases locks automatically, hiding the complexity.
+1. **Row-level**: any `UPDATE` or `DELETE` locks the affected rows until the transaction ends.
+2. **Table-level**: every command takes a table lock mode appropriate to it. `SELECT` takes ACCESS SHARE; `UPDATE`/`DELETE`/`INSERT` take ROW EXCLUSIVE, which conflicts with things like `ALTER TABLE` but not with each other.
+3. **Page-level**: short-term share/exclusive locks on buffer pages while reading/writing them (released right after the access, not held to commit).
+4. **Tuple-level**: an update marks the old row version as locked/deleted by the updating transaction.
+5. **Shared and exclusive**: shared for reads, exclusive for writes.
+</Note>
+
+<Note>
+**Explicit locking**
+
+You acquire the lock yourself to override default behaviour. Finer control, more responsibility.
+```sql
+BEGIN;
+LOCK TABLE table_name IN SHARE ROW EXCLUSIVE MODE;
+-- CODE
+COMMIT;   -- table locks are always released at transaction end
+```
+</Note>
 
 ### Table-level lock modes (weakest → strongest)
 
-![[Screenshot_2023-07-23_at_3.25.01_PM.png]]
+![Screenshot_2023-07-23_at_3.25.01_PM](/Attachments/Screenshot_2023-07-23_at_3.25.01_PM.png)
 
 | Mode | Taken by | Notes |
 |---|---|---|
@@ -163,7 +176,7 @@ Granularity is the size of the thing locked: database, table, page, row, or even
 
 ### Row-level lock modes
 
-![[Screenshot_2023-07-23_at_3.25.29_PM.png]]
+![Screenshot_2023-07-23_at_3.25.29_PM](/Attachments/Screenshot_2023-07-23_at_3.25.29_PM.png)
 
 | Mode | Blocks | Typical use |
 |---|---|---|
@@ -201,8 +214,11 @@ SELECT pg_try_advisory_lock(42);
 
 Family: `pg_advisory_lock`, `pg_try_advisory_lock`, `pg_advisory_lock_shared`, `pg_try_advisory_lock_shared`, their `_xact_` variants, and `pg_advisory_unlock`, `pg_advisory_unlock_shared`, `pg_advisory_unlock_all`. Any other session asking for the same key blocks until it's released.
 
-> [!warning] Advisory locks and connection poolers
-> Session-level advisory locks are tied to the **server connection**. Behind PgBouncer in transaction pooling mode, your next statement may run on a different server connection, so use `pg_advisory_xact_lock` there. See [[Connection Pooling]].
+<Warning>
+**Advisory locks and connection poolers**
+
+Session-level advisory locks are tied to the **server connection**. Behind PgBouncer in transaction pooling mode, your next statement may run on a different server connection, so use `pg_advisory_xact_lock` there. See [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling).
+</Warning>
 
 ### Seeing who blocks whom
 
@@ -218,12 +234,15 @@ FROM pg_locks WHERE NOT granted;
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Lock queue pile-up on DDL**: `ALTER TABLE` needs ACCESS EXCLUSIVE. If a long `SELECT` holds ACCESS SHARE, the `ALTER` waits, and **every new query queues behind the ALTER**. Always run migrations with `SET lock_timeout = '3s'` and retry. See [[Database Migrations & Schema Evolution]].
-> - **Lost updates at Read Committed**: read-modify-write in the app without `FOR UPDATE` or a version check.
-> - **Deadlocks from inconsistent ordering**, including from foreign keys and triggers you forgot about.
-> - **Locking too much**: `FOR UPDATE` on a large range, or `LOCK TABLE` for convenience, destroys concurrency.
-> - **Long transactions** hold row locks until the end, not until the statement ends.
+<Warning>
+**Common pitfalls**
+
+- **Lock queue pile-up on DDL**: `ALTER TABLE` needs ACCESS EXCLUSIVE. If a long `SELECT` holds ACCESS SHARE, the `ALTER` waits, and **every new query queues behind the ALTER**. Always run migrations with `SET lock_timeout = '3s'` and retry. See [Database Migrations & Schema Evolution](/Software%20Engineering/Databases/Core%20Concepts/Database%20Migrations%20%26%20Schema%20Evolution).
+- **Lost updates at Read Committed**: read-modify-write in the app without `FOR UPDATE` or a version check.
+- **Deadlocks from inconsistent ordering**, including from foreign keys and triggers you forgot about.
+- **Locking too much**: `FOR UPDATE` on a large range, or `LOCK TABLE` for convenience, destroys concurrency.
+- **Long transactions** hold row locks until the end, not until the statement ends.
+</Warning>
 
 ## Senior perspective
 
@@ -232,36 +251,46 @@ FROM pg_locks WHERE NOT granted;
 - Measure contention: `pg_stat_activity` wait events, `log_lock_waits = on`, deadlock counts in `pg_stat_database`. PostgreSQL 19 (in beta as of September 2026) adds a `pg_stat_lock` view with per-lock-type statistics.
 - In review, ask: which rows/tables does this lock, in what order, for how long, and what happens to other requests meanwhile?
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 19 Beta 1 (2026-06-04)** adds a `pg_stat_lock` view with per-lock-type statistics. PG 19 is not released yet (Beta 4 on 2026-09-24, RC planned for early October 2026), so treat this as upcoming.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 19 Beta 1 (2026-06-04)** adds a `pg_stat_lock` view with per-lock-type statistics. PG 19 is not released yet (Beta 4 on 2026-09-24, RC planned for early October 2026), so treat this as upcoming.
+</Info>
 
 ## Interview questions
 
-> [!question]- What is two-phase locking and why does it guarantee serializability?
-> Each transaction acquires locks in a growing phase and releases them in a shrinking phase, never acquiring after releasing. The moment of the last acquisition (lock point) gives a total order of transactions; any conflicting operations follow that order, so the schedule is conflict-equivalent to the serial order by lock points. Strict 2PL holds write locks to commit to avoid cascading aborts.
+<Accordion title="What is two-phase locking and why does it guarantee serializability?">
+Each transaction acquires locks in a growing phase and releases them in a shrinking phase, never acquiring after releasing. The moment of the last acquisition (lock point) gives a total order of transactions; any conflicting operations follow that order, so the schedule is conflict-equivalent to the serial order by lock points. Strict 2PL holds write locks to commit to avoid cascading aborts.
+</Accordion>
 
-> [!question]- How would you prevent double-booking a seat?
-> Lock the row while deciding: `SELECT ... FOR UPDATE` then update, or a single conditional `UPDATE seats SET booked = true WHERE id = 14 AND booked = false` and check the row count, or a unique constraint on (event, seat) in a bookings table. Serializable isolation with retries also works.
+<Accordion title="How would you prevent double-booking a seat?">
+Lock the row while deciding: `SELECT ... FOR UPDATE` then update, or a single conditional `UPDATE seats SET booked = true WHERE id = 14 AND booked = false` and check the row count, or a unique constraint on (event, seat) in a bookings table. Serializable isolation with retries also works.
+</Accordion>
 
-> [!question]- How do databases deal with deadlocks, and what should the application do?
-> They detect cycles in the wait-for graph and abort a victim (Postgres raises 40P01 after `deadlock_timeout`). The app should acquire locks in a consistent order, keep transactions short, and retry the aborted transaction.
+<Accordion title="How do databases deal with deadlocks, and what should the application do?">
+They detect cycles in the wait-for graph and abort a victim (Postgres raises 40P01 after `deadlock_timeout`). The app should acquire locks in a consistent order, keep transactions short, and retry the aborted transaction.
+</Accordion>
 
-> [!question]- Optimistic vs pessimistic locking: when would you use each?
-> Pessimistic for hot rows and short critical sections where conflicts are likely. Optimistic (version column, or SERIALIZABLE with retries) when conflicts are rare or the "read then write" spans user think time, since holding DB locks across user interaction is unacceptable.
+<Accordion title="Optimistic vs pessimistic locking: when would you use each?">
+Pessimistic for hot rows and short critical sections where conflicts are likely. Optimistic (version column, or SERIALIZABLE with retries) when conflicts are rare or the "read then write" spans user think time, since holding DB locks across user interaction is unacceptable.
+</Accordion>
 
-> [!question]- What's the difference between `FOR UPDATE` and `FOR NO KEY UPDATE` in Postgres?
-> Both lock the row exclusively against writers, but `FOR NO KEY UPDATE` doesn't conflict with `FOR KEY SHARE`, which foreign-key checks take. Normal updates that don't change key columns take the weaker lock so inserting child rows referencing the parent isn't blocked.
+<Accordion title="What's the difference between `FOR UPDATE` and `FOR NO KEY UPDATE` in Postgres?">
+Both lock the row exclusively against writers, but `FOR NO KEY UPDATE` doesn't conflict with `FOR KEY SHARE`, which foreign-key checks take. Normal updates that don't change key columns take the weaker lock so inserting child rows referencing the parent isn't blocked.
+</Accordion>
 
-> [!question]- Why did my `ALTER TABLE` take the whole site down?
-> It waited for ACCESS EXCLUSIVE behind a long-running query, and all subsequent queries on the table queued behind it. Use `lock_timeout` and retries, and run DDL at quiet times or with online-safe variants.
+<Accordion title="Why did my `ALTER TABLE` take the whole site down?">
+It waited for ACCESS EXCLUSIVE behind a long-running query, and all subsequent queries on the table queued behind it. Use `lock_timeout` and retries, and run DDL at quiet times or with online-safe variants.
+</Accordion>
 
-> [!question]- What are advisory locks good for?
-> Application-defined mutual exclusion using the database as the coordinator: singleton cron jobs, migrations, per-tenant serialization. Use transaction-level variants behind transaction poolers.
+<Accordion title="What are advisory locks good for?">
+Application-defined mutual exclusion using the database as the coordinator: singleton cron jobs, migrations, per-tenant serialization. Use transaction-level variants behind transaction poolers.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Transactions & ACID]] · [[Isolation Levels & Read Phenomena]] · [[MVCC & Vacuum]]
-- [[Database Migrations & Schema Evolution]] · [[Connection Pooling]] · [[Replication & 2PC 3PC]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) · [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum)
+- [Database Migrations & Schema Evolution](/Software%20Engineering/Databases/Core%20Concepts/Database%20Migrations%20%26%20Schema%20Evolution) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)
 - Original notes: `_Archive/Overview - Locking & Distributed DB (original)`, `_Archive/ACID Overview (original)`
 
 ## Sources

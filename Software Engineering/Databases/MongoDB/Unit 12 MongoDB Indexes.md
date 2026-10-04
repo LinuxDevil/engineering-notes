@@ -1,14 +1,18 @@
 ---
+title: "Unit 12 MongoDB Indexes"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB Indexes, Compound Index, Multikey Index, ESR Rule, MongoDB explain, MongoDB Unit 12]
 updated: 2026-09-27
 ---
 # Unit 12 MongoDB Indexes
 
-> [!tldr] TL;DR
-> An **index** is an ordered data structure (a B-tree) holding a small part of each document plus a pointer to it, so queries can find and sort data without reading the whole collection. Without one, MongoDB does a **collection scan** (`COLLSCAN`) and sorts in memory. Types covered: **single-field**, **compound** (usable by queries on its **prefix**; order fields by the **ESR rule: Equality, Sort, Range**) and **multikey** (on arrays). Check usage with `explain()`. Indexes speed reads but cost **writes**, memory and disk, so drop the ones you don't use.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 12 · Prev: [[Unit 11 MongoDB Aggregation]] · Next: [[Unit 13 MongoDB Atlas Search]]
+An **index** is an ordered data structure (a B-tree) holding a small part of each document plus a pointer to it, so queries can find and sort data without reading the whole collection. Without one, MongoDB does a **collection scan** (`COLLSCAN`) and sorts in memory. Types covered: **single-field**, **compound** (usable by queries on its **prefix**; order fields by the **ESR rule: Equality, Sort, Range**) and **multikey** (on arrays). Check usage with `explain()`. Indexes speed reads but cost **writes**, memory and disk, so drop the ones you don't use.
+</Note>
+
+> Course: MongoDB University, Unit 12 · Prev: [Unit 11 MongoDB Aggregation](/Software%20Engineering/Databases/MongoDB/Unit%2011%20MongoDB%20Aggregation) · Next: [Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search)
 
 ## What this unit covers
 How indexes support efficient queries, their trade-offs, single-field and compound indexes, multikey indexes, checking whether queries use indexes, and deleting indexes.
@@ -62,7 +66,7 @@ db.customers.createIndex({ accounts: 1 })
 db.customers.find({ accounts: 627788 }).explain()   // IXSCAN with isMultiKey: true
 ```
 
-![[Screenshot_2023-04-27_at_3.31.33_PM.png]]
+![Screenshot_2023-04-27_at_3.31.33_PM](/Attachments/Screenshot_2023-04-27_at_3.31.33_PM.png)
 
 ## 3. Compound indexes
 An index on several fields. It supports queries that match on a **prefix** of the index fields.
@@ -81,8 +85,11 @@ db.accounts.find({ active: true }).sort({ birthday: -1 })
 db.accounts.find({ active: true, name: "Ali" })   // uses prefix { active }, then filters name in the index
 ```
 
-> [!note] Correction
-> The original note listed `db.accounts.find({name: 'Ali'}, {active: true})` as using the prefix. The second argument of `find()` is a **projection**, not a filter, so that query filters only on `name` and **cannot** use the index prefix. Use `find({ active: true, name: 'Ali' })` instead.
+<Note>
+**Correction**
+
+The original note listed `db.accounts.find({name: 'Ali'}, {active: true})` as using the prefix. The second argument of `find()` is a **projection**, not a filter, so that query filters only on `name` and **cannot** use the index prefix. Use `find({ active: true, name: 'Ali' })` instead.
+</Note>
 
 Queries that don't include the first field can't use the compound index efficiently, even if they include other indexed fields:
 
@@ -146,8 +153,11 @@ db.accounts.aggregate([{ $indexStats: {} }])   // accesses.ops per index since l
 | Wildcard | unknown/dynamic field names |
 | Clustered | collection stored in `_id` order (5.3+) |
 
-> [!info]+ 🆕 2025–2026
-> **MongoDB 8.3 (May 2026)**: multi-planning with a **cost-based ranker (CBR)** as backup is now the default plan-selection mechanism for eligible queries, with new `serverStatus` and `$queryStats` metrics. Plans you see in `explain()` may differ from older versions. ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
+<Info>
+**🆕 2025–2026**
+
+**MongoDB 8.3 (May 2026)**: multi-planning with a **cost-based ranker (CBR)** as backup is now the default plan-selection mechanism for eligible queries, with new `serverStatus` and `$queryStats` metrics. Plans you see in `explain()` may differ from older versions. ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
+</Info>
 
 ## Senior perspective
 - **Working set**: indexes should fit in RAM (the WiredTiger cache). If they don't, every query pays disk I/O.
@@ -155,31 +165,37 @@ db.accounts.aggregate([{ $indexStats: {} }])   // accesses.ops per index since l
 - **Write amplification**: each index adds work to every write. High-ingest collections should have few, carefully chosen indexes.
 - **Low-selectivity fields** (booleans, status with 3 values) make poor leading fields unless combined with others or used in a partial index.
 - **Unique indexes** are how you enforce invariants (idempotency keys, emails) under concurrency; application checks alone race.
-- **Sharding**: the shard key needs a supporting index; queries without the shard key scatter to all shards. See [[Sharding & Partitioning]].
-- Use Atlas Performance Advisor and `$queryStats` to find missing and unused indexes; see [[Database Indexes]] and [[Query Optimization & EXPLAIN]].
+- **Sharding**: the shard key needs a supporting index; queries without the shard key scatter to all shards. See [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
+- Use Atlas Performance Advisor and `$queryStats` to find missing and unused indexes; see [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) and [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN).
 
 ## Interview questions
-> [!question]- What does the ESR rule say?
-> Order compound index fields Equality first, then Sort, then Range. Equality narrows the scan, sort fields next let the index return ordered results, and range fields last avoid breaking that order and causing in-memory sorts.
+<Accordion title="What does the ESR rule say?">
+Order compound index fields Equality first, then Sort, then Range. Equality narrows the scan, sort fields next let the index return ordered results, and range fields last avoid breaking that order and causing in-memory sorts.
+</Accordion>
 
-> [!question]- What is an index prefix and why does it matter?
-> The leading subset of a compound index's fields. A query can use the compound index only if it filters (or sorts) on a prefix, e.g. `{a, b, c}` serves `{a}`, `{a, b}`, `{a, b, c}` but not `{b}` or `{c}` alone.
+<Accordion title="What is an index prefix and why does it matter?">
+The leading subset of a compound index's fields. A query can use the compound index only if it filters (or sorts) on a prefix, e.g. `{a, b, c}` serves `{a}`, `{a, b}`, `{a, b, c}` but not `{b}` or `{c}` alone.
+</Accordion>
 
-> [!question]- How do you tell if a query uses an index?
-> Run `explain("executionStats")`. `IXSCAN` means an index is used; `COLLSCAN` means a full scan; a `SORT` stage means an in-memory sort. Compare keys examined and docs examined with docs returned.
+<Accordion title="How do you tell if a query uses an index?">
+Run `explain("executionStats")`. `IXSCAN` means an index is used; `COLLSCAN` means a full scan; a `SORT` stage means an in-memory sort. Compare keys examined and docs examined with docs returned.
+</Accordion>
 
-> [!question]- What is a multikey index and what are its limits?
-> An index on an array field with one entry per element. A compound index can include at most one array field per document, and multikey indexes can't produce covered queries on the array field.
+<Accordion title="What is a multikey index and what are its limits?">
+An index on an array field with one entry per element. A compound index can include at most one array field per document, and multikey indexes can't produce covered queries on the array field.
+</Accordion>
 
-> [!question]- What is a covered query?
-> One where the filter and projection use only fields in a single index (and `_id` is excluded or indexed), so MongoDB answers from the index without fetching documents.
+<Accordion title="What is a covered query?">
+One where the filter and projection use only fields in a single index (and `_id` is excluded or indexed), so MongoDB answers from the index without fetching documents.
+</Accordion>
 
-> [!question]- How would you safely remove an index you think is unused?
-> Check `$indexStats` and Performance Advisor over a representative period, hide it with `hideIndex()`, monitor latency, then drop it. Unhide instantly if something regresses.
+<Accordion title="How would you safely remove an index you think is unused?">
+Check `$indexStats` and Performance Advisor over a representative period, hide it with `hideIndex()`, monitor latency, then drop it. Unhide instantly if something regresses.
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Database Indexes]] · [[Query Optimization & EXPLAIN]] · [[Sharding & Partitioning]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning)
 
 ## Sources
 - [MongoDB Manual: Indexes](https://www.mongodb.com/docs/manual/indexes/)

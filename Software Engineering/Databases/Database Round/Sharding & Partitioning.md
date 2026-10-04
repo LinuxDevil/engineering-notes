@@ -1,12 +1,16 @@
 ---
+title: "Sharding & Partitioning"
 tags: [databases, databases/distributed, databases/postgres]
 aliases: [Sharding, Partitioning, Horizontal Partitioning, Vertical Partitioning, Consistent Hashing, Shard Key, Partition Pruning]
 updated: 2026-09-27
 ---
 # Sharding & Partitioning
 
-> [!tldr] TL;DR
-> **Partitioning** splits one big table into smaller tables **inside the same database**; the DB routes queries to the right partitions (partition pruning) and the client doesn't notice. **Sharding** splits data across **multiple database servers** by a **shard key**; each shard is an independent database and something (the app, a proxy, or a distributed DB) must route queries. Partition early and cheaply; shard late and reluctantly, because cross-shard queries, transactions and rebalancing get hard.
+<Note>
+**TL;DR**
+
+**Partitioning** splits one big table into smaller tables **inside the same database**; the DB routes queries to the right partitions (partition pruning) and the client doesn't notice. **Sharding** splits data across **multiple database servers** by a **shard key**; each shard is an independent database and something (the app, a proxy, or a distributed DB) must route queries. Partition early and cheaply; shard late and reluctantly, because cross-shard queries, transactions and rebalancing get hard.
+</Note>
 
 *Sharding works at the database (server) level. Partitioning works at the table level.*
 
@@ -14,7 +18,7 @@ updated: 2026-09-27
 
 Sharding segments data into partitions spread across multiple servers. You split a table **by rows** into multiple databases on multiple servers, based on a **shard key**.
 
-![[Screenshot_2023-07-28_at_3.12.57_PM.png]]
+![Screenshot_2023-07-28_at_3.12.57_PM](/Attachments/Screenshot_2023-07-28_at_3.12.57_PM.png)
 
 Vocabulary:
 
@@ -53,15 +57,18 @@ Pros:
 
 Cons:
 
-![[Screenshot_2023-07-28_at_7.11.22_PM.png]]
+![Screenshot_2023-07-28_at_7.11.22_PM](/Attachments/Screenshot_2023-07-28_at_7.11.22_PM.png)
 
-- Complex client/routing logic; cross-shard **joins** and **transactions** are hard (2PC or sagas, see [[Replication & 2PC 3PC]]).
+- Complex client/routing logic; cross-shard **joins** and **transactions** are hard (2PC or sagas, see [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)).
 - **Rebalancing/resharding** when shards grow unevenly.
 - Schema changes and backups multiply by N.
 - Hot shards if the key is skewed (celebrity users, one huge tenant).
 
-> [!warning] The last thing you want to do is shard your database
-> Ask the questions first: Have we fixed queries and indexes? Scaled up? Added caching and read replicas? Partitioned big tables? Split by function? Only shard when a single primary truly can't handle the write volume, data size or connections.
+<Warning>
+**The last thing you want to do is shard your database**
+
+Ask the questions first: Have we fixed queries and indexes? Scaled up? Added caching and read replicas? Partitioned big tables? Split by function? Only shard when a single primary truly can't handle the write volume, data size or connections.
+</Warning>
 
 ## Partitioning
 
@@ -84,7 +91,7 @@ The partition key column should be `NOT NULL` (or have a default/NULL-accepting 
 
 ### Horizontal partitioning vs sharding
 
-![[Screenshot_2023-07-28_at_3.18.38_PM.png]]
+![Screenshot_2023-07-28_at_3.18.38_PM](/Attachments/Screenshot_2023-07-28_at_3.18.38_PM.png)
 
 | | Partitioning | Sharding |
 |---|---|---|
@@ -94,9 +101,9 @@ The partition key column should be `NOT NULL` (or have a default/NULL-accepting 
 | Transactions/joins | Normal | Cross-shard is hard |
 | Solves | Big tables, retention, index size | Write throughput, total size, connection limits |
 
-![[Screenshot_2023-07-27_at_11.23.15_PM.png]]
+![Screenshot_2023-07-27_at_11.23.15_PM](/Attachments/Screenshot_2023-07-27_at_11.23.15_PM.png)
 
-![[Screenshot_2023-07-27_at_11.23.24_PM.png]]
+![Screenshot_2023-07-27_at_11.23.24_PM](/Attachments/Screenshot_2023-07-27_at_11.23.24_PM.png)
 
 ## Worked example: range partitioning in Postgres
 
@@ -152,7 +159,7 @@ SELECT pg_relation_size(oid), relname
 FROM pg_class ORDER BY pg_relation_size(oid) DESC;
 ```
 
-More on Postgres partitioning (list/hash, default partitions, detach concurrently, pg_partman, retention): [[SQL Table Partitioning]].
+More on Postgres partitioning (list/hash, default partitions, detach concurrently, pg_partman, retention): [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning).
 
 ## Sharding in practice
 
@@ -171,12 +178,15 @@ SELECT create_distributed_table('orders', 'tenant_id', colocate_with => 'custome
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Bad shard key**: low cardinality, skewed (hot shards), or not present in most queries (every query fans out to all shards).
-> - Queries without the partition key scan **every** partition.
-> - Too many partitions (thousands) slow planning and increase lock overhead.
-> - Unique constraints across partitions/shards: in Postgres a unique/PK constraint on a partitioned table must include the partition key.
-> - Resharding with `mod N` hashing moves almost everything; plan logical shards ≫ physical shards from day one.
+<Warning>
+**Common pitfalls**
+
+- **Bad shard key**: low cardinality, skewed (hot shards), or not present in most queries (every query fans out to all shards).
+- Queries without the partition key scan **every** partition.
+- Too many partitions (thousands) slow planning and increase lock overhead.
+- Unique constraints across partitions/shards: in Postgres a unique/PK constraint on a partitioned table must include the partition key.
+- Resharding with `mod N` hashing moves almost everything; plan logical shards ≫ physical shards from day one.
+</Warning>
 
 ## Senior perspective
 
@@ -185,31 +195,39 @@ SELECT create_distributed_table('orders', 'tenant_id', colocate_with => 'custome
 - Partitioning by time plus dropping old partitions is the cheapest big win for event/log tables.
 - Review questions: Which queries don't include the shard key? How do we reshard? What's the plan for the biggest tenant? How do cross-shard reports run (usually: a warehouse)?
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)** allows identity columns and exclusion constraints on partitioned tables.
-> - **PostgreSQL 19** had `ALTER TABLE ... MERGE PARTITIONS` / `SPLIT PARTITIONS` in Beta 1 (2026-06-04), but they were **reverted** before Beta 4 (2026-09-24), so they won't be in 19.0.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)** allows identity columns and exclusion constraints on partitioned tables.
+- **PostgreSQL 19** had `ALTER TABLE ... MERGE PARTITIONS` / `SPLIT PARTITIONS` in Beta 1 (2026-06-04), but they were **reverted** before Beta 4 (2026-09-24), so they won't be in 19.0.
+</Info>
 
 ## Interview questions
 
-> [!question]- Partitioning vs sharding?
-> Partitioning splits a table into smaller tables within one database server, transparently to clients, mainly for manageability and pruning. Sharding distributes data across multiple servers by a shard key to scale writes and storage, requiring routing and making cross-shard operations hard.
+<Accordion title="Partitioning vs sharding?">
+Partitioning splits a table into smaller tables within one database server, transparently to clients, mainly for manageability and pruning. Sharding distributes data across multiple servers by a shard key to scale writes and storage, requiring routing and making cross-shard operations hard.
+</Accordion>
 
-> [!question]- How do you choose a shard key?
-> High cardinality, even distribution, present in the most frequent queries, and aligned with transaction boundaries (e.g. tenant id). Avoid monotonically increasing keys with range sharding (hot last shard) and skewed keys.
+<Accordion title="How do you choose a shard key?">
+High cardinality, even distribution, present in the most frequent queries, and aligned with transaction boundaries (e.g. tenant id). Avoid monotonically increasing keys with range sharding (hot last shard) and skewed keys.
+</Accordion>
 
-> [!question]- What is consistent hashing and why is it useful?
-> Keys and nodes are hashed onto a ring; a key belongs to the next node clockwise. Adding/removing a node only remaps keys in one segment (~1/N) instead of nearly all keys as with `mod N`. Virtual nodes balance load.
+<Accordion title="What is consistent hashing and why is it useful?">
+Keys and nodes are hashed onto a ring; a key belongs to the next node clockwise. Adding/removing a node only remaps keys in one segment (~1/N) instead of nearly all keys as with `mod N`. Virtual nodes balance load.
+</Accordion>
 
-> [!question]- When would you not shard?
-> When the problem can be solved by query/index tuning, vertical scaling, caching, read replicas, partitioning or splitting services. Sharding adds permanent complexity to every feature.
+<Accordion title="When would you not shard?">
+When the problem can be solved by query/index tuning, vertical scaling, caching, read replicas, partitioning or splitting services. Sharding adds permanent complexity to every feature.
+</Accordion>
 
-> [!question]- How does partition pruning work?
-> The planner (and executor, for parameters known at run time) compares the query's conditions on the partition key with each partition's bounds and skips partitions that can't contain matching rows.
+<Accordion title="How does partition pruning work?">
+The planner (and executor, for parameters known at run time) compares the query's conditions on the partition key with each partition's bounds and skips partitions that can't contain matching rows.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[SQL Table Partitioning]] · [[Clustering and Scaling]] · [[Replication & 2PC 3PC]] · [[CAP Theorem]]
-- [[NoSQL Database Types]] · [[Database Indexes]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning) · [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem)
+- [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes)
 
 ## Sources
 - PostgreSQL docs, Table Partitioning: https://www.postgresql.org/docs/current/ddl-partitioning.html

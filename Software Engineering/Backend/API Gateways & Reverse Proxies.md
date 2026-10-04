@@ -1,12 +1,16 @@
 ---
+title: "API Gateways & Reverse Proxies"
 tags: [backend, backend/infrastructure, apis]
 aliases: [API Gateway, Reverse Proxy vs API Gateway, BFF, Backend for Frontend, Envoy, Kong, Gateway API, Service Mesh, AI Gateway]
 updated: 2026-09-27
 ---
 # API Gateways & Reverse Proxies
 
-> [!tldr] TL;DR
-> A **reverse proxy** forwards traffic to backends (TLS, routing, load balancing). An **API gateway** is a reverse proxy specialised for APIs: it adds **authentication, rate limits/quotas, request validation, transformation, API keys, analytics and a developer portal**. A **BFF (Backend for Frontend)** is an app-specific gateway owned by a frontend team that aggregates calls and keeps tokens out of the browser. A **service mesh** handles service-to-service (east-west) traffic. In 2026, Kubernetes traffic management is moving from Ingress to **Gateway API**, and "AI gateways" add MCP/LLM routing on top.
+<Note>
+**TL;DR**
+
+A **reverse proxy** forwards traffic to backends (TLS, routing, load balancing). An **API gateway** is a reverse proxy specialised for APIs: it adds **authentication, rate limits/quotas, request validation, transformation, API keys, analytics and a developer portal**. A **BFF (Backend for Frontend)** is an app-specific gateway owned by a frontend team that aggregates calls and keeps tokens out of the browser. A **service mesh** handles service-to-service (east-west) traffic. In 2026, Kubernetes traffic management is moving from Ingress to **Gateway API**, and "AI gateways" add MCP/LLM routing on top.
+</Note>
 
 ## Layers of the edge
 
@@ -27,7 +31,7 @@ flowchart LR
 |---|---|---|---|
 | CDN / WAF | caching, DDoS, TLS near users, bot filtering | north-south | Cloudflare, Fastly, CloudFront, Akamai |
 | Load balancer | spread connections/requests, health checks | north-south | AWS ALB/NLB, HAProxy, Nginx |
-| Reverse proxy | TLS termination, routing, static files, compression | north-south | [[Nginx]], Caddy, Envoy, Traefik |
+| Reverse proxy | TLS termination, routing, static files, compression | north-south | [Nginx](/Software%20Engineering/Backend/Nginx), Caddy, Envoy, Traefik |
 | **API gateway** | API-level policies: auth, keys, quotas, transformation, analytics, portal | north-south | Kong, Envoy Gateway, Apigee, AWS API Gateway, Azure APIM, Tyk, KrakenD |
 | **BFF** | per-client aggregation and shaping; OAuth token handling | north-south | a small Node/Kotlin/Go service or Next.js server |
 | Service mesh | mTLS, retries, timeouts, traffic shifting, telemetry between services | east-west | Istio (incl. ambient mode), Linkerd, Cilium |
@@ -49,13 +53,13 @@ Many products do both; Nginx + modules can act as a gateway, Kong is built on Ng
 ✅ Cross-cutting, business-agnostic concerns:
 - TLS, routing, versions (`/v1` → cluster A)
 - **Token validation** (signature, `exp`, `aud`) and coarse **scope checks**
-- **Rate limits and quotas** ([[Rate Limiting & Throttling]])
+- **Rate limits and quotas** ([Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling))
 - Request size limits, schema validation against OpenAPI
-- Correlation IDs, access logs, metrics, tracing headers ([[HTTP Headers vs Body - Where Data Belongs]])
+- Correlation IDs, access logs, metrics, tracing headers ([HTTP Headers vs Body - Where Data Belongs](/Software%20Engineering/APIs%20%26%20Auth/HTTP%20Headers%20vs%20Body%20-%20Where%20Data%20Belongs))
 - CORS, caching of public responses, canary/blue-green routing
 
 ❌ Keep out:
-- **Business logic** and object-level authorization ("does user 7 own order 42?") → services ([[Authentication vs Authorization]])
+- **Business logic** and object-level authorization ("does user 7 own order 42?") → services ([Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization))
 - Heavy orchestration across many services (becomes a distributed monolith; use a BFF or a workflow engine)
 
 ### Worked example: Kong declarative config
@@ -100,8 +104,8 @@ Gateway API splits roles: infra teams own `GatewayClass`/`Gateway`, app teams ow
 
 **Backend for Frontend**: one backend per client experience (web, iOS, partner), owned by that client's team.
 
-- **Aggregation**: one call from the UI → BFF fans out to 5 services in parallel, shapes one response (fixes chatty REST, see [[GraphQL vs REST]]).
-- **Security (OAuth BFF)**: the BFF is a *confidential OAuth client*; it runs the Authorization Code + PKCE flow, stores access/refresh tokens **server-side**, and gives the browser only an `HttpOnly` session cookie. The browser never sees a token, so XSS can't steal one. RFC 10017 (Aug 2026) recommends this for business and sensitive SPAs. See [[OAuth 2.x & OpenID Connect]], [[JWT vs Cookies]], and the frontend side in [[Authentication & Token Storage]].
+- **Aggregation**: one call from the UI → BFF fans out to 5 services in parallel, shapes one response (fixes chatty REST, see [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST)).
+- **Security (OAuth BFF)**: the BFF is a *confidential OAuth client*; it runs the Authorization Code + PKCE flow, stores access/refresh tokens **server-side**, and gives the browser only an `HttpOnly` session cookie. The browser never sees a token, so XSS can't steal one. RFC 10017 (Aug 2026) recommends this for business and sensitive SPAs. See [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect), [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies), and the frontend side in [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).
 - **Risks**: duplication across BFFs, BFF becoming a monolith; keep them thin (composition, not business rules).
 
 ```ts
@@ -125,24 +129,30 @@ APIs are increasingly called by **AI agents** through the Model Context Protocol
 - apply **per-tool authorization** (hide tools a caller can't use), quotas by **tokens/cost**, and audit logging;
 - route by the MCP `Mcp-Method`/`Mcp-Name` headers (2026-07-28 spec) instead of parsing JSON-RPC bodies.
 
-See [[AI in Frontend - MCP, WebMCP & Built-in AI]] for the protocol itself.
+See [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI) for the protocol itself.
 
-> [!info]+ 🆕 2025–2026
-> - **2025-11-11 → March 2026:** Kubernetes **ingress-nginx retired** (no further fixes). Recommended path: **Gateway API** implementations (Envoy Gateway, Istio, Cilium, Kong, NGINX Gateway Fabric, etc.) using `ingress2gateway`. See [[Nginx]].
-> - **2026-06-23:** **Envoy AI Gateway 1.0**, now renamed **Agent Router** (an Agentic AI Foundation project): stable v1beta1 API, 16 LLM providers behind an OpenAI-compatible interface, full **MCP gateway**, OpenTelemetry tracing, multi-tenant routing.
-> - **2026-07-28:** MCP spec goes **stateless** and adds routing headers, so MCP servers can sit behind ordinary round-robin load balancers and gateways.
-> - **2026-09-01:** **Kong AI Gateway 2.0 GA**: MCP server bundling, MCP ACLs (unauthorised tools invisible at discovery), identity-aware AI policies, modality-aware cost tracking; AI plugins remain supported on Kong Gateway 3.14 LTS.
-> - **2026-08:** RFC 10017 formalises the **BFF** as the most secure architecture for browser-based OAuth clients.
+<Info>
+**🆕 2025–2026**
+
+- **2025-11-11 → March 2026:** Kubernetes **ingress-nginx retired** (no further fixes). Recommended path: **Gateway API** implementations (Envoy Gateway, Istio, Cilium, Kong, NGINX Gateway Fabric, etc.) using `ingress2gateway`. See [Nginx](/Software%20Engineering/Backend/Nginx).
+- **2026-06-23:** **Envoy AI Gateway 1.0**, now renamed **Agent Router** (an Agentic AI Foundation project): stable v1beta1 API, 16 LLM providers behind an OpenAI-compatible interface, full **MCP gateway**, OpenTelemetry tracing, multi-tenant routing.
+- **2026-07-28:** MCP spec goes **stateless** and adds routing headers, so MCP servers can sit behind ordinary round-robin load balancers and gateways.
+- **2026-09-01:** **Kong AI Gateway 2.0 GA**: MCP server bundling, MCP ACLs (unauthorised tools invisible at discovery), identity-aware AI policies, modality-aware cost tracking; AI plugins remain supported on Kong Gateway 3.14 LTS.
+- **2026-08:** RFC 10017 formalises the **BFF** as the most secure architecture for browser-based OAuth clients.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - The gateway as a **single point of failure**: run it highly available, with capacity headroom; it sees 100% of traffic.
-> - Business logic creeping into gateway plugins/Lua scripts (untestable, owned by nobody).
-> - Trusting identity headers (`X-User-Id`) from the outside; the gateway must strip them and set its own.
-> - Double retries: client + gateway + mesh + SDK each retrying 3× → 81 attempts during an outage. Retry in one layer, with budgets.
-> - Timeouts that don't nest (gateway 30 s, service 60 s → wasted work after the client gave up). Propagate deadlines.
-> - One shared gateway config edited by every team without ownership or CI.
+<Warning>
+**Common mistakes**
+
+- The gateway as a **single point of failure**: run it highly available, with capacity headroom; it sees 100% of traffic.
+- Business logic creeping into gateway plugins/Lua scripts (untestable, owned by nobody).
+- Trusting identity headers (`X-User-Id`) from the outside; the gateway must strip them and set its own.
+- Double retries: client + gateway + mesh + SDK each retrying 3× → 81 attempts during an outage. Retry in one layer, with budgets.
+- Timeouts that don't nest (gateway 30 s, service 60 s → wasted work after the client gave up). Propagate deadlines.
+- One shared gateway config edited by every team without ownership or CI.
+</Warning>
 
 ## Senior perspective
 
@@ -154,26 +164,31 @@ See [[AI in Frontend - MCP, WebMCP & Built-in AI]] for the protocol itself.
 
 ## Interview questions
 
-> [!question]- Reverse proxy vs API gateway vs load balancer?
-> A load balancer distributes traffic across instances. A reverse proxy fronts servers, terminating TLS and routing by host/path, often also load balancing and caching. An API gateway is a reverse proxy with API-management features: authentication, consumer quotas, transformation, schema validation, analytics and developer portals.
+<Accordion title="Reverse proxy vs API gateway vs load balancer?">
+A load balancer distributes traffic across instances. A reverse proxy fronts servers, terminating TLS and routing by host/path, often also load balancing and caching. An API gateway is a reverse proxy with API-management features: authentication, consumer quotas, transformation, schema validation, analytics and developer portals.
+</Accordion>
 
-> [!question]- What is the BFF pattern and when is it useful?
-> A dedicated backend per client type that aggregates and shapes data for that UI and, in OAuth setups, acts as a confidential client so tokens stay server-side and the browser holds only an HttpOnly session cookie. Useful when clients have different data needs, for reducing chattiness, and for SPA security.
+<Accordion title="What is the BFF pattern and when is it useful?">
+A dedicated backend per client type that aggregates and shapes data for that UI and, in OAuth setups, acts as a confidential client so tokens stay server-side and the browser holds only an HttpOnly session cookie. Useful when clients have different data needs, for reducing chattiness, and for SPA security.
+</Accordion>
 
-> [!question]- What should not be done in an API gateway?
-> Business logic and fine-grained, object-level authorization, which need domain context and belong in services; complex orchestration across many services, which turns the gateway into a fragile monolith.
+<Accordion title="What should not be done in an API gateway?">
+Business logic and fine-grained, object-level authorization, which need domain context and belong in services; complex orchestration across many services, which turns the gateway into a fragile monolith.
+</Accordion>
 
-> [!question]- API gateway vs service mesh?
-> Gateway handles north-south traffic (external clients into the system) with API-management concerns. A mesh handles east-west traffic between services: mTLS, retries, timeouts, traffic shifting and telemetry, usually via sidecars or node-level proxies.
+<Accordion title="API gateway vs service mesh?">
+Gateway handles north-south traffic (external clients into the system) with API-management concerns. A mesh handles east-west traffic between services: mTLS, retries, timeouts, traffic shifting and telemetry, usually via sidecars or node-level proxies.
+</Accordion>
 
-> [!question]- Why is Kubernetes moving from Ingress to Gateway API?
-> Ingress is minimal and relies on controller-specific annotations for anything advanced. Gateway API is expressive (header matching, traffic splitting, gRPC routes), portable across implementations, and role-oriented. The retirement of ingress-nginx in March 2026 accelerated migrations.
+<Accordion title="Why is Kubernetes moving from Ingress to Gateway API?">
+Ingress is minimal and relies on controller-specific annotations for anything advanced. Gateway API is expressive (header matching, traffic splitting, gRPC routes), portable across implementations, and role-oriented. The retirement of ingress-nginx in March 2026 accelerated migrations.
+</Accordion>
 
 ## Related
-- [[Backend Index]] · [[APIs & Auth Index]]
-- [[Nginx]] · [[Rate Limiting & Throttling]] · [[OAuth 2.x & OpenID Connect]] · [[JWT vs Cookies]] · [[API Security]] · [[GraphQL vs REST]] · [[gRPC vs REST]]
-- [[Microservices Architecture]] · Frontend: [[Authentication & Token Storage]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]]
-- Other domains: [[Kubernetes Networking - Services, Ingress & Gateway API]] · [[CDN & Edge Computing]] · [[Microservices Architecture]] · [[Security Index]]
+- [Backend Index](/Software%20Engineering/Backend/Backend%20Index) · [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index)
+- [Nginx](/Software%20Engineering/Backend/Nginx) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) · [API Security](/Software%20Engineering/Security/API%20Security) · [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST) · [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST)
+- [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · Frontend: [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
+- Other domains: [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API) · [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Security Index](/Software%20Engineering/Security/Security%20Index)
 
 ## Sources
 - [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/) · [ingress2gateway](https://github.com/kubernetes-sigs/ingress2gateway)

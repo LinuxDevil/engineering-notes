@@ -1,14 +1,18 @@
 ---
+title: "Summarizing Data"
 tags: [databases, databases/sql]
 aliases: [Aggregate Functions, COUNT, SUM, AVG, MIN, MAX, FILTER clause]
 updated: 2026-09-27
 ---
 # Summarizing Data
 
-> [!tldr] TL;DR
-> Aggregate functions (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`) collapse many rows into one value. All of them **ignore `NULL`s**, except `COUNT(*)`, which counts rows. `DISTINCT` inside an aggregate works on unique values only. On an empty set, `COUNT` returns `0` but `SUM`/`AVG`/`MIN`/`MAX` return `NULL`.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 9 · Prev: [[Using Data Manipulation Functions]] · Next: [[Grouping Data]]
+Aggregate functions (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`) collapse many rows into one value. All of them **ignore `NULL`s**, except `COUNT(*)`, which counts rows. `DISTINCT` inside an aggregate works on unique values only. On an empty set, `COUNT` returns `0` but `SUM`/`AVG`/`MIN`/`MAX` return `NULL`.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 9 · Prev: [Using Data Manipulation Functions](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Data%20Manipulation%20Functions) · Next: [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data)
 
 ## Aggregate functions
 
@@ -24,8 +28,9 @@ updated: 2026-09-27
 
 It's often necessary to **summarize** data without retrieving all of it (how many customers, the average price, the latest order). Aggregates do this inside the database, which is far cheaper than shipping rows to the application.
 
-> [!note]
-> Aggregates can work on expressions, not just columns: `AVG(prod_price * quantity)`.
+<Note>
+Aggregates can work on expressions, not just columns: `AVG(prod_price * quantity)`.
+</Note>
 
 ## The `AVG()` function
 
@@ -70,8 +75,11 @@ FROM Customers;
 
 Returns the highest value in a column; a column (or expression) must be specified.
 
-> [!note] `MAX()` with non-numeric types
-> Most DBMSs allow `MAX()` on text and dates. On text it returns the value that would sort **last** (per the collation). `NULL`s are ignored.
+<Note>
+**`MAX()` with non-numeric types**
+
+Most DBMSs allow `MAX()` on text and dates. On text it returns the value that would sort **last** (per the collation). `NULL`s are ignored.
+</Note>
 
 ### Example 4
 
@@ -115,8 +123,11 @@ All five aggregates can be used two ways:
 1. On all rows: specify `ALL` or nothing (`ALL` is the default).
 2. On unique values only: specify `DISTINCT`.
 
-> [!warning] `DISTINCT` rules
-> `DISTINCT` can only be used with `COUNT()` when a column is named: `COUNT(DISTINCT col)` works, `COUNT(DISTINCT *)` does not. `DISTINCT` with `MIN()`/`MAX()` is legal but pointless.
+<Warning>
+**`DISTINCT` rules**
+
+`DISTINCT` can only be used with `COUNT()` when a column is named: `COUNT(DISTINCT col)` works, `COUNT(DISTINCT *)` does not. `DISTINCT` with `MIN()`/`MAX()` is legal but pointless.
+</Warning>
 
 Some DBMSs support extra arguments (e.g. SQL Server's `TOP`/`TOP PERCENT`) for calculations on subsets; check your docs.
 
@@ -175,7 +186,7 @@ So `SELECT SUM(amount) FROM payments WHERE user_id = 42` can return `NULL`, not 
 
 ## Beyond the book / Senior perspective
 
-- **Aggregates per group** need `GROUP BY` ([[Grouping Data]]). Aggregates that keep every row (running totals, ranks, "percent of total") are **window functions**, also covered there.
+- **Aggregates per group** need `GROUP BY` ([Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data)). Aggregates that keep every row (running totals, ranks, "percent of total") are **window functions**, also covered there.
 - **`COUNT(*)` on a huge table is slow** in PostgreSQL (MVCC means it must check row visibility; an index-only scan helps if the visibility map is fresh). For dashboards, an estimate is often enough: `SELECT reltuples FROM pg_class WHERE relname = 'orders';`.
 - **`COUNT(DISTINCT ...)` is expensive** at scale (sort or hash of all values). Approximate algorithms (HyperLogLog, e.g. the `hll` extension, BigQuery `APPROX_COUNT_DISTINCT`) trade exactness for speed.
 - **Integer overflow and precision:** `SUM` of `integer` returns `bigint` in PostgreSQL, and `AVG` of integers returns `numeric`. In SQL Server, `AVG` of an `int` column returns an **int** (truncated); cast first.
@@ -183,24 +194,29 @@ So `SELECT SUM(amount) FROM payments WHERE user_id = 42` can return `NULL`, not 
 
 ## Interview questions
 
-> [!question]- `COUNT(*)` vs `COUNT(col)` vs `COUNT(1)`?
-> `COUNT(*)` and `COUNT(1)` both count rows (identical performance in modern DBMSs). `COUNT(col)` counts rows where `col` is not NULL.
+<Accordion title="`COUNT(*)` vs `COUNT(col)` vs `COUNT(1)`?">
+`COUNT(*)` and `COUNT(1)` both count rows (identical performance in modern DBMSs). `COUNT(col)` counts rows where `col` is not NULL.
+</Accordion>
 
-> [!question]- What does `SUM` return when no rows match?
-> `NULL`, not 0. Wrap with `COALESCE(SUM(x), 0)`. `COUNT` returns 0.
+<Accordion title="What does `SUM` return when no rows match?">
+`NULL`, not 0. Wrap with `COALESCE(SUM(x), 0)`. `COUNT` returns 0.
+</Accordion>
 
-> [!question]- How do aggregates treat NULLs?
-> They ignore them (except `COUNT(*)`). That changes averages: `AVG` divides by the number of non-null values.
+<Accordion title="How do aggregates treat NULLs?">
+They ignore them (except `COUNT(*)`). That changes averages: `AVG` divides by the number of non-null values.
+</Accordion>
 
-> [!question]- How do you count several conditions in one query?
-> Conditional aggregation: `COUNT(*) FILTER (WHERE ...)` in PostgreSQL/SQLite, or `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` everywhere.
+<Accordion title="How do you count several conditions in one query?">
+Conditional aggregation: `COUNT(*) FILTER (WHERE ...)` in PostgreSQL/SQLite, or `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` everywhere.
+</Accordion>
 
-> [!question]- Why is `SELECT COUNT(*) FROM big_table` slow in PostgreSQL?
-> MVCC: each row version's visibility must be checked, so it scans the table or an index (index-only scans help when the visibility map is up to date). Use estimates from `pg_class.reltuples` or maintained counters when exact numbers aren't required.
+<Accordion title="Why is `SELECT COUNT(*) FROM big_table` slow in PostgreSQL?">
+MVCC: each row version's visibility must be checked, so it scans the table or an index (index-only scans help when the visibility map is up to date). Use estimates from `pg_class.reltuples` or maintained counters when exact numbers aren't required.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Grouping Data]] (GROUP BY, HAVING, window functions) · [[Creating Calculated Fields]] · [[Query Optimization & EXPLAIN]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data) (GROUP BY, HAVING, window functions) · [Creating Calculated Fields](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Calculated%20Fields) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 9 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

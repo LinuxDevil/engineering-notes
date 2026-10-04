@@ -1,12 +1,16 @@
 ---
+title: "Connection Pooling"
 tags: [databases, databases/operations, databases/postgres]
 aliases: [Connection Pool, Pooling, PgBouncer, Pool Sizing, HikariCP]
 updated: 2026-09-27
 ---
 # Connection Pooling
 
-> [!tldr] TL;DR
-> Opening a database connection is expensive (TCP + TLS handshake, authentication, and in Postgres a whole new server **process**). A **connection pool** opens a fixed set of connections once and lends them to requests. Pools live in the app (node-postgres `Pool`, HikariCP) and/or in a proxy (**PgBouncer**, RDS Proxy, Supavisor). Size pools **small**: roughly a few connections per CPU core of the database, not per user. The total across all app instances must stay under the DB's `max_connections`.
+<Note>
+**TL;DR**
+
+Opening a database connection is expensive (TCP + TLS handshake, authentication, and in Postgres a whole new server **process**). A **connection pool** opens a fixed set of connections once and lends them to requests. Pools live in the app (node-postgres `Pool`, HikariCP) and/or in a proxy (**PgBouncer**, RDS Proxy, Supavisor). Size pools **small**: roughly a few connections per CPU core of the database, not per user. The total across all app instances must stay under the DB's `max_connections`.
+</Note>
 
 ## The idea
 
@@ -118,48 +122,59 @@ Other options: **RDS Proxy** / **Azure** and **Cloud SQL** built-in poolers, **S
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Leaked connections**: forgetting `release()` on an error path; the pool drains and every request times out. Use `try/finally` or helpers.
-> - **Pool per request** or per function invocation (serverless): recreates the problem pooling solves. Create the pool once per process; in serverless use an external pooler or HTTP driver.
-> - **Oversized pools**: 100s of connections per instance × many instances exhaust `max_connections` and degrade throughput.
-> - **Holding a connection during slow non-DB work** (HTTP calls) starves the pool.
-> - **Session state behind transaction pooling**: `SET search_path`, session advisory locks, prepared statements on old PgBouncer versions. Use `SET LOCAL` inside the transaction and `pg_advisory_xact_lock`.
-> - **Stale connections** after failover or firewall idle timeouts: set `maxLifetime`/`idleTimeout` below infrastructure timeouts and enable TCP keepalives.
+<Warning>
+**Common pitfalls**
+
+- **Leaked connections**: forgetting `release()` on an error path; the pool drains and every request times out. Use `try/finally` or helpers.
+- **Pool per request** or per function invocation (serverless): recreates the problem pooling solves. Create the pool once per process; in serverless use an external pooler or HTTP driver.
+- **Oversized pools**: 100s of connections per instance × many instances exhaust `max_connections` and degrade throughput.
+- **Holding a connection during slow non-DB work** (HTTP calls) starves the pool.
+- **Session state behind transaction pooling**: `SET search_path`, session advisory locks, prepared statements on old PgBouncer versions. Use `SET LOCAL` inside the transaction and `pg_advisory_xact_lock`.
+- **Stale connections** after failover or firewall idle timeouts: set `maxLifetime`/`idleTimeout` below infrastructure timeouts and enable TCP keepalives.
+</Warning>
 
 ## Senior perspective
 
 - Watch pool metrics: wait time to acquire, active vs idle, timeouts. A growing acquire time means the DB (or your transactions) is the bottleneck, not the pool size.
 - Put timeouts at every layer: `connectionTimeoutMillis` in the app, `statement_timeout` and `idle_in_transaction_session_timeout` in Postgres, `query_wait_timeout` in PgBouncer.
 - Reads vs writes: separate pools for the primary and replicas; route read-only queries to replicas only if they tolerate lag.
-- MongoDB drivers pool internally too (`maxPoolSize` default 100); the same sizing logic applies. See [[Unit 06 Connecting to MongoDB in Node.js]].
+- MongoDB drivers pool internally too (`maxPoolSize` default 100); the same sizing logic applies. See [Unit 06 Connecting to MongoDB in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2006%20Connecting%20to%20MongoDB%20in%20Node.js).
 - Review questions: What's the max total connections across all replicas of this service at peak autoscale? What happens when the pool is exhausted: fail fast or queue forever?
 
-> [!info]+ 🆕 2025–2026
-> - **PgBouncer 1.25.0 (2025-11-09)** added LDAP authentication, client-side direct TLS connections, much faster SCRAM authentication, a `pool_idle_timeout` setting, per-user/database `query_wait_timeout`, and removed the deprecated online restart (`-R`).
-> - **PgBouncer 1.25.1 (2025-12-03)** fixed **CVE-2025-12819** (an unauthenticated attacker could run SQL during authentication via a malicious `search_path` startup parameter). Later 1.25.x releases fixed further denial-of-service CVEs. Keep poolers patched; they're internet-adjacent.
-> - **PostgreSQL 18 (2025-09-25)** introduced OAuth authentication and deprecated MD5 passwords (use SCRAM), which affects pooler `auth_type` configuration.
+<Info>
+**🆕 2025–2026**
+
+- **PgBouncer 1.25.0 (2025-11-09)** added LDAP authentication, client-side direct TLS connections, much faster SCRAM authentication, a `pool_idle_timeout` setting, per-user/database `query_wait_timeout`, and removed the deprecated online restart (`-R`).
+- **PgBouncer 1.25.1 (2025-12-03)** fixed **CVE-2025-12819** (an unauthenticated attacker could run SQL during authentication via a malicious `search_path` startup parameter). Later 1.25.x releases fixed further denial-of-service CVEs. Keep poolers patched; they're internet-adjacent.
+- **PostgreSQL 18 (2025-09-25)** introduced OAuth authentication and deprecated MD5 passwords (use SCRAM), which affects pooler `auth_type` configuration.
+</Info>
 
 ## Interview questions
 
-> [!question]- Why is opening a DB connection per request bad?
-> Each connection costs a TCP (and TLS) handshake, authentication and, in Postgres, forking a backend process with its own memory. That can dwarf query time and limits throughput; many concurrent connections also overload the server.
+<Accordion title="Why is opening a DB connection per request bad?">
+Each connection costs a TCP (and TLS) handshake, authentication and, in Postgres, forking a backend process with its own memory. That can dwarf query time and limits throughput; many concurrent connections also overload the server.
+</Accordion>
 
-> [!question]- How do you size a connection pool?
-> Start near (DB cores × 2) + disks for total active connections, divide across app instances, keep the fleet total under `max_connections` with headroom, then tune using acquire-wait and DB utilisation metrics. Little's law (throughput × latency) estimates busy connections.
+<Accordion title="How do you size a connection pool?">
+Start near (DB cores × 2) + disks for total active connections, divide across app instances, keep the fleet total under `max_connections` with headroom, then tune using acquire-wait and DB utilisation metrics. Little's law (throughput × latency) estimates busy connections.
+</Accordion>
 
-> [!question]- What are PgBouncer's pooling modes and their trade-offs?
-> Session (a server connection per client session, compatible but little sharing), transaction (server connection per transaction, best multiplexing, breaks session state) and statement (per statement, no multi-statement transactions).
+<Accordion title="What are PgBouncer's pooling modes and their trade-offs?">
+Session (a server connection per client session, compatible but little sharing), transaction (server connection per transaction, best multiplexing, breaks session state) and statement (per statement, no multi-statement transactions).
+</Accordion>
 
-> [!question]- Your service times out acquiring DB connections under load. What do you check?
-> Leaked connections (missing release), long transactions or slow queries holding connections, external calls inside transactions, pool size vs DB capacity, lock waits in `pg_stat_activity`, and whether autoscaling multiplied pools past `max_connections`.
+<Accordion title="Your service times out acquiring DB connections under load. What do you check?">
+Leaked connections (missing release), long transactions or slow queries holding connections, external calls inside transactions, pool size vs DB capacity, lock waits in `pg_stat_activity`, and whether autoscaling multiplied pools past `max_connections`.
+</Accordion>
 
-> [!question]- How do you use Postgres from serverless functions?
-> Create the client outside the handler for reuse, and put an external pooler (PgBouncer, RDS Proxy, Supavisor) or an HTTP/WebSocket driver in front, since each function instance would otherwise open its own connections.
+<Accordion title="How do you use Postgres from serverless functions?">
+Create the client outside the handler for reuse, and put an external pooler (PgBouncer, RDS Proxy, Supavisor) or an HTTP/WebSocket driver in front, since each function instance would otherwise open its own connections.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Transactions & ACID]] · [[Locking & Concurrency Control]] · [[Clustering and Scaling]] · [[Replication & 2PC 3PC]]
-- [[Unit 06 Connecting to MongoDB in Node.js]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) · [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)
+- [Unit 06 Connecting to MongoDB in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2006%20Connecting%20to%20MongoDB%20in%20Node.js)
 
 ## Sources
 - node-postgres, Pooling: https://node-postgres.com/features/pooling · Pool API: https://node-postgres.com/apis/pool

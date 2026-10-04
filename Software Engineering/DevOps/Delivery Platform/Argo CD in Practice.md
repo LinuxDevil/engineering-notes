@@ -1,14 +1,18 @@
 ---
+title: "Argo CD in Practice"
 tags: [devops, devops/gitops]
 aliases: [Argo CD Deep Dive, ArgoCD in Practice, Argo CD Hands-on, ApplicationSet, AppProject, Argo CD Sync Waves]
 updated: 2026-09-27
 ---
 # Argo CD in Practice
 
-> [!tldr] TL;DR
-> Argo CD is a Kubernetes controller that keeps the cluster equal to what Git says. You describe each deployable unit as an `Application` (repo + path + destination), group and fence them with an `AppProject`, and stamp out many of them with an `ApplicationSet`. Sync policies, waves, hooks and `ignoreDifferences` control *how* it converges; RBAC, SSO and projects control *who* can make it converge. This note runs the whole thing for the Acme Shop platform, including the Argo CD 3.x changes (3.0 in May 2025 through 3.6-rc1 in September 2026).
+<Note>
+**TL;DR**
 
-This is the hands-on companion to [[GitOps - Argo CD & Flux]], which covers the *why* of GitOps and Flux. Here we install, configure, operate and debug Argo CD for the Acme Shop (`shell`, `catalog`, `checkout`, `orders-api`) described in [[Kubernetes Delivery Platform - End to End]].
+Argo CD is a Kubernetes controller that keeps the cluster equal to what Git says. You describe each deployable unit as an `Application` (repo + path + destination), group and fence them with an `AppProject`, and stamp out many of them with an `ApplicationSet`. Sync policies, waves, hooks and `ignoreDifferences` control *how* it converges; RBAC, SSO and projects control *who* can make it converge. This note runs the whole thing for the Acme Shop platform, including the Argo CD 3.x changes (3.0 in May 2025 through 3.6-rc1 in September 2026).
+</Note>
+
+This is the hands-on companion to [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux), which covers the *why* of GitOps and Flux. Here we install, configure, operate and debug Argo CD for the Acme Shop (`shell`, `catalog`, `checkout`, `orders-api`) described in [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End).
 
 ## 1. The mental model
 
@@ -146,7 +150,7 @@ helm upgrade --install argocd argo/argo-cd \
 
 After this first bootstrap, Argo CD manages its own chart through an Application in `platform/argocd/` (the "Argo CD manages Argo CD" pattern). Upgrades then become PRs that bump the chart version.
 
-Exposing the UI with Gateway API (ingress-nginx was retired in March 2026, see [[Kubernetes Networking - Services, Ingress & Gateway API]]):
+Exposing the UI with Gateway API (ingress-nginx was retired in March 2026, see [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)):
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -201,8 +205,11 @@ argocd app logs orders-api-prod --kind Deployment --name orders-api --group apps
 argocd app manifests orders-api-prod --source live
 ```
 
-> [!warning] Rollback vs GitOps
-> `argocd app rollback` refuses to run while automated sync is on, because auto-sync would immediately re-apply Git. In a GitOps shop the real rollback is `git revert` of the tag bump; use `app rollback` only in an incident after disabling auto-sync, then fix Git.
+<Warning>
+**Rollback vs GitOps**
+
+`argocd app rollback` refuses to run while automated sync is on, because auto-sync would immediately re-apply Git. In a GitOps shop the real rollback is `git revert` of the tag bump; use `app rollback` only in an incident after disabling auto-sync, then fix Git.
+</Warning>
 
 ## 4. The `Application` CRD
 
@@ -343,7 +350,7 @@ Namespaces are created by the platform team's app, so the shop apps don't use `C
 | `prune` | Checkbox per sync | `automated.prune: true` |
 | Drift | Shown as OutOfSync | Reverted if `selfHeal: true` |
 
-We run automated sync in all three environments: the PR review and branch protection on `platform-gitops` *are* the approval, and Argo Rollouts gates prod traffic ([[Argo Rollouts - Canary & Blue-Green]]).
+We run automated sync in all three environments: the PR review and branch protection on `platform-gitops` *are* the approval, and Argo Rollouts gates prod traffic ([Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green)).
 
 ### `syncOptions` you will actually use
 
@@ -409,8 +416,11 @@ spec:
             limits: { memory: 256Mi }
 ```
 
-> [!warning] PreSync hooks run before wave -1
-> The PreSync phase runs before any Sync-phase wave, so a Secret the migration needs must already exist (created by a previous sync) or also be a PreSync hook with a lower wave. On the very first deploy, create `orders-api-db` first. Also, migrations must be **backward compatible** (expand/contract): old pods keep serving while the Job runs, and during a canary two versions share the schema.
+<Warning>
+**PreSync hooks run before wave -1**
+
+The PreSync phase runs before any Sync-phase wave, so a Secret the migration needs must already exist (created by a previous sync) or also be a PreSync hook with a lower wave. On the very first deploy, create `orders-api-db` first. Also, migrations must be **backward compatible** (expand/contract): old pods keep serving while the Job runs, and during a canary two versions share the schema.
+</Warning>
 
 A PostSync smoke test:
 
@@ -662,7 +672,7 @@ Three ways to change that tag:
 
 | Approach | How | Pros | Cons |
 |---|---|---|---|
-| **CI bumps the tag** ([[Jenkins - Pipelines as Code]]) | After build + tests, Jenkins runs `kustomize edit set image ...` and commits to dev (direct) or opens a PR for staging/prod | Explicit, auditable, works with any tool | Promotion logic lives in pipeline code; CI needs Git write access |
+| **CI bumps the tag** ([Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)) | After build + tests, Jenkins runs `kustomize edit set image ...` and commits to dev (direct) or opens a PR for staging/prod | Explicit, auditable, works with any tool | Promotion logic lives in pipeline code; CI needs Git write access |
 | **Argo CD Image Updater** | Watches the registry, writes new tags back to Git (or as parameter overrides) | No CI step; good for dev auto-deploy | Registry polling; less control over "promote only what passed staging" |
 | **Kargo** | Promotion-as-a-resource: `Warehouse` (subscribes to images/charts/Git), `Freight` (a versioned bundle), `Stage` (dev/staging/prod) and `Promotion` with steps (clone, `kustomize-set-image`, commit, push/PR, `argocd-update`) | Visual pipeline, verification gates per stage, promotes the same Freight | Another controller; by Akuity, not a CNCF project |
 
@@ -732,7 +742,7 @@ spec:
         property: url
 ```
 
-More on vaults and rotation in [[Secrets Management]].
+More on vaults and rotation in [Secrets Management](/Software%20Engineering/Security/Secrets%20Management).
 
 ## 10. Seeing what's going on
 
@@ -746,7 +756,7 @@ More on vaults and rotation in [[Secrets Management]].
 
 **CLI**: `argocd app get orders-api-prod` (tree + conditions), `argocd app logs ...`, `argocd app diff`, `argocd app history`, `argocd app resources orders-api-prod --orphaned`.
 
-**Metrics**: the controller exports `argocd_app_info{sync_status,health_status}` (3.0 removed the older `argocd_app_sync_status`/`argocd_app_health_status` metrics), `argocd_app_sync_total`, reconcile durations, repo-server Git request latencies. Dashboards and alerts live in [[Grafana & the LGTM Stack]].
+**Metrics**: the controller exports `argocd_app_info{sync_status,health_status}` (3.0 removed the older `argocd_app_sync_status`/`argocd_app_health_status` metrics), `argocd_app_sync_total`, reconcile durations, repo-server Git request latencies. Dashboards and alerts live in [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack).
 
 ### Notifications to Slack
 
@@ -832,28 +842,34 @@ SSO: bundled Dex (GitHub, LDAP, SAML) or direct OIDC (`oidc.config` in `argocd-c
 
 ## 13. What changed in 2025–2026
 
-> [!info]+ 🆕 2025–2026
-> - **Argo CD 3.0 GA (2025-05-06)**. Breaking/default changes: annotation-based resource tracking by default; fine-grained RBAC (app `update`/`delete` no longer cover its resources); logs RBAC enforced; default `resource.exclusions` for high-churn kinds (Endpoints, EndpointSlice, Lease...); status-field changes ignored by default; per-resource health no longer persisted in the Application CR; legacy repo config in `argocd-cm` removed (use Secrets); metrics `argocd_app_sync_status`/`argocd_app_health_status`/`argocd_app_created_time` removed in favour of `argocd_app_info`; Dex RBAC subject moved to `federated_claims.user_id`.
-> - **3.1 (2025-08-13)**: OCI registries as an application source (beta), CLI plugins, Source Hydrator updates, v2 resource-actions API with parameters, 18 new health checks.
-> - **3.2 (2025-11-04)**: ApplicationSet progressive-sync visibility and ordered deletion, server-side diff in the CLI, `argocd app get-resource`, hydration status on app tiles, CronJob health (apps may flip to Degraded after upgrade). 2.14 reached end of life.
-> - **3.3 (2026-02-02)**: **PreDelete hooks**, background OIDC token refresh, shallow Git clones for large repos, Source Hydrator uses git notes and inline parameters. CRDs now need server-side apply to install (`--server-side --force-conflicts`). Helm 2 support removed.
-> - **3.4 (first release 3.4.1, 2026-05-06)**: `teams-workflows` notification service (legacy Teams service deprecated), hook finalizers always cleaned up after failed syncs, annotation to pause reconciliation for a cluster, app health `Missing` only when all resources are missing, cluster version format `vMajor.Minor.Patch` for cluster generators.
-> - **3.5 (2026-08-04)**: Helm 4 support (Helm 4.2), mTLS between repo-server and other components, Source Integrity (replaces GnuPG verification, includes Git commit signature checks), impersonation and Source Hydrator promoted to beta, ApplicationSet UI with change previews, React 19 UI (old UI extensions may need rebuilding).
-> - **3.6.0-rc1 (2026-09-16)**, GA targeted for 2026-11-03: more health checks, ApplicationSet progressive-sync metrics and conditions, compressed cluster cache.
-> - **Argo CD Image Updater 1.0 (2025-11-11)**: `ImageUpdater` CRD replaces Application annotations; 1.3.0 on 2026-08-13.
-> - **Kargo**: active under Akuity, v1.11.0 released 2026-07-24.
-> - The **Argo project** (CD, Rollouts, Workflows, Events) has been a **CNCF graduated** project since December 2022.
+<Info>
+**🆕 2025–2026**
+
+- **Argo CD 3.0 GA (2025-05-06)**. Breaking/default changes: annotation-based resource tracking by default; fine-grained RBAC (app `update`/`delete` no longer cover its resources); logs RBAC enforced; default `resource.exclusions` for high-churn kinds (Endpoints, EndpointSlice, Lease...); status-field changes ignored by default; per-resource health no longer persisted in the Application CR; legacy repo config in `argocd-cm` removed (use Secrets); metrics `argocd_app_sync_status`/`argocd_app_health_status`/`argocd_app_created_time` removed in favour of `argocd_app_info`; Dex RBAC subject moved to `federated_claims.user_id`.
+- **3.1 (2025-08-13)**: OCI registries as an application source (beta), CLI plugins, Source Hydrator updates, v2 resource-actions API with parameters, 18 new health checks.
+- **3.2 (2025-11-04)**: ApplicationSet progressive-sync visibility and ordered deletion, server-side diff in the CLI, `argocd app get-resource`, hydration status on app tiles, CronJob health (apps may flip to Degraded after upgrade). 2.14 reached end of life.
+- **3.3 (2026-02-02)**: **PreDelete hooks**, background OIDC token refresh, shallow Git clones for large repos, Source Hydrator uses git notes and inline parameters. CRDs now need server-side apply to install (`--server-side --force-conflicts`). Helm 2 support removed.
+- **3.4 (first release 3.4.1, 2026-05-06)**: `teams-workflows` notification service (legacy Teams service deprecated), hook finalizers always cleaned up after failed syncs, annotation to pause reconciliation for a cluster, app health `Missing` only when all resources are missing, cluster version format `vMajor.Minor.Patch` for cluster generators.
+- **3.5 (2026-08-04)**: Helm 4 support (Helm 4.2), mTLS between repo-server and other components, Source Integrity (replaces GnuPG verification, includes Git commit signature checks), impersonation and Source Hydrator promoted to beta, ApplicationSet UI with change previews, React 19 UI (old UI extensions may need rebuilding).
+- **3.6.0-rc1 (2026-09-16)**, GA targeted for 2026-11-03: more health checks, ApplicationSet progressive-sync metrics and conditions, compressed cluster cache.
+- **Argo CD Image Updater 1.0 (2025-11-11)**: `ImageUpdater` CRD replaces Application annotations; 1.3.0 on 2026-08-13.
+- **Kargo**: active under Akuity, v1.11.0 released 2026-07-24.
+- The **Argo project** (CD, Rollouts, Workflows, Events) has been a **CNCF graduated** project since December 2022.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Team apps in the `default` project: anyone who can create an app can deploy anything anywhere.
-> - `prune: true` + a typo in `path` that renders an empty directory. Keep `allowEmpty: false` (the default) and review ApplicationSet changes carefully; use `applicationsSync: create-update` so an AppSet mistake can't delete apps.
-> - An Application's `finalizer` + deleting the ApplicationSet = deleting production workloads. Set `preserveResourcesOnDeletion: true`.
-> - Mutable image tags: Git doesn't change, the cluster does. Use SHA tags or digests.
-> - Relying on `argocd app rollback` while auto-sync is on; it won't work and Git still says the bad version.
-> - Pre-3.0 RBAC assumptions after upgrading (people suddenly can't see logs or restart pods).
-> - Manifest generation that calls the network (Helm dependencies from the internet) makes every refresh slow and flaky; vendor or cache charts.
+<Warning>
+**Common pitfalls**
+
+- Team apps in the `default` project: anyone who can create an app can deploy anything anywhere.
+- `prune: true` + a typo in `path` that renders an empty directory. Keep `allowEmpty: false` (the default) and review ApplicationSet changes carefully; use `applicationsSync: create-update` so an AppSet mistake can't delete apps.
+- An Application's `finalizer` + deleting the ApplicationSet = deleting production workloads. Set `preserveResourcesOnDeletion: true`.
+- Mutable image tags: Git doesn't change, the cluster does. Use SHA tags or digests.
+- Relying on `argocd app rollback` while auto-sync is on; it won't work and Git still says the bad version.
+- Pre-3.0 RBAC assumptions after upgrading (people suddenly can't see logs or restart pods).
+- Manifest generation that calls the network (Helm dependencies from the internet) makes every refresh slow and flaky; vendor or cache charts.
+</Warning>
 
 ## Senior perspective
 
@@ -866,36 +882,44 @@ SSO: bundled Dex (GitHub, LDAP, SAML) or direct OIDC (`oidc.config` in `argocd-c
 
 ## Interview questions
 
-> [!question]- Walk through what happens between merging a tag bump and the new pods serving traffic.
-> The webhook (or the ~3 min poll) triggers a refresh; repo-server renders the overlay at the new commit; the controller diffs it against its watch cache of live objects, finds the Deployment/Rollout OutOfSync, and because auto-sync is on starts a sync: PreSync hooks (DB migration), then resources by wave, waiting for health; then PostSync hooks. Kubernetes (or Argo Rollouts) performs the actual rolling/canary update. Health rolls up to Healthy and notifications fire.
+<Accordion title="Walk through what happens between merging a tag bump and the new pods serving traffic.">
+The webhook (or the ~3 min poll) triggers a refresh; repo-server renders the overlay at the new commit; the controller diffs it against its watch cache of live objects, finds the Deployment/Rollout OutOfSync, and because auto-sync is on starts a sync: PreSync hooks (DB migration), then resources by wave, waiting for health; then PostSync hooks. Kubernetes (or Argo Rollouts) performs the actual rolling/canary update. Health rolls up to Healthy and notifications fire.
+</Accordion>
 
-> [!question]- Sync status vs health status?
-> Sync compares desired (Git) with live; health describes whether live objects work (Deployment available, Job succeeded). They are independent: Synced/Degraded means you applied a broken version; OutOfSync/Healthy means Git changed but isn't applied yet.
+<Accordion title="Sync status vs health status?">
+Sync compares desired (Git) with live; health describes whether live objects work (Deployment available, Job succeeded). They are independent: Synced/Degraded means you applied a broken version; OutOfSync/Healthy means Git changed but isn't applied yet.
+</Accordion>
 
-> [!question]- How do you stop Argo CD fighting an HPA over replicas?
-> Remove `replicas` from Git, or add `ignoreDifferences` on `/spec/replicas` together with `RespectIgnoreDifferences=true`; server-side apply also helps because the HPA owns that field.
+<Accordion title="How do you stop Argo CD fighting an HPA over replicas?">
+Remove `replicas` from Git, or add `ignoreDifferences` on `/spec/replicas` together with `RespectIgnoreDifferences=true`; server-side apply also helps because the HPA owns that field.
+</Accordion>
 
-> [!question]- App-of-apps vs ApplicationSet?
-> App-of-apps is a parent Application whose manifests are Applications, good for bootstrapping heterogeneous platform components. ApplicationSet generates many similar Applications from generators (git directories, clusters, lists, PRs), good for fleets. Many teams use app-of-apps to bootstrap and ApplicationSets for workloads.
+<Accordion title="App-of-apps vs ApplicationSet?">
+App-of-apps is a parent Application whose manifests are Applications, good for bootstrapping heterogeneous platform components. ApplicationSet generates many similar Applications from generators (git directories, clusters, lists, PRs), good for fleets. Many teams use app-of-apps to bootstrap and ApplicationSets for workloads.
+</Accordion>
 
-> [!question]- How would you run DB migrations with Argo CD safely?
-> A PreSync hook Job using the same image tag, with `BeforeHookCreation` delete policy, a deadline, and backward-compatible (expand/contract) migrations so old pods and canary pods both work. Alternatively run migrations in the app on start with a lock, or a migration operator; never make the old version break mid-rollout.
+<Accordion title="How would you run DB migrations with Argo CD safely?">
+A PreSync hook Job using the same image tag, with `BeforeHookCreation` delete policy, a deadline, and backward-compatible (expand/contract) migrations so old pods and canary pods both work. Alternatively run migrations in the app on start with a lock, or a migration operator; never make the old version break mid-rollout.
+</Accordion>
 
-> [!question]- What does an AppProject protect you from?
-> It restricts which repos an app may use, which clusters/namespaces it may deploy to, which kinds (e.g. no ClusterRoles), and defines team roles and sync windows. Without it, anyone who can create an Application in `default` can deploy anything to any cluster Argo CD manages.
+<Accordion title="What does an AppProject protect you from?">
+It restricts which repos an app may use, which clusters/namespaces it may deploy to, which kinds (e.g. no ClusterRoles), and defines team roles and sync windows. Without it, anyone who can create an Application in `default` can deploy anything to any cluster Argo CD manages.
+</Accordion>
 
-> [!question]- How do you handle secrets in GitOps?
-> Keep only references or ciphertext in Git: External Secrets Operator syncing from a cloud vault (most common), Sealed Secrets, or SOPS. Prefer approaches that materialise the Secret in the destination cluster rather than during manifest generation, since rendered manifests are cached by Argo CD.
+<Accordion title="How do you handle secrets in GitOps?">
+Keep only references or ciphertext in Git: External Secrets Operator syncing from a cloud vault (most common), Sealed Secrets, or SOPS. Prefer approaches that materialise the Secret in the destination cluster rather than during manifest generation, since rendered manifests are cached by Argo CD.
+</Accordion>
 
-> [!question]- What were the main breaking changes in Argo CD 3.0?
-> Annotation-based tracking by default, fine-grained RBAC (app update/delete no longer covers its resources), logs RBAC enforced, default exclusions for high-churn resources, some metrics removed in favour of `argocd_app_info`, and legacy repo config in `argocd-cm` removed.
+<Accordion title="What were the main breaking changes in Argo CD 3.0?">
+Annotation-based tracking by default, fine-grained RBAC (app update/delete no longer covers its resources), logs RBAC enforced, default exclusions for high-churn resources, some metrics removed in favour of `argocd_app_info`, and legacy repo config in `argocd-cm` removed.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]] · [[GitOps - Argo CD & Flux]]
-- [[Argo Rollouts - Canary & Blue-Green]] · [[Jenkins - Pipelines as Code]] · [[Grafana & the LGTM Stack]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Deploying Next.js Micro-frontends to Kubernetes]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]]
-- [[Helm & Kustomize]] · [[Kubernetes Workloads in Production]] · [[Kubernetes Networking - Services, Ingress & Gateway API]]
-- [[Secrets Management]] · [[Supply Chain Security]] · [[Platform Engineering & Internal Developer Platforms]] · [[CI-CD Pipelines]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux)
+- [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)
+- [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)
+- [Secrets Management](/Software%20Engineering/Security/Secrets%20Management) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)
 
 ## Sources
 - [Argo CD documentation](https://argo-cd.readthedocs.io/en/stable/) (architecture, user guide, operator manual)

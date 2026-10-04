@@ -1,12 +1,16 @@
 ---
+title: "Memory Management & Garbage Collection"
 tags: [frontend, frontend/javascript]
 aliases: [Garbage Collection, Memory Leaks, Stack vs Heap, Explicit Resource Management, using]
 updated: 2026-09-27
 ---
 # Memory Management & Garbage Collection
 
-> [!tldr] TL;DR
-> JS manages memory automatically: values are allocated when created and **garbage-collected** when they are no longer **reachable** from the roots (globals, the current call stack, active closures). Engines use **mark-and-sweep** with a **generational** heap. Leaks happen when you *accidentally keep things reachable*: forgotten listeners, timers, subscriptions, caches, detached DOM nodes, closures. Find them with DevTools heap snapshots. For deterministic cleanup of resources (not memory), ES2027's `using` is coming (Limited support today).
+<Note>
+**TL;DR**
+
+JS manages memory automatically: values are allocated when created and **garbage-collected** when they are no longer **reachable** from the roots (globals, the current call stack, active closures). Engines use **mark-and-sweep** with a **generational** heap. Leaks happen when you *accidentally keep things reachable*: forgotten listeners, timers, subscriptions, caches, detached DOM nodes, closures. Find them with DevTools heap snapshots. For deterministic cleanup of resources (not memory), ES2027's `using` is coming (Limited support today).
+</Note>
 
 ## Memory lifecycle
 
@@ -32,8 +36,11 @@ function book() {
 const b = book();
 ```
 
-> [!note] Conceptual model
-> The ECMAScript spec doesn't define stack/heap; engines decide. V8 stores small integers ("Smis") inline and boxes most other values on the heap. A closure's captured variables live in a heap-allocated **context**, which is why closures can keep large objects alive. See [[Closures & Memory Model]] and [[Execution Context & Call Stack]].
+<Note>
+**Conceptual model**
+
+The ECMAScript spec doesn't define stack/heap; engines decide. V8 stores small integers ("Smis") inline and boxes most other values on the heap. A closure's captured variables live in a heap-allocated **context**, which is why closures can keep large objects alive. See [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) and [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack).
+</Note>
 
 ## Reachability and mark-and-sweep
 
@@ -76,23 +83,26 @@ flowchart LR
 | Console | `console.log(bigObject)` keeps it alive while DevTools is open | Remove logs in prod |
 | Third-party widgets | Map/chart libraries not destroyed | Call their `destroy()` |
 
-> [!example] React: leak vs fixed
-> ```jsx
-> // Leak: listener and interval outlive the component
-> useEffect(() => {
->   window.addEventListener('resize', onResize);
->   const id = setInterval(refreshPrices, 5000);
-> }, []);
->
-> // Fixed: return a cleanup
-> useEffect(() => {
->   const ac = new AbortController();
->   window.addEventListener('resize', onResize, { signal: ac.signal });
->   const id = setInterval(refreshPrices, 5000);
->   return () => { ac.abort(); clearInterval(id); };
-> }, []);
-> ```
-> React StrictMode mounts, unmounts and re-mounts in development precisely to surface missing cleanups.
+<Info>
+**React: leak vs fixed**
+
+```jsx
+// Leak: listener and interval outlive the component
+useEffect(() => {
+  window.addEventListener('resize', onResize);
+  const id = setInterval(refreshPrices, 5000);
+}, []);
+
+// Fixed: return a cleanup
+useEffect(() => {
+  const ac = new AbortController();
+  window.addEventListener('resize', onResize, { signal: ac.signal });
+  const id = setInterval(refreshPrices, 5000);
+  return () => { ac.abort(); clearInterval(id); };
+}, []);
+```
+React StrictMode mounts, unmounts and re-mounts in development precisely to surface missing cleanups.
+</Info>
 
 ## Finding leaks with Chrome DevTools
 
@@ -114,7 +124,7 @@ flowchart LR
 
 ## Weak references
 
-`WeakMap`, `WeakSet`, `WeakRef` and `FinalizationRegistry` let you reference objects without keeping them alive. See [[Collections - Map, Set, WeakMap & WeakRef]].
+`WeakMap`, `WeakSet`, `WeakRef` and `FinalizationRegistry` let you reference objects without keeping them alive. See [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef).
 
 ## Explicit Resource Management: `using` (ES2027 target)
 
@@ -155,43 +165,55 @@ try { await doSomething(prices.sub); }
 finally { prices[Symbol.dispose](); }
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Explicit Resource Management** (`using`, `await using`, `DisposableStack`) is Stage 4 with target **ES2027**; Baseline Limited (Chrome 134, Firefox 141, no Safari).
-> - **Upsert** (`getOrInsertComputed`) makes lazy caches simpler, and `WeakMap.prototype.getOrInsertComputed` pairs well with per-object caches (ES2026).
+<Info>
+**🆕 2025–2026**
 
-> [!warning] Common pitfalls
-> - Assuming `delete obj.prop` or `x = null` frees memory immediately: it only removes one reference; GC decides when.
-> - Clearing a component's state but leaving a listener that closes over it.
-> - Caching everything "for performance" and never evicting.
-> - Measuring leaks without forcing GC first (you'll see garbage that just hasn't been collected yet).
+- **Explicit Resource Management** (`using`, `await using`, `DisposableStack`) is Stage 4 with target **ES2027**; Baseline Limited (Chrome 134, Firefox 141, no Safari).
+- **Upsert** (`getOrInsertComputed`) makes lazy caches simpler, and `WeakMap.prototype.getOrInsertComputed` pairs well with per-object caches (ES2026).
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- Assuming `delete obj.prop` or `x = null` frees memory immediately: it only removes one reference; GC decides when.
+- Clearing a component's state but leaving a listener that closes over it.
+- Caching everything "for performance" and never evicting.
+- Measuring leaks without forcing GC first (you'll see garbage that just hasn't been collected yet).
+</Warning>
 
 ## Interview questions
 
-> [!question]- How does garbage collection work in JavaScript?
-> Engines use reachability: starting from roots (globals, the stack, closures, host references) they mark every reachable object and sweep the rest (mark-and-sweep). V8 is generational: a fast scavenger for young objects and incremental/concurrent mark-sweep-compact for old ones.
+<Accordion title="How does garbage collection work in JavaScript?">
+Engines use reachability: starting from roots (globals, the stack, closures, host references) they mark every reachable object and sweep the rest (mark-and-sweep). V8 is generational: a fast scavenger for young objects and incremental/concurrent mark-sweep-compact for old ones.
+</Accordion>
 
-> [!question]- What is the difference between stack and heap?
-> The stack holds call frames (local variables, arguments) with LIFO lifetime tied to function calls; the heap holds dynamically allocated objects whose lifetime is managed by the GC. Primitives in locals conceptually live in the frame; objects live on the heap and frames hold references.
+<Accordion title="What is the difference between stack and heap?">
+The stack holds call frames (local variables, arguments) with LIFO lifetime tied to function calls; the heap holds dynamically allocated objects whose lifetime is managed by the GC. Primitives in locals conceptually live in the frame; objects live on the heap and frames hold references.
+</Accordion>
 
-> [!question]- What are common causes of memory leaks in a SPA?
-> Listeners, intervals and subscriptions not cleaned up on unmount; detached DOM nodes still referenced; unbounded caches/Maps; closures capturing large data; accidental globals; third-party widgets not destroyed.
+<Accordion title="What are common causes of memory leaks in a SPA?">
+Listeners, intervals and subscriptions not cleaned up on unmount; detached DOM nodes still referenced; unbounded caches/Maps; closures capturing large data; accidental globals; third-party widgets not destroyed.
+</Accordion>
 
-> [!question]- How would you find a memory leak?
-> Reproduce the action repeatedly, watch heap/DOM node counts, take heap snapshots before/after (forcing GC), use the Comparison view and "Detached" filter, then follow the retainers path to the code holding the reference.
+<Accordion title="How would you find a memory leak?">
+Reproduce the action repeatedly, watch heap/DOM node counts, take heap snapshots before/after (forcing GC), use the Comparison view and "Detached" filter, then follow the retainers path to the code holding the reference.
+</Accordion>
 
-> [!question]- Can circular references cause leaks?
-> Not with mark-and-sweep: an unreachable cycle is collected. They were a problem with reference counting (old IE COM/DOM objects).
+<Accordion title="Can circular references cause leaks?">
+Not with mark-and-sweep: an unreachable cycle is collected. They were a problem with reference counting (old IE COM/DOM objects).
+</Accordion>
 
-> [!question]- What is the `using` keyword?
-> Explicit Resource Management: `using x = resource` calls `x[Symbol.dispose]()` when the block exits, `await using` awaits `[Symbol.asyncDispose]()`. It's Stage 4 targeting ES2027 with limited browser support (no Safari yet).
+<Accordion title="What is the `using` keyword?">
+Explicit Resource Management: `using x = resource` calls `x[Symbol.dispose]()` when the block exits, `await using` awaits `[Symbol.asyncDispose]()`. It's Stage 4 targeting ES2027 with limited browser support (no Safari yet).
+</Accordion>
 
 ## Related
-- [[Closures & Memory Model]]
-- [[Execution Context & Call Stack]]
-- [[Collections - Map, Set, WeakMap & WeakRef]]
-- [[Hooks Reference]]
-- [[Performance Optimization Playbook]]
-- [[Modern JavaScript ES2022-ES2027]]
+- [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack)
+- [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)
+- [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
 
 ## Sources
 - MDN: [Memory management](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Memory_management), [Resource management / using](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Resource_management)

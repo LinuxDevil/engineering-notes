@@ -1,4 +1,7 @@
-[[Interview Questions Angular]]
+---
+title: "Angular"
+---
+[Interview Questions Angular](/Software%20Engineering/Interviews/Interview%20Questions%20Angular)
 
 
 ## What is zone?
@@ -14,10 +17,12 @@ What is NgZone?
 What is NoopZone?
     Zone is loaded/required by default in Angular applications and it helps Angular to know when to trigger the change detection. This way, it make sures developers focus on application development rather core part of Angular. You can also use Angular without Zone but the change detection need to be implemented on your own and `noop zone` need to be configured in bootstrap process. Let's follow the below two steps to remove zone.js,
 	1. Remove the zone.js import from polyfills.ts.
-		`/***************************************************************************************************
+```typescript
+/***************************************************************************************************
  - Zone JS is required by default for Angular itself.
  */
-// import 'zone.js/dist/zone';  // Included with Angular CLI.`
+// import 'zone.js/dist/zone';  // Included with Angular CLI.
+```
 	2. Bootstrap Angular with noop zone in src/main.ts.
 ```plain text
 platformBrowserDynamic().bootstrapModule(AppModule, {ngZone: 'noop'})
@@ -28,16 +33,20 @@ platformBrowserDynamic().bootstrapModule(AppModule, {ngZone: 'noop'})
 
 The compiler can only resolve references to exported symbols in the metadata. Where as some of the non-exported members are folded while generating the code. i.e Folding is a process in which the collector evaluate an expression during collection and record the result in the .metadata.json instead of the original expression. For example, the compiler couldn't refer selector reference because it is not exported
 
-`let selector = 'app-root';
+```typescript
+let selector = 'app-root';
 @Component({
   selector: selector
-})`
+})
+```
 
 Will be folded into inline selector
 
-`@Component({
+```typescript
+@Component({
       selector: 'app-root'
-    })`
+    })
+```
 
 Remember that the compiler can’t fold everything. For example, spread operator on arrays, objects created using new keywords and function calls.
 
@@ -70,7 +79,7 @@ Below are the list of AOT benefits,
 
 1. The main building blocks of an Angular application are shown in the diagram below:-
 
-![[Untitled 43.png]]
+![Untitled 43](/Attachments/Untitled%2043.png)
 
 1. What are the key components of Angular?Angular has the key components below,
 	1. **Component:** These are the basic building blocks of an Angular application to control HTML views.
@@ -92,7 +101,9 @@ export class HighlightDirective {
 }
 ```
     Now this directive extends HTML element behavior with a yellow background as below
-    `<p myHighlight>Highlight me!</p>`
+```typescript
+<p myHighlight>Highlight me!</p>
+```
 
 3. What are components?Components are the most basic UI building block of an Angular app, which form a tree of Angular components. These components are a subset of directives. Unlike directives, components always have a template, and only one component can be instantiated per element in a template. Let's see a simple example of Angular component
 ```plain text
@@ -115,7 +126,8 @@ export class AppComponent {
 4. What is a template?
 	A template is a HTML view where you can display data by binding controls to properties of an Angular component. You can store your component's template in one of two places. You can define it inline using the template property, or you can define the template in a separate HTML file and link to it in the component metadata using the @Component decorator's templateUrl property.
 	**Using inline template with template syntax,**
-	`import { Component } from '@angular/core';
+```typescript
+import { Component } from '@angular/core';
 
 @Component ({
    selector: 'my-app',
@@ -129,7 +141,8 @@ export class AppComponent {
 
 export class AppComponent {
    title: string = 'Hello World';
-}`
+}
+```
     **Using separate template file such as app.component.html**
 ```plain text
 import { Component } from '@angular/core';
@@ -146,9 +159,10 @@ export class AppComponent {
 
 5. What is a module?
 	Modules are logical boundaries in your application and the application is divided into separate modules to separate the functionality of your application. Lets take an example of **app.module.ts** root module declared with **@NgModule** decorator as below,
-	`import { NgModule }      from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppComponent }  from './app.component';
+```typescript
+import { NgModule }      from '@angular/core';
+ import { BrowserModule } from '@angular/platform-browser';
+ import { AppComponent }  from './app.component';
 
 @NgModule ({
    imports:      [ BrowserModule ],
@@ -156,7 +170,8 @@ import { AppComponent }  from './app.component';
    bootstrap:    [ AppComponent ],
    providers: []
 })
-export class AppModule { }`
+ export class AppModule { }
+```
     The NgModule decorator has five important (among all) options:
 	1. The imports option is used to import other dependent modules. The BrowserModule is required by default for any web based angular application.
 	2. The declarations option is used to define components in the respective module.
@@ -166,7 +181,7 @@ export class AppModule { }`
 
 6. What are lifecycle hooks available?
 	Angular application goes through an entire set of processes or has a lifecycle right from its initiation to the end of the application. The representation of lifecycle in pictorial representation as follows,
-![[lifecycle.png]]
+![lifecycle](/Attachments/lifecycle.png)
     The description of each lifecycle method is as below,
 	6. **ngOnChanges:** When the value of a data bound property changes, then this method is called.
 	7. **ngOnInit:** This is called whenever the initialization of the directive/component after Angular first displays the data-bound properties happens.
@@ -179,13 +194,14 @@ export class AppModule { }`
 
 7. What is metadata?Metadata is used to decorate a class so that it can configure the expected behavior of the class. The metadata is represented by decorators
 	14. **Class decorators**, e.g. @Component and @NgModule
-		`import { NgModule, Component } from '@angular/core';
+```typescript
+import { NgModule, Component } from '@angular/core';
 
 @Component({
   selector: 'my-component',
   template: '<div>Class decorator</div>',
 })
-export class MyComponent {
+ export class MyComponent {
   constructor() {
     console.log('Hey I am a component!');
   }
@@ -195,36 +211,41 @@ export class MyComponent {
   imports: [],
   declarations: [],
 })
-export class MyModule {
+ export class MyModule {
   constructor() {
     console.log('Hey I am a module!');
   }
-}`
+}
+```
 	15. **Property decorators** Used for properties inside classes, e.g. @Input and @Output
-		`import { Component, Input } from '@angular/core';
+```typescript
+import { Component, Input } from '@angular/core';
 
 @Component({
     selector: 'my-component',
     template: '<div>Property decorator</div>'
 })
 
-export class MyComponent {
+ export class MyComponent {
     @Input()
     title: string;
-}`
+}
+```
 	16. **Method decorators** Used for methods inside classes, e.g. @HostListener
-		`import { Component, HostListener } from '@angular/core';
+```typescript
+import { Component, HostListener } from '@angular/core';
 
 @Component({
     selector: 'my-component',
     template: '<div>Method decorator</div>'
 })
-export class MyComponent {
+ export class MyComponent {
     @HostListener('click', ['$event'])
     onHostClick(event: Event) {
         // clicked, `event` available
     }
-}`
+}
+```
 	17. **Parameter decorators** Used for parameters inside class constructors, e.g. @Inject, @Optional
 ```plain text
 import { Component, Inject } from '@angular/core';
@@ -261,21 +282,23 @@ export class App implements OnInit{
 9. What is a service?
 	A service is used when a common functionality needs to be provided to various modules. Services allow for greater separation of concerns for your application and better modularity by allowing you to extract common functionality out of components.
 	Let's create a repoService which can be used across components,
-	`import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+```typescript
+import { Injectable } from '@angular/core';
+ import { Http } from '@angular/http';
 
 @Injectable({ // The Injectable decorator is required for dependency injection to work
   // providedIn option registers the service with a specific NgModule
   providedIn: 'root',  // This declares the service with the root app (AppModule)
 })
-export class RepoService{
+ export class RepoService{
   constructor(private http: Http){
   }
 
   fetchAll(){
     return this.http.get('https://api.github.com/repositories');
   }
-}`
+}
+```
     The above service uses Http service as a dependency.
 
 10. What is dependency injection in Angular?Dependency injection (DI), is an important application design pattern in which a class asks for dependencies from external sources rather than creating them itself. Angular comes with its own dependency injection framework for resolving dependencies( services or objects that a class needs to perform its function).So you can have your services depend on other services throughout your application.
@@ -283,7 +306,7 @@ export class RepoService{
 11. How is Dependency Hierarchy formed?
 	Injectors in Angular have rules that can be leveraged to achieve the desired visibility of injectables in your applications. By understanding these rules, you can determine in which NgModule, Component, or Directive you should declare a provider.
 	### Angular has two injector hierarchies:
-![[injector hierarchies.png]]
+![injector hierarchies](/Attachments/injector%20hierarchies.png)
     ### Module injector
     When angular starts, it creates a root injector where the services will be registered, these are provided via injectable annotation. All services provided in the `ng-model` property are called providers (if those modules are not lazy-loaded).
     Angular recursively goes through all models which are being used in the application and creates instances for provided services in the root injector. If you provide some service in an eagerly-loaded model, the service will be added to the root injector, which makes it available across the whole application.
@@ -291,10 +314,10 @@ export class RepoService{
     During application bootstrapping angular creates a few more injectors, above the root injector goes the platform injector, this one is created by the platform browser dynamic function inside the `main.ts` file, and it provides some platform-specific features like `DomSanitizer`.
     ### NullInjector()
     At the very top, the next parent injector in the hierarchy is the `NullInjector()`.The responsibility of this injector is to throw the error if something tries to find dependencies there, unless you've used `@Optional()` because ultimately, everything ends at the `NullInjector()` and it returns an error or, in the case of `@Optional()`, `null`.
-![[hierarchy diagram.png]]
+![hierarchy diagram](/Attachments/hierarchy%20diagram.png)
     ### ElementInjector
     Angular creates `ElementInjector` hierarchies implicitly for each DOM element. `ElementInjector` injector is being created for any tag that matches the angular component, or any tag on which directive is applied, and you can configure it in component and directive annotations inside the provider's property, thus, it creates its own hierarchy likewise the upper one.
-![[element injector hieracrhy.png]]
+![element injector hieracrhy](/Attachments/element%20injector%20hieracrhy.png)
 
 
 12. What happens if you use script tag inside template?
@@ -415,13 +438,13 @@ multicasted.subscribe({
 	2. **App adds custom element to DOM:** Add custom element just like a built-in HTML element directly into the DOM.
 	3. **Browser instantiate component based class:** Browser creates an instance of the registered class and adds it to the DOM.
 	4. **Instance provides content with data binding and change detection:** The content with in template is rendered using the component and DOM data. The flow chart of the custom elements functionality would be as follows,
-![[customElement.png]]
+![customElement](/Attachments/customElement.png)
 25. How to transfer components to custom elements?
 	Transforming components to custom elements involves **two** major steps,
 	5. **Build custom element class:** Angular provides the `createCustomElement()` function for converting an Angular component (along with its dependencies) to a custom element. The conversion process implements `NgElementConstructor` interface, and creates a constructor class which is used to produce a self-bootstrapping instance of Angular component.
 	6. **Register element class with browser:** It uses `customElements.define()` JS function, to register the configured constructor and its associated custom-element tag with the browser's `CustomElementRegistry`. When the browser encounters the tag for the registered element, it uses the constructor to create a custom-element instance.
 	The detailed structure would be as follows,
-![[createElement.png]]
+![createElement](/Attachments/createElement.png)
 26. What are the mapping rules between Angular component and custom element?The Component properties and logic maps directly into HTML attributes and the browser's event system. Let us describe them in two steps,
 	7. The createCustomElement() API parses the component input properties with corresponding attributes for the custom element. For example, component @Input('myInputProp') converted as custom element attribute `my-input-prop`.
 	8. The Component outputs are dispatched as HTML Custom Events, with the name of the custom event matching the output name. For example, component @Output() valueChanged = new EventEmitter() converted as custom element with dispatch event as "valueChanged".
@@ -429,10 +452,12 @@ multicasted.subscribe({
 	You can use the `NgElement` and `WithProperties` types exported from @angular/elements.
 	Let's see how it can be applied by comparing with Angular component.
 	9. The simple container with input property would be as below,
-		`@Component(...)
+```typescript
+@Component(...)
 class MyContainer {
   @Input() message: string;
-}`
+}
+```
 	10. After applying types typescript validates input value and their types,
 ```plain text
 const container = document.createElement('my-container') as NgElement & WithProperties<{message: string}>;
@@ -490,7 +515,9 @@ class MyComponent {
 33. What is Angular Ivy?
 	Angular Ivy is a new rendering engine for Angular. You can choose to opt in a preview version of Ivy from Angular version 8.
 	22. You can enable ivy in a new project by using the --enable-ivy flag with the ng new command
-		`ng new ivy-demo-app --enable-ivy`
+```typescript
+ng new ivy-demo-app --enable-ivy
+```
 	23. You can add it to an existing project by adding `enableIvy` option in the `angularCompilerOptions` in your project's `tsconfig.app.json`.
 ```plain text
 {
@@ -556,19 +583,23 @@ Http Interceptors are part of @angular/common/http, which inspect and transform 
 
 The syntax of HttpInterceptor interface looks like as below,
 
-`interface HttpInterceptor {
+```typescript
+interface HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>>
-}`
+}
+```
 
 You can use interceptors by declaring a service class that implements the intercept() method of the HttpInterceptor interface.
 
-`@Injectable()
-export class MyInterceptor implements HttpInterceptor {
+```typescript
+@Injectable()
+ export class MyInterceptor implements HttpInterceptor {
     constructor() {}
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         ...
     }
-}`
+}
+```
 
 After that you can use it in your module,
 

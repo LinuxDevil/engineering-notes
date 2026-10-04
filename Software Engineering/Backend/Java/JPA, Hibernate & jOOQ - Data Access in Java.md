@@ -1,12 +1,16 @@
 ---
+title: "JPA, Hibernate & jOOQ - Data Access in Java"
 tags: [backend, backend/java, databases]
 aliases: [JPA, Hibernate, jOOQ, Java ORM, Spring Data JPA, N+1 problem, JDBC, Java data access, jOOQ (java Object Oriented Querying)]
 updated: 2026-09-27
 ---
 # JPA, Hibernate & jOOQ - Data Access in Java
 
-> [!tldr] TL;DR
-> Java talks to SQL databases through **JDBC**. On top of it you choose a style: **JPA/Hibernate** (an ORM: map entities to tables, the persistence context tracks changes and writes SQL for you), **jOOQ** (database-first, **type-safe SQL** generated from your schema), or thin helpers like Spring's **`JdbcClient`**. JPA is productive for aggregate-style CRUD; jOOQ shines for complex queries, reporting and SQL-heavy code. Most production problems are the same everywhere: **N+1 queries**, wrong fetch strategies, long transactions and missing indexes.
+<Note>
+**TL;DR**
+
+Java talks to SQL databases through **JDBC**. On top of it you choose a style: **JPA/Hibernate** (an ORM: map entities to tables, the persistence context tracks changes and writes SQL for you), **jOOQ** (database-first, **type-safe SQL** generated from your schema), or thin helpers like Spring's **`JdbcClient`**. JPA is productive for aggregate-style CRUD; jOOQ shines for complex queries, reporting and SQL-heavy code. Most production problems are the same everywhere: **N+1 queries**, wrong fetch strategies, long transactions and missing indexes.
+</Note>
 
 ## The layers
 
@@ -163,12 +167,15 @@ Licensing: the open-source edition supports open-source databases (PostgreSQL, M
 Many teams combine them: JPA for aggregate writes, jOOQ or `JdbcClient` for read models and reports (a light CQRS split).
 
 ## Reactive data access
-Blocking JDBC doesn't fit WebFlux. Options: **R2DBC** (Spring Data R2DBC), **Hibernate Reactive**, or jOOQ's R2DBC support. With virtual threads (Java 21+) plain JDBC scales well for most services. See [[Java Concurrency & Virtual Threads]] and [[Reactive Spring Book]].
+Blocking JDBC doesn't fit WebFlux. Options: **R2DBC** (Spring Data R2DBC), **Hibernate Reactive**, or jOOQ's R2DBC support. With virtual threads (Java 21+) plain JDBC scales well for most services. See [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) and [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book).
 
-> [!info]+ 🆕 2025–2026
-> - **Hibernate ORM 7.0 Final (2025-05-19)**: Jakarta Persistence **3.2**, Jakarta EE 11, Java 17+, relicensed to **Apache License 2.0**, new `QuerySpecification`/Restrictions APIs and **Jakarta Data** repositories. The 7.x line continued (7.4 latest stable as of Sept 2026; 8.0 in development).
-> - **Spring Boot 4.0 (2025-11-20)** ships **Hibernate 7.2** and JPA 3.2; Boot 4 also has per-module test starters like `spring-boot-starter-data-jpa-test`. See [[Spring Boot 3 to 4 - What's New]].
-> - JPA 3.2 highlights: `EntityManagerFactory#runInTransaction/callInTransaction`, `union/intersect/except` and more functions in JPQL, records as embeddables.
+<Info>
+**🆕 2025–2026**
+
+- **Hibernate ORM 7.0 Final (2025-05-19)**: Jakarta Persistence **3.2**, Jakarta EE 11, Java 17+, relicensed to **Apache License 2.0**, new `QuerySpecification`/Restrictions APIs and **Jakarta Data** repositories. The 7.x line continued (7.4 latest stable as of Sept 2026; 8.0 in development).
+- **Spring Boot 4.0 (2025-11-20)** ships **Hibernate 7.2** and JPA 3.2; Boot 4 also has per-module test starters like `spring-boot-starter-data-jpa-test`. See [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New).
+- JPA 3.2 highlights: `EntityManagerFactory#runInTransaction/callInTransaction`, `union/intersect/except` and more functions in JPQL, records as embeddables.
+</Info>
 
 ## Pitfalls
 - `open-in-view` hiding lazy loading in the web layer (Boot enables it by default with a warning); disable it.
@@ -180,35 +187,41 @@ Blocking JDBC doesn't fit WebFlux. Options: **R2DBC** (Spring Data R2DBC), **Hib
 
 ## Senior perspective
 - The database is the long-lived asset: design schema, constraints and indexes deliberately; the ORM is a convenience layer on top.
-- Track **queries per request** and slow query logs; review `EXPLAIN` plans for new queries. See [[Databases Index]].
+- Track **queries per request** and slow query logs; review `EXPLAIN` plans for new queries. See [Databases Index](/Software%20Engineering/Databases/Databases%20Index).
 - Aggregate boundaries (DDD) keep JPA sane: small aggregates, references by id across aggregates, no bidirectional associations "just because".
 - Connection pool sizing (HikariCP) is a throughput limiter; with virtual threads, the pool, not threads, becomes the bottleneck.
 - Review checklist: fetch plans, N+1, transaction scope, locking strategy, migrations reversible/online, pagination (keyset over offset for large tables).
 
 ## Interview questions
 
-> [!question]- What is the N+1 problem and how do you fix it?
-> Loading N parent rows with one query and then triggering one extra query per row to load an association. Fix with fetch joins, entity graphs, batch fetching, or DTO projections that select exactly the needed columns.
+<Accordion title="What is the N+1 problem and how do you fix it?">
+Loading N parent rows with one query and then triggering one extra query per row to load an association. Fix with fetch joins, entity graphs, batch fetching, or DTO projections that select exactly the needed columns.
+</Accordion>
 
-> [!question]- JPA vs Hibernate?
-> JPA (Jakarta Persistence) is the standard API/specification; Hibernate is an implementation that also offers extra features (its own annotations, HQL extensions, caching, statistics).
+<Accordion title="JPA vs Hibernate?">
+JPA (Jakarta Persistence) is the standard API/specification; Hibernate is an implementation that also offers extra features (its own annotations, HQL extensions, caching, statistics).
+</Accordion>
 
-> [!question]- What is the persistence context?
-> The set of managed entity instances within a session/transaction. It guarantees one instance per id, tracks changes for automatic dirty checking and flushes them as SQL at flush/commit time.
+<Accordion title="What is the persistence context?">
+The set of managed entity instances within a session/transaction. It guarantees one instance per id, tracks changes for automatic dirty checking and flushes them as SQL at flush/commit time.
+</Accordion>
 
-> [!question]- Optimistic vs pessimistic locking?
-> Optimistic uses a version column and fails the update if someone else changed the row (good for low contention). Pessimistic takes a DB row lock (`SELECT FOR UPDATE`) up front, blocking others (good for high contention on specific rows).
+<Accordion title="Optimistic vs pessimistic locking?">
+Optimistic uses a version column and fails the update if someone else changed the row (good for low contention). Pessimistic takes a DB row lock (`SELECT FOR UPDATE`) up front, blocking others (good for high contention on specific rows).
+</Accordion>
 
-> [!question]- Why would you choose jOOQ over JPA?
-> When the application is SQL-centric: complex joins, window functions, reporting, vendor features, or when you want compile-time checked SQL generated from the real schema instead of mapping objects.
+<Accordion title="Why would you choose jOOQ over JPA?">
+When the application is SQL-centric: complex joins, window functions, reporting, vendor features, or when you want compile-time checked SQL generated from the real schema instead of mapping objects.
+</Accordion>
 
-> [!question]- What does `@Transactional(readOnly = true)` do with Hibernate?
-> Hints to skip dirty checking and flushing (session flush mode MANUAL), which saves CPU/memory, and can route to read replicas with a routing datasource. It doesn't by itself prevent writes at the DB level.
+<Accordion title="What does `@Transactional(readOnly = true)` do with Hibernate?">
+Hints to skip dirty checking and flushing (session flush mode MANUAL), which saves CPU/memory, and can route to read replicas with a routing datasource. It doesn't by itself prevent writes at the DB level.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Spring Boot Essentials]] · [[Spring Boot 3 to 4 - What's New]] · [[Java Concurrency & Virtual Threads]]
-- [[Java Backend Preparation Checklist]] · [[Databases Index]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Spring Boot Essentials](/Software%20Engineering/Backend/Java/Spring%20Boot%20Essentials) · [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New) · [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads)
+- [Java Backend Preparation Checklist](/Software%20Engineering/Backend/Java/Java%20Backend%20Preparation%20Checklist) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
 
 ## Sources
 - [Jakarta Persistence 3.2 specification](https://jakarta.ee/specifications/persistence/3.2/)

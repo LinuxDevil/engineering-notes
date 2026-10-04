@@ -1,3 +1,6 @@
+---
+title: "Overview 1 - Replication & Data Systems (original)"
+---
 **Leaders and Followers**
 
 The most common method of replication is the leader-based (or master-slave) replication. Here, one replica, known as the leader (or master), accepts all writes. Other replicas, known as followers (or slaves), just replicate the new data from the leader.

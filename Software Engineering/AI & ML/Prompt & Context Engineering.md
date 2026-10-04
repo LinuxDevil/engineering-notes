@@ -1,12 +1,16 @@
 ---
+title: "Prompt & Context Engineering"
 tags: [ai-ml, ai-ml/llm, ai-ml/prompting]
 aliases: [Prompt Engineering, Context Engineering, System Prompts, Few-shot Prompting, Structured Outputs, Prompt Caching]
 updated: 2026-09-27
 ---
 # Prompt & Context Engineering
 
-> [!tldr] TL;DR
-> **Prompt engineering** is writing clear instructions for an LLM: a role and rules in the **system prompt**, the task with its context, **examples** (few-shot), and a defined **output format** (ideally enforced with **structured outputs**). **Context engineering**, the 2025 term, widens the lens to *everything* in the context window across a whole agent run: instructions, retrieved documents, tool definitions and results, memory and history, curated to the **smallest set of high-signal tokens**. **Prompt caching** makes the stable parts of that context cheap and fast to resend.
+<Note>
+**TL;DR**
+
+**Prompt engineering** is writing clear instructions for an LLM: a role and rules in the **system prompt**, the task with its context, **examples** (few-shot), and a defined **output format** (ideally enforced with **structured outputs**). **Context engineering**, the 2025 term, widens the lens to *everything* in the context window across a whole agent run: instructions, retrieved documents, tool definitions and results, memory and history, curated to the **smallest set of high-signal tokens**. **Prompt caching** makes the stable parts of that context cheap and fast to resend.
+</Note>
 
 ## Part 1: Prompt engineering
 
@@ -31,9 +35,9 @@ Principles:
 4. **Show, don't just tell: examples.** A few diverse examples of input → output teach format and edge cases faster than paragraphs of rules.
 5. **Specify the output**: format, length, schema, tone. Better still, enforce it with structured outputs.
 6. **Say what to do, not only what not to do.** "Write in plain prose paragraphs" beats "don't use bullet points".
-7. **Let it think when the task is hard**: ask for reasoning before the answer, or use a reasoning model / extended thinking. See [[Transformers & How LLMs Work]].
-8. **Break complex tasks into steps** (prompt chaining) rather than one mega-prompt. See [[AI Agents & Agentic Patterns]].
-9. **Iterate against evals**, not vibes: keep a test set and measure every prompt change ([[LLM Evaluation & Observability]]).
+7. **Let it think when the task is hard**: ask for reasoning before the answer, or use a reasoning model / extended thinking. See [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work).
+8. **Break complex tasks into steps** (prompt chaining) rather than one mega-prompt. See [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns).
+9. **Iterate against evals**, not vibes: keep a test set and measure every prompt change ([LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability)).
 
 ### System prompts
 The system prompt sets persistent behaviour: role, rules, tone, tools, output conventions. Keep it at the right altitude: specific enough to guide behaviour, general enough not to hard-code brittle if-else logic. Put **stable** content here (it's cacheable) and **per-request** content in the user turn.
@@ -48,18 +52,21 @@ The system prompt sets persistent behaviour: role, rules, tone, tools, output co
 | **Role prompting** | "You are a senior security reviewer" | sets vocabulary, depth and focus |
 | **Prefill** (some APIs) | start the assistant's reply for it (e.g. `{`) | force a format or skip preamble |
 
-> [!example] Few-shot classification
-> ```text
-> Classify the support ticket as billing, bug, or feature_request.
-> Reply with the label only.
->
-> <example><ticket>I was charged twice this month</ticket><label>billing</label></example>
-> <example><ticket>Export button does nothing on Safari</ticket><label>bug</label></example>
-> <example><ticket>Could you add dark mode?</ticket><label>feature_request</label></example>
->
-> <ticket>{{ticket_text}}</ticket>
-> ```
-> Make examples **diverse** (the model copies patterns, including accidental ones like always the same length) and include tricky cases.
+<Info>
+**Few-shot classification**
+
+```text
+Classify the support ticket as billing, bug, or feature_request.
+Reply with the label only.
+
+<example><ticket>I was charged twice this month</ticket><label>billing</label></example>
+<example><ticket>Export button does nothing on Safari</ticket><label>bug</label></example>
+<example><ticket>Could you add dark mode?</ticket><label>feature_request</label></example>
+
+<ticket>{{ticket_text}}</ticket>
+```
+Make examples **diverse** (the model copies patterns, including accidental ones like always the same length) and include tricky cases.
+</Info>
 
 ### Structured outputs
 Free-text JSON "please reply in JSON" breaks in production: missing fields, extra prose, invalid syntax. **Structured outputs** constrain decoding to a JSON Schema so the response always parses.
@@ -81,15 +88,21 @@ ticket = resp.output_parsed   # a validated Ticket
 - Schemas still need validation of **meaning** (is the urgency sensible? does the ID exist?).
 - Keep schemas simple; very deep or huge schemas reduce quality and may hit provider limits.
 
-> [!info]+ 🆕 Structured outputs across providers
-> - **OpenAI** Structured Outputs (`strict: true` / `json_schema`): 2024-08-06.
-> - **Anthropic** structured outputs: public beta 2025-11-14, **generally available 2026-02-04**.
-> - **Gemini** supports a subset of JSON Schema for response schemas.
+<Info>
+**🆕 Structured outputs across providers**
+
+- **OpenAI** Structured Outputs (`strict: true` / `json_schema`): 2024-08-06.
+- **Anthropic** structured outputs: public beta 2025-11-14, **generally available 2026-02-04**.
+- **Gemini** supports a subset of JSON Schema for response schemas.
+</Info>
 
 ## Part 2: Context engineering
 
-> [!info]+ 🆕 2025: the term "context engineering"
-> In June 2025 Shopify CEO Tobi Lütke described context engineering as providing all the context needed for a task to be plausibly solvable by the LLM, and Andrej Karpathy endorsed the term over "prompt engineering". Anthropic's **"Effective context engineering for AI agents"** (2025-09-29) made it standard vocabulary for agent builders.
+<Info>
+**🆕 2025: the term "context engineering"**
+
+In June 2025 Shopify CEO Tobi Lütke described context engineering as providing all the context needed for a task to be plausibly solvable by the LLM, and Andrej Karpathy endorsed the term over "prompt engineering". Anthropic's **"Effective context engineering for AI agents"** (2025-09-29) made it standard vocabulary for agent builders.
+</Info>
 
 **Why a new term?** In agents, the prompt you write is a small part of the context. Most tokens come from tool definitions, tool results, retrieved documents, memory and a long history that grows every step. Engineering that whole window is the job.
 
@@ -116,11 +129,11 @@ Models have a finite **attention budget**. As the window fills, recall and instr
 | **Right-altitude system prompt** | clear, minimal, organised into sections | `## Background`, `## Tools`, `## Output` |
 | **Lean tools** | few, well-described, non-overlapping tools with concise results | paginate and truncate; return IDs + summaries, not raw dumps |
 | **Just-in-time retrieval** | keep lightweight references (paths, URLs, IDs) and load content only when needed | agent runs `grep`/`head` instead of loading the repo |
-| **Retrieval (RAG)** | fetch only relevant chunks | [[Retrieval-Augmented Generation (RAG)]] |
+| **Retrieval (RAG)** | fetch only relevant chunks | [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG)) |
 | **Compaction** | summarise old history when near the limit, keep decisions and open issues, drop stale tool output | long coding sessions |
 | **Structured note-taking** | agent writes progress to a file outside the context and re-reads it | `NOTES.md`, todo lists |
 | **Sub-agents** | delegate focused work to a fresh context that returns a condensed summary | research sub-agent returns 1–2k tokens |
-| **Project memory files** | persistent instructions every session loads | `AGENTS.md`, `CLAUDE.md` ([[AI-Assisted Software Development]]) |
+| **Project memory files** | persistent instructions every session loads | `AGENTS.md`, `CLAUDE.md` ([AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development)) |
 | **Skills / progressive disclosure** | only a short description is always loaded; full instructions load on demand | Agent Skills |
 | **Ordering** | stable content first (cacheable), key instructions and the question near the end | long-document Q&A |
 
@@ -129,7 +142,7 @@ Models have a finite **attention budget**. As the window fills, recall and instr
 - Are tool results trimmed to what matters?
 - Is there a compaction or note-taking strategy for runs longer than one window?
 - Do instructions conflict (system prompt vs AGENTS.md vs tool descriptions)?
-- Is untrusted content (web pages, emails, user files) clearly marked and kept away from high-privilege actions? ([[AI Safety, Security & Guardrails for Apps]])
+- Is untrusted content (web pages, emails, user files) clearly marked and kept away from high-privilege actions? ([AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps))
 
 ## Part 3: Prompt caching
 
@@ -181,26 +194,31 @@ client.messages.create(
 
 ## Interview questions
 
-> [!question]- What's the difference between prompt engineering and context engineering?
-> Prompt engineering focuses on writing the instructions for a single call. Context engineering manages everything in the model's context across a whole (often agentic) run: system prompt, tools, retrieved data, memory, history and tool results, curating the smallest high-signal set as the window fills.
+<Accordion title="What's the difference between prompt engineering and context engineering?">
+Prompt engineering focuses on writing the instructions for a single call. Context engineering manages everything in the model's context across a whole (often agentic) run: system prompt, tools, retrieved data, memory, history and tool results, curating the smallest high-signal set as the window fills.
+</Accordion>
 
-> [!question]- When do you use few-shot examples?
-> When you need a specific format, label set, tone or handling of edge cases that's easier to show than describe. Use a few diverse, representative examples and include hard cases; avoid examples that share accidental patterns.
+<Accordion title="When do you use few-shot examples?">
+When you need a specific format, label set, tone or handling of edge cases that's easier to show than describe. Use a few diverse, representative examples and include hard cases; avoid examples that share accidental patterns.
+</Accordion>
 
-> [!question]- How do you get reliable JSON from an LLM?
-> Use the provider's structured outputs / strict tool schemas so decoding is constrained to your JSON Schema, keep the schema simple, validate semantically in code, and handle refusals or validation failures with a retry or fallback.
+<Accordion title="How do you get reliable JSON from an LLM?">
+Use the provider's structured outputs / strict tool schemas so decoding is constrained to your JSON Schema, keep the schema simple, validate semantically in code, and handle refusals or validation failures with a retry or fallback.
+</Accordion>
 
-> [!question]- How does prompt caching work and how do you design for it?
-> The provider caches the processed prefix of a prompt; later requests with an identical prefix reuse it at lower cost and latency. Put stable content (tools, system prompt, long documents, examples) first and variable content last, avoid changing anything early in the prompt, and monitor cache-read tokens.
+<Accordion title="How does prompt caching work and how do you design for it?">
+The provider caches the processed prefix of a prompt; later requests with an identical prefix reuse it at lower cost and latency. Put stable content (tools, system prompt, long documents, examples) first and variable content last, avoid changing anything early in the prompt, and monitor cache-read tokens.
+</Accordion>
 
-> [!question]- What is context rot and how do you fight it in a long-running agent?
-> Model performance degrades as the context fills with tokens. Fight it with lean tool outputs, just-in-time retrieval, compaction of old history, structured notes stored outside the context, and sub-agents that return condensed summaries.
+<Accordion title="What is context rot and how do you fight it in a long-running agent?">
+Model performance degrades as the context fills with tokens. Fight it with lean tool outputs, just-in-time retrieval, compaction of old history, structured notes stored outside the context, and sub-agents that return condensed summaries.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[Transformers & How LLMs Work]] · [[AI Agents & Agentic Patterns]] · [[Retrieval-Augmented Generation (RAG)]]
-- [[Fine-tuning vs RAG vs Prompting]] · [[LLM Evaluation & Observability]] · [[AI Safety, Security & Guardrails for Apps]]
-- [[AI-Assisted Software Development]] · [[AI Workflow]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG))
+- [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting) · [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability) · [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps)
+- [AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development) · [AI Workflow](/Software%20Engineering/AI%20%26%20ML/AI%20Workflow)
 
 ## Sources
 - Anthropic, [Prompt engineering overview](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview)

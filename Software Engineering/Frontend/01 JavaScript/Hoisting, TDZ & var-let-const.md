@@ -1,25 +1,32 @@
 ---
+title: "Hoisting, TDZ & var-let-const"
 tags: [frontend, frontend/javascript]
 aliases: [Hoisting, TDZ, Temporal Dead Zone, var vs let vs const, var let const]
 updated: 2026-09-27
 ---
 # Hoisting, TDZ & var-let-const
 
-> [!tldr] TL;DR
-> **Hoisting** is the observable effect of the engine registering all declarations of a scope during the **creation phase**, before any line of that scope runs. Function declarations are usable before their line; `var` exists early as `undefined`; `let`, `const` and `class` exist early but are **uninitialized** until their line runs. That window is the **Temporal Dead Zone (TDZ)**, and touching the variable there throws `ReferenceError`. Default to `const`, use `let` when you reassign, avoid `var`.
+<Note>
+**TL;DR**
+
+**Hoisting** is the observable effect of the engine registering all declarations of a scope during the **creation phase**, before any line of that scope runs. Function declarations are usable before their line; `var` exists early as `undefined`; `let`, `const` and `class` exist early but are **uninitialized** until their line runs. That window is the **Temporal Dead Zone (TDZ)**, and touching the variable there throws `ReferenceError`. Default to `const`, use `let` when you reassign, avoid `var`.
+</Note>
 
 ## What hoisting really is
 
 The popular definition: *"the engine moves variable and function declarations to the top of their scope before the code runs"*, like header files in C++ where declarations come first.
 
-That's a useful **mental model**, but nothing is physically moved. What actually happens (see [[Execution Context & Call Stack]]):
+That's a useful **mental model**, but nothing is physically moved. What actually happens (see [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack)):
 
 1. **Creation phase**: the engine scans the scope and creates a binding for every declaration (assigning the label).
 2. It **initializes** some of them right away with a default value (functions → the function, `var` → `undefined`), and leaves `let`/`const`/`class` **uninitialized**.
 3. **Execution phase**: lines run top to bottom; when a declaration line is reached, the value is assigned and saved in memory.
 
-> [!note] Creation & Execution
-> Hoisting has 2 steps per binding: **declaration** (create the label) and **initialization** (give it a starting value). For `var` both happen in the creation phase; for `let`/`const`/`class` initialization waits until the declaration line executes.
+<Note>
+**Creation & Execution**
+
+Hoisting has 2 steps per binding: **declaration** (create the label) and **initialization** (give it a starting value). For `var` both happen in the creation phase; for `let`/`const`/`class` initialization waits until the declaration line executes.
+</Note>
 
 ### What each declaration does when hoisted
 
@@ -34,7 +41,7 @@ That's a useful **mental model**, but nothing is physically moved. What actually
 
 ## The `var` lifecycle
 
-![[Untitled 44.png]]
+![Untitled 44](/Attachments/Untitled%2044.png)
 
 ```js
 console.log(ali); // undefined
@@ -50,32 +57,38 @@ ali = 'Mohammad'; // execution: assigned
 
 Function hoisting lets us **call a function before it is defined**. Only **function declarations** are hoisted with their body, not function expressions or arrow functions.
 
-> [!example] `add` before its definition
-> ```js
-> console.log(add(2, 3)); // 5
->
-> function add(x, y) {    // function declaration
->   var result = x + y;
->   return result;
-> }
-> ```
-> **Creation phase**
-> - The engine scans the code, recognises the `add` function declaration and allocates memory for it (the whole function).
-> - The `console.log` statement is just noted.
->
-> **Execution phase**
-> - Execution starts; at `console.log` it looks up `add`.
-> - Although the call is written before the declaration, `add` already exists from the creation phase.
-> - Output: `5`.
+<Info>
+**`add` before its definition**
 
-> [!example] Expressions are not hoisted with their value
-> ```js
-> sayHi();      // TypeError: sayHi is not a function   (var → undefined)
-> var sayHi = function () { console.log('hi'); };
->
-> greet();      // ReferenceError: Cannot access 'greet' before initialization (TDZ)
-> const greet = () => console.log('hello');
-> ```
+```js
+console.log(add(2, 3)); // 5
+
+function add(x, y) {    // function declaration
+  var result = x + y;
+  return result;
+}
+```
+**Creation phase**
+- The engine scans the code, recognises the `add` function declaration and allocates memory for it (the whole function).
+- The `console.log` statement is just noted.
+
+**Execution phase**
+- Execution starts; at `console.log` it looks up `add`.
+- Although the call is written before the declaration, `add` already exists from the creation phase.
+- Output: `5`.
+</Info>
+
+<Info>
+**Expressions are not hoisted with their value**
+
+```js
+sayHi();      // TypeError: sayHi is not a function   (var → undefined)
+var sayHi = function () { console.log('hi'); };
+
+greet();      // ReferenceError: Cannot access 'greet' before initialization (TDZ)
+const greet = () => console.log('hello');
+```
+</Info>
 
 - If a function and a `var` share a name, the function declaration wins during creation; a later assignment overwrites it at runtime.
 - **Function declarations inside blocks** are block-scoped in strict mode; in sloppy mode browsers use legacy, confusing semantics. Prefer `const fn = ...` in blocks.
@@ -193,7 +206,7 @@ console.log(person);   // Ali
 
 - Block-scoped, **can't be reassigned or re-declared**, must be initialized on the same line.
 - Hoisted like `let`: created at the top of the block but not initialized (TDZ).
-- `const` makes the **binding** constant, **not the value**. Objects and arrays held in a `const` can still be mutated. For real immutability use `Object.freeze` (shallow) or immutable update patterns; see [[Objects, Arrays & Immutability]].
+- `const` makes the **binding** constant, **not the value**. Objects and arrays held in a `const` can still be mutated. For real immutability use `Object.freeze` (shallow) or immutable update patterns; see [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability).
 
 ```js
 const user = { name: 'Ali' };
@@ -211,47 +224,60 @@ flowchart TD
   A --> E["var: only in legacy code"]
 ```
 
-> [!example] Classic loop + closure bug
-> ```js
-> for (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3
-> for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
-> ```
-> `var` gives one shared binding; `let` gives a new binding per iteration. Pre-ES6 fix: an IIFE that captures `i` as a parameter. See [[Closures & Memory Model]].
+<Info>
+**Classic loop + closure bug**
 
-> [!warning] Common pitfalls
-> - "`let`/`const` aren't hoisted": wrong, they are hoisted, just not initialized. Proof: an inner `let x` shadows an outer `x` *from the top of the block*, so reading `x` before the inner declaration throws instead of reading the outer one.
-> - "`const` means immutable": only the binding is.
-> - Classes are **not** usable before their declaration (TDZ), unlike function declarations.
-> - `typeof x` is not a safe existence check for a TDZ variable.
+```js
+for (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3
+for (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2
+```
+`var` gives one shared binding; `let` gives a new binding per iteration. Pre-ES6 fix: an IIFE that captures `i` as a parameter. See [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model).
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- "`let`/`const` aren't hoisted": wrong, they are hoisted, just not initialized. Proof: an inner `let x` shadows an outer `x` *from the top of the block*, so reading `x` before the inner declaration throws instead of reading the outer one.
+- "`const` means immutable": only the binding is.
+- Classes are **not** usable before their declaration (TDZ), unlike function declarations.
+- `typeof x` is not a safe existence check for a TDZ variable.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is hoisting?
-> During the creation phase of a scope, the engine creates bindings for all its declarations before running code. Function declarations are initialized with their function (callable early), `var` with `undefined`, and `let`/`const`/`class` are left uninitialized (TDZ). Nothing is physically moved.
+<Accordion title="What is hoisting?">
+During the creation phase of a scope, the engine creates bindings for all its declarations before running code. Function declarations are initialized with their function (callable early), `var` with `undefined`, and `let`/`const`/`class` are left uninitialized (TDZ). Nothing is physically moved.
+</Accordion>
 
-> [!question]- What is the Temporal Dead Zone?
-> The period from the start of a `let`/`const`/`class` binding's scope until its declaration executes. Any access in that period, including `typeof`, throws `ReferenceError`. It's about time of execution, not text position.
+<Accordion title="What is the Temporal Dead Zone?">
+The period from the start of a `let`/`const`/`class` binding's scope until its declaration executes. Any access in that period, including `typeof`, throws `ReferenceError`. It's about time of execution, not text position.
+</Accordion>
 
-> [!question]- Difference between `var`, `let` and `const`?
-> `var`: function-scoped, re-declarable, hoisted as `undefined`, becomes a `window` property at top level. `let`: block-scoped, no re-declaration, reassignable, TDZ. `const`: like `let` but must be initialized and can't be reassigned; the value itself can still be mutated if it's an object.
+<Accordion title="Difference between `var`, `let` and `const`?">
+`var`: function-scoped, re-declarable, hoisted as `undefined`, becomes a `window` property at top level. `let`: block-scoped, no re-declaration, reassignable, TDZ. `const`: like `let` but must be initialized and can't be reassigned; the value itself can still be mutated if it's an object.
+</Accordion>
 
-> [!question]- Are function expressions hoisted?
-> Only the variable that holds them, under that variable's rules. `var f = function(){}` → `f` is `undefined` early (calling gives TypeError). `const f = () => {}` → TDZ ReferenceError.
+<Accordion title="Are function expressions hoisted?">
+Only the variable that holds them, under that variable's rules. `var f = function(){}` → `f` is `undefined` early (calling gives TypeError). `const f = () => {}` → TDZ ReferenceError.
+</Accordion>
 
-> [!question]- Are classes hoisted?
-> Yes, but like `let` they stay uninitialized until the declaration runs, so `new C()` before `class C {}` throws ReferenceError.
+<Accordion title="Are classes hoisted?">
+Yes, but like `let` they stay uninitialized until the declaration runs, so `new C()` before `class C {}` throws ReferenceError.
+</Accordion>
 
-> [!question]- Output? `var a = 1; function f() { console.log(a); var a = 2; } f();`
-> `undefined`. The inner `var a` is hoisted to the top of `f` and shadows the global `a`; at the `console.log` it's still `undefined`.
+<Accordion title="Output? `var a = 1; function f() { console.log(a); var a = 2; } f();`">
+`undefined`. The inner `var a` is hoisted to the top of `f` and shadows the global `a`; at the `console.log` it's still `undefined`.
+</Accordion>
 
-> [!question]- Output? `let a = 1; { console.log(a); let a = 2; }`
-> `ReferenceError`. The block's `a` is hoisted to the top of the block and shadows the outer one, but it's in TDZ at the log.
+<Accordion title="Output? `let a = 1; { console.log(a); let a = 2; }`">
+`ReferenceError`. The block's `a` is hoisted to the top of the block and shadows the outer one, but it's in TDZ at the log.
+</Accordion>
 
 ## Related
-- [[JavaScript Index]]
-- [[Execution Context & Call Stack]] · [[Scope & Lexical Environment]] · [[Closures & Memory Model]] · [[Objects, Arrays & Immutability]]
-- Course notes: [[Principles]] · [[Closures]] · [[JavaScript the hard parts v2]]
-- [[JavaScript Interview Questions]] · [[Output Questions & Tricky Snippets]]
+- [JavaScript Index](/Software%20Engineering/Frontend/01%20JavaScript/JavaScript%20Index)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Scope & Lexical Environment](/Software%20Engineering/Frontend/01%20JavaScript/Scope%20%26%20Lexical%20Environment) · [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) · [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability)
+- Course notes: [Principles](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Principles) · [Closures](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Closures) · [JavaScript the hard parts v2](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/JavaScript%20the%20hard%20parts%20v2)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions) · [Output Questions & Tricky Snippets](/Software%20Engineering/Frontend/17%20Interview%20Prep/Output%20Questions%20%26%20Tricky%20Snippets)
 
 ## Sources
 - [Hoisting in JavaScript (Scaler)](https://www.scaler.com/topics/hoisting-in-javascript/)

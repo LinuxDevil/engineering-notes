@@ -1,12 +1,16 @@
 ---
+title: "Test-Driven Development (TDD)"
 tags: [principles, principles/testing]
 aliases: [TDD, Test Driven Development, Red Green Refactor, Test Pyramid, Testing Trophy, Test Doubles, Mocks vs Stubs, TODO TDD  BDD  DDD]
 updated: 2026-09-27
 ---
 # Test-Driven Development (TDD)
 
-> [!tldr] TL;DR
-> **TDD** is a design practice where you write a small **failing test first (red)**, write the minimum code to pass it (**green**), then **refactor** with the test as a safety net, in cycles of minutes. It produces a fast regression suite, but its main payoff is **design feedback**: code that is hard to test is usually badly coupled. Balance test types with the **test pyramid** (or trophy/honeycomb), and use **test doubles** (dummy, stub, spy, mock, fake) only at boundaries you don't control. For specification by example with stakeholders, see [[Behavior-Driven Development (BDD)]].
+<Note>
+**TL;DR**
+
+**TDD** is a design practice where you write a small **failing test first (red)**, write the minimum code to pass it (**green**), then **refactor** with the test as a safety net, in cycles of minutes. It produces a fast regression suite, but its main payoff is **design feedback**: code that is hard to test is usually badly coupled. Balance test types with the **test pyramid** (or trophy/honeycomb), and use **test doubles** (dummy, stub, spy, mock, fake) only at boundaries you don't control. For specification by example with stakeholders, see [Behavior-Driven Development (BDD)](/Software%20Engineering/Principles/Behavior-Driven%20Development%20(BDD)).
+</Note>
 
 ## The cycle
 
@@ -116,7 +120,7 @@ it("marks the order paid when the charge succeeds", async () => {
 Guidelines:
 - **Don't mock what you don't own** (e.g. an HTTP library's classes). Wrap it in your own adapter and fake the adapter; test the adapter against the real thing (contract/integration test).
 - **Mock roles, not objects**; prefer state verification over interaction verification unless the interaction *is* the behaviour (e.g. "an email is sent").
-- Too many mocks in one test = the unit under test has too many dependencies (a design smell, see [[Coupling, Cohesion & Modularity]]).
+- Too many mocks in one test = the unit under test has too many dependencies (a design smell, see [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)).
 
 ## The test pyramid, trophy and honeycomb
 
@@ -130,7 +134,7 @@ flowchart TB
 | Model | Shape | Emphasis | Best fit |
 |---|---|---|---|
 | **Test pyramid** (Mike Cohn, 2009; Fowler/Vocke) | Many unit, fewer integration, very few E2E | Fast, cheap feedback | Logic-heavy backends, libraries |
-| **Testing trophy** (Kent C. Dodds, 2018) | Static analysis base, **integration tests largest**, some unit, few E2E | "The more your tests resemble the way your software is used, the more confidence they give" | Frontend apps (see [[Frontend Testing]]) |
+| **Testing trophy** (Kent C. Dodds, 2018) | Static analysis base, **integration tests largest**, some unit, few E2E | "The more your tests resemble the way your software is used, the more confidence they give" | Frontend apps (see [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)) |
 | **Honeycomb** (Spotify, 2018) | Mostly integration tests of each service, few implementation-detail tests, few integrated tests | Microservices where the risk is in the wiring | Service-oriented backends |
 
 The shapes disagree on proportions but agree on principles: most tests should be **fast and deterministic**; a few slow end-to-end tests cover critical journeys; test at the level where the risk is. Add **contract tests** (e.g. Pact) between services and **static analysis/types** as the cheapest layer.
@@ -146,55 +150,68 @@ The shapes disagree on proportions but agree on principles: most tests should be
 
 Research on TDD's productivity effects is mixed (small, context-dependent effects); its strongest supporters argue the value is in the **short feedback loop**, not the test-first ordering per se.
 
-> [!info]+ 🆕 2025–2026: TDD with AI coding agents
-> - Kent Beck's essay **"Augmented Coding: Beyond the Vibes" (2025-06-25)** describes building a production-quality B+ tree library with an AI agent by instructing it to follow red–green–refactor strictly and to separate structural from behavioural changes. He lists warning signs to intervene on: loops, unrequested functionality, and "cheating", e.g. **disabling or deleting tests**.
-> - **Spec-driven development** tools pair specs with tests as the agent's acceptance criteria: GitHub **Spec Kit** (open-sourced 2025-09-02) and AWS **Kiro** (announced 2025-07-14) generate requirements → design → tasks; Thoughtworks Technology Radar Vol. 33 (Nov 2025) placed spec-driven development in **Assess**.
-> - Practical pattern: write (or review) the failing tests yourself, let the agent make them pass, and treat test changes in an AI diff as high-risk review items.
+<Info>
+**🆕 2025–2026: TDD with AI coding agents**
+
+- Kent Beck's essay **"Augmented Coding: Beyond the Vibes" (2025-06-25)** describes building a production-quality B+ tree library with an AI agent by instructing it to follow red–green–refactor strictly and to separate structural from behavioural changes. He lists warning signs to intervene on: loops, unrequested functionality, and "cheating", e.g. **disabling or deleting tests**.
+- **Spec-driven development** tools pair specs with tests as the agent's acceptance criteria: GitHub **Spec Kit** (open-sourced 2025-09-02) and AWS **Kiro** (announced 2025-07-14) generate requirements → design → tasks; Thoughtworks Technology Radar Vol. 33 (Nov 2025) placed spec-driven development in **Assess**.
+- Practical pattern: write (or review) the failing tests yourself, let the agent make them pass, and treat test changes in an AI diff as high-risk review items.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common TDD mistakes
-> - Writing tests after the fact and calling it TDD; you lose the design feedback.
-> - Skipping the **refactor** step: you get tested but messy code.
-> - Steps too big: an hour in red. Take smaller steps.
-> - Testing private methods or mocking everything, which pins implementation.
-> - Chasing coverage percentages. 100% coverage with weak assertions proves little; use **mutation testing** (Stryker, PIT) to check tests actually catch bugs.
-> - Flaky tests tolerated in CI: they destroy trust. Quarantine and fix.
+<Warning>
+**Common TDD mistakes**
+
+- Writing tests after the fact and calling it TDD; you lose the design feedback.
+- Skipping the **refactor** step: you get tested but messy code.
+- Steps too big: an hour in red. Take smaller steps.
+- Testing private methods or mocking everything, which pins implementation.
+- Chasing coverage percentages. 100% coverage with weak assertions proves little; use **mutation testing** (Stryker, PIT) to check tests actually catch bugs.
+- Flaky tests tolerated in CI: they destroy trust. Quarantine and fix.
+</Warning>
 
 ## Senior perspective
 
 - Use TDD where logic is non-trivial and the interface is known (domain rules, parsers, algorithms, bug fixes: **write the failing test that reproduces the bug first**). Spike first when exploring unknown APIs.
-- Architect for testability: pure domain core + adapters at the edge ([[Software Architecture Styles]]) makes most tests fast unit tests without mocks.
+- Architect for testability: pure domain core + adapters at the edge ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles)) makes most tests fast unit tests without mocks.
 - Watch suite health metrics: runtime, flakiness rate, time-to-first-failure. A 40-minute suite changes developer behaviour.
-- Tests are code: apply the same review standards, builders for test data ([[Creational Patterns#Builder]]), and delete tests that no longer earn their keep.
+- Tests are code: apply the same review standards, builders for test data ([Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns#builder)), and delete tests that no longer earn their keep.
 
 ## Interview questions
 
-> [!question]- Describe the TDD cycle.
-> Red: write a small test for the next behaviour and watch it fail. Green: write the minimal code to pass. Refactor: improve the design of code and tests while keeping them green. Repeat in short cycles, guided by a test list.
+<Accordion title="Describe the TDD cycle.">
+Red: write a small test for the next behaviour and watch it fail. Green: write the minimal code to pass. Refactor: improve the design of code and tests while keeping them green. Repeat in short cycles, guided by a test list.
+</Accordion>
 
-> [!question]- What's the difference between a mock and a stub?
-> A stub provides canned answers so the code under test can run; you then assert on the result/state. A mock is set up with expectations about calls and verifies the interactions themselves. Spies record calls for later assertions; fakes are working simplified implementations.
+<Accordion title="What's the difference between a mock and a stub?">
+A stub provides canned answers so the code under test can run; you then assert on the result/state. A mock is set up with expectations about calls and verifies the interactions themselves. Spies record calls for later assertions; fakes are working simplified implementations.
+</Accordion>
 
-> [!question]- Explain the test pyramid. Is it still valid?
-> Many fast unit tests, fewer integration tests, very few slow E2E tests, to keep feedback fast and reliable. The trophy (frontend) and honeycomb (microservices) shift weight to integration tests; all agree on minimising slow, flaky E2E tests and testing where the risk is.
+<Accordion title="Explain the test pyramid. Is it still valid?">
+Many fast unit tests, fewer integration tests, very few slow E2E tests, to keep feedback fast and reliable. The trophy (frontend) and honeycomb (microservices) shift weight to integration tests; all agree on minimising slow, flaky E2E tests and testing where the risk is.
+</Accordion>
 
-> [!question]- How do you test code that depends on the current time or random values?
-> Inject them: a `Clock`/`now()` function and a seeded random generator or ID generator as dependencies, replaced with fixed values in tests.
+<Accordion title="How do you test code that depends on the current time or random values?">
+Inject them: a `Clock`/`now()` function and a seeded random generator or ID generator as dependencies, replaced with fixed values in tests.
+</Accordion>
 
-> [!question]- What's wrong with 100% code coverage as a goal?
-> Coverage shows code was executed, not that behaviour was verified. Teams game it with assertion-free tests. Better: coverage as a signal for untested areas, plus mutation testing and review of test quality.
+<Accordion title="What's wrong with 100% code coverage as a goal?">
+Coverage shows code was executed, not that behaviour was verified. Teams game it with assertion-free tests. Better: coverage as a signal for untested areas, plus mutation testing and review of test quality.
+</Accordion>
 
-> [!question]- Classical vs mockist TDD?
-> Classical (Chicago/Detroit): test behaviour through real collaborating objects, mock only awkward boundaries, assert on state. Mockist (London): test each object in isolation, mocking collaborators and asserting interactions, often outside-in. Classical tests are more refactor-resilient; mockist tests drive interface discovery.
+<Accordion title="Classical vs mockist TDD?">
+Classical (Chicago/Detroit): test behaviour through real collaborating objects, mock only awkward boundaries, assert on state. Mockist (London): test each object in isolation, mocking collaborators and asserting interactions, often outside-in. Classical tests are more refactor-resilient; mockist tests drive interface discovery.
+</Accordion>
 
-> [!question]- How do you keep AI agents honest when they write code?
-> Give them tests as acceptance criteria (ideally written or reviewed by a human first), require red–green–refactor, run the suite in CI, and review any change to tests, especially deletions, skips or loosened assertions.
+<Accordion title="How do you keep AI agents honest when they write code?">
+Give them tests as acceptance criteria (ideally written or reviewed by a human first), require red–green–refactor, run the suite in CI, and review any change to tests, especially deletions, skips or loosened assertions.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Behavior-Driven Development (BDD)]] · [[Clean Code & Refactoring]] · [[Dependency Injection & Inversion of Control]] · [[Software Architecture Styles]]
-- Frontend testing tools and practice: [[Frontend Testing]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Behavior-Driven Development (BDD)](/Software%20Engineering/Principles/Behavior-Driven%20Development%20(BDD)) · [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring) · [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles)
+- Frontend testing tools and practice: [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
 
 ## Sources
 - Kent Beck, *Test-Driven Development: By Example* (Addison-Wesley, 2002) · [Kent Beck: Canon TDD (2023)](https://tidyfirst.substack.com/p/canon-tdd)

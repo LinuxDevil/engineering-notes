@@ -1,3 +1,6 @@
+---
+title: "Arrays and strings (original)"
+---
 ## Two pointer technique
 
 There’s a couple of ways to implement the two pointers technique

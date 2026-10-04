@@ -1,12 +1,16 @@
 ---
+title: "API Security"
 tags: [security, security/api]
 aliases: [OWASP API Security Top 10, API Top 10, BOLA, RBAC vs ABAC vs ReBAC, Authorization Models]
 updated: 2026-09-27
 ---
 # API Security
 
-> [!tldr] TL;DR
-> APIs expose data and business logic directly, so their biggest risks are **authorization** failures, not exotic exploits: 3 of the OWASP API Security Top 10 (2023) items are about authorization at object, property and function level. Authenticate every call, authorize **every object and every field**, limit resource consumption, keep an inventory of all APIs, and treat third-party APIs as untrusted. For authorization design, start with **RBAC**, add **ABAC** conditions for context, and use **ReBAC** when permissions follow relationships (documents shared in folders, orgs and teams).
+<Note>
+**TL;DR**
+
+APIs expose data and business logic directly, so their biggest risks are **authorization** failures, not exotic exploits: 3 of the OWASP API Security Top 10 (2023) items are about authorization at object, property and function level. Authenticate every call, authorize **every object and every field**, limit resource consumption, keep an inventory of all APIs, and treat third-party APIs as untrusted. For authorization design, start with **RBAC**, add **ABAC** conditions for context, and use **ReBAC** when permissions follow relationships (documents shared in folders, orgs and teams).
+</Note>
 
 ## OWASP API Security Top 10 (2023)
 The current edition is 2023 (the previous was 2019).
@@ -19,19 +23,19 @@ The current edition is 2023 (the previous was 2019).
 | **API4** | Unrestricted Resource Consumption | `?limit=1000000`, huge GraphQL queries, unlimited SMS sends | Pagination caps, rate limits, quotas, timeouts, query cost limits |
 | **API5** | Broken Function Level Authorization (BFLA) | A normal user calls `POST /admin/users` | Deny by default; role checks per route/operation |
 | **API6** | Unrestricted Access to Sensitive Business Flows | Bots buy all concert tickets, mass account creation, coupon abuse | Business-level limits, bot detection, device fingerprinting, CAPTCHA/step-up |
-| **API7** | Server-Side Request Forgery | Webhook URL points to `169.254.169.254` | Destination allow-lists, block internal IPs ([[Backend Security Essentials]]) |
+| **API7** | Server-Side Request Forgery | Webhook URL points to `169.254.169.254` | Destination allow-lists, block internal IPs ([Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials)) |
 | **API8** | Security Misconfiguration | Verbose errors, permissive CORS, missing TLS, default configs | Hardened config, automated checks |
 | **API9** | Improper Inventory Management | Old `/v1` still live without auth; forgotten staging APIs | API inventory, gateway as single entry, retire old versions |
 | **API10** | Unsafe Consumption of APIs | Trusting data from a partner API; following its redirects | Validate third-party responses, timeouts, TLS, limits |
 
-Changes vs 2019: "Excessive Data Exposure" and "Mass Assignment" merged into API3 (BOPLA); new API6 (business flows), API7 (SSRF) and API10 (unsafe consumption); "Injection" and "Insufficient Logging" dropped as separate items (still important; see [[OWASP Top 10]]).
+Changes vs 2019: "Excessive Data Exposure" and "Mass Assignment" merged into API3 (BOPLA); new API6 (business flows), API7 (SSRF) and API10 (unsafe consumption); "Injection" and "Insufficient Logging" dropped as separate items (still important; see [OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010)).
 
 ## Authentication for APIs
 | Caller | Recommended |
 |---|---|
-| Browser SPA of your own app | Session cookie via a BFF, or OAuth 2 authorization code + PKCE ([[Authentication & Token Storage]]) |
+| Browser SPA of your own app | Session cookie via a BFF, or OAuth 2 authorization code + PKCE ([Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage)) |
 | Mobile app | OAuth 2 authorization code + PKCE with the system browser |
-| Third-party apps acting for users | OAuth 2 / OpenID Connect with scopes and consent ([[OAuth 2.x & OpenID Connect]]) |
+| Third-party apps acting for users | OAuth 2 / OpenID Connect with scopes and consent ([OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect)) |
 | Service to service | mTLS (service mesh) or client credentials / workload identity tokens |
 | Simple server integrations | API keys: scoped, rotatable, hashed at rest, sent in a header |
 
@@ -109,12 +113,15 @@ app.patch('/projects/:id', auth, async (req, res) => {
 - Disable introspection in production (or restrict it), enforce depth and cost limits, persisted queries for first-party clients, authorization in resolvers or a data layer (not only at the gateway), batching limits to stop brute force via aliases.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Authorization checked in the UI or the gateway only.
-> - Returning whole database entities and relying on the client to hide fields.
-> - Using sequential ids and thinking random ids would be "the fix".
-> - Rate limiting only by IP (attackers rotate IPs; limit per account/key too).
-> - Forgotten versions and test endpoints left open.
+<Warning>
+**Common mistakes**
+
+- Authorization checked in the UI or the gateway only.
+- Returning whole database entities and relying on the client to hide fields.
+- Using sequential ids and thinking random ids would be "the fix".
+- Rate limiting only by IP (attackers rotate IPs; limit per account/key too).
+- Forgotten versions and test endpoints left open.
+</Warning>
 
 ## Senior perspective
 - Make the secure path the default: a framework-level `authorize()` that must be called (lint or test fails otherwise), repository methods that require a user/tenant context, response serializers per role.
@@ -123,29 +130,35 @@ app.patch('/projects/:id', auth, async (req, res) => {
 - Answer "who can access this resource and why?" for audits; ReBAC and explicit policies make that possible.
 
 ## Interview questions
-> [!question]- What is BOLA and why is it #1 in the API Top 10?
-> Broken Object Level Authorization: the API doesn't verify the caller may access the specific object id in the request. It's #1 because it's extremely common, trivial to exploit (change an id) and invisible to generic scanners.
+<Accordion title="What is BOLA and why is it #1 in the API Top 10?">
+Broken Object Level Authorization: the API doesn't verify the caller may access the specific object id in the request. It's #1 because it's extremely common, trivial to exploit (change an id) and invisible to generic scanners.
+</Accordion>
 
-> [!question]- BOLA vs BFLA vs BOPLA?
-> BOLA: wrong object (another user's order). BFLA: wrong function (a user calling an admin operation). BOPLA: wrong properties (reading sensitive fields or writing fields like `role` through mass assignment).
+<Accordion title="BOLA vs BFLA vs BOPLA?">
+BOLA: wrong object (another user's order). BFLA: wrong function (a user calling an admin operation). BOPLA: wrong properties (reading sensitive fields or writing fields like `role` through mass assignment).
+</Accordion>
 
-> [!question]- RBAC vs ABAC vs ReBAC: when would you use each?
-> RBAC for coarse, stable permissions by job role. ABAC when decisions depend on attributes and context (tenant, region, time, data classification). ReBAC when access follows relationships and sharing (folders, teams, orgs), like Google Drive. Most real systems mix them.
+<Accordion title="RBAC vs ABAC vs ReBAC: when would you use each?">
+RBAC for coarse, stable permissions by job role. ABAC when decisions depend on attributes and context (tenant, region, time, data classification). ReBAC when access follows relationships and sharing (folders, teams, orgs), like Google Drive. Most real systems mix them.
+</Accordion>
 
-> [!question]- How do you secure service-to-service calls?
-> Mutual TLS with workload identities (e.g. SPIFFE via a service mesh) or short-lived tokens from client credentials / workload identity, plus authorization per caller service. Don't trust the network.
+<Accordion title="How do you secure service-to-service calls?">
+Mutual TLS with workload identities (e.g. SPIFFE via a service mesh) or short-lived tokens from client credentials / workload identity, plus authorization per caller service. Don't trust the network.
+</Accordion>
 
-> [!question]- How do you protect an API from abuse and scraping?
-> Authentication, per-account and per-key rate limits, quotas, pagination caps, bot detection for sensitive flows, anomaly detection on usage, and not exposing more data than a screen needs.
+<Accordion title="How do you protect an API from abuse and scraping?">
+Authentication, per-account and per-key rate limits, quotas, pagination caps, bot detection for sensitive flows, anomaly detection on usage, and not exposing more data than a screen needs.
+</Accordion>
 
-> [!question]- What are the main GraphQL security concerns?
-> Query depth/complexity DoS, introspection leaking schema, authorization per field/resolver, batching/alias abuse for brute force, and N+1 queries causing resource exhaustion.
+<Accordion title="What are the main GraphQL security concerns?">
+Query depth/complexity DoS, introspection leaking schema, authorization per field/resolver, batching/alias abuse for brute force, and N+1 queries causing resource exhaustion.
+</Accordion>
 
 ## Related
-- [[Security Index]]
-- [[OWASP Top 10]] · [[Backend Security Essentials]] · [[Secrets Management]] · [[Secure SDLC & Threat Modeling]]
-- [[OAuth 2.x & OpenID Connect]] · [[Passkeys, WebAuthn & MFA]] · [[Authentication & Token Storage]]
-- [[Backend Interview Questions]]
+- [Security Index](/Software%20Engineering/Security/Security%20Index)
+- [OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010) · [Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials) · [Secrets Management](/Software%20Engineering/Security/Secrets%20Management) · [Secure SDLC & Threat Modeling](/Software%20Engineering/Security/Secure%20SDLC%20%26%20Threat%20Modeling)
+- [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA) · [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage)
+- [Backend Interview Questions](/Software%20Engineering/Interviews/Backend%20Interview%20Questions)
 
 ## Sources
 - [OWASP API Security Top 10 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/)

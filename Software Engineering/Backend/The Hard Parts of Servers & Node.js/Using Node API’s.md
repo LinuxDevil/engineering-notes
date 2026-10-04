@@ -1,14 +1,18 @@
 ---
+title: "Using Node API’s"
 tags: [backend, backend/node, course]
 aliases: [Using Node APIs, Node APIs, req and res objects]
 updated: 2026-09-27
 ---
 # Using Node API’s
 
-> [!tldr] TL;DR
-> When a request arrives, Node **auto-runs** the function you gave `http.createServer` and **auto-fills its arguments**: a `req` object built by parsing the raw HTTP message, and a `res` object whose methods (`writeHead`, `setHeader`, `end`) write straight into the response Node will send back. You never call the handler yourself.
+<Note>
+**TL;DR**
 
-*Part of [[The Hard Parts of Servers & Node.js]] (course notes).*
+When a request arrives, Node **auto-runs** the function you gave `http.createServer` and **auto-fills its arguments**: a `req` object built by parsing the raw HTTP message, and a `res` object whose methods (`writeHead`, `setHeader`, `end`) write straight into the response Node will send back. You never call the handler yourself.
+</Note>
+
+*Part of [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) (course notes).*
 
 ## Node auto-runs and auto-fills
 
@@ -30,7 +34,7 @@ const server = http.createServer((req, res) => {
    - `res` (an `http.ServerResponse`): functions like `setHeader`, `writeHead`, `write`, `end` that build the outgoing message.
 4. Node runs our handler with those two objects in a new execution context. We look at `req.url`/`req.method` to "route" and use `res.end(...)` to send data to the client.
 
-![[Screenshot_2023-04-29_at_1.45.04_AM.png]]
+![Screenshot_2023-04-29_at_1.45.04_AM](/Attachments/Screenshot_2023-04-29_at_1.45.04_AM.png)
 
 ## Worked example: a tiny router
 
@@ -70,8 +74,11 @@ Content-Length: 14
 {"text":"hi"}
 ```
 
-> [!note] JS is an evaluated language
-> Your handler code isn't run when the file loads; it's saved in memory as a function definition and evaluated later, when Node calls it.
+<Note>
+**JS is an evaluated language**
+
+Your handler code isn't run when the file loads; it's saved in memory as a function definition and evaluated later, when Node calls it.
+</Note>
 
 ## Pitfalls
 - Forgetting `res.end()` leaves the client hanging until it times out.
@@ -80,16 +87,18 @@ Content-Length: 14
 
 ## Interview questions
 
-> [!question]- What are `req` and `res` in Node's http module?
-> `req` is an `IncomingMessage` (a readable stream plus parsed method, URL and headers). `res` is a `ServerResponse` (a writable stream with helpers to set status and headers). Node creates both for every request and passes them to your handler.
+<Accordion title="What are `req` and `res` in Node's http module?">
+`req` is an `IncomingMessage` (a readable stream plus parsed method, URL and headers). `res` is a `ServerResponse` (a writable stream with helpers to set status and headers). Node creates both for every request and passes them to your handler.
+</Accordion>
 
-> [!question]- Why do you need to listen to `data`/`end` to read a POST body?
-> Because the body arrives in chunks over the socket and `req` is a stream. Node doesn't buffer it for you, which keeps memory bounded for large uploads.
+<Accordion title="Why do you need to listen to `data`/`end` to read a POST body?">
+Because the body arrives in chunks over the socket and `req` is a stream. Node doesn't buffer it for you, which keeps memory bounded for large uploads.
+</Accordion>
 
 ## Related
-- [[The Hard Parts of Servers & Node.js]] · [[Node.js Index]]
-- [[Introduction to Node.js]] · [[Node with HTTP]] · [[Building HTTP Servers - Express, Fastify & Hono]]
-- [[Networking - HTTP, Caching & Real-time]]
+- [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) · [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Introduction to Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Introduction%20to%20Node.js) · [Node with HTTP](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node%20with%20HTTP) · [Building HTTP Servers - Express, Fastify & Hono](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Building%20HTTP%20Servers%20-%20Express%2C%20Fastify%20%26%20Hono)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
 
 ## Sources
 - [Node.js docs: http](https://nodejs.org/api/http.html)

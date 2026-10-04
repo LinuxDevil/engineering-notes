@@ -1,14 +1,18 @@
 ---
+title: "Job Control API - Pause, Resume, Run Now & Stop"
 tags: [backend, backend/jobs, backend/node, devops/kubernetes]
 aliases: [Job Control API, jobs-api, Job Control Plane, JobBackend, Pause Resume Run Now Stop, K8sCronJobBackend, BullMqBackend]
 updated: 2026-09-27
 ---
 # Job Control API - Pause, Resume, Run Now & Stop
 
-> [!tldr] TL;DR
-> **`jobs-api`** is a small Fastify service that gives operators one API for every scheduled job, whether it runs on **BullMQ** or as a **Kubernetes CronJob**. A `JobBackend` interface hides the difference: *pause* removes the BullMQ scheduler or sets `spec.suspend: true`; *resume* re-creates it without backfill; *run now* enqueues a job whose id comes from the `Idempotency-Key` or creates a Job from the CronJob's `jobTemplate`; *stop* cancels cooperatively (BullMQ `AbortSignal` via Redis pub/sub) or deletes the K8s Job with foreground propagation. Around it: OIDC JWT verification with `jose`, per-route RBAC, idempotency keys, RFC 9457 Problem Details, an append-only audit table, rate limits, SSE for logs and live events, and a least-privilege K8s Role.
+<Note>
+**TL;DR**
 
-It's the control plane of Acme Ops. The worker side is in [[BullMQ Job Schedulers in Practice]], the CronJobs in [[Kubernetes CronJobs in Practice]], the UI in [[Job Scheduler Dashboard with Next.js]], and the reasoning (idempotency, overlap, misfires) in [[Cron with Message Queues - Architecture]].
+**`jobs-api`** is a small Fastify service that gives operators one API for every scheduled job, whether it runs on **BullMQ** or as a **Kubernetes CronJob**. A `JobBackend` interface hides the difference: *pause* removes the BullMQ scheduler or sets `spec.suspend: true`; *resume* re-creates it without backfill; *run now* enqueues a job whose id comes from the `Idempotency-Key` or creates a Job from the CronJob's `jobTemplate`; *stop* cancels cooperatively (BullMQ `AbortSignal` via Redis pub/sub) or deletes the K8s Job with foreground propagation. Around it: OIDC JWT verification with `jose`, per-route RBAC, idempotency keys, RFC 9457 Problem Details, an append-only audit table, rate limits, SSE for logs and live events, and a least-privilege K8s Role.
+</Note>
+
+It's the control plane of Acme Ops. The worker side is in [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice), the CronJobs in [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice), the UI in [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js), and the reasoning (idempotency, overlap, misfires) in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture).
 
 ## 1. Resource model
 
@@ -88,7 +92,7 @@ stateDiagram-v2
 Rules that every note and the dashboard rely on:
 
 - **Pause** stops *new scheduled* runs only. In-flight runs continue; manual runs still work.
-- **Resume** re-enables the schedule; missed ticks are **not** backfilled (BullMQ: the scheduler is re-created from the next pattern match; K8s: `startingDeadlineSeconds` bounds catch-up, see [[Kubernetes CronJobs in Practice]]).
+- **Resume** re-enables the schedule; missed ticks are **not** backfilled (BullMQ: the scheduler is re-created from the next pattern match; K8s: `startingDeadlineSeconds` bounds catch-up, see [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice)).
 - **Stop** is **cooperative** and asynchronous: `202` means "cancellation requested". A run can still end as `succeeded` if it finished first.
 - **Overlap** is `Forbid` by default (K8s `concurrencyPolicy`; BullMQ global concurrency 1 + misfire grace).
 
@@ -802,7 +806,7 @@ export class RunTombstones {
 }
 ```
 
-The contract with the CronJob manifests (see [[Kubernetes CronJobs in Practice]] and [[Playwright Automation as a Cron Job]]):
+The contract with the CronJob manifests (see [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) and [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)):
 
 ```yaml
 apiVersion: batch/v1
@@ -830,8 +834,11 @@ spec:
           terminationGracePeriodSeconds: 60   # the container must stop cleanly on SIGTERM within this
 ```
 
-> [!tip] Stop without losing the Job object
-> An alternative to deleting is patching the **Job's** `spec.suspend: true`: Kubernetes terminates the active pods but keeps the Job (with a `Suspended` condition) for history. Acme deletes with foreground propagation to match `kubectl delete job` semantics and uses tombstones for history.
+<Tip>
+**Stop without losing the Job object**
+
+An alternative to deleting is patching the **Job's** `spec.suspend: true`: Kubernetes terminates the active pods but keeps the Job (with a `Suspended` condition) for history. Acme deletes with foreground propagation to match `kubectl delete job` semantics and uses tombstones for history.
+</Tip>
 
 ## 9. Postgres: audit log, idempotency keys, tombstones
 
@@ -1151,7 +1158,7 @@ export function openSse(req: FastifyRequest, reply: FastifyReply) {
 
 `GET /api/jobs/events` merges BullMQ `QueueEvents`, a Kubernetes watch on Jobs, and `job.updated` messages. Because several `jobs-api` replicas run behind the Service, every event goes through a Redis channel so each replica's SSE clients see everything.
 
-The payloads are **flat, partial updates**, the same shape the worker-side listeners in [[BullMQ Job Schedulers in Practice#11. Progress, logs and live status]] publish and the [[Job Scheduler Dashboard with Next.js]] parses:
+The payloads are **flat, partial updates**, the same shape the worker-side listeners in [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice#11-progress-logs-and-live-status) publish and the [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) parses:
 
 ```ts
 type JobEvent =
@@ -1298,7 +1305,7 @@ export async function buildServer(deps?: Partial<{ jobs: JobService; db: pg.Pool
 }
 ```
 
-`jobs-api` also serves `/metrics` (public to the cluster network only) with a `jobs_paused{job}` gauge (1 while paused), refreshed from `jobs.list()` every 30 s. The missed-schedule alert in [[Cron with Message Queues - Architecture#14. Observability]] uses it to stay quiet for jobs someone paused on purpose.
+`jobs-api` also serves `/metrics` (public to the cluster network only) with a `jobs_paused{job}` gauge (1 while paused), refreshed from `jobs.list()` every 30 s. The missed-schedule alert in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture#14-observability) uses it to stay quiet for jobs someone paused on purpose.
 
 ## 12. Kubernetes RBAC for the `jobs-api` ServiceAccount
 
@@ -1349,8 +1356,11 @@ kubectl auth can-i delete deployments -n shop-prod --as=system:serviceaccount:sh
 kubectl auth can-i get secrets -n shop-prod --as=system:serviceaccount:shop-prod:jobs-api                           # no
 ```
 
-> [!danger] `create jobs` is a powerful permission
-> A principal that can create Jobs can run **any image with any ServiceAccount** in the namespace, which is a privilege-escalation path if `jobs-api` is compromised. Contain it: run CronJobs in a dedicated namespace (e.g. `shop-jobs`) with no other workloads, and add an admission policy that only lets `jobs-api` create Jobs owned by a CronJob and using Acme images. `ValidatingAdmissionPolicy` is GA since Kubernetes 1.30:
+<Warning>
+**`create jobs` is a powerful permission**
+
+A principal that can create Jobs can run **any image with any ServiceAccount** in the namespace, which is a privilege-escalation path if `jobs-api` is compromised. Contain it: run CronJobs in a dedicated namespace (e.g. `shop-jobs`) with no other workloads, and add an admission policy that only lets `jobs-api` create Jobs owned by a CronJob and using Acme images. `ValidatingAdmissionPolicy` is GA since Kubernetes 1.30:
+</Warning>
 
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
@@ -1384,13 +1394,13 @@ spec:
 
 ## 13. Security
 
-- **Authentication**: OIDC access tokens verified locally with `jose` (issuer, audience `jobs-api`, algorithm allow-list, 30 s clock tolerance). The dashboard calls `jobs-api` **server-side** with the user's token (or a token exchanged for this audience); tokens never reach browser JavaScript. See [[OAuth 2.x & OpenID Connect]] and [[Authentication vs Authorization]].
+- **Authentication**: OIDC access tokens verified locally with `jose` (issuer, audience `jobs-api`, algorithm allow-list, 30 s clock tolerance). The dashboard calls `jobs-api` **server-side** with the user's token (or a token exchanged for this audience); tokens never reach browser JavaScript. See [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) and [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization).
 - **Authorization**: route roles (`ops:jobs:read`, `ops:jobs:write`, `ops:jobs:admin`) plus per-job policy. Deny by default: a route without `requiredRole` fails review.
 - **Destructive actions**: stop and pause are confirmed in the UI (type the job id, show what's running and since when) and carry a `reason` that lands in the audit log. `Replace`-style actions (stop then run) are two audited calls, never one silent one.
 - **Rate limits**: 300 req/min per user overall, 20 mutations/min, 10 manual runs/min per user. Manual runs also respect Forbid, so spamming "run now" queues at most one extra run per job.
 - **Input**: `input` is untrusted JSON; each job validates it with its own schema, and it's size-limited (Fastify `bodyLimit`). K8s passes it as an env var, never as a shell string.
 - **Blast radius**: least-privilege Role, admission policy, network policy allowing only `ops-console` → `jobs-api`, Bull Board read-only.
-- **Audit**: append-only table (no UPDATE/DELETE grants), ship it to long-term storage, and alert on unusual patterns (many stops by one user, mutations outside business hours). See [[API Security]].
+- **Audit**: append-only table (no UPDATE/DELETE grants), ship it to long-term storage, and alert on unusual patterns (many stops by one user, mutations outside business hours). See [API Security](/Software%20Engineering/Security/API%20Security).
 
 ## 14. Tests
 
@@ -1535,16 +1545,19 @@ A senior answer is usually "buy the engine, build the thin layer": keep the nati
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Pausing a BullMQ job with `queue.pause()` (blocks manual runs, fires a catch-up on resume) instead of removing the scheduler.
-> - Unsuspending a CronJob without `startingDeadlineSeconds`: Kubernetes schedules a catch-up run immediately.
-> - Deleting a K8s Job with the default `Background` or `Orphan` propagation: the API returns before pods stop, or leaves pods running.
-> - Treating `202` from stop as "stopped". It means "cancellation requested"; the dashboard must follow the run to `cancelled`.
-> - No `Idempotency-Key`: a double click or a retrying proxy starts two runs.
-> - `runId`s with `:` or `/` put raw into URLs; always encode them.
-> - SSE through a proxy that buffers or times out idle connections; send heartbeats and `X-Accel-Buffering: no`.
-> - Giving `jobs-api` a ClusterRole or `pods/exec` "just in case".
-> - Logging tokens (Fastify logs headers unless redacted).
+<Warning>
+**Common mistakes**
+
+- Pausing a BullMQ job with `queue.pause()` (blocks manual runs, fires a catch-up on resume) instead of removing the scheduler.
+- Unsuspending a CronJob without `startingDeadlineSeconds`: Kubernetes schedules a catch-up run immediately.
+- Deleting a K8s Job with the default `Background` or `Orphan` propagation: the API returns before pods stop, or leaves pods running.
+- Treating `202` from stop as "stopped". It means "cancellation requested"; the dashboard must follow the run to `cancelled`.
+- No `Idempotency-Key`: a double click or a retrying proxy starts two runs.
+- `runId`s with `:` or `/` put raw into URLs; always encode them.
+- SSE through a proxy that buffers or times out idle connections; send heartbeats and `X-Accel-Buffering: no`.
+- Giving `jobs-api` a ClusterRole or `pods/exec` "just in case".
+- Logging tokens (Fastify logs headers unless redacted).
+</Warning>
 
 ## Senior perspective
 
@@ -1555,46 +1568,57 @@ A senior answer is usually "buy the engine, build the thin layer": keep the nati
 - **Least privilege is testable**: `kubectl auth can-i` checks in CI, admission policies, and an alert if the Role changes.
 - Review questions: *What does pause do to a run that's already queued? What if two operators click stop at once? Can a user run a job they can't see? What happens if Redis is down: do reads still work for K8s jobs? Where is the audit log retained and who can delete it?*
 
-> [!info]+ 🆕 2025–2026
-> - **2025-02-22 · jose 6.0.0**; 6.2.x current. `createRemoteJWKSet` + `jwtVerify` as used here.
-> - **2025-07-09 · Zod 4.0.0** (an alternative to TypeBox for schemas; Fastify has type providers for both).
-> - **2025-09-09 · TypeBox 1.0.0** published as the `typebox` package; **2025-09-20 · `@fastify/type-provider-typebox` 6.0.0** switched to it (peer `typebox ^1.0.13`). Old code imports `@sinclair/typebox`.
-> - **2025-10-03 · `@kubernetes/client-node` 1.4.0:** Kubernetes 1.34 APIs, AbortSignal support. **2026-08-12 · 2.0.0:** HTTP layer moved from node-fetch to **undici**, dropped Node 18, 20 and 23, generated against Kubernetes 1.36; the object-parameter API style from 1.0 is unchanged.
-> - **2026-04-18:** the IETF *Idempotency-Key HTTP Header Field* draft reached **-07**; still a draft, but its semantics (400 missing, 409 in flight, 422 reused with a different payload) are what this API implements.
-> - **2026-07-30 · BullMQ 6.0.0** removed repeatable jobs; the BullMQ backend uses only Job Scheduler APIs (see [[BullMQ Job Schedulers in Practice]]).
+<Info>
+**🆕 2025–2026**
+
+- **2025-02-22 · jose 6.0.0**; 6.2.x current. `createRemoteJWKSet` + `jwtVerify` as used here.
+- **2025-07-09 · Zod 4.0.0** (an alternative to TypeBox for schemas; Fastify has type providers for both).
+- **2025-09-09 · TypeBox 1.0.0** published as the `typebox` package; **2025-09-20 · `@fastify/type-provider-typebox` 6.0.0** switched to it (peer `typebox ^1.0.13`). Old code imports `@sinclair/typebox`.
+- **2025-10-03 · `@kubernetes/client-node` 1.4.0:** Kubernetes 1.34 APIs, AbortSignal support. **2026-08-12 · 2.0.0:** HTTP layer moved from node-fetch to **undici**, dropped Node 18, 20 and 23, generated against Kubernetes 1.36; the object-parameter API style from 1.0 is unchanged.
+- **2026-04-18:** the IETF *Idempotency-Key HTTP Header Field* draft reached **-07**; still a draft, but its semantics (400 missing, 409 in flight, 422 reused with a different payload) are what this API implements.
+- **2026-07-30 · BullMQ 6.0.0** removed repeatable jobs; the BullMQ backend uses only Job Scheduler APIs (see [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice)).
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you give one API over jobs running on different schedulers?
-> Define a backend-neutral resource model (job, state, run) and an adapter interface (`list`, `get`, `pause`, `resume`, `runNow`, `stopRun`, `listRuns`, `getRunLogs`). Each backend maps the semantics: BullMQ removes/re-creates the Job Scheduler, K8s patches `spec.suspend`, run now is `queue.add` vs creating a Job from the CronJob template, stop is AbortSignal vs deleting the Job. A router picks the backend by job id.
+<Accordion title="How do you give one API over jobs running on different schedulers?">
+Define a backend-neutral resource model (job, state, run) and an adapter interface (`list`, `get`, `pause`, `resume`, `runNow`, `stopRun`, `listRuns`, `getRunLogs`). Each backend maps the semantics: BullMQ removes/re-creates the Job Scheduler, K8s patches `spec.suspend`, run now is `queue.add` vs creating a Job from the CronJob template, stop is AbortSignal vs deleting the Job. A router picks the backend by job id.
+</Accordion>
 
-> [!question]- What exactly does "pause" mean, and how is it different on BullMQ and Kubernetes?
-> Stop creating new scheduled runs; in-flight runs continue and manual runs still work. BullMQ: remove the Job Scheduler (after stashing its definition) and record a paused flag so deploy-time reconciliation doesn't re-add it; not `queue.pause()`, which blocks all processing. Kubernetes: `spec.suspend: true` via a merge patch; resume with `startingDeadlineSeconds` set to avoid an immediate catch-up run.
+<Accordion title="What exactly does &quot;pause&quot; mean, and how is it different on BullMQ and Kubernetes?">
+Stop creating new scheduled runs; in-flight runs continue and manual runs still work. BullMQ: remove the Job Scheduler (after stashing its definition) and record a paused flag so deploy-time reconciliation doesn't re-add it; not `queue.pause()`, which blocks all processing. Kubernetes: `spec.suspend: true` via a merge patch; resume with `startingDeadlineSeconds` set to avoid an immediate catch-up run.
+</Accordion>
 
-> [!question]- How is "run now" implemented for a CronJob, and why the owner reference?
-> Read the CronJob, copy `spec.jobTemplate` into a new Job with the annotation `cronjob.kubernetes.io/instantiate: manual` and a controller owner reference to the CronJob, which is what `kubectl create job --from=cronjob/x` does. The owner reference means history limits clean it up, `Forbid` counts it as active, and deleting the CronJob cascades. A deterministic name from the Idempotency-Key makes retries return 409, which we treat as success.
+<Accordion title="How is &quot;run now&quot; implemented for a CronJob, and why the owner reference?">
+Read the CronJob, copy `spec.jobTemplate` into a new Job with the annotation `cronjob.kubernetes.io/instantiate: manual` and a controller owner reference to the CronJob, which is what `kubectl create job --from=cronjob/x` does. The owner reference means history limits clean it up, `Forbid` counts it as active, and deleting the CronJob cascades. A deterministic name from the Idempotency-Key makes retries return 409, which we treat as success.
+</Accordion>
 
-> [!question]- How do you stop an in-flight run safely?
-> Cooperatively. BullMQ: set a durable cancel flag and publish a cancel message; the worker holding the job calls `cancelJob`, the processor's `AbortSignal` fires, it cleans up and throws `UnrecoverableError('cancelled: …')`. Kubernetes: delete the Job with `propagationPolicy: Foreground`, so pods get SIGTERM and `terminationGracePeriodSeconds` before SIGKILL, and the Job object disappears only after its pods. The API returns 202 and the status moves `cancelling` → `cancelled`.
+<Accordion title="How do you stop an in-flight run safely?">
+Cooperatively. BullMQ: set a durable cancel flag and publish a cancel message; the worker holding the job calls `cancelJob`, the processor's `AbortSignal` fires, it cleans up and throws `UnrecoverableError('cancelled: …')`. Kubernetes: delete the Job with `propagationPolicy: Foreground`, so pods get SIGTERM and `terminationGracePeriodSeconds` before SIGKILL, and the Job object disappears only after its pods. The API returns 202 and the status moves `cancelling` → `cancelled`.
+</Accordion>
 
-> [!question]- How do you implement Idempotency-Key correctly?
-> Store `(principal, key)` with a hash of the request and, once done, the response. On repeat: same hash and a stored response → replay it; different hash → 422; still in flight → 409; missing key → 400. Delete the record if the operation failed so the client can retry. Also derive downstream ids (queue job id, K8s Job name) from the key so duplicates are rejected even if the store is lost.
+<Accordion title="How do you implement Idempotency-Key correctly?">
+Store `(principal, key)` with a hash of the request and, once done, the response. On repeat: same hash and a stored response → replay it; different hash → 422; still in flight → 409; missing key → 400. Delete the record if the operation failed so the client can retry. Also derive downstream ids (queue job id, K8s Job name) from the key so duplicates are rejected even if the store is lost.
+</Accordion>
 
-> [!question]- What K8s permissions does this service need, and what's risky about them?
-> `get/list/watch/patch` on CronJobs (patch pinned with `resourceNames`), `get/list/watch/create/delete` on Jobs, `list` on pods and `get` on `pods/log`, in one namespace via a Role. Creating Jobs means creating Pods with any image and ServiceAccount in that namespace, so isolate the namespace and add an admission policy restricting what `jobs-api` may create.
+<Accordion title="What K8s permissions does this service need, and what's risky about them?">
+`get/list/watch/patch` on CronJobs (patch pinned with `resourceNames`), `get/list/watch/create/delete` on Jobs, `list` on pods and `get` on `pods/log`, in one namespace via a Role. Creating Jobs means creating Pods with any image and ServiceAccount in that namespace, so isolate the namespace and add an admission policy restricting what `jobs-api` may create.
+</Accordion>
 
-> [!question]- Why RFC 9457 Problem Details?
-> A standard, machine-readable error shape (`type`, `title`, `status`, `detail`, `instance` plus extensions) with its own media type `application/problem+json`. Clients branch on `type` instead of parsing messages, and every error from every route looks the same.
+<Accordion title="Why RFC 9457 Problem Details?">
+A standard, machine-readable error shape (`type`, `title`, `status`, `detail`, `instance` plus extensions) with its own media type `application/problem+json`. Clients branch on `type` instead of parsing messages, and every error from every route looks the same.
+</Accordion>
 
-> [!question]- Build vs buy for a job control plane?
-> Buy the engine (BullMQ, K8s, Temporal, Argo Workflows, Airflow, Dagster) and prefer its native UI when you have one runtime. Build a thin control API only when you need one audited surface over several runtimes with your own RBAC and semantics. Revisit when jobs gain dependencies and history needs: that's when a workflow engine is cheaper than more glue.
+<Accordion title="Build vs buy for a job control plane?">
+Buy the engine (BullMQ, K8s, Temporal, Argo Workflows, Airflow, Dagster) and prefer its native UI when you have one runtime. Build a thin control API only when you need one audited surface over several runtimes with your own RBAC and semantics. Revisit when jobs gain dependencies and history needs: that's when a workflow engine is cheaper than more glue.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]] · [[APIs & Auth Index]]
-- [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Kubernetes CronJobs in Practice]] · [[Job Scheduler Dashboard with Next.js]] · [[Playwright Automation as a Cron Job]]
-- [[REST API Design]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[Rate Limiting & Throttling]] · [[Webhooks, Polling, SSE & WebSockets]]
-- [[OAuth 2.x & OpenID Connect]] · [[Authentication vs Authorization]] · [[API Security]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index) · [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index)
+- [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) · [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [Webhooks, Polling, SSE & WebSockets](/Software%20Engineering/APIs%20%26%20Auth/Webhooks%2C%20Polling%2C%20SSE%20%26%20WebSockets)
+- [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization) · [API Security](/Software%20Engineering/Security/API%20Security)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)
 
 ## Sources
 - [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457)

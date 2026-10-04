@@ -1,12 +1,16 @@
 ---
+title: "Grafana & the LGTM Stack"
 tags: [devops, devops/observability]
 aliases: [LGTM Stack, Grafana Stack, Loki, Tempo, Mimir, Grafana Alloy, LogQL, Grafana Dashboards, Grafana Alerting, kube-prometheus-stack]
 updated: 2026-09-27
 ---
 # Grafana & the LGTM Stack
 
-> [!tldr] TL;DR
-> **LGTM** = **L**oki (logs), **G**rafana (UI, dashboards, alerting), **T**empo (traces), **M**imir or plain Prometheus (metrics), plus **Pyroscope** (profiles). **Grafana Alloy** is the collector that feeds them all: Grafana Agent reached end of life on 2025-11-01 and Promtail on 2026-03-02. On Kubernetes you install kube-prometheus-stack, Loki, Tempo and an Alloy DaemonSet into `monitoring`, then correlate the signals: a metric spike links to an exemplar trace, the trace links to its logs, the logs link back to the trace. This is the hands-on companion to the concepts in [[Observability - Logs, Metrics & Traces]].
+<Note>
+**TL;DR**
+
+**LGTM** = **L**oki (logs), **G**rafana (UI, dashboards, alerting), **T**empo (traces), **M**imir or plain Prometheus (metrics), plus **Pyroscope** (profiles). **Grafana Alloy** is the collector that feeds them all: Grafana Agent reached end of life on 2025-11-01 and Promtail on 2026-03-02. On Kubernetes you install kube-prometheus-stack, Loki, Tempo and an Alloy DaemonSet into `monitoring`, then correlate the signals: a metric spike links to an exemplar trace, the trace links to its logs, the logs link back to the trace. This is the hands-on companion to the concepts in [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces).
+</Note>
 
 ## 1. The stack and how data flows
 
@@ -52,15 +56,18 @@ flowchart LR
   GF --> PR & LK & TP & MI & PY
 ```
 
-> [!info]+ 🆕 2025–2026: the collector consolidation
-> - **Grafana Agent** (Static, Flow and Operator) was deprecated in favour of Alloy (announced April 2024), stayed in LTS until 2025-10-31 and reached **end of life on 2025-11-01**: no more security or bug fixes.
-> - **Promtail** reached **end of life on 2026-03-02**. All log-collection development happens in Alloy (lambda-promtail is the exception and stays supported). `alloy convert --source-format=promtail` converts old configs.
-> - **Alloy** is Grafana's distribution of the OpenTelemetry Collector with native Prometheus and Loki pipelines, and it is 100% OTLP compatible. Alloy v1.20.0 shipped 2026-09-25 (with breaking changes in a few components, so read the release notes before upgrading).
-> - The **Loki, Tempo and Grafana Helm charts moved to the community-maintained `grafana-community/helm-charts` repo** (end of January 2026). Alloy and the `k8s-monitoring` chart are still published by Grafana Labs.
+<Info>
+**🆕 2025–2026: the collector consolidation**
+
+- **Grafana Agent** (Static, Flow and Operator) was deprecated in favour of Alloy (announced April 2024), stayed in LTS until 2025-10-31 and reached **end of life on 2025-11-01**: no more security or bug fixes.
+- **Promtail** reached **end of life on 2026-03-02**. All log-collection development happens in Alloy (lambda-promtail is the exception and stays supported). `alloy convert --source-format=promtail` converts old configs.
+- **Alloy** is Grafana's distribution of the OpenTelemetry Collector with native Prometheus and Loki pipelines, and it is 100% OTLP compatible. Alloy v1.20.0 shipped 2026-09-25 (with breaking changes in a few components, so read the release notes before upgrading).
+- The **Loki, Tempo and Grafana Helm charts moved to the community-maintained `grafana-community/helm-charts` repo** (end of January 2026). Alloy and the `k8s-monitoring` chart are still published by Grafana Labs.
+</Info>
 
 ## 2. Installing on Kubernetes (`monitoring` namespace)
 
-In Acme Shop these values files live in `platform-gitops/platform/monitoring/` and Argo CD installs them as Helm-sourced Applications ([[Argo CD in Practice]]). The commands below are what Argo CD effectively runs, useful for a local cluster.
+In Acme Shop these values files live in `platform-gitops/platform/monitoring/` and Argo CD installs them as Helm-sourced Applications ([Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)). The commands below are what Argo CD effectively runs, useful for a local cluster.
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -299,7 +306,7 @@ Notes:
 
 ### 2.5 Managed alternative: Grafana Cloud
 
-Grafana Cloud runs Grafana, Loki, Tempo, Mimir and Pyroscope for you (with a free tier). You still run **Alloy** in the cluster, usually through the `k8s-monitoring` chart, pointing `loki.write`, `prometheus.remote_write` and `otelcol.exporter.otlphttp` at Cloud endpoints with an access-policy token stored in a Kubernetes Secret ([[Secrets Management]]).
+Grafana Cloud runs Grafana, Loki, Tempo, Mimir and Pyroscope for you (with a free tier). You still run **Alloy** in the cluster, usually through the `k8s-monitoring` chart, pointing `loki.write`, `prometheus.remote_write` and `otelcol.exporter.otlphttp` at Cloud endpoints with an access-policy token stored in a Kubernetes Secret ([Secrets Management](/Software%20Engineering/Security/Secrets%20Management)).
 
 | | Self-hosted LGTM | Grafana Cloud |
 |---|---|---|
@@ -459,15 +466,15 @@ histogram_quantile(0.95, sum by (le, service, span_name) (
   rate(traces_spanmetrics_latency_bucket{service=~"shell|catalog|checkout", span_kind="SPAN_KIND_SERVER"}[5m])))
 ```
 
-2. **Container metrics** for saturation (section 8) and, optionally, a prom-client registry exposed from a route handler if you need business metrics. Browser-side Web Vitals come from RUM (Grafana Faro), not the server ([[Core Web Vitals]]).
+2. **Container metrics** for saturation (section 8) and, optionally, a prom-client registry exposed from a route handler if you need business metrics. Browser-side Web Vitals come from RUM (Grafana Faro), not the server ([Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)).
 
-Details of instrumenting the zones are in [[Deploying Next.js Micro-frontends to Kubernetes]].
+Details of instrumenting the zones are in [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes).
 
 ## 5. Traces and correlation
 
 ### 5.1 Node auto-instrumentation → Alloy → Tempo
 
-No code changes: preload the OTel auto-instrumentation and point it at the node-local Alloy. (The Deployment is in [[Deploying Node.js Apps to Kubernetes]].)
+No code changes: preload the OTel auto-instrumentation and point it at the node-local Alloy. (The Deployment is in [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes).)
 
 ```yaml
 # excerpt of the orders-api container spec
@@ -646,7 +653,7 @@ A common split: SLO and infrastructure alerts as `PrometheusRule` in Git (evalua
 
 ### 7.2 SLO burn-rate alert for `orders-api`
 
-SLO: 99.9% of `orders-api` requests are non-5xx over 30 days, so the error budget is 0.1%. Multi-window, multi-burn-rate per the Google SRE workbook (concept in [[Observability - Logs, Metrics & Traces]]).
+SLO: 99.9% of `orders-api` requests are non-5xx over 30 days, so the error budget is 0.1%. Multi-window, multi-burn-rate per the Google SRE workbook (concept in [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)).
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
@@ -773,7 +780,7 @@ sum by (node) (kube_pod_container_resource_requests{resource="cpu"})
 / sum by (node) (kube_node_status_allocatable{resource="cpu"})
 ```
 
-Use `container_memory_working_set_bytes` (what the OOM killer and kubelet eviction look at), not `container_memory_usage_bytes` (includes reclaimable cache). How to act on these signals is in [[Kubernetes Operations - Logs, Debugging & Scheduling]].
+Use `container_memory_working_set_bytes` (what the OOM killer and kubelet eviction look at), not `container_memory_usage_bytes` (includes reclaimable cache). How to act on these signals is in [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling).
 
 ## 9. Cost and retention
 
@@ -786,28 +793,34 @@ Use `container_memory_working_set_bytes` (what the OOM killer and kubelet evicti
 
 ## 10. What changed recently
 
-> [!info]+ 🆕 2025–2026 versions and features
-> - **Grafana 12 (May 2025, GrafanaCON Seattle)**: "observability as code" (new versioned App Platform APIs, Git Sync and dynamic dashboards as experimental, dashboard schema v2), Drilldown apps for metrics, logs and traces, new alerting tools.
-> - **Grafana 13 (2026-04-21, GrafanaCON Barcelona)**: **Git Sync GA** in all editions (GitHub, GitLab, Bitbucket, plain Git), **dynamic dashboards GA** and on by default with dashboard **schema v2** (v1 dashboards migrate automatically when loaded), layout templates for DORA and RED/USE, **Grafana Advisor GA**. Current release line is 13.2 (13.2.2 on 2026-09-15).
-> - **`gcx`** replaced `grafanactl` as the Grafana CLI (GA 2026-07-28; the grafanactl repo was scheduled for archiving on 2026-06-01).
-> - **Loki 3.x**: 3.0 (2024) made structured metadata and OTLP ingestion first class; current 3.7.x (3.7.8 on 2026-09-17). **Simple Scalable mode is deprecated and will be removed in Loki 4.0.** Helm chart moved to `grafana-community` (January 2026).
-> - **Mimir 3.0 (announced 2025-11-03)**: **ingest storage architecture** (Kafka-compatible buffer between write and read paths) becomes the preferred stable architecture; the **Mimir Query Engine** is the default (streaming PromQL, up to 92% lower peak memory per Grafana).
-> - **Tempo 3.0 (announced 2026-06-01)**: new architecture that removes ingesters and separates read/write paths (Kafka-compatible buffer in microservices mode, one stored copy instead of RF3), **TraceQL metrics GA**, vParquet5 default, trace redaction CLI; `tempo-cli migrate` helps convert 2.x configs. Tempo 2.x users must plan a migration.
-> - **Alloy 1.x** is the only supported Grafana collector: Agent EOL 2025-11-01, Promtail EOL 2026-03-02.
+<Info>
+**🆕 2025–2026 versions and features**
+
+- **Grafana 12 (May 2025, GrafanaCON Seattle)**: "observability as code" (new versioned App Platform APIs, Git Sync and dynamic dashboards as experimental, dashboard schema v2), Drilldown apps for metrics, logs and traces, new alerting tools.
+- **Grafana 13 (2026-04-21, GrafanaCON Barcelona)**: **Git Sync GA** in all editions (GitHub, GitLab, Bitbucket, plain Git), **dynamic dashboards GA** and on by default with dashboard **schema v2** (v1 dashboards migrate automatically when loaded), layout templates for DORA and RED/USE, **Grafana Advisor GA**. Current release line is 13.2 (13.2.2 on 2026-09-15).
+- **`gcx`** replaced `grafanactl` as the Grafana CLI (GA 2026-07-28; the grafanactl repo was scheduled for archiving on 2026-06-01).
+- **Loki 3.x**: 3.0 (2024) made structured metadata and OTLP ingestion first class; current 3.7.x (3.7.8 on 2026-09-17). **Simple Scalable mode is deprecated and will be removed in Loki 4.0.** Helm chart moved to `grafana-community` (January 2026).
+- **Mimir 3.0 (announced 2025-11-03)**: **ingest storage architecture** (Kafka-compatible buffer between write and read paths) becomes the preferred stable architecture; the **Mimir Query Engine** is the default (streaming PromQL, up to 92% lower peak memory per Grafana).
+- **Tempo 3.0 (announced 2026-06-01)**: new architecture that removes ingesters and separates read/write paths (Kafka-compatible buffer in microservices mode, one stored copy instead of RF3), **TraceQL metrics GA**, vParquet5 default, trace redaction CLI; `tempo-cli migrate` helps convert 2.x configs. Tempo 2.x users must plan a migration.
+- **Alloy 1.x** is the only supported Grafana collector: Agent EOL 2025-11-01, Promtail EOL 2026-03-02.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **High-cardinality Loki labels** (`trace_id`, `user_id`, `path` with IDs): stream explosion, slow queries, OOMing ingesters. Use structured metadata.
-> - **ServiceMonitor not picked up**: selector label mismatch with the Service, unnamed port, wrong `namespaceSelector`, or `serviceMonitorSelectorNilUsesHelmValues` left `true`.
-> - **Starting a new Loki on Simple Scalable** because an old blog said so.
-> - Still running **Promtail or Grafana Agent**: unsupported, no security fixes.
-> - Queries over 30 days with `{namespace=~".+"}` and no line filter: Loki reads everything.
-> - **Averages of percentiles** and `histogram_quantile` without `le` in the `by` clause.
-> - Editing a **provisioned dashboard in the UI** and losing the change at next sync.
-> - **Alert rules in Grafana only**, so a Grafana outage silences all paging.
-> - Everything in `monitoring` shares the fate of the cluster it watches: if the cluster dies, so do the alerts. Add an external heartbeat ("dead man's switch" `Watchdog` alert to an external service).
-> - Logging secrets or personal data because "it's only internal"; Loki makes them searchable for everyone with Explore access.
+<Warning>
+**Common pitfalls**
+
+- **High-cardinality Loki labels** (`trace_id`, `user_id`, `path` with IDs): stream explosion, slow queries, OOMing ingesters. Use structured metadata.
+- **ServiceMonitor not picked up**: selector label mismatch with the Service, unnamed port, wrong `namespaceSelector`, or `serviceMonitorSelectorNilUsesHelmValues` left `true`.
+- **Starting a new Loki on Simple Scalable** because an old blog said so.
+- Still running **Promtail or Grafana Agent**: unsupported, no security fixes.
+- Queries over 30 days with `{namespace=~".+"}` and no line filter: Loki reads everything.
+- **Averages of percentiles** and `histogram_quantile` without `le` in the `by` clause.
+- Editing a **provisioned dashboard in the UI** and losing the change at next sync.
+- **Alert rules in Grafana only**, so a Grafana outage silences all paging.
+- Everything in `monitoring` shares the fate of the cluster it watches: if the cluster dies, so do the alerts. Add an external heartbeat ("dead man's switch" `Watchdog` alert to an external service).
+- Logging secrets or personal data because "it's only internal"; Loki makes them searchable for everyone with Explore access.
+</Warning>
 
 ## Senior perspective
 
@@ -821,36 +834,44 @@ Use `container_memory_working_set_bytes` (what the OOM killer and kubelet evicti
 
 ## Interview questions
 
-> [!question]- What are the components of the LGTM stack and what does each do?
-> Loki stores and queries logs (LogQL) with a small label index and compressed chunks in object storage. Grafana is the UI for dashboards, exploration and alerting. Tempo stores traces in object storage and queries them by ID or TraceQL. Mimir is horizontally scalable, long-term Prometheus-compatible metrics storage. Pyroscope adds continuous profiling, and Alloy collects and forwards all signals.
+<Accordion title="What are the components of the LGTM stack and what does each do?">
+Loki stores and queries logs (LogQL) with a small label index and compressed chunks in object storage. Grafana is the UI for dashboards, exploration and alerting. Tempo stores traces in object storage and queries them by ID or TraceQL. Mimir is horizontally scalable, long-term Prometheus-compatible metrics storage. Pyroscope adds continuous profiling, and Alloy collects and forwards all signals.
+</Accordion>
 
-> [!question]- Why are high-cardinality labels bad in Loki, and what do you do instead?
-> Each unique label combination is a stream with its own chunks and index entries. High cardinality makes many tiny streams: ingester memory grows, chunks are small and inefficient, the index balloons and queries touch far more chunks. Keep labels to bounded values (namespace, app, level) and put identifiers like trace_id in structured metadata or the log line, filtering with line filters and parsers.
+<Accordion title="Why are high-cardinality labels bad in Loki, and what do you do instead?">
+Each unique label combination is a stream with its own chunks and index entries. High cardinality makes many tiny streams: ingester memory grows, chunks are small and inefficient, the index balloons and queries touch far more chunks. Keep labels to bounded values (namespace, app, level) and put identifiers like trace_id in structured metadata or the log line, filtering with line filters and parsers.
+</Accordion>
 
-> [!question]- How do you go from a latency spike to the root cause in Grafana?
-> Open the latency histogram with exemplars, click an exemplar on the spike to open the trace in Tempo, find the slow span, then use trace-to-logs to see that request's log lines in Loki (and span profiles in Pyroscope if enabled). The glue is consistent service labels, trace IDs injected into logs, exemplar storage in Prometheus and derived fields in the Loki data source.
+<Accordion title="How do you go from a latency spike to the root cause in Grafana?">
+Open the latency histogram with exemplars, click an exemplar on the spike to open the trace in Tempo, find the slow span, then use trace-to-logs to see that request's log lines in Loki (and span profiles in Pyroscope if enabled). The glue is consistent service labels, trace IDs injected into logs, exemplar storage in Prometheus and derived fields in the Loki data source.
+</Accordion>
 
-> [!question]- ServiceMonitor vs PodMonitor?
-> Both are Prometheus Operator CRDs that generate scrape configs. ServiceMonitor discovers targets through a Service's endpoints (normal for request-serving apps). PodMonitor selects Pods directly, for workloads without a Service such as workers or batch Jobs.
+<Accordion title="ServiceMonitor vs PodMonitor?">
+Both are Prometheus Operator CRDs that generate scrape configs. ServiceMonitor discovers targets through a Service's endpoints (normal for request-serving apps). PodMonitor selects Pods directly, for workloads without a Service such as workers or batch Jobs.
+</Accordion>
 
-> [!question]- Grafana Alerting or Prometheus Alertmanager?
-> Alertmanager with PrometheusRules keeps alert evaluation next to the data and independent of Grafana, and fits GitOps. Grafana Alerting can alert on any data source (logs, traces, SQL) and is easier for teams working in the UI. Many orgs keep SLO and infra alerts in Prometheus/Mimir rules and use Grafana Alerting for cross-signal or team alerts, with one routing model for both.
+<Accordion title="Grafana Alerting or Prometheus Alertmanager?">
+Alertmanager with PrometheusRules keeps alert evaluation next to the data and independent of Grafana, and fits GitOps. Grafana Alerting can alert on any data source (logs, traces, SQL) and is easier for teams working in the UI. Many orgs keep SLO and infra alerts in Prometheus/Mimir rules and use Grafana Alerting for cross-signal or team alerts, with one routing model for both.
+</Accordion>
 
-> [!question]- Which Loki deployment mode would you pick today?
-> Monolithic (SingleBinary) with object storage for small to moderate volume (roughly up to 20 GB/day), microservices (Distributed) for large or demanding clusters. Not Simple Scalable for new installs: it is deprecated and will be removed in Loki 4.0.
+<Accordion title="Which Loki deployment mode would you pick today?">
+Monolithic (SingleBinary) with object storage for small to moderate volume (roughly up to 20 GB/day), microservices (Distributed) for large or demanding clusters. Not Simple Scalable for new installs: it is deprecated and will be removed in Loki 4.0.
+</Accordion>
 
-> [!question]- Why migrate from Promtail or Grafana Agent to Alloy?
-> Grafana Agent reached end of life on 2025-11-01 and Promtail on 2026-03-02; neither gets security fixes. Alloy is the supported collector, an OTel Collector distribution with Prometheus and Loki pipelines, so one agent handles logs, metrics, traces and profiles. Conversion tooling (`alloy convert`) translates old configs.
+<Accordion title="Why migrate from Promtail or Grafana Agent to Alloy?">
+Grafana Agent reached end of life on 2025-11-01 and Promtail on 2026-03-02; neither gets security fixes. Alloy is the supported collector, an OTel Collector distribution with Prometheus and Loki pipelines, so one agent handles logs, metrics, traces and profiles. Conversion tooling (`alloy convert`) translates old configs.
+</Accordion>
 
-> [!question]- How would you manage dashboards as code in 2026?
-> Keep dashboard JSON in Git and provision it (ConfigMap sidecar in Kubernetes), or use Git Sync (GA in Grafana 13) so UI edits become pull requests. Generate repetitive dashboards with the Foundation SDK rather than Grafonnet, and use Terraform or the gcx CLI for folders, data sources and alert resources. Provisioned dashboards should not be edited in place.
+<Accordion title="How would you manage dashboards as code in 2026?">
+Keep dashboard JSON in Git and provision it (ConfigMap sidecar in Kubernetes), or use Git Sync (GA in Grafana 13) so UI edits become pull requests. Generate repetitive dashboards with the Foundation SDK rather than Grafonnet, and use Terraform or the gcx CLI for folders, data sources and alert resources. Provisioned dashboards should not be edited in place.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]] · [[Observability - Logs, Metrics & Traces]] (concepts: signals, SLOs, sampling)
-- [[Kubernetes Operations - Logs, Debugging & Scheduling]] · [[Kubernetes Workloads in Production]] · [[Kubernetes]]
-- [[Argo Rollouts - Canary & Blue-Green]] (canary analysis queries the Prometheus metrics defined here) · [[Argo CD in Practice]] · [[Jenkins - Pipelines as Code]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Deploying Next.js Micro-frontends to Kubernetes]] · [[Helm & Kustomize]]
-- [[Site Reliability Engineering & Incident Management]] · [[Node.js Performance & Debugging]] · [[Core Web Vitals]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) (concepts: signals, SLOs, sampling)
+- [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes)
+- [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) (canary analysis queries the Prometheus metrics defined here) · [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize)
+- [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging) · [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
 
 ## Sources
 - [Grafana Agent docs: deprecation and EOL](https://grafana.com/docs/agent/latest/) · [Migrate to Alloy (Loki docs)](https://grafana.com/docs/loki/latest/setup/migrate/migrate-to-alloy/) · [From Agent to Alloy FAQ](https://grafana.com/blog/grafana-agent-to-grafana-alloy-opentelemetry-collector-faq/)

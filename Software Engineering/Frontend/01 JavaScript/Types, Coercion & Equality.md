@@ -1,12 +1,16 @@
 ---
+title: "Types, Coercion & Equality"
 tags: [frontend, frontend/javascript]
 aliases: [Types, Primitives, Type Coercion, Equality, == vs ===, null vs undefined, typeof, Truthy and Falsy]
 updated: 2026-09-27
 ---
 # Types, Coercion & Equality
 
-> [!tldr] TL;DR
-> JavaScript has **7 primitive types** (`string`, `number`, `bigint`, `boolean`, `undefined`, `null`, `symbol`) and **objects** (everything else, including arrays and functions). Values, not variables, have types, and operators **coerce** values between types implicitly. `===` compares without coercion, `==` coerces first, and `Object.is` is "same value" (it fixes `NaN` and `-0`). Know the falsy list, `typeof` quirks and the `null`/`undefined` distinction and most "weird JS" questions become predictable.
+<Note>
+**TL;DR**
+
+JavaScript has **7 primitive types** (`string`, `number`, `bigint`, `boolean`, `undefined`, `null`, `symbol`) and **objects** (everything else, including arrays and functions). Values, not variables, have types, and operators **coerce** values between types implicitly. `===` compares without coercion, `==` coerces first, and `Object.is` is "same value" (it fixes `NaN` and `-0`). Know the falsy list, `typeof` quirks and the `null`/`undefined` distinction and most "weird JS" questions become predictable.
+</Note>
 
 ## Primitive vs non-primitive (reference) types
 
@@ -41,7 +45,7 @@ mutate(obj);   // obj = { x: 1 }
 reassign(obj); // obj still { x: 1 }
 ```
 
-JS has no "call by reference" for variables; to let a function change something for the caller, pass an object (or return the new value). Copying objects (shallow vs deep, `structuredClone`) is covered in [[Objects, Arrays & Immutability]].
+JS has no "call by reference" for variables; to let a function change something for the caller, pass an object (or return the new value). Copying objects (shallow vs deep, `structuredClone`) is covered in [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability).
 
 ## Numbers, BigInt and Symbol in brief
 
@@ -66,7 +70,7 @@ JS has no "call by reference" for variables; to let a function change something 
 - Unique, immutable identifiers: `Symbol('id') !== Symbol('id')`.
 - Used as **non-colliding property keys** (skipped by `for...in`, `Object.keys` and `JSON.stringify`).
 - `Symbol.for('app.key')` gets a shared symbol from the global registry.
-- **Well-known symbols** customise language behaviour: `Symbol.iterator` ([[Iterators, Generators & Iterator Helpers]]), `Symbol.toPrimitive`, `Symbol.hasInstance`, `Symbol.asyncIterator`, `Symbol.dispose`.
+- **Well-known symbols** customise language behaviour: `Symbol.iterator` ([Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers)), `Symbol.toPrimitive`, `Symbol.hasInstance`, `Symbol.asyncIterator`, `Symbol.dispose`.
 
 ## `typeof` quirks and reliable type checks
 
@@ -92,7 +96,7 @@ typeof Symbol();          // 'symbol'
 | `NaN` | `Number.isNaN(x)` |
 | a plain object | `Object.prototype.toString.call(x) === '[object Object]'` |
 | exact built-in tag | `Object.prototype.toString.call(x)` → `'[object Date]'`, `'[object RegExp]'`, ... |
-| an instance of a class | `x instanceof C`, or a private brand check `#f in x` ([[Prototypes, Classes & Inheritance]]) |
+| an instance of a class | `x instanceof C`, or a private brand check `#f in x` ([Prototypes, Classes & Inheritance](/Software%20Engineering/Frontend/01%20JavaScript/Prototypes%2C%20Classes%20%26%20Inheritance)) |
 
 ## `null` vs `undefined`
 
@@ -214,7 +218,7 @@ Object.is(NaN, NaN);     // true
 Object.is(0, -0);        // false
 ```
 
-React uses `Object.is` to decide whether state changed and whether effect/memo dependencies changed, which is why you must create **new** objects/arrays instead of mutating ([[State, Props & Data Flow]]).
+React uses `Object.is` to decide whether state changed and whether effect/memo dependencies changed, which is why you must create **new** objects/arrays instead of mutating ([State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow)).
 
 ### How `==` coerces (simplified algorithm)
 
@@ -248,54 +252,68 @@ null >= 0;           // true   (relational operators DO convert null → 0!)
 
 **Rule of thumb**: always use `===`, except `x == null` to check for "null or undefined" at once. ESLint `eqeqeq` with the `null: 'ignore'` option encodes exactly that.
 
-> [!info]+ 🆕 2025–2026: numeric and type helpers
-> - **`Math.sumPrecise`** (ES2026, Baseline Newly 2026-04-10): sums without floating-point accumulation error. `Math.sumPrecise([1e20, 0.1, -1e20]) // 0.1` (a naive loop gives `0`).
-> - **`Float16Array`**, `Math.f16round` (ES2025, Baseline Newly 2025-04-04): half-precision floats for GPU/ML data.
-> - **`JSON.parse` source text access** (ES2026, Baseline Newly 2025-03-31 per web-features): read the raw text of a value to keep big integers exact: `JSON.parse(t, (k, v, { source }) => k === 'id' ? BigInt(source) : v)`.
-> - **`Error.isError`** (ES2026, Baseline **Limited**: Chrome 134, Firefox 138, no Safari): a reliable cross-realm "is this an Error?" check, like `Array.isArray` for errors.
->
-> See [[Modern JavaScript ES2022-ES2027]].
+<Info>
+**🆕 2025–2026: numeric and type helpers**
 
-> [!warning] Common pitfalls
-> - `typeof null === 'object'`: check `x !== null` before treating something as an object.
-> - `||` for defaults swallows `0`, `''` and `false`; use `??`.
-> - Global `isNaN`/`isFinite` coerce; use `Number.isNaN`/`Number.isFinite`.
-> - Input values from the DOM are always strings: `input.value + 1` concatenates. Use `input.valueAsNumber` or `Number(...)`.
-> - `parseInt` without a radix, or on non-strings: `parseInt(0.0000005) === 5` (it stringifies to `'5e-7'`).
-> - `array.sort()` without a comparator sorts as **strings**: `[10, 9, 1].sort()` → `[1, 10, 9]`.
+- **`Math.sumPrecise`** (ES2026, Baseline Newly 2026-04-10): sums without floating-point accumulation error. `Math.sumPrecise([1e20, 0.1, -1e20]) // 0.1` (a naive loop gives `0`).
+- **`Float16Array`**, `Math.f16round` (ES2025, Baseline Newly 2025-04-04): half-precision floats for GPU/ML data.
+- **`JSON.parse` source text access** (ES2026, Baseline Newly 2025-03-31 per web-features): read the raw text of a value to keep big integers exact: `JSON.parse(t, (k, v, { source }) => k === 'id' ? BigInt(source) : v)`.
+- **`Error.isError`** (ES2026, Baseline **Limited**: Chrome 134, Firefox 138, no Safari): a reliable cross-realm "is this an Error?" check, like `Array.isArray` for errors.
+
+See [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027).
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- `typeof null === 'object'`: check `x !== null` before treating something as an object.
+- `||` for defaults swallows `0`, `''` and `false`; use `??`.
+- Global `isNaN`/`isFinite` coerce; use `Number.isNaN`/`Number.isFinite`.
+- Input values from the DOM are always strings: `input.value + 1` concatenates. Use `input.valueAsNumber` or `Number(...)`.
+- `parseInt` without a radix, or on non-strings: `parseInt(0.0000005) === 5` (it stringifies to `'5e-7'`).
+- `array.sort()` without a comparator sorts as **strings**: `[10, 9, 1].sort()` → `[1, 10, 9]`.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What are the primitive types in JavaScript?
-> `string`, `number`, `bigint`, `boolean`, `undefined`, `null`, `symbol`. Everything else is an object (including arrays, functions, dates). Primitives are immutable and compared by value; objects are mutable and compared by reference.
+<Accordion title="What are the primitive types in JavaScript?">
+`string`, `number`, `bigint`, `boolean`, `undefined`, `null`, `symbol`. Everything else is an object (including arrays, functions, dates). Primitives are immutable and compared by value; objects are mutable and compared by reference.
+</Accordion>
 
-> [!question]- `==` vs `===`?
-> `===` compares type and value with no conversion. `==` converts operands to a common type first (booleans → numbers, objects → primitives, strings → numbers), with the special case `null == undefined` only. Prefer `===`; `x == null` is the common exception.
+<Accordion title="`==` vs `===`?">
+`===` compares type and value with no conversion. `==` converts operands to a common type first (booleans → numbers, objects → primitives, strings → numbers), with the special case `null == undefined` only. Prefer `===`; `x == null` is the common exception.
+</Accordion>
 
-> [!question]- What does `Object.is` do differently from `===`?
-> `Object.is(NaN, NaN)` is `true` and `Object.is(0, -0)` is `false`; otherwise identical. React uses it for state and dependency comparison.
+<Accordion title="What does `Object.is` do differently from `===`?">
+`Object.is(NaN, NaN)` is `true` and `Object.is(0, -0)` is `false`; otherwise identical. React uses it for state and dependency comparison.
+</Accordion>
 
-> [!question]- `null` vs `undefined`?
-> `undefined` means a value hasn't been assigned (engine default for missing things); `null` is an explicit "no value" set by code. `null == undefined` but not `===`; `typeof null` is `'object'`; `Number(null)` is `0`, `Number(undefined)` is `NaN`; defaults and JSON treat them differently.
+<Accordion title="`null` vs `undefined`?">
+`undefined` means a value hasn't been assigned (engine default for missing things); `null` is an explicit "no value" set by code. `null == undefined` but not `===`; `typeof null` is `'object'`; `Number(null)` is `0`, `Number(undefined)` is `NaN`; defaults and JSON treat them differently.
+</Accordion>
 
-> [!question]- List the falsy values.
-> `false`, `0`, `-0`, `0n`, `''`, `null`, `undefined`, `NaN`. Everything else, including `'0'`, `[]`, `{}`, is truthy.
+<Accordion title="List the falsy values.">
+`false`, `0`, `-0`, `0n`, `''`, `null`, `undefined`, `NaN`. Everything else, including `'0'`, `[]`, `{}`, is truthy.
+</Accordion>
 
-> [!question]- Why is `0.1 + 0.2 !== 0.3`? How do you handle money?
-> Numbers are binary IEEE-754 doubles; 0.1 and 0.2 can't be represented exactly, so the sum has a rounding error. Compare with an epsilon, format with `toFixed`/`Intl.NumberFormat`, and store money as integer minor units (or `BigInt`) rather than floats.
+<Accordion title="Why is `0.1 + 0.2 !== 0.3`? How do you handle money?">
+Numbers are binary IEEE-754 doubles; 0.1 and 0.2 can't be represented exactly, so the sum has a rounding error. Compare with an epsilon, format with `toFixed`/`Intl.NumberFormat`, and store money as integer minor units (or `BigInt`) rather than floats.
+</Accordion>
 
-> [!question]- What is "mutable vs immutable"? Is JS pass-by-reference?
-> Primitives are immutable; objects are mutable. JS is always pass-by-value, but for objects the value is a reference ("pass by sharing"): mutations through a parameter are visible to the caller, reassignment isn't.
+<Accordion title="What is &quot;mutable vs immutable&quot;? Is JS pass-by-reference?">
+Primitives are immutable; objects are mutable. JS is always pass-by-value, but for objects the value is a reference ("pass by sharing"): mutations through a parameter are visible to the caller, reassignment isn't.
+</Accordion>
 
-> [!question]- Output? `[] + {}`, `[] == ![]`, `'5' - - '2'`
-> `'[object Object]'`; `true` (`![]` is `false` → 0, `[]` → `''` → 0); `7` (`'5' - (-2)`).
+<Accordion title="Output? `[] + {}`, `[] == ![]`, `'5' - - '2'`">
+`'[object Object]'`; `true` (`![]` is `false` → 0, `[]` → `''` → 0); `7` (`'5' - (-2)`).
+</Accordion>
 
 ## Related
-- [[JavaScript Index]]
-- [[Objects, Arrays & Immutability]] · [[Prototypes, Classes & Inheritance]] · [[Collections - Map, Set, WeakMap & WeakRef]] · [[Modern JavaScript ES2022-ES2027]] · [[Hoisting, TDZ & var-let-const]]
-- [[TypeScript Essentials]] (static types on top of these runtime types)
-- Course notes: [[JS the hard parts v3]] (type coercion section)
-- [[JavaScript Interview Questions]] · [[Output Questions & Tricky Snippets]]
+- [JavaScript Index](/Software%20Engineering/Frontend/01%20JavaScript/JavaScript%20Index)
+- [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability) · [Prototypes, Classes & Inheritance](/Software%20Engineering/Frontend/01%20JavaScript/Prototypes%2C%20Classes%20%26%20Inheritance) · [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef) · [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027) · [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const)
+- [TypeScript Essentials](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%20Essentials) (static types on top of these runtime types)
+- Course notes: [JS the hard parts v3](/Software%20Engineering/Frontend/Courses%20%26%20Books/JS%20the%20hard%20parts%20v3) (type coercion section)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions) · [Output Questions & Tricky Snippets](/Software%20Engineering/Frontend/17%20Interview%20Prep/Output%20Questions%20%26%20Tricky%20Snippets)
 
 ## Sources
 - [MDN: JavaScript data types and data structures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures)

@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Notification System"
 tags: [system-design, system-design/case-study]
 aliases: [Notification System Design, Push Notification Service]
 updated: 2026-09-27
 ---
 # Case Study - Notification System
 
-> [!tldr] TL;DR
-> A notification system accepts events from many services and delivers messages over **channels** (mobile push via APNs/FCM, email, SMS, in-app, web push) while respecting **user preferences, rate limits and quiet hours**. The design is a pipeline: API → validation and preference check → template rendering → **per-channel queues** → channel workers calling third-party providers with **retries, idempotency and DLQs** → delivery tracking. Third-party providers are slow and flaky, so queues and backpressure are the heart of it.
+<Note>
+**TL;DR**
+
+A notification system accepts events from many services and delivers messages over **channels** (mobile push via APNs/FCM, email, SMS, in-app, web push) while respecting **user preferences, rate limits and quiet hours**. The design is a pipeline: API → validation and preference check → template rendering → **per-channel queues** → channel workers calling third-party providers with **retries, idempotency and DLQs** → delivery tracking. Third-party providers are slow and flaky, so queues and backpressure are the heart of it.
+</Note>
 
 ## 1. Requirements
 **Functional**: send transactional (OTP, receipts) and marketing notifications; channels push/email/SMS/in-app; templates with i18n; user preferences and unsubscribe; scheduling; delivery status and analytics.
@@ -59,7 +63,7 @@ flowchart LR
 
 ## 6. Deep dives
 ### Priorities and isolation
-Separate topics/queues for **transactional** (OTP, security) vs **marketing**; dedicated worker pools (bulkheads). A 20 M campaign must never delay a password reset. See [[Distributed Systems Patterns]].
+Separate topics/queues for **transactional** (OTP, security) vs **marketing**; dedicated worker pools (bulkheads). A 20 M campaign must never delay a password reset. See [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns).
 
 ### Idempotency and duplicates
 - Producer idempotency key → unique constraint on `notifications`.
@@ -93,21 +97,25 @@ Scheduled notifications stored with `send_at`; a scheduler scans due items by ti
 - Monitor delivery rate, open rate, bounce/complaint rate (email deliverability reputation), and token invalidation rate.
 
 ## Interview questions
-> [!question]- How do you prevent marketing blasts from delaying OTPs?
-> Separate priority queues/topics and dedicated worker pools and provider quotas for transactional traffic (bulkheads), plus rate limiting on bulk sends.
+<Accordion title="How do you prevent marketing blasts from delaying OTPs?">
+Separate priority queues/topics and dedicated worker pools and provider quotas for transactional traffic (bulkheads), plus rate limiting on bulk sends.
+</Accordion>
 
-> [!question]- How do you avoid sending duplicates?
-> Idempotency keys at ingestion with a unique constraint, dedupe checks in workers based on delivery status, provider idempotency where supported, and collapse keys for push. Accept at-least-once with rare duplicates where unavoidable.
+<Accordion title="How do you avoid sending duplicates?">
+Idempotency keys at ingestion with a unique constraint, dedupe checks in workers based on delivery status, provider idempotency where supported, and collapse keys for push. Accept at-least-once with rare duplicates where unavoidable.
+</Accordion>
 
-> [!question]- A push provider is down. What happens?
-> Workers hit a circuit breaker, messages stay in queue with backoff, alerts fire on lag; optionally fail over to another channel or provider; expire time-sensitive messages instead of delivering them late.
+<Accordion title="A push provider is down. What happens?">
+Workers hit a circuit breaker, messages stay in queue with backoff, alerts fire on lag; optionally fail over to another channel or provider; expire time-sensitive messages instead of delivering them late.
+</Accordion>
 
-> [!question]- How do you handle user preferences at scale?
-> Cache preferences keyed by user in Redis with invalidation on change; evaluate in the processor before rendering; include category-level and channel-level opt-outs and quiet hours by timezone.
+<Accordion title="How do you handle user preferences at scale?">
+Cache preferences keyed by user in Redis with invalidation on change; evaluate in the processor before rendering; include category-level and channel-level opt-outs and quiet hours by timezone.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[Message Queues & Event Streaming]] · [[Distributed Systems Patterns]] · [[Case Study - Rate Limiter]] · [[Case Study - Chat System]] · [[Case Study - News Feed Backend]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter) · [Case Study - Chat System](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Chat%20System) · [Case Study - News Feed Backend](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20News%20Feed%20Backend)
 
 ## Sources
 - Alex Xu, *System Design Interview*, vol. 1, ch. 10 "Design a Notification System"

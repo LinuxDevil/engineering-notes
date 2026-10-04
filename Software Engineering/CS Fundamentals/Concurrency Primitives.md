@@ -1,12 +1,16 @@
 ---
+title: "Concurrency Primitives"
 tags: [cs-fundamentals, cs-fundamentals/concurrency]
 aliases: [Mutex, Semaphore, Deadlock, Race Condition, Atomics, Lock-free, Locks, Condition Variable]
 updated: 2026-09-27
 ---
 # Concurrency Primitives
 
-> [!tldr] TL;DR
-> When threads share memory, **race conditions** happen whenever a read-modify-write isn't atomic. The tools: **mutexes/locks** (one thread at a time in a critical section), **read-write locks**, **semaphores** (N permits), **condition variables** (wait for a condition), **atomics** (CPU-level indivisible operations like compare-and-swap), and higher-level channels/actors. Locks bring **deadlocks** (four Coffman conditions), livelock, starvation and contention. **Lock-free** algorithms use CAS loops instead of locks but are hard to get right (ABA problem, memory ordering). Concepts of concurrency vs parallelism are in [[Concurrency And Parallelism]].
+<Note>
+**TL;DR**
+
+When threads share memory, **race conditions** happen whenever a read-modify-write isn't atomic. The tools: **mutexes/locks** (one thread at a time in a critical section), **read-write locks**, **semaphores** (N permits), **condition variables** (wait for a condition), **atomics** (CPU-level indivisible operations like compare-and-swap), and higher-level channels/actors. Locks bring **deadlocks** (four Coffman conditions), livelock, starvation and contention. **Lock-free** algorithms use CAS loops instead of locks but are hard to get right (ABA problem, memory ordering). Concepts of concurrency vs parallelism are in [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism).
+</Note>
 
 ## Race conditions
 ```python
@@ -23,7 +27,7 @@ T1: add → 6         T2: add → 6
 T1: store 6         T2: store 6     ← one increment lost
 ```
 - **Data race**: concurrent access to the same memory, at least one write, no synchronization → undefined behavior in C/C++/Rust-unsafe, surprising results elsewhere.
-- **Race condition** (broader): correctness depends on timing, e.g. check-then-act (`if not exists: create`), even across processes or services (the same bug with a database: use constraints or `SELECT ... FOR UPDATE`, see [[Isolation Levels & Read Phenomena]]).
+- **Race condition** (broader): correctness depends on timing, e.g. check-then-act (`if not exists: create`), even across processes or services (the same bug with a database: use constraints or `SELECT ... FOR UPDATE`, see [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena)).
 
 ## Primitives
 | Primitive | What it does | Use for |
@@ -104,7 +108,7 @@ long old, next;
 do { old = value.get(); next = old * 2; } while (!value.compareAndSet(old, next));   // CAS loop
 ```
 - **Memory model**: compilers and CPUs reorder memory operations; without synchronization another thread may see writes out of order or never. `volatile` (Java), `std::atomic` with acquire/release (C++), locks, and channels create **happens-before** edges that guarantee visibility.
-- **False sharing**: two atomics on the same 64-byte cache line ping-pong between cores ([[Computer Architecture Basics]]); pad them apart.
+- **False sharing**: two atomics on the same 64-byte cache line ping-pong between cores ([Computer Architecture Basics](/Software%20Engineering/CS%20Fundamentals/Computer%20Architecture%20Basics)); pad them apart.
 
 ## Lock-free basics
 | Guarantee | Meaning |
@@ -122,36 +126,45 @@ do { old = value.get(); next = old * 2; } while (!value.compareAndSet(old, next)
 - Keep critical sections tiny; never do I/O or call unknown code while holding a lock.
 - Use high-level concurrent collections and executors before hand-rolled primitives.
 - Contention shows up as latency, not errors: profile lock wait time (JFR, `perf`, mutex profiles in Go).
-- Distributed locks are a different beast (leases, fencing tokens): see [[Consistency Models & Consensus]].
+- Distributed locks are a different beast (leases, fencing tokens): see [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus).
 - Tools: ThreadSanitizer, Go race detector (`go test -race`), Java `jstack` for deadlocks.
 
-> [!info]+ 🆕 2025–2026
-> - **Python 3.14 (2025-10-07)**: the free-threaded (no-GIL) build became **officially supported** (still optional) under PEP 779, so Python threads can now run truly in parallel; pure-Python code that relied on the GIL for implicit atomicity must use locks explicitly. ([PEP 779](https://peps.python.org/pep-0779/), [What's new in 3.14](https://docs.python.org/3/whatsnew/3.14.html))
-> - **Java 24 (March 2025, JEP 491)**: virtual threads no longer pin their carrier thread when blocking inside `synchronized`, so the old advice to replace `synchronized` with `ReentrantLock` for virtual threads is largely obsolete. ([JEP 491](https://openjdk.org/jeps/491))
+<Info>
+**🆕 2025–2026**
+
+- **Python 3.14 (2025-10-07)**: the free-threaded (no-GIL) build became **officially supported** (still optional) under PEP 779, so Python threads can now run truly in parallel; pure-Python code that relied on the GIL for implicit atomicity must use locks explicitly. ([PEP 779](https://peps.python.org/pep-0779/), [What's new in 3.14](https://docs.python.org/3/whatsnew/3.14.html))
+- **Java 24 (March 2025, JEP 491)**: virtual threads no longer pin their carrier thread when blocking inside `synchronized`, so the old advice to replace `synchronized` with `ReentrantLock` for virtual threads is largely obsolete. ([JEP 491](https://openjdk.org/jeps/491))
+</Info>
 
 ## Interview questions
-> [!question]- Mutex vs semaphore?
-> A mutex allows one owner in a critical section and is released by the thread that acquired it. A semaphore holds N permits, any thread can release, and it's used to limit concurrency or signal between threads. A binary semaphore resembles a mutex but lacks ownership.
+<Accordion title="Mutex vs semaphore?">
+A mutex allows one owner in a critical section and is released by the thread that acquired it. A semaphore holds N permits, any thread can release, and it's used to limit concurrency or signal between threads. A binary semaphore resembles a mutex but lacks ownership.
+</Accordion>
 
-> [!question]- What are the conditions for deadlock and how do you prevent it?
-> Mutual exclusion, hold and wait, no preemption, circular wait. Prevent by breaking one, typically a global lock ordering, or timeouts with tryLock and retry, or acquiring all resources at once.
+<Accordion title="What are the conditions for deadlock and how do you prevent it?">
+Mutual exclusion, hold and wait, no preemption, circular wait. Prevent by breaking one, typically a global lock ordering, or timeouts with tryLock and retry, or acquiring all resources at once.
+</Accordion>
 
-> [!question]- What is a race condition? Give an example outside threads.
-> Behavior depends on timing of concurrent operations. Example: two requests check that a username is free and both insert it. Fix with a unique constraint or atomic insert-if-absent.
+<Accordion title="What is a race condition? Give an example outside threads.">
+Behavior depends on timing of concurrent operations. Example: two requests check that a username is free and both insert it. Fix with a unique constraint or atomic insert-if-absent.
+</Accordion>
 
-> [!question]- What is CAS and what's the ABA problem?
-> Compare-and-swap atomically updates a value only if it still equals the expected one. ABA: another thread changes A→B→A, so CAS succeeds even though the state changed; fix with version counters or safe memory reclamation.
+<Accordion title="What is CAS and what's the ABA problem?">
+Compare-and-swap atomically updates a value only if it still equals the expected one. ABA: another thread changes A→B→A, so CAS succeeds even though the state changed; fix with version counters or safe memory reclamation.
+</Accordion>
 
-> [!question]- Why wait on a condition variable inside a while loop?
-> Spurious wakeups can occur, and another thread may consume the condition between notify and reacquiring the lock, so you must recheck the predicate.
+<Accordion title="Why wait on a condition variable inside a while loop?">
+Spurious wakeups can occur, and another thread may consume the condition between notify and reacquiring the lock, so you must recheck the predicate.
+</Accordion>
 
-> [!question]- When is a lock-free structure a bad idea?
-> When contention is low (a mutex is simpler and just as fast), when the team can't maintain it, or when CAS retry storms under high contention make it slower than a lock or a sharded design.
+<Accordion title="When is a lock-free structure a bad idea?">
+When contention is low (a mutex is simpler and just as fast), when the team can't maintain it, or when CAS retry storms under high contention make it slower than a lock or a sharded design.
+</Accordion>
 
 ## Related
-- [[CS Fundamentals Index]]
-- [[Concurrency And Parallelism]] · [[Operating Systems Essentials]] · [[Computer Architecture Basics]]
-- [[Consistency Models & Consensus]] · [[Isolation Levels & Read Phenomena]] · [[Event Loop - Microtasks & Macrotasks]]
+- [CS Fundamentals Index](/Software%20Engineering/CS%20Fundamentals/CS%20Fundamentals%20Index)
+- [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism) · [Operating Systems Essentials](/Software%20Engineering/CS%20Fundamentals/Operating%20Systems%20Essentials) · [Computer Architecture Basics](/Software%20Engineering/CS%20Fundamentals/Computer%20Architecture%20Basics)
+- [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) · [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
 
 ## Sources
 - Brian Goetz et al., *Java Concurrency in Practice*

@@ -1,14 +1,18 @@
 ---
+title: "MCP"
 tags: [ai-ml, ai-ml/agents, ai-ml/mcp]
 aliases: [MCP Server, MCP Spec, MCP Protocol, Building MCP Servers]
 updated: 2026-09-27
 ---
 # MCP
 
-> [!tldr] TL;DR
-> The **Model Context Protocol (MCP)** is an open, JSON-RPC based standard for connecting AI applications (hosts like Claude, Cursor, VS Code, ChatGPT) to external **tools**, **resources** and **prompts** through small programs called **MCP servers**. Write a server once and any MCP-capable host can use it. The spec has moved fast: Streamable HTTP and OAuth (2025-03-26), structured output and elicitation (2025-06-18), tasks and URL elicitation (2025-11-25), and a **stateless** redesign in the current revision **2026-07-28**. Since 2025-12-09 MCP is governed by the Linux Foundation's **Agentic AI Foundation**.
+<Note>
+**TL;DR**
 
-This note is the protocol and server-building reference. For how front-end tooling uses MCP (Chrome DevTools for agents, Next.js/Angular MCP servers, WebMCP), see [[AI in Frontend - MCP, WebMCP & Built-in AI]].
+The **Model Context Protocol (MCP)** is an open, JSON-RPC based standard for connecting AI applications (hosts like Claude, Cursor, VS Code, ChatGPT) to external **tools**, **resources** and **prompts** through small programs called **MCP servers**. Write a server once and any MCP-capable host can use it. The spec has moved fast: Streamable HTTP and OAuth (2025-03-26), structured output and elicitation (2025-06-18), tasks and URL elicitation (2025-11-25), and a **stateless** redesign in the current revision **2026-07-28**. Since 2025-12-09 MCP is governed by the Linux Foundation's **Agentic AI Foundation**.
+</Note>
+
+This note is the protocol and server-building reference. For how front-end tooling uses MCP (Chrome DevTools for agents, Next.js/Angular MCP servers, WebMCP), see [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
 
 - Docs: [modelcontextprotocol.io](https://modelcontextprotocol.io) · [Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
 - TypeScript SDK: [github.com/modelcontextprotocol/typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk)
@@ -17,7 +21,7 @@ This note is the protocol and server-building reference. For how front-end tooli
 
 LLMs only know what's in their context window. To do useful work they need your data and your actions: files, databases, tickets, APIs. Before MCP every app wrote its own bespoke integration for every tool (an **M × N** problem). MCP standardises the connection so it becomes **M + N**: hosts implement the client side once, services implement a server once.
 
-MCP helps you build agents and complex workflows on top of LLMs. It does **not** replace function/tool calling in model APIs; it standardises *where tools come from* and how they're described, discovered and invoked. See [[AI Agents & Agentic Patterns]].
+MCP helps you build agents and complex workflows on top of LLMs. It does **not** replace function/tool calling in model APIs; it standardises *where tools come from* and how they're described, discovered and invoked. See [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns).
 
 ```text
 MCP Host (Claude, Cursor...)
@@ -28,7 +32,7 @@ MCP Host (Claude, Cursor...)
 
 ## Architecture
 
-![[image 14.png]]
+![image 14](/Attachments/image%2014.png)
 
 - **MCP Host**: the AI application the user interacts with (Claude Desktop/Code, Cursor, VS Code, ChatGPT). It owns the model, the UI and permissions.
 - **MCP Client**: a protocol connector inside the host with a **1:1** connection to one server.
@@ -89,8 +93,11 @@ Remote servers are how SaaS vendors ship MCP (one URL, OAuth login) and are now 
 
 ## Building a server (TypeScript)
 
-> [!info]+ 🆕 SDK API change
-> The original version of this note used `server.tool(...)` and `server.resource(...)`. In SDK v1 those variadic methods were **deprecated in favour of `registerTool` / `registerResource` / `registerPrompt`**, and in **SDK v2** (released with spec 2026-07-28; server package 2.0.0 on npm 2026-07-27) they are **removed**. v2 also splits the SDK into `@modelcontextprotocol/server` and `@modelcontextprotocol/client`, and expects `z.object(...)` schemas rather than raw Zod shapes. The legacy `@modelcontextprotocol/sdk` (v1) keeps getting fixes for at least 6 months after v2.
+<Info>
+**🆕 SDK API change**
+
+The original version of this note used `server.tool(...)` and `server.resource(...)`. In SDK v1 those variadic methods were **deprecated in favour of `registerTool` / `registerResource` / `registerPrompt`**, and in **SDK v2** (released with spec 2026-07-28; server package 2.0.0 on npm 2026-07-27) they are **removed**. v2 also splits the SDK into `@modelcontextprotocol/server` and `@modelcontextprotocol/client`, and expects `z.object(...)` schemas rather than raw Zod shapes. The legacy `@modelcontextprotocol/sdk` (v1) keeps getting fixes for at least 6 months after v2.
+</Info>
 
 ### 1. Install and import (v2)
 ```bash
@@ -147,10 +154,13 @@ server.registerTool(
 );
 ```
 
-Fixes compared with the original snippet: template strings need backticks (`` `User ${id}` ``), not single quotes; the annotation is `destructiveHint`; **idempotent** means "repeating the call with the same arguments has no extra effect" (not "different outputs per run"); **openWorld** means "interacts with an open world of external entities"; errors should set `isError: true`.
+Fixes compared with the original snippet: template strings need backticks (`` `User $\{id\}` ``), not single quotes; the annotation is `destructiveHint`; **idempotent** means "repeating the call with the same arguments has no extra effect" (not "different outputs per run"); **openWorld** means "interacts with an open world of external entities"; errors should set `isError: true`.
 
-> [!warning] Annotations are hints, not security
-> The spec says clients must treat annotations as **untrusted** unless the server is trusted. Enforce permissions in the server itself.
+<Warning>
+**Annotations are hints, not security**
+
+The spec says clients must treat annotations as **untrusted** unless the server is trusted. Enforce permissions in the server itself.
+</Warning>
 
 ### 4. Register a resource and a resource template
 ```typescript
@@ -176,7 +186,7 @@ server.registerResource(
 );
 ```
 
-![[image 16.png]]
+![image 16](/Attachments/image%2016.png)
 
 ### 5. Register a prompt
 ```typescript
@@ -210,7 +220,7 @@ npx @modelcontextprotocol/inspector npm run server:dev
 ```
 The Inspector is a web UI to list and call tools, read resources and try prompts.
 
-![[image 15.png]]
+![image 15](/Attachments/image%2015.png)
 
 The original note set `DANGEROUSLY_OMIT_AUTH=true` to skip the Inspector's session token. That turns off the protection that stops other web pages from talking to the Inspector's local proxy (which can launch processes), so use it only briefly on a trusted machine, never on a shared network.
 
@@ -235,16 +245,19 @@ timeline
   2026-07-28 : Stateless core : server/discover : Tasks as extension
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **2025-03-26**: OAuth 2.1 authorization framework; **Streamable HTTP** replaces HTTP+SSE; JSON-RPC batching added; **tool annotations**; audio content; `completions` capability.
-> - **2025-06-18**: batching **removed**; **structured tool output** (`outputSchema` / `structuredContent`); MCP servers classified as **OAuth Resource Servers** (protected resource metadata) and clients must send **RFC 8707 resource indicators**; **elicitation**; **resource links** in tool results; `MCP-Protocol-Version` header required on HTTP; new Security Best Practices page.
-> - **2025-11-25**: OpenID Connect discovery; **icons** for tools/resources/prompts; incremental scope consent; tool-naming guidance; **URL-mode elicitation**; **sampling with tools**; **Client ID Metadata Documents** as the recommended client registration; **experimental tasks** (long-running, pollable operations); JSON Schema 2020-12 as default; formal governance and SDK tiers.
-> - **2026-07-28 (current)**: MCP becomes **stateless**: no `initialize` handshake, no `Mcp-Session-Id`; each request carries version and capabilities in `_meta`; servers must implement **`server/discover`**; `subscriptions/listen` replaces the GET stream and `resources/subscribe`; `ping` and `logging/setLevel` removed; **tasks move to an official extension** (`io.modelcontextprotocol/tasks`); **Multi Round-Trip Requests** (`InputRequiredResult`) replace server-initiated requests such as sampling and elicitation; SSE resumability removed; `ttlMs`/`cacheScope` caching hints; clients must validate the RFC 9207 `iss` parameter; **Roots, Sampling and Logging deprecated**, and Dynamic Client Registration deprecated in favour of Client ID Metadata Documents (12-month minimum deprecation window).
-> - **2025-09-08**: official **MCP Registry** in preview (registry.modelcontextprotocol.io).
-> - **2025-12-09**: Anthropic donated MCP to the **Agentic AI Foundation (AAIF)** under the Linux Foundation, co-founded with Block (goose) and OpenAI (AGENTS.md).
-> - **2026-01-26**: **MCP Apps** launched as the first official extension: servers return interactive UIs (`ui://` resources rendered in sandboxed iframes), supported by Claude, ChatGPT, goose and VS Code.
-> - **2026-07-27**: TypeScript SDK **v2** (`@modelcontextprotocol/server` 2.0.0).
-> - Adoption: Microsoft announced MCP support across Windows 11, GitHub, Copilot Studio and Azure AI Foundry at Build (2025-05-19); Google announced managed remote MCP servers for its services (2025-12-11).
+<Info>
+**🆕 2025–2026**
+
+- **2025-03-26**: OAuth 2.1 authorization framework; **Streamable HTTP** replaces HTTP+SSE; JSON-RPC batching added; **tool annotations**; audio content; `completions` capability.
+- **2025-06-18**: batching **removed**; **structured tool output** (`outputSchema` / `structuredContent`); MCP servers classified as **OAuth Resource Servers** (protected resource metadata) and clients must send **RFC 8707 resource indicators**; **elicitation**; **resource links** in tool results; `MCP-Protocol-Version` header required on HTTP; new Security Best Practices page.
+- **2025-11-25**: OpenID Connect discovery; **icons** for tools/resources/prompts; incremental scope consent; tool-naming guidance; **URL-mode elicitation**; **sampling with tools**; **Client ID Metadata Documents** as the recommended client registration; **experimental tasks** (long-running, pollable operations); JSON Schema 2020-12 as default; formal governance and SDK tiers.
+- **2026-07-28 (current)**: MCP becomes **stateless**: no `initialize` handshake, no `Mcp-Session-Id`; each request carries version and capabilities in `_meta`; servers must implement **`server/discover`**; `subscriptions/listen` replaces the GET stream and `resources/subscribe`; `ping` and `logging/setLevel` removed; **tasks move to an official extension** (`io.modelcontextprotocol/tasks`); **Multi Round-Trip Requests** (`InputRequiredResult`) replace server-initiated requests such as sampling and elicitation; SSE resumability removed; `ttlMs`/`cacheScope` caching hints; clients must validate the RFC 9207 `iss` parameter; **Roots, Sampling and Logging deprecated**, and Dynamic Client Registration deprecated in favour of Client ID Metadata Documents (12-month minimum deprecation window).
+- **2025-09-08**: official **MCP Registry** in preview (registry.modelcontextprotocol.io).
+- **2025-12-09**: Anthropic donated MCP to the **Agentic AI Foundation (AAIF)** under the Linux Foundation, co-founded with Block (goose) and OpenAI (AGENTS.md).
+- **2026-01-26**: **MCP Apps** launched as the first official extension: servers return interactive UIs (`ui://` resources rendered in sandboxed iframes), supported by Claude, ChatGPT, goose and VS Code.
+- **2026-07-27**: TypeScript SDK **v2** (`@modelcontextprotocol/server` 2.0.0).
+- Adoption: Microsoft announced MCP support across Windows 11, GitHub, Copilot Studio and Azure AI Foundry at Build (2025-05-19); Google announced managed remote MCP servers for its services (2025-12-11).
+</Info>
 
 ## Security
 
@@ -254,7 +267,7 @@ MCP gives a model hands. Treat every server like a dependency with production cr
 - **Token passthrough is forbidden**: a server must not accept tokens that weren't issued for it, and must not forward the client's token to downstream APIs.
 - **Session / state-handle hijacking**: possessing a session ID or handle must never count as authentication; bind handles to the user.
 - **SSRF, local server compromise, scope minimisation** are also covered in the official Security Best Practices.
-- **Tool poisoning / prompt injection**: tool descriptions and tool results are text that goes into the model. A malicious server (or a malicious document returned by a benign one) can instruct the model to misuse other tools. Pin and review servers, keep a human approval step for destructive or outbound actions, and avoid combining private data, untrusted content and external communication in one agent. See [[AI Safety, Security & Guardrails for Apps]].
+- **Tool poisoning / prompt injection**: tool descriptions and tool results are text that goes into the model. A malicious server (or a malicious document returned by a benign one) can instruct the model to misuse other tools. Pin and review servers, keep a human approval step for destructive or outbound actions, and avoid combining private data, untrusted content and external communication in one agent. See [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps).
 
 ## Senior perspective
 - **Design tools for the model, not as a 1:1 API mirror.** Fewer, higher-level tools with clear names, descriptions, examples and concise outputs beat 80 thin CRUD endpoints; tool definitions cost context tokens on every call.
@@ -265,29 +278,35 @@ MCP gives a model hands. Treat every server like a dependency with production cr
 
 ## Interview questions
 
-> [!question]- What problem does MCP solve, and how is it different from function calling?
-> Function calling is how a model API lets a model request a call to a tool you described. MCP standardises how tools, data and prompts are *packaged, discovered and invoked* across apps, so one server works in many hosts. Hosts turn MCP tools into function-calling tool definitions for their model.
+<Accordion title="What problem does MCP solve, and how is it different from function calling?">
+Function calling is how a model API lets a model request a call to a tool you described. MCP standardises how tools, data and prompts are *packaged, discovered and invoked* across apps, so one server works in many hosts. Hosts turn MCP tools into function-calling tool definitions for their model.
+</Accordion>
 
-> [!question]- Explain host, client and server.
-> The host is the AI app (owns model, UI, permissions); it creates one client per server connection; the server exposes tools, resources and prompts over stdio or Streamable HTTP.
+<Accordion title="Explain host, client and server.">
+The host is the AI app (owns model, UI, permissions); it creates one client per server connection; the server exposes tools, resources and prompts over stdio or Streamable HTTP.
+</Accordion>
 
-> [!question]- Tools vs resources vs prompts?
-> Tools are model-controlled actions with side effects or computations; resources are application-controlled read-only context identified by URIs; prompts are user-selected templates.
+<Accordion title="Tools vs resources vs prompts?">
+Tools are model-controlled actions with side effects or computations; resources are application-controlled read-only context identified by URIs; prompts are user-selected templates.
+</Accordion>
 
-> [!question]- Why was HTTP+SSE replaced by Streamable HTTP?
-> The old transport needed two endpoints and a long-lived SSE connection per client, which was awkward for serverless and load balancers. Streamable HTTP uses one endpoint with plain POSTs that can optionally stream responses. The 2026-07-28 revision goes further and removes protocol sessions entirely.
+<Accordion title="Why was HTTP+SSE replaced by Streamable HTTP?">
+The old transport needed two endpoints and a long-lived SSE connection per client, which was awkward for serverless and load balancers. Streamable HTTP uses one endpoint with plain POSTs that can optionally stream responses. The 2026-07-28 revision goes further and removes protocol sessions entirely.
+</Accordion>
 
-> [!question]- How does authorization work for remote MCP servers?
-> OAuth 2.1: the MCP server is a resource server that advertises its authorization server via protected resource metadata; the client obtains a token scoped to that server (RFC 8707 resource indicator), registering itself preferably via a Client ID Metadata Document. The server validates the token audience and must never pass it through to other APIs.
+<Accordion title="How does authorization work for remote MCP servers?">
+OAuth 2.1: the MCP server is a resource server that advertises its authorization server via protected resource metadata; the client obtains a token scoped to that server (RFC 8707 resource indicator), registering itself preferably via a Client ID Metadata Document. The server validates the token audience and must never pass it through to other APIs.
+</Accordion>
 
-> [!question]- What are the main security risks of MCP?
-> Prompt injection through tool results or descriptions, over-privileged tools, token passthrough and confused-deputy OAuth flows, malicious or compromised servers (supply chain), and local servers running arbitrary code with the user's permissions. Mitigate with allow-listed servers, least-privilege scopes, human approval for risky actions and audit logging.
+<Accordion title="What are the main security risks of MCP?">
+Prompt injection through tool results or descriptions, over-privileged tools, token passthrough and confused-deputy OAuth flows, malicious or compromised servers (supply chain), and local servers running arbitrary code with the user's permissions. Mitigate with allow-listed servers, least-privilege scopes, human approval for risky actions and audit logging.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[AI in Frontend - MCP, WebMCP & Built-in AI]] (MCP in front-end tooling, WebMCP)
-- [[AI Agents & Agentic Patterns]] · [[AI Safety, Security & Guardrails for Apps]] · [[LLM Landscape 2025-2026]] (A2A)
-- [[AI-Assisted Software Development]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI) (MCP in front-end tooling, WebMCP)
+- [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps) · [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026) (A2A)
+- [AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development)
 
 ## Sources
 - MCP specification, current revision: https://modelcontextprotocol.io/specification/2026-07-28 · changelog: https://modelcontextprotocol.io/specification/2026-07-28/changelog

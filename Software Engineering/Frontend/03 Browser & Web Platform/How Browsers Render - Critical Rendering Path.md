@@ -1,12 +1,16 @@
 ---
+title: "How Browsers Render - Critical Rendering Path"
 tags: [frontend, frontend/browser, frontend/performance]
 aliases: [Critical Rendering Path, CRP, Browser Rendering, Reflow vs Repaint, Rendering Pipeline]
 updated: 2026-09-27
 ---
 # How Browsers Render - Critical Rendering Path
 
-> [!tldr] TL;DR
-> The **Critical Rendering Path (CRP)** is the sequence of steps the browser takes between receiving HTML bytes and putting pixels on screen: parse HTML → DOM, parse CSS → CSSOM, combine into a render tree, **layout**, **paint**, **composite**. Anything that blocks those steps (render-blocking CSS, parser-blocking JS) delays first paint. Knowing which step a change triggers (layout vs paint vs composite only) is the key to fast pages and smooth 60fps animations.
+<Note>
+**TL;DR**
+
+The **Critical Rendering Path (CRP)** is the sequence of steps the browser takes between receiving HTML bytes and putting pixels on screen: parse HTML → DOM, parse CSS → CSSOM, combine into a render tree, **layout**, **paint**, **composite**. Anything that blocks those steps (render-blocking CSS, parser-blocking JS) delays first paint. Knowing which step a change triggers (layout vs paint vs composite only) is the key to fast pages and smooth 60fps animations.
+</Note>
 
 ## 1. From URL to first byte (navigation)
 
@@ -23,8 +27,8 @@ flowchart LR
 ```
 
 - Each arrow is network latency. On mobile, DNS + TCP + TLS can cost several hundred ms before a single byte arrives.
-- Reduce it with a CDN, HTTP/2 or HTTP/3 (see [[Networking - HTTP, Caching & Real-time]]), `preconnect` / `dns-prefetch` for third-party origins, and caching.
-- The browser starts parsing HTML **as it streams in**; it does not wait for the whole document. That's why streaming SSR helps (see [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]).
+- Reduce it with a CDN, HTTP/2 or HTTP/3 (see [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)), `preconnect` / `dns-prefetch` for third-party origins, and caching.
+- The browser starts parsing HTML **as it streams in**; it does not wait for the whole document. That's why streaming SSR helps (see [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)).
 
 ## 2. The rendering pipeline
 
@@ -51,16 +55,19 @@ flowchart LR
 | **Paint** | Records draw commands (text, colors, borders, shadows, images) for each layer, then rasterizes them into pixels (often on raster threads / GPU). | Expensive properties: big `box-shadow`, `filter: blur()`, gradients over large areas. |
 | **Composite** | The compositor thread combines the painted layers in the correct order (stacking/z-index) and sends them to the GPU. | `transform` and `opacity` changes can be handled here **without layout or paint**. |
 
-> [!example] What blocks what
-> ```html
-> <head>
->   <link rel="stylesheet" href="/app.css">      <!-- render-blocking -->
->   <script src="/legacy.js"></script>            <!-- parser-blocking (and waits for app.css) -->
->   <script src="/app.js" defer></script>         <!-- non-blocking, runs after parsing -->
->   <link rel="stylesheet" href="/print.css" media="print"> <!-- NOT render-blocking for screen -->
-> </head>
-> ```
-> A `media` attribute that doesn't match makes the stylesheet non-blocking (it's still downloaded, at low priority).
+<Info>
+**What blocks what**
+
+```html
+<head>
+  <link rel="stylesheet" href="/app.css">      <!-- render-blocking -->
+  <script src="/legacy.js"></script>            <!-- parser-blocking (and waits for app.css) -->
+  <script src="/app.js" defer></script>         <!-- non-blocking, runs after parsing -->
+  <link rel="stylesheet" href="/print.css" media="print"> <!-- NOT render-blocking for screen -->
+</head>
+```
+A `media` attribute that doesn't match makes the stylesheet non-blocking (it's still downloaded, at low priority).
+</Info>
 
 ## 3. Critical resources, path length, and bytes
 
@@ -78,12 +85,15 @@ How to shrink each:
 | Shorter path length | Avoid CSS `@import` chains, `preload` late-discovered resources (fonts, LCP image, CSS background images), `preconnect` to third-party origins, HTTP/2+. |
 | Fewer critical bytes | Minify + compress (Brotli/gzip), tree-shake, split code, remove unused CSS, modern image formats (AVIF/WebP). |
 
-> [!example] Inline critical CSS, load the rest non-blocking
-> ```html
-> <style>/* above-the-fold CSS only, a few KB */ header{...} .hero{...}</style>
-> <link rel="preload" href="/full.css" as="style" onload="this.rel='stylesheet'">
-> <noscript><link rel="stylesheet" href="/full.css"></noscript>
-> ```
+<Info>
+**Inline critical CSS, load the rest non-blocking**
+
+```html
+<style>/* above-the-fold CSS only, a few KB */ header{...} .hero{...}</style>
+<link rel="preload" href="/full.css" as="style" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/full.css"></noscript>
+```
+</Info>
 
 ## 4. Loading scripts: async, defer, module, preload
 
@@ -93,7 +103,7 @@ How to shrink each:
 The parser stops, the script downloads, executes, then parsing resumes. Blocks both parsing and first render when it's in `<head>`.
 
 ### `async`
-![[Untitled 48.png]]
+![Untitled 48](/Attachments/Untitled%2048.png)
 
 - The script is **downloaded in parallel** while HTML parsing continues.
 - As soon as the download finishes, it **executes immediately**, pausing the HTML parser during execution.
@@ -102,7 +112,7 @@ The parser stops, the script downloads, executes, then parsing resumes. Blocks b
 - Good for independent scripts: analytics, ads, widgets that don't touch other scripts.
 
 ### `defer`
-![[Untitled 49.png]]
+![Untitled 49](/Attachments/Untitled%2049.png)
 
 - Downloaded in parallel while HTML parsing continues.
 - Executes **after the document has been fully parsed** (not "rendered"), right **before `DOMContentLoaded`**.
@@ -115,7 +125,7 @@ The parser stops, the script downloads, executes, then parsing resumes. Blocks b
 ### `preload` / `modulepreload` / `prefetch`
 - `<link rel="preload" as="...">` tells the browser: "fetch this now, at high priority, I'll need it for this page". It **only downloads and caches** the resource; it does **not execute** it. The resource is used when something later references it (a `<script src>`, a CSS `url()`, a font-face). If nothing uses it within a few seconds, Chrome warns in the console.
 - `<link rel="modulepreload">` is preload for ES modules: it fetches, parses and compiles the module (and can be listed for dependencies), so deep import chains don't become waterfalls.
-- `<link rel="prefetch">` is low priority, for a **future navigation** (next page). For full next-page prerendering see Speculation Rules in [[Modern Web Platform APIs 2025-2026]].
+- `<link rel="prefetch">` is low priority, for a **future navigation** (next page). For full next-page prerendering see Speculation Rules in [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026).
 
 | | Downloads during parsing | Executes | Order | Blocks parser |
 |---|---|---|---|---|
@@ -138,24 +148,27 @@ The parser stops, the script downloads, executes, then parsing resumes. Blocks b
 ```
 
 - `fetchpriority="high|low|auto"` (Priority Hints) adjusts the priority of an element's fetch relative to others of the same type. Also available as an option on `fetch(url, { priority: 'high' })`.
-- Classic win: `fetchpriority="high"` on the **LCP image** and never `loading="lazy"` on it (see [[Core Web Vitals]]).
+- Classic win: `fetchpriority="high"` on the **LCP image** and never `loading="lazy"` on it (see [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)).
 - Fonts must be preloaded with `crossorigin` even when same-origin, or they are fetched twice.
 
-> [!example] Worked example: making a Flights search page render sooner
-> Before: `<head>` has 3 blocking scripts, `styles.css` that `@import`s `grid.css`, a web font discovered only from CSS, and the hero image lazy-loaded.
-> ```html
-> <head>
->   <link rel="preconnect" href="https://images.cdn.example">
->   <style>/* critical CSS for header + search form */</style>
->   <link rel="stylesheet" href="/styles.css"> <!-- @import removed: grid.css concatenated in -->
->   <link rel="preload" href="/fonts/brand.woff2" as="font" type="font/woff2" crossorigin>
->   <script src="/app.js" type="module"></script>      <!-- deferred by default -->
->   <script src="/analytics.js" async></script>
-> </head>
-> <body>
->   <img src="https://images.cdn.example/hero.avif" fetchpriority="high" alt="Destinations">
-> ```
-> Result: critical path length drops from ~4 round trips to ~2, and the LCP image starts downloading during HTML parsing.
+<Info>
+**Worked example: making a Flights search page render sooner**
+
+Before: `<head>` has 3 blocking scripts, `styles.css` that `@import`s `grid.css`, a web font discovered only from CSS, and the hero image lazy-loaded.
+```html
+<head>
+  <link rel="preconnect" href="https://images.cdn.example">
+  <style>/* critical CSS for header + search form */</style>
+  <link rel="stylesheet" href="/styles.css"> <!-- @import removed: grid.css concatenated in -->
+  <link rel="preload" href="/fonts/brand.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/app.js" type="module"></script>      <!-- deferred by default -->
+  <script src="/analytics.js" async></script>
+</head>
+<body>
+  <img src="https://images.cdn.example/hero.avif" fetchpriority="high" alt="Destinations">
+```
+Result: critical path length drops from ~4 round trips to ~2, and the LCP image starts downloading during HTML parsing.
+</Info>
 
 ## 5. Reflow vs repaint vs composite
 
@@ -184,27 +197,30 @@ flowchart LR
 
 Reading a geometry property (`offsetHeight`, `getBoundingClientRect()`, `scrollTop`, `getComputedStyle()`) after a write forces the browser to run layout **immediately** so it can give you a correct number. Doing that in a loop is "layout thrashing".
 
-> [!example] Batch reads, then writes
-> ```js
-> // BAD: read/write interleaved → N forced layouts
-> items.forEach(el => {
->   const h = el.offsetHeight;          // read (forces layout)
->   el.style.height = h * 2 + 'px';     // write (invalidates layout)
-> });
->
-> // GOOD: all reads first, then all writes → 1 layout
-> const heights = items.map(el => el.offsetHeight);
-> items.forEach((el, i) => { el.style.height = heights[i] * 2 + 'px'; });
->
-> // GOOD: schedule writes for the next frame
-> requestAnimationFrame(() => { el.style.transform = `translateX(${x}px)`; });
-> ```
+<Info>
+**Batch reads, then writes**
+
+```js
+// BAD: read/write interleaved → N forced layouts
+items.forEach(el => {
+  const h = el.offsetHeight;          // read (forces layout)
+  el.style.height = h * 2 + 'px';     // write (invalidates layout)
+});
+
+// GOOD: all reads first, then all writes → 1 layout
+const heights = items.map(el => el.offsetHeight);
+items.forEach((el, i) => { el.style.height = heights[i] * 2 + 'px'; });
+
+// GOOD: schedule writes for the next frame
+requestAnimationFrame(() => { el.style.transform = `translateX(${x}px)`; });
+```
+</Info>
 
 Other ways to reduce reflow cost:
 - Change **classes** rather than many individual inline styles.
 - Build big DOM updates off-document (`DocumentFragment`, or let your framework batch).
 - Use `contain: layout paint` / `content-visibility: auto` to limit how far layout and paint spread (`content-visibility` is Baseline since Sept 2025).
-- Virtualize long lists ([[Virtualization & Large Lists]]).
+- Virtualize long lists ([Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)).
 
 ## 6. Compositor layers and GPU acceleration
 
@@ -212,22 +228,28 @@ Other ways to reduce reflow cost:
 - An element gets its own layer (is "promoted") when it has, for example: an active `transform`/`opacity` animation, `will-change: transform|opacity`, 3D transforms, `<video>`/`<canvas>`, `position: fixed` in some cases, or it overlaps another composited layer.
 - Animating `transform`/`opacity` on a layered element doesn't need the main thread, so the animation **stays smooth even when JS is busy**. That is what "GPU-accelerated animation" means.
 
-> [!example] Animate transform, not left
-> ```css
-> /* Jank: triggers layout every frame */
-> .drawer { transition: left 300ms; left: -300px; }
-> .drawer.open { left: 0; }
->
-> /* Smooth: compositor-only */
-> .drawer { transition: transform 300ms; transform: translateX(-100%); will-change: transform; }
-> .drawer.open { transform: translateX(0); }
-> ```
+<Info>
+**Animate transform, not left**
 
-> [!warning] Common pitfalls
-> - **Too many layers**: each costs GPU memory (width × height × 4 bytes). `will-change` on hundreds of list items can make things slower and crash low-end mobiles. Add it just before an animation and remove it after.
-> - The old `transform: translateZ(0)` "hack" forces a layer; prefer `will-change` and use it sparingly.
-> - **Layer explosion**: an element above a composited layer may itself need a layer (implicit compositing). Check DevTools → Layers panel.
-> - Promoting doesn't help if you still change `width`/`top` each frame.
+```css
+/* Jank: triggers layout every frame */
+.drawer { transition: left 300ms; left: -300px; }
+.drawer.open { left: 0; }
+
+/* Smooth: compositor-only */
+.drawer { transition: transform 300ms; transform: translateX(-100%); will-change: transform; }
+.drawer.open { transform: translateX(0); }
+```
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- **Too many layers**: each costs GPU memory (width × height × 4 bytes). `will-change` on hundreds of list items can make things slower and crash low-end mobiles. Add it just before an animation and remove it after.
+- The old `transform: translateZ(0)` "hack" forces a layer; prefer `will-change` and use it sparingly.
+- **Layer explosion**: an element above a composited layer may itself need a layer (implicit compositing). Check DevTools → Layers panel.
+- Promoting doesn't help if you still change `width`/`top` each frame.
+</Warning>
 
 ## 7. The frame lifecycle (one frame at 60 Hz ≈ 16.7 ms)
 
@@ -237,51 +259,59 @@ flowchart LR
 ```
 
 - `requestAnimationFrame` callbacks run **just before style/layout of the next frame**: the right place for visual updates.
-- Rendering is a separate step of the event loop that happens **between tasks**, at most once per frame, and only when needed. It does **not** run inside the microtask checkpoint (a long chain of microtasks actually blocks rendering). See [[Event Loop - Microtasks & Macrotasks]].
-- A task longer than 50 ms is a **long task**: it delays input handling and hurts INP. Break it up with `scheduler.yield()` / `setTimeout` (see [[Modern Web Platform APIs 2025-2026]] and [[Performance Optimization Playbook]]).
+- Rendering is a separate step of the event loop that happens **between tasks**, at most once per frame, and only when needed. It does **not** run inside the microtask checkpoint (a long chain of microtasks actually blocks rendering). See [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks).
+- A task longer than 50 ms is a **long task**: it delays input handling and hurts INP. Break it up with `scheduler.yield()` / `setTimeout` (see [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026) and [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)).
 
 ## 8. Measuring
 
 - **DevTools Performance panel**: purple = style/layout, green = paint/composite, yellow = scripting. Red triangles mark long tasks; "Forced reflow" warnings flag thrashing.
 - **Rendering tab**: "Paint flashing", "Layout Shift Regions", "Layer borders".
 - **Lighthouse**: "Eliminate render-blocking resources", "Avoid chaining critical requests", "Largest Contentful Paint element".
-- Field data: Navigation Timing / Resource Timing / LCP entries via `PerformanceObserver` ([[Observer APIs]]), and [[Core Web Vitals]].
-- Related topics from the owner's checklist (Web Performance): lazy loading, performance budgets, RUM vs synthetic monitoring, navigation & resource timings, latency. These are covered in [[Performance Optimization Playbook]] and [[Core Web Vitals]].
+- Field data: Navigation Timing / Resource Timing / LCP entries via `PerformanceObserver` ([Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)), and [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals).
+- Related topics from the owner's checklist (Web Performance): lazy loading, performance budgets, RUM vs synthetic monitoring, navigation & resource timings, latency. These are covered in [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook) and [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals).
 
 ## Interview questions
 
-> [!question]- Walk me through what happens after I type a URL and press Enter.
-> URL parsing and HSTS check → cache check (service worker, HTTP cache) → DNS → TCP (or QUIC) + TLS → HTTP request → server response streams in → HTML parser builds the DOM, the preload scanner fetches CSS/JS/images → CSSOM built (render-blocking) → scripts run (sync ones block parsing) → render tree → layout → paint → composite → `DOMContentLoaded` after parsing and deferred scripts → `load` after all subresources.
+<Accordion title="Walk me through what happens after I type a URL and press Enter.">
+URL parsing and HSTS check → cache check (service worker, HTTP cache) → DNS → TCP (or QUIC) + TLS → HTTP request → server response streams in → HTML parser builds the DOM, the preload scanner fetches CSS/JS/images → CSSOM built (render-blocking) → scripts run (sync ones block parsing) → render tree → layout → paint → composite → `DOMContentLoaded` after parsing and deferred scripts → `load` after all subresources.
+</Accordion>
 
-> [!question]- What's the difference between async and defer?
-> Both download without blocking the parser. `async` executes as soon as it's downloaded (pausing parsing), in no guaranteed order. `defer` executes after parsing is done, before `DOMContentLoaded`, in document order. Use `defer` (or `type="module"`) for app code, `async` for independent third-party scripts.
+<Accordion title="What's the difference between async and defer?">
+Both download without blocking the parser. `async` executes as soon as it's downloaded (pausing parsing), in no guaranteed order. `defer` executes after parsing is done, before `DOMContentLoaded`, in document order. Use `defer` (or `type="module"`) for app code, `async` for independent third-party scripts.
+</Accordion>
 
-> [!question]- Does preload execute a script?
-> No. Preload only fetches and caches at high priority. The script executes when a `<script src>` references it. `modulepreload` additionally parses/compiles ES modules.
+<Accordion title="Does preload execute a script?">
+No. Preload only fetches and caches at high priority. The script executes when a `<script src>` references it. `modulepreload` additionally parses/compiles ES modules.
+</Accordion>
 
-> [!question]- Why is CSS render-blocking, and how do you reduce its impact?
-> The browser needs the CSSOM to know what to paint; painting without it would cause a flash of unstyled content. Reduce impact by inlining critical CSS, deferring the rest, using `media` attributes for conditional CSS, removing unused CSS and avoiding `@import` chains.
+<Accordion title="Why is CSS render-blocking, and how do you reduce its impact?">
+The browser needs the CSSOM to know what to paint; painting without it would cause a flash of unstyled content. Reduce impact by inlining critical CSS, deferring the rest, using `media` attributes for conditional CSS, removing unused CSS and avoiding `@import` chains.
+</Accordion>
 
-> [!question]- Reflow vs repaint? Which CSS properties are cheapest to animate?
-> Reflow recalculates geometry (and then repaints); repaint redraws pixels without geometry changes. `transform` and `opacity` are cheapest because they can be handled by the compositor without layout or paint.
+<Accordion title="Reflow vs repaint? Which CSS properties are cheapest to animate?">
+Reflow recalculates geometry (and then repaints); repaint redraws pixels without geometry changes. `transform` and `opacity` are cheapest because they can be handled by the compositor without layout or paint.
+</Accordion>
 
-> [!question]- What is layout thrashing and how do you avoid it?
-> Interleaving DOM writes and geometry reads so the browser has to do a synchronous layout on each read. Batch reads before writes, use `requestAnimationFrame`, or libraries like fastdom.
+<Accordion title="What is layout thrashing and how do you avoid it?">
+Interleaving DOM writes and geometry reads so the browser has to do a synchronous layout on each read. Batch reads before writes, use `requestAnimationFrame`, or libraries like fastdom.
+</Accordion>
 
-> [!question]- What does will-change do and when is it harmful?
-> It hints that a property will change, so the browser can promote the element to its own compositor layer ahead of time. Overusing it wastes GPU memory and can make rendering slower.
+<Accordion title="What does will-change do and when is it harmful?">
+It hints that a property will change, so the browser can promote the element to its own compositor layer ahead of time. Overusing it wastes GPU memory and can make rendering slower.
+</Accordion>
 
-> [!question]- Is rendering done in the microtask step of the event loop?
-> No. Microtasks run after each task until the queue is empty; rendering (rAF, style, layout, paint) is a separate opportunity between tasks, roughly once per frame. Endless microtasks can starve rendering.
+<Accordion title="Is rendering done in the microtask step of the event loop?">
+No. Microtasks run after each task until the queue is empty; rendering (rAF, style, layout, paint) is a separate opportunity between tasks, roughly once per frame. Endless microtasks can starve rendering.
+</Accordion>
 
 ## Related
-- [[Core Web Vitals]]
-- [[Performance Optimization Playbook]]
-- [[Event Loop - Microtasks & Macrotasks]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[CSS Fundamentals - Cascade, Box Model & Contexts]] (stacking contexts, formatting contexts)
-- [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Frontend System Design Index]]
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [CSS Fundamentals - Cascade, Box Model & Contexts](/Software%20Engineering/Frontend/04%20CSS/CSS%20Fundamentals%20-%20Cascade%2C%20Box%20Model%20%26%20Contexts) (stacking contexts, formatting contexts)
+- [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
 
 ## Sources
 - MDN: [Critical rendering path](https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path), [How browsers work](https://developer.mozilla.org/en-US/docs/Web/Performance/How_browsers_work), [`<script>` async/defer](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script), [rel=preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload), [rel=modulepreload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/modulepreload), [fetchpriority](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#fetchpriority)

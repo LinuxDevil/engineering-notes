@@ -1,12 +1,16 @@
 ---
+title: "Core Web Vitals"
 tags: [frontend, frontend/performance]
 aliases: [CWV, Web Vitals, LCP, INP, CLS]
 updated: 2026-09-27
 ---
 # Core Web Vitals
 
-> [!tldr] TL;DR
-> Core Web Vitals are Google's three user-centric metrics for **loading (LCP)**, **responsiveness (INP)** and **visual stability (CLS)**. They are judged on **real-user (field) data at the 75th percentile**, collected by the Chrome UX Report (CrUX), and they feed Google Search's page experience signals. Lab tools (Lighthouse, DevTools) help you *debug*; field data (RUM, CrUX) tells you what users actually *feel*.
+<Note>
+**TL;DR**
+
+Core Web Vitals are Google's three user-centric metrics for **loading (LCP)**, **responsiveness (INP)** and **visual stability (CLS)**. They are judged on **real-user (field) data at the 75th percentile**, collected by the Chrome UX Report (CrUX), and they feed Google Search's page experience signals. Lab tools (Lighthouse, DevTools) help you *debug*; field data (RUM, CrUX) tells you what users actually *feel*.
+</Note>
 
 ## The three metrics and their thresholds
 
@@ -84,8 +88,11 @@ flowchart LR
 | Good for | "Are users happy? Which pages/segments hurt?" | "Why is it slow? Did this PR regress?" — reproducible, runs in CI |
 | Weakness | Noisy, delayed, needs traffic | Doesn't reflect real device/network mix; misses interactions, cache state, personalisation |
 
-> [!tip] Rule of thumb
-> **Field data decides whether you have a problem; lab data helps you find and fix it.** A 100 Lighthouse score with failing CrUX data is still failing.
+<Tip>
+**Rule of thumb**
+
+**Field data decides whether you have a problem; lab data helps you find and fix it.** A 100 Lighthouse score with failing CrUX data is still failing.
+</Tip>
 
 ### CrUX (Chrome UX Report)
 - Anonymised field data from **opted-in Chrome users** (desktop and Android), aggregated over a **rolling 28-day window**.
@@ -98,49 +105,55 @@ flowchart LR
 ### The `web-vitals` library (recommended)
 Handles all the edge cases (bfcache restores, prerendered pages, background tabs, CLS session windows, INP outliers) that a raw `PerformanceObserver` gets wrong.
 
-> [!example] Send Core Web Vitals to analytics
-> ```js
-> import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
->
-> function sendToAnalytics(metric) {
->   const body = JSON.stringify({
->     name: metric.name,      // 'LCP' | 'INP' | 'CLS' | ...
->     value: metric.value,
->     rating: metric.rating,  // 'good' | 'needs-improvement' | 'poor'
->     id: metric.id,          // unique per page load, for dedupe
->     navigationType: metric.navigationType,
->     page: location.pathname,
->   });
->   // sendBeacon survives page unload; fall back to keepalive fetch
->   (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
->     fetch('/analytics', { body, method: 'POST', keepalive: true });
-> }
->
-> onLCP(sendToAnalytics);
-> onINP(sendToAnalytics);
-> onCLS(sendToAnalytics);
-> onFCP(sendToAnalytics);
-> onTTFB(sendToAnalytics);
-> ```
+<Info>
+**Send Core Web Vitals to analytics**
+
+```js
+import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = JSON.stringify({
+    name: metric.name,      // 'LCP' | 'INP' | 'CLS' | ...
+    value: metric.value,
+    rating: metric.rating,  // 'good' | 'needs-improvement' | 'poor'
+    id: metric.id,          // unique per page load, for dedupe
+    navigationType: metric.navigationType,
+    page: location.pathname,
+  });
+  // sendBeacon survives page unload; fall back to keepalive fetch
+  (navigator.sendBeacon && navigator.sendBeacon('/analytics', body)) ||
+    fetch('/analytics', { body, method: 'POST', keepalive: true });
+}
+
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);
+onFCP(sendToAnalytics);
+onTTFB(sendToAnalytics);
+```
+</Info>
 
 The **attribution build** (`import { onINP } from 'web-vitals/attribution'`) adds a `metric.attribution` object that tells you *why*: for LCP the element and the four sub-parts, for CLS the largest shifted element, for INP the target element, interaction type, the three phases and the related Long Animation Frame entries.
 
-> [!example] Debug INP in production with attribution
-> ```js
-> import { onINP } from 'web-vitals/attribution';
->
-> onINP(({ value, attribution }) => {
->   const { interactionTarget, interactionType,
->           inputDelay, processingDuration, presentationDelay,
->           longAnimationFrameEntries } = attribution;
->   // Which scripts were running during the slow frame?
->   const scripts = (longAnimationFrameEntries || [])
->     .flatMap(loaf => loaf.scripts)
->     .map(s => ({ src: s.sourceURL, fn: s.sourceFunctionName, ms: s.duration }));
->   report({ value, interactionTarget, interactionType,
->            inputDelay, processingDuration, presentationDelay, scripts });
-> });
-> ```
+<Info>
+**Debug INP in production with attribution**
+
+```js
+import { onINP } from 'web-vitals/attribution';
+
+onINP(({ value, attribution }) => {
+  const { interactionTarget, interactionType,
+          inputDelay, processingDuration, presentationDelay,
+          longAnimationFrameEntries } = attribution;
+  // Which scripts were running during the slow frame?
+  const scripts = (longAnimationFrameEntries || [])
+    .flatMap(loaf => loaf.scripts)
+    .map(s => ({ src: s.sourceURL, fn: s.sourceFunctionName, ms: s.duration }));
+  report({ value, interactionTarget, interactionType,
+           inputDelay, processingDuration, presentationDelay, scripts });
+});
+```
+</Info>
 
 ### Raw Performance APIs
 Useful to understand what the library does, and for custom metrics.
@@ -194,35 +207,41 @@ new PerformanceObserver((list) => {
 | Resource load duration | Smaller image: AVIF/WebP, correct `srcset`/`sizes`, compression, CDN; fewer competing downloads |
 | Element render delay | Remove render-blocking CSS/JS, inline critical CSS, avoid client-side rendering the hero (SSR/SSG it), don't hide content behind A/B-test scripts or hydration, `font-display` for text LCP |
 
-> [!example] LCP-friendly hero image
-> ```html
-> <link rel="preconnect" href="https://img.example-cdn.com">
-> <img src="https://img.example-cdn.com/hero-1200.avif"
->      srcset="https://img.example-cdn.com/hero-600.avif 600w,
->              https://img.example-cdn.com/hero-1200.avif 1200w"
->      sizes="100vw" width="1200" height="600"
->      fetchpriority="high" alt="Dubai skyline at sunset">
-> ```
+<Info>
+**LCP-friendly hero image**
+
+```html
+<link rel="preconnect" href="https://img.example-cdn.com">
+<img src="https://img.example-cdn.com/hero-1200.avif"
+     srcset="https://img.example-cdn.com/hero-600.avif 600w,
+             https://img.example-cdn.com/hero-1200.avif 1200w"
+     sizes="100vw" width="1200" height="600"
+     fetchpriority="high" alt="Dubai skyline at sunset">
+```
+</Info>
 
 ### Fixing INP
 - **Input delay high** → the main thread was busy: break up long tasks, defer/remove third-party scripts, avoid heavy work during hydration, move work to a Web Worker.
-- **Processing high** → your handler is slow: do the minimum needed for visual feedback first, then **yield** (`await scheduler.yield()` with a `setTimeout` fallback) before the rest; debounce; avoid synchronous `localStorage`/layout reads; in React use `startTransition`/`useDeferredValue` and fix unnecessary re-renders (see [[React Performance]]).
-- **Presentation delay high** → too much rendering: huge DOM (virtualize — [[Virtualization & Large Lists]]), layout thrashing, expensive CSS, `content-visibility: auto` for off-screen sections.
+- **Processing high** → your handler is slow: do the minimum needed for visual feedback first, then **yield** (`await scheduler.yield()` with a `setTimeout` fallback) before the rest; debounce; avoid synchronous `localStorage`/layout reads; in React use `startTransition`/`useDeferredValue` and fix unnecessary re-renders (see [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)).
+- **Presentation delay high** → too much rendering: huge DOM (virtualize — [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)), layout thrashing, expensive CSS, `content-visibility: auto` for off-screen sections.
 
-> [!example] Give feedback first, then yield
-> ```js
-> button.addEventListener('click', async () => {
->   button.classList.add('loading');         // cheap visual update
->   await yieldToMain();                     // let the browser paint it
->   const results = filterHugeList(query);   // heavy work after the paint
->   render(results);
-> });
->
-> function yieldToMain() {
->   if (globalThis.scheduler?.yield) return scheduler.yield();
->   return new Promise((r) => setTimeout(r, 0));
-> }
-> ```
+<Info>
+**Give feedback first, then yield**
+
+```js
+button.addEventListener('click', async () => {
+  button.classList.add('loading');         // cheap visual update
+  await yieldToMain();                     // let the browser paint it
+  const results = filterHugeList(query);   // heavy work after the paint
+  render(results);
+});
+
+function yieldToMain() {
+  if (globalThis.scheduler?.yield) return scheduler.yield();
+  return new Promise((r) => setTimeout(r, 0));
+}
+```
+</Info>
 
 ### Fixing CLS
 - Always set **`width`/`height`** (or `aspect-ratio`) on images, videos, iframes and ad slots.
@@ -234,63 +253,77 @@ new PerformanceObserver((list) => {
 
 ### Fixing TTFB / FCP
 - Cache HTML at the edge (SSG/ISR or `Cache-Control` + `stale-while-revalidate`), minimise redirects, use HTTP/2 or HTTP/3, stream the response so the `<head>` flushes early.
-- Remove render-blocking resources in `<head>`; `defer` scripts; inline critical CSS. See [[How Browsers Render - Critical Rendering Path]].
+- Remove render-blocking resources in `<head>`; `defer` scripts; inline critical CSS. See [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path).
 
-> [!warning] Common pitfalls
-> - Optimising the Lighthouse score instead of field data.
-> - Lazy-loading the hero image (hurts LCP badly).
-> - Measuring only on fast office laptops — test with CPU throttling (4× or more) and a mid-range Android profile.
-> - Forgetting that SPA route changes are not new page loads for CrUX (see soft navigations below).
-> - Using `unload` handlers, which block bfcache.
+<Warning>
+**Common pitfalls**
 
-> [!info]+ 🆕 2025–2026
-> - **Thresholds unchanged:** LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1.
-> - **LCP and Event Timing are Baseline Newly available (2025-12-12)** now that Safari 26.2 supports them (Firefox had LCP since 122). Your *own* RUM can therefore collect LCP and interaction latency across all major engines — but **CrUX is still Chrome-only data**.
-> - **Soft Navigations API shipped in Chrome 151 (2026-07-28)** after a final origin trial in Chrome 147–149. It adds a `soft-navigation` PerformanceEntry and a new `interaction-contentful-paint` entry, so SPA route changes (History/Navigation API URL change after a user interaction + DOM paint) can be measured like page loads.
-> - **web-vitals v6 (2026-07-21)** supports soft navigations.
-> - **Still undecided:** how CrUX and Core Web Vitals will use SPA soft-navigation data. Google said it would decide after launch; there's no confirmation that CrUX counts it yet.
-> - **LoAF** remains Chromium only — use it for INP attribution.
-> - Framework traces in DevTools: **React 19.2 Performance Tracks** and Angular's Chrome DevTools profiling integration (v20).
->
-> ```js
-> new PerformanceObserver((l) => l.getEntries().forEach(console.log))
->   .observe({ type: 'soft-navigation', buffered: true });
-> ```
+- Optimising the Lighthouse score instead of field data.
+- Lazy-loading the hero image (hurts LCP badly).
+- Measuring only on fast office laptops — test with CPU throttling (4× or more) and a mid-range Android profile.
+- Forgetting that SPA route changes are not new page loads for CrUX (see soft navigations below).
+- Using `unload` handlers, which block bfcache.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **Thresholds unchanged:** LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1.
+- **LCP and Event Timing are Baseline Newly available (2025-12-12)** now that Safari 26.2 supports them (Firefox had LCP since 122). Your *own* RUM can therefore collect LCP and interaction latency across all major engines — but **CrUX is still Chrome-only data**.
+- **Soft Navigations API shipped in Chrome 151 (2026-07-28)** after a final origin trial in Chrome 147–149. It adds a `soft-navigation` PerformanceEntry and a new `interaction-contentful-paint` entry, so SPA route changes (History/Navigation API URL change after a user interaction + DOM paint) can be measured like page loads.
+- **web-vitals v6 (2026-07-21)** supports soft navigations.
+- **Still undecided:** how CrUX and Core Web Vitals will use SPA soft-navigation data. Google said it would decide after launch; there's no confirmation that CrUX counts it yet.
+- **LoAF** remains Chromium only — use it for INP attribution.
+- Framework traces in DevTools: **React 19.2 Performance Tracks** and Angular's Chrome DevTools profiling integration (v20).
+
+```js
+new PerformanceObserver((l) => l.getEntries().forEach(console.log))
+  .observe({ type: 'soft-navigation', buffered: true });
+```
+</Info>
 
 ## Interview questions
 
-> [!question]- What are the Core Web Vitals and their "good" thresholds?
-> LCP ≤ 2.5 s (loading), INP ≤ 200 ms (responsiveness), CLS ≤ 0.1 (visual stability), measured at the 75th percentile of real page loads, separately for mobile and desktop.
+<Accordion title="What are the Core Web Vitals and their &quot;good&quot; thresholds?">
+LCP ≤ 2.5 s (loading), INP ≤ 200 ms (responsiveness), CLS ≤ 0.1 (visual stability), measured at the 75th percentile of real page loads, separately for mobile and desktop.
+</Accordion>
 
-> [!question]- Why did INP replace FID?
-> FID only measured the input delay of the first interaction, ignoring handler time and rendering, and most sites passed it. INP measures the full latency (input delay + processing + presentation delay) of all interactions across the visit, so it reflects real sluggishness.
+<Accordion title="Why did INP replace FID?">
+FID only measured the input delay of the first interaction, ignoring handler time and rendering, and most sites passed it. INP measures the full latency (input delay + processing + presentation delay) of all interactions across the visit, so it reflects real sluggishness.
+</Accordion>
 
-> [!question]- Lighthouse says 98 but Search Console says my LCP is poor. Why?
-> Lighthouse is one synthetic load on a fast machine with a cold cache and simulated throttling. Search Console uses CrUX field data from real users on real devices and networks over 28 days. Differences come from slow devices, geography/CDN misses, personalisation, ads, logged-in states, and different LCP elements. Trust field data; use lab to reproduce.
+<Accordion title="Lighthouse says 98 but Search Console says my LCP is poor. Why?">
+Lighthouse is one synthetic load on a fast machine with a cold cache and simulated throttling. Search Console uses CrUX field data from real users on real devices and networks over 28 days. Differences come from slow devices, geography/CDN misses, personalisation, ads, logged-in states, and different LCP elements. Trust field data; use lab to reproduce.
+</Accordion>
 
-> [!question]- How would you debug a poor LCP?
-> Identify the LCP element, then split LCP into TTFB, resource load delay, load duration and render delay. Fix the biggest: cache HTML at the edge for TTFB; make the image discoverable in HTML with `fetchpriority="high"` / preload for load delay; compress and resize (AVIF, srcset) for duration; remove render-blocking CSS/JS and avoid client-only rendering for render delay.
+<Accordion title="How would you debug a poor LCP?">
+Identify the LCP element, then split LCP into TTFB, resource load delay, load duration and render delay. Fix the biggest: cache HTML at the edge for TTFB; make the image discoverable in HTML with `fetchpriority="high"` / preload for load delay; compress and resize (AVIF, srcset) for duration; remove render-blocking CSS/JS and avoid client-only rendering for render delay.
+</Accordion>
 
-> [!question]- How do you find what causes a poor INP in production?
-> Collect INP with the `web-vitals/attribution` build: it gives the target element, interaction type, the three phases and Long Animation Frame entries listing the scripts that ran. Then fix by phase: break up long tasks and yield (input delay/processing), reduce render work and DOM size (presentation delay).
+<Accordion title="How do you find what causes a poor INP in production?">
+Collect INP with the `web-vitals/attribution` build: it gives the target element, interaction type, the three phases and Long Animation Frame entries listing the scripts that ran. Then fix by phase: break up long tasks and yield (input delay/processing), reduce render work and DOM size (presentation delay).
+</Accordion>
 
-> [!question]- How is CLS calculated, and why doesn't it just keep growing in a long-lived SPA?
-> Each shift scores impact fraction × distance fraction; shifts within 500 ms of user input are excluded. Shifts are grouped into session windows (max 5 s, gaps under 1 s) and CLS is the largest window, so a long session doesn't accumulate forever.
+<Accordion title="How is CLS calculated, and why doesn't it just keep growing in a long-lived SPA?">
+Each shift scores impact fraction × distance fraction; shifts within 500 ms of user input are excluded. Shifts are grouped into session windows (max 5 s, gaps under 1 s) and CLS is the largest window, so a long session doesn't accumulate forever.
+</Accordion>
 
-> [!question]- Are TTFB and FCP Core Web Vitals?
-> No. They're diagnostic metrics. TTFB is part of LCP (the first sub-part) and FCP shows when anything first appears; both help explain a bad LCP.
+<Accordion title="Are TTFB and FCP Core Web Vitals?">
+No. They're diagnostic metrics. TTFB is part of LCP (the first sub-part) and FCP shows when anything first appears; both help explain a bad LCP.
+</Accordion>
 
-> [!question]- How are SPA route changes measured?
-> Historically they weren't — CrUX only counts hard navigations. Chrome 151 shipped the Soft Navigations API (`soft-navigation` and `interaction-contentful-paint` entries) and web-vitals v6 supports it, so RUM can measure them. Whether CrUX will count them is still undecided.
+<Accordion title="How are SPA route changes measured?">
+Historically they weren't — CrUX only counts hard navigations. Chrome 151 shipped the Soft Navigations API (`soft-navigation` and `interaction-contentful-paint` entries) and web-vitals v6 supports it, so RUM can measure them. Whether CrUX will count them is still undecided.
+</Accordion>
 
 ## Related
-- [[Performance Optimization Playbook]]
-- [[Virtualization & Large Lists]]
-- [[How Browsers Render - Critical Rendering Path]]
-- [[React Performance]]
-- [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[Observer APIs]]
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
+- [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)
+- [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs)
 
 ## Sources
 - [web.dev – Web Vitals](https://web.dev/articles/vitals)

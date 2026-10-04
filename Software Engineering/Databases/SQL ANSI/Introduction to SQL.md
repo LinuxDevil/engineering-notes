@@ -1,14 +1,18 @@
 ---
+title: "Introduction to SQL"
 tags: [databases, databases/sql]
 aliases: [SQL Basics, SQL Keys, Database Keys, Understanding SQL, Super Key, Candidate Key]
 updated: 2026-09-27
 ---
 # Introduction to SQL
 
-> [!tldr] TL;DR
-> A relational database stores data in **tables** (rows and typed columns) described by a **schema**. **Keys** identify rows: a *super key* is any column set that is unique, a *candidate key* is a minimal super key, the *primary key* is the candidate you pick, the rest are *alternate keys*, and a *foreign key* points at another table's key. SQL is the declarative language you use to ask for data: you say *what* you want, the database decides *how*.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 1 · Prev: [[SQL ANSI]] · Next: [[Retrieving Information]]
+A relational database stores data in **tables** (rows and typed columns) described by a **schema**. **Keys** identify rows: a *super key* is any column set that is unique, a *candidate key* is a minimal super key, the *primary key* is the candidate you pick, the rest are *alternate keys*, and a *foreign key* points at another table's key. SQL is the declarative language you use to ask for data: you say *what* you want, the database decides *how*.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 1 · Prev: [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · Next: [Retrieving Information](/Software%20Engineering/Databases/SQL%20ANSI/Retrieving%20Information)
 
 ## Core vocabulary
 
@@ -41,13 +45,16 @@ Rules:
 3. Primary key values should never be modified or updated.
 4. Primary key values should never be reused. If a row is deleted, its key should not be given to a new row.
 
-> [!note] Composite primary keys
-> With a primary key made of several columns, the individual columns need not be unique; only the combination must be.
+<Note>
+**Composite primary keys**
+
+With a primary key made of several columns, the individual columns need not be unique; only the combination must be.
+</Note>
 
 ### Super key
 A single column or a group of columns that can uniquely identify rows (tuples) in a table.
 
-![[Screen_Shot_2022-06-28_at_11.05.13_PM.png]]
+![Screen_Shot_2022-06-28_at_11.05.13_PM](/Attachments/Screen_Shot_2022-06-28_at_11.05.13_PM.png)
 
 If the *Id* attribute is unique for every employee, *Id* is a super key. So are *(Id, Name)*, *(Id, Email)* and *(Id, Name, Email)*: they still identify each row because they contain *Id*, even though the extra attributes are unnecessary.
 
@@ -63,8 +70,11 @@ A candidate key or primary key made of more than one attribute, e.g. `(order_num
 ### Unique key
 A `UNIQUE` constraint guarantees no duplicate values, like a primary key, but a table can have many of them and they can accept `NULL`.
 
-> [!warning] How many NULLs can a unique column hold?
-> The original note said "only once". That's **SQL Server** behaviour. In the SQL standard, PostgreSQL, MySQL, SQLite and Oracle (for single-column keys), `NULL` is not equal to `NULL`, so a `UNIQUE` column can hold **many** `NULL`s. PostgreSQL 15+ lets you choose with `UNIQUE NULLS NOT DISTINCT`.
+<Warning>
+**How many NULLs can a unique column hold?**
+
+The original note said "only once". That's **SQL Server** behaviour. In the SQL standard, PostgreSQL, MySQL, SQLite and Oracle (for single-column keys), `NULL` is not equal to `NULL`, so a `UNIQUE` column can hold **many** `NULL`s. PostgreSQL 15+ lets you choose with `UNIQUE NULLS NOT DISTINCT`.
+</Warning>
 
 ### Alternate key
 Candidate keys that were **not** chosen as the primary key. They are usually enforced with `UNIQUE` (and `NOT NULL` if they must always be present).
@@ -113,30 +123,34 @@ CREATE TABLE order_items (
 
 ## Beyond the book / Senior perspective
 
-- **Surrogate vs natural keys.** A natural key (email, ISBN) has business meaning and can change; a surrogate key (identity, UUID) never does. Most teams use a surrogate primary key plus `UNIQUE` constraints on the natural keys. See [[Primary vs Secondary Key]].
-- **Key type matters for performance.** Random UUIDv4 primary keys scatter inserts across the B-tree. Sequential IDs or time-ordered UUIDv7 keep inserts at the "right edge" of the index. See [[SQL Indexes Deep Dive]].
+- **Surrogate vs natural keys.** A natural key (email, ISBN) has business meaning and can change; a surrogate key (identity, UUID) never does. Most teams use a surrogate primary key plus `UNIQUE` constraints on the natural keys. See [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key).
+- **Key type matters for performance.** Random UUIDv4 primary keys scatter inserts across the B-tree. Sequential IDs or time-ordered UUIDv7 keep inserts at the "right edge" of the index. See [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive).
 - **Declare foreign keys**, and index the referencing column yourself: PostgreSQL does not create an index on the FK column automatically (MySQL/InnoDB does).
-- **SQL is declarative.** The optimizer picks join order and access paths. Reading plans is a core senior skill: [[Query Optimization & EXPLAIN]].
-- Keys and normal forms go together: [[Data Modeling & Normalization]].
+- **SQL is declarative.** The optimizer picks join order and access paths. Reading plans is a core senior skill: [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN).
+- Keys and normal forms go together: [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization).
 
 ## Interview questions
 
-> [!question]- What's the difference between a super key, a candidate key and a primary key?
-> A super key is any set of columns that uniquely identifies a row. A candidate key is a minimal super key (remove any column and it stops being unique). The primary key is the candidate key you pick as the row's main identifier; the others become alternate keys.
+<Accordion title="What's the difference between a super key, a candidate key and a primary key?">
+A super key is any set of columns that uniquely identifies a row. A candidate key is a minimal super key (remove any column and it stops being unique). The primary key is the candidate key you pick as the row's main identifier; the others become alternate keys.
+</Accordion>
 
-> [!question]- Primary key vs unique constraint?
-> Both enforce uniqueness. A table has one primary key, which is implicitly `NOT NULL` and is the default FK target; it can have many unique constraints, which allow `NULL`s (and in most DBMSs several of them).
+<Accordion title="Primary key vs unique constraint?">
+Both enforce uniqueness. A table has one primary key, which is implicitly `NOT NULL` and is the default FK target; it can have many unique constraints, which allow `NULL`s (and in most DBMSs several of them).
+</Accordion>
 
-> [!question]- Natural or surrogate primary key?
-> Surrogate keys (identity/UUID) are stable, compact and meaningless, so they never need updating. Natural keys can change and cascade updates through foreign keys. Common practice: surrogate PK plus `UNIQUE` on the natural key.
+<Accordion title="Natural or surrogate primary key?">
+Surrogate keys (identity/UUID) are stable, compact and meaningless, so they never need updating. Natural keys can change and cascade updates through foreign keys. Common practice: surrogate PK plus `UNIQUE` on the natural key.
+</Accordion>
 
-> [!question]- Does a foreign key create an index?
-> Not in PostgreSQL or SQL Server: you should add one on the referencing column, or deletes on the parent and joins will scan the child table. MySQL InnoDB requires and auto-creates one.
+<Accordion title="Does a foreign key create an index?">
+Not in PostgreSQL or SQL Server: you should add one on the referencing column, or deletes on the parent and joins will scan the child table. MySQL InnoDB requires and auto-creates one.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Primary vs Secondary Key]] · [[Data Modeling & Normalization]] · [[Understanding Advanced SQL Features]] (constraints)
-- Next lesson: [[Retrieving Information]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key) · [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (constraints)
+- Next lesson: [Retrieving Information](/Software%20Engineering/Databases/SQL%20ANSI/Retrieving%20Information)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 1 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

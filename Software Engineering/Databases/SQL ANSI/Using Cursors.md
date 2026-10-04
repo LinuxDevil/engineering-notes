@@ -1,14 +1,18 @@
 ---
+title: "Using Cursors"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [Cursors, DECLARE CURSOR, FETCH, WITH HOLD, Server-side Cursors]
 updated: 2026-09-27
 ---
 # Using Cursors
 
-> [!tldr] TL;DR
-> A cursor is a named result set on the server that you step through a few rows at a time: `DECLARE` it, (`OPEN` it), `FETCH` rows, `CLOSE` it. They're useful for streaming huge results without loading them all into memory. In PostgreSQL, SQL-level cursors live **inside a transaction** unless declared `WITH HOLD`, and most drivers expose them as "server-side cursors". Don't use cursors to loop and update row by row when one set-based statement would do.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 21 · Prev: [[Managing Transaction Processing]] · Next: [[Understanding Advanced SQL Features]]
+A cursor is a named result set on the server that you step through a few rows at a time: `DECLARE` it, (`OPEN` it), `FETCH` rows, `CLOSE` it. They're useful for streaming huge results without loading them all into memory. In PostgreSQL, SQL-level cursors live **inside a transaction** unless declared `WITH HOLD`, and most drivers expose them as "server-side cursors". Don't use cursors to loop and update row by row when one set-based statement would do.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 21 · Prev: [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) · Next: [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features)
 
 ## Understanding cursors
 
@@ -16,11 +20,17 @@ Retrieval works with sets of rows called **result sets**: all rows matching a st
 
 **Cursor:** a query stored on the DBMS server; not the `SELECT` statement itself but the **result set** it retrieves. Once the cursor exists, applications can scroll or browse through the data as needed.
 
-> [!note] Cursors and transactions
-> The original note says "a cursor can only be declared inside a transaction". That's true for **PostgreSQL SQL-level cursors declared without `WITH HOLD`**: they exist only until the transaction ends (outside a transaction block, `DECLARE` fails). `WITH HOLD` cursors survive the commit, and SQL Server / Oracle / MySQL cursors inside procedures follow their own scoping rules. In PostgreSQL the cursor doesn't compute everything up front; rows are produced as you `FETCH` them.
+<Note>
+**Cursors and transactions**
 
-> [!note] SQLite
-> SQLite has no SQL cursor statements; its C API steps through results with `sqlite3_step()`, which plays the same role.
+The original note says "a cursor can only be declared inside a transaction". That's true for **PostgreSQL SQL-level cursors declared without `WITH HOLD`**: they exist only until the transaction ends (outside a transaction block, `DECLARE` fails). `WITH HOLD` cursors survive the commit, and SQL Server / Oracle / MySQL cursors inside procedures follow their own scoping rules. In PostgreSQL the cursor doesn't compute everything up front; rows are produced as you `FETCH` them.
+</Note>
+
+<Note>
+**SQLite**
+
+SQLite has no SQL cursor statements; its C API steps through results with `sqlite3_step()`, which plays the same role.
+</Note>
 
 Different DBMSs support different cursor options. Common ones:
 1. Flag a cursor as **read-only**, so data can be read but not updated or deleted through it.
@@ -175,33 +185,40 @@ while ((rows = await cursor.read(5000)).length) { rows.forEach(process); }
 
 JDBC with PostgreSQL uses a cursor when autocommit is off and `setFetchSize(n)` is set; MySQL Connector/J needs `useCursorFetch=true` or streaming mode. By default, most drivers read the **entire** result into memory, which is how "SELECT * FROM big_table" takes down an app server.
 
-> [!warning] Connection poolers
-> PgBouncer in transaction-pooling mode doesn't support `WITH HOLD` cursors or cursors spanning transactions. Keep cursors within one transaction.
+<Warning>
+**Connection poolers**
+
+PgBouncer in transaction-pooling mode doesn't support `WITH HOLD` cursors or cursors spanning transactions. Keep cursors within one transaction.
+</Warning>
 
 ## Beyond the book / Senior perspective
 
 - **Set-based beats row-by-row.** A cursor loop that updates rows one at a time ("RBAR", row by agonizing row) is often 10-100x slower than one `UPDATE ... FROM` or `INSERT ... SELECT`. Use cursors for streaming output or genuinely sequential logic, not as a `for` loop over data.
 - **Cursors hold resources.** An open cursor keeps a snapshot (in PostgreSQL, blocking `VACUUM` cleanup) and possibly locks. Consume and close promptly.
-- **Cursors vs pagination.** For user-facing paging, don't keep a cursor open between HTTP requests; use keyset pagination ([[Retrieving Information]]). Cursors fit batch jobs and exports.
+- **Cursors vs pagination.** For user-facing paging, don't keep a cursor open between HTTP requests; use keyset pagination ([Retrieving Information](/Software%20Engineering/Databases/SQL%20ANSI/Retrieving%20Information)). Cursors fit batch jobs and exports.
 - SQL Server cursor types (`STATIC`, `KEYSET`, `DYNAMIC`, `FAST_FORWARD`) change consistency and cost; `FAST_FORWARD READ_ONLY` is the cheap default for simple loops.
 
 ## Interview questions
 
-> [!question]- What is a database cursor and when would you use one?
-> A server-side handle to a query's result set that you fetch from incrementally. Use it to stream very large results with bounded memory, or for procedural row-at-a-time logic that can't be expressed set-based.
+<Accordion title="What is a database cursor and when would you use one?">
+A server-side handle to a query's result set that you fetch from incrementally. Use it to stream very large results with bounded memory, or for procedural row-at-a-time logic that can't be expressed set-based.
+</Accordion>
 
-> [!question]- Why are cursors often considered an anti-pattern?
-> They encourage row-by-row processing, which is much slower than set-based SQL, and they hold snapshots/locks for their lifetime.
+<Accordion title="Why are cursors often considered an anti-pattern?">
+They encourage row-by-row processing, which is much slower than set-based SQL, and they hold snapshots/locks for their lifetime.
+</Accordion>
 
-> [!question]- What does WITH HOLD do in PostgreSQL?
-> Keeps the cursor usable after the transaction that created it commits; PostgreSQL materializes the remaining rows at commit. Without it, the cursor is closed at transaction end.
+<Accordion title="What does WITH HOLD do in PostgreSQL?">
+Keeps the cursor usable after the transaction that created it commits; PostgreSQL materializes the remaining rows at commit. Without it, the cursor is closed at transaction end.
+</Accordion>
 
-> [!question]- How do you process a 100 GB table in an application without running out of memory?
-> Use a server-side cursor (named cursor in psycopg, fetch size in JDBC, pg-cursor in Node) or keyset-paginated batches, processing rows in chunks.
+<Accordion title="How do you process a 100 GB table in an application without running out of memory?">
+Use a server-side cursor (named cursor in psycopg, fetch size in JDBC, pg-cursor in Node) or keyset-paginated batches, processing rows in chunks.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Managing Transaction Processing]] · [[Working with Stored Procedures]] · [[Retrieving Information]] · [[Connection Pooling]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) · [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures) · [Retrieving Information](/Software%20Engineering/Databases/SQL%20ANSI/Retrieving%20Information) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 21 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

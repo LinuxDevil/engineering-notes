@@ -1,12 +1,16 @@
 ---
+title: "Primary vs Secondary Key"
 tags: [databases, databases/indexing, databases/internals]
 aliases: [Clustered Index, Clustered vs Non-clustered, Index Organized Table, IOT, Heap Organized Table, Secondary Index, Primary Index]
 updated: 2026-09-27
 ---
 # Primary vs Secondary Key
 
-> [!tldr] TL;DR
-> A **primary (clustered) index** decides the physical order of the table: rows are stored inside the index, sorted by the key (an **index-organized table**, as in MySQL InnoDB and SQL Server). A **secondary index** is a separate structure that points back to the rows; the table itself is an unordered **heap**. PostgreSQL has **only secondary indexes**: even the primary key's index points into the heap. Clustering makes range scans on the key almost sequential but makes the choice of key (and secondary lookups) matter much more.
+<Note>
+**TL;DR**
+
+A **primary (clustered) index** decides the physical order of the table: rows are stored inside the index, sorted by the key (an **index-organized table**, as in MySQL InnoDB and SQL Server). A **secondary index** is a separate structure that points back to the rows; the table itself is an unordered **heap**. PostgreSQL has **only secondary indexes**: even the primary key's index points into the heap. Clustering makes range scans on the key almost sequential but makes the choice of key (and secondary lookups) matter much more.
+</Note>
 
 ## The idea
 
@@ -63,11 +67,14 @@ With millions of rows, `orders_b` inserts touch pages all over the tree, most no
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Wide or random clustered keys** in InnoDB bloat every secondary index and fragment the table.
-> - **Updating the primary key** in a clustered table physically moves the row and updates every secondary index. Keep PKs immutable.
-> - Assuming Postgres returns rows in PK order without `ORDER BY`. It doesn't; nothing is guaranteed without `ORDER BY` in any database.
-> - In InnoDB, forgetting a PK: it uses the first `NOT NULL UNIQUE` index or a hidden 6-byte row id you can't use.
+<Warning>
+**Common pitfalls**
+
+- **Wide or random clustered keys** in InnoDB bloat every secondary index and fragment the table.
+- **Updating the primary key** in a clustered table physically moves the row and updates every secondary index. Keep PKs immutable.
+- Assuming Postgres returns rows in PK order without `ORDER BY`. It doesn't; nothing is guaranteed without `ORDER BY` in any database.
+- In InnoDB, forgetting a PK: it uses the first `NOT NULL UNIQUE` index or a hidden 6-byte row id you can't use.
+</Warning>
 
 ## Senior perspective
 
@@ -75,29 +82,36 @@ With millions of rows, `orders_b` inserts touch pages all over the tree, most no
 - Covering indexes blur the difference: in Postgres an index with `INCLUDE` columns can answer queries like a clustered index would, as long as the visibility map is up to date.
 - Review question: "What's the access pattern: range scans by key, or point lookups by several attributes?" That decides whether clustering helps.
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 18 (2025-09-25)** ships `uuidv7()`, generating timestamp-ordered UUIDs that index much better than random `gen_random_uuid()` (v4) values.
-> - **MySQL 8.0 reached end of life on 2026-04-30**; InnoDB behaviour described here is the same in the current LTS lines 8.4 and 9.7 (released 2026-04-21).
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 18 (2025-09-25)** ships `uuidv7()`, generating timestamp-ordered UUIDs that index much better than random `gen_random_uuid()` (v4) values.
+- **MySQL 8.0 reached end of life on 2026-04-30**; InnoDB behaviour described here is the same in the current LTS lines 8.4 and 9.7 (released 2026-04-21).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is a clustered index?
-> An index whose leaf level stores the table rows themselves, so the table is physically ordered by the index key. There can be only one per table. InnoDB and SQL Server tables are clustered by the primary key.
+<Accordion title="What is a clustered index?">
+An index whose leaf level stores the table rows themselves, so the table is physically ordered by the index key. There can be only one per table. InnoDB and SQL Server tables are clustered by the primary key.
+</Accordion>
 
-> [!question]- How does a secondary index lookup work in InnoDB vs Postgres?
-> InnoDB: find the PK value in the secondary index, then search the clustered PK tree for the row (two traversals). Postgres: find the ctid in the index and read that heap page directly, then check tuple visibility.
+<Accordion title="How does a secondary index lookup work in InnoDB vs Postgres?">
+InnoDB: find the PK value in the secondary index, then search the clustered PK tree for the row (two traversals). Postgres: find the ctid in the index and read that heap page directly, then check tuple visibility.
+</Accordion>
 
-> [!question]- Why are random UUID primary keys bad for InnoDB?
-> Inserts go to random leaf pages of the clustered index, causing page splits, fragmentation, poor buffer-pool hit rates and heavy random IO. Every secondary index also stores the 16-byte PK. Use sequential or time-ordered IDs.
+<Accordion title="Why are random UUID primary keys bad for InnoDB?">
+Inserts go to random leaf pages of the clustered index, causing page splits, fragmentation, poor buffer-pool hit rates and heavy random IO. Every secondary index also stores the 16-byte PK. Use sequential or time-ordered IDs.
+</Accordion>
 
-> [!question]- Does PostgreSQL have clustered indexes?
-> No persistent ones. All indexes are secondary and point to heap tuples. `CLUSTER` reorders the table once but doesn't maintain the order.
+<Accordion title="Does PostgreSQL have clustered indexes?">
+No persistent ones. All indexes are secondary and point to heap tuples. `CLUSTER` reorders the table once but doesn't maintain the order.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Database Indexes]] · [[SQL Indexes Deep Dive]] · [[Database Internals]] · [[Database Pages]]
-- [[Introduction to SQL]] (key types: super, candidate, primary, alternate, foreign)
-- [[Data Modeling & Normalization]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals) · [Database Pages](/Software%20Engineering/Databases/Database%20Round/Database%20Pages)
+- [Introduction to SQL](/Software%20Engineering/Databases/SQL%20ANSI/Introduction%20to%20SQL) (key types: super, candidate, primary, alternate, foreign)
+- [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization)
 
 ## Sources
 - MySQL docs, Clustered and Secondary Indexes: https://dev.mysql.com/doc/refman/8.4/en/innodb-index-types.html

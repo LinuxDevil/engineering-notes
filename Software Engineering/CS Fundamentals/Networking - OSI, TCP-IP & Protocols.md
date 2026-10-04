@@ -1,12 +1,16 @@
 ---
+title: "Networking - OSI, TCP-IP & Protocols"
 tags: [cs-fundamentals, cs-fundamentals/networking]
 aliases: [OSI Model, TCP/IP Model, TCP Handshake, TLS 1.3 Handshake, HTTP/3, QUIC, Congestion Control]
 updated: 2026-09-27
 ---
 # Networking - OSI, TCP-IP & Protocols
 
-> [!tldr] TL;DR
-> The **OSI model** (7 layers) and the practical **TCP/IP model** (4 layers) describe how data is wrapped layer by layer: application → transport (TCP/UDP) → network (IP) → link (Ethernet/Wi-Fi). **TCP** opens connections with a **3-way handshake**, guarantees ordered delivery, and uses **congestion control** (slow start, CUBIC, BBR). **TLS 1.3** secures connections in **1 round trip**. **HTTP/1.1** → **HTTP/2** (multiplexing over one TCP connection) → **HTTP/3** (over **QUIC**, on UDP, no TCP head-of-line blocking, faster handshakes, connection migration). Browser-facing HTTP caching and real-time are in [[Networking - HTTP, Caching & Real-time]].
+<Note>
+**TL;DR**
+
+The **OSI model** (7 layers) and the practical **TCP/IP model** (4 layers) describe how data is wrapped layer by layer: application → transport (TCP/UDP) → network (IP) → link (Ethernet/Wi-Fi). **TCP** opens connections with a **3-way handshake**, guarantees ordered delivery, and uses **congestion control** (slow start, CUBIC, BBR). **TLS 1.3** secures connections in **1 round trip**. **HTTP/1.1** → **HTTP/2** (multiplexing over one TCP connection) → **HTTP/3** (over **QUIC**, on UDP, no TCP head-of-line blocking, faster handshakes, connection migration). Browser-facing HTTP caching and real-time are in [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time).
+</Note>
 
 ## Layer models
 | OSI layer | TCP/IP layer | Unit | Examples | Devices |
@@ -19,7 +23,7 @@ updated: 2026-09-27
 | 2 Data link | Link | Frame | Ethernet, Wi-Fi, ARP | Switch |
 | 1 Physical | Link | Bits | Fiber, copper, radio | Hub, NIC |
 
-**Encapsulation**: `[Ethernet [IP [TCP [TLS [HTTP data]]]]]`. Each layer adds a header; the receiver strips them in reverse. "L4 vs L7 load balancer" refers to these layers ([[Scalability Fundamentals]]).
+**Encapsulation**: `[Ethernet [IP [TCP [TLS [HTTP data]]]]]`. Each layer adds a header; the receiver strips them in reverse. "L4 vs L7 load balancer" refers to these layers ([Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals)).
 
 ## TCP in depth
 ### 3-way handshake and teardown
@@ -68,7 +72,7 @@ sequenceDiagram
 - Everything after ServerHello is encrypted, including the certificate.
 - **SNI** tells the server which hostname (for multiple certs per IP); **ECH** (Encrypted Client Hello) hides it.
 - **ALPN** negotiates the application protocol (h2, http/1.1).
-- Certificates and PKI basics: [[Cryptography Basics for Engineers]].
+- Certificates and PKI basics: [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers).
 
 ## HTTP/1.1 vs HTTP/2 vs HTTP/3
 | | HTTP/1.1 (1997) | HTTP/2 (2015) | HTTP/3 (2022) |
@@ -97,9 +101,9 @@ openssl s_client -connect example.com:443 -tls1_3 -groups X25519MLKEM768   # Ope
 ## Other protocols worth knowing
 | Protocol | Layer / transport | Use |
 |---|---|---|
-| DNS | App over UDP/TCP (53), DoH/DoT | Name resolution ([[How the Internet Works]]) |
+| DNS | App over UDP/TCP (53), DoH/DoT | Name resolution ([How the Internet Works](/Software%20Engineering/CS%20Fundamentals/How%20the%20Internet%20Works)) |
 | WebSocket | Upgraded HTTP/1.1 (or HTTP/2 extended CONNECT) | Full-duplex real-time |
-| gRPC | HTTP/2 | Service-to-service RPC ([[gRPC vs REST]]) |
+| gRPC | HTTP/2 | Service-to-service RPC ([gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST)) |
 | SSH | TCP 22 | Remote shells, tunnels |
 | SMTP/IMAP | TCP | Email |
 | ICMP | Network | ping, traceroute, PMTU discovery |
@@ -107,46 +111,58 @@ openssl s_client -connect example.com:443 -tls1_3 -groups X25519MLKEM768   # Ope
 | DHCP | App over UDP | Assign IP addresses |
 
 ## Pitfalls
-> [!warning] Pitfalls
-> - Blaming HTTP/2 multiplexing for all latency: on lossy mobile networks TCP HOL blocking can make HTTP/2 worse than several HTTP/1.1 connections; HTTP/3 fixes it.
-> - Using TLS 0-RTT for non-idempotent requests (replay attacks).
-> - Ignoring connection reuse between services; new TLS connections per request burn CPU and RTTs.
-> - Firewalls allowing TCP 443 but blocking UDP 443 → silent fallback, uneven performance.
+<Warning>
+**Pitfalls**
+
+- Blaming HTTP/2 multiplexing for all latency: on lossy mobile networks TCP HOL blocking can make HTTP/2 worse than several HTTP/1.1 connections; HTTP/3 fixes it.
+- Using TLS 0-RTT for non-idempotent requests (replay attacks).
+- Ignoring connection reuse between services; new TLS connections per request burn CPU and RTTs.
+- Firewalls allowing TCP 443 but blocking UDP 443 → silent fallback, uneven performance.
+</Warning>
 
 ## Senior perspective
 - Latency is mostly **round trips**; count them per request (DNS, TCP, TLS, redirects, API chains).
 - Tune keep-alive and idle timeouts consistently across client → LB → server to avoid resets (idle timeout of the LB shorter than the server's).
 - Internal service mesh: mTLS everywhere, HTTP/2 or gRPC with connection pooling.
-- For global users, terminate TLS/QUIC at the edge ([[CDN & Edge Computing]]).
+- For global users, terminate TLS/QUIC at the edge ([CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing)).
 
-> [!info]+ 🆕 2025–2026
-> - **Post-quantum key exchange is now the default** in major TLS stacks: Chrome 131 (Nov 2024) switched to the standardized hybrid **X25519MLKEM768**; **OpenSSL 3.5 (2025-04-08, LTS)** offers X25519MLKEM768 as a default key share; Apple enabled it by default in its 2025 OS releases; Cloudflare saw **52% of human traffic** post-quantum encrypted by end of 2025. ([Chrome/Bleeping Computer](https://www.bleepingcomputer.com/news/security/chrome-switching-to-nist-approved-ml-kem-quantum-encryption/), [OpenSSL 3.5 notes](https://openssl-library.org/news/openssl-3.5-notes/), [Cloudflare Radar 2025](https://blog.cloudflare.com/radar-2025-year-in-review/))
-> - **HTTP/3 share**: ~21% of requests to Cloudflare in 2025 (HTTP/2 ~50%, HTTP/1.x ~29%). ([Cloudflare Radar 2025](https://blog.cloudflare.com/radar-2025-year-in-review/))
-> - Hybrid ML-KEM ClientHellos are ~1 KB larger, which can split the ClientHello across packets and break buggy middleboxes; test your load balancers and firewalls.
+<Info>
+**🆕 2025–2026**
+
+- **Post-quantum key exchange is now the default** in major TLS stacks: Chrome 131 (Nov 2024) switched to the standardized hybrid **X25519MLKEM768**; **OpenSSL 3.5 (2025-04-08, LTS)** offers X25519MLKEM768 as a default key share; Apple enabled it by default in its 2025 OS releases; Cloudflare saw **52% of human traffic** post-quantum encrypted by end of 2025. ([Chrome/Bleeping Computer](https://www.bleepingcomputer.com/news/security/chrome-switching-to-nist-approved-ml-kem-quantum-encryption/), [OpenSSL 3.5 notes](https://openssl-library.org/news/openssl-3.5-notes/), [Cloudflare Radar 2025](https://blog.cloudflare.com/radar-2025-year-in-review/))
+- **HTTP/3 share**: ~21% of requests to Cloudflare in 2025 (HTTP/2 ~50%, HTTP/1.x ~29%). ([Cloudflare Radar 2025](https://blog.cloudflare.com/radar-2025-year-in-review/))
+- Hybrid ML-KEM ClientHellos are ~1 KB larger, which can split the ClientHello across packets and break buggy middleboxes; test your load balancers and firewalls.
+</Info>
 
 ## Interview questions
-> [!question]- Explain the TCP 3-way handshake.
-> Client sends SYN with its initial sequence number; server replies SYN-ACK with its own and acknowledges the client's; client ACKs. Both sides now know each other's sequence numbers and the connection is established after one round trip.
+<Accordion title="Explain the TCP 3-way handshake.">
+Client sends SYN with its initial sequence number; server replies SYN-ACK with its own and acknowledges the client's; client ACKs. Both sides now know each other's sequence numbers and the connection is established after one round trip.
+</Accordion>
 
-> [!question]- What is head-of-line blocking and how does HTTP/3 fix it?
-> In HTTP/2 all streams share one TCP byte stream, so a single lost packet stalls every stream until retransmitted. QUIC implements streams independently over UDP, so loss only blocks the affected stream.
+<Accordion title="What is head-of-line blocking and how does HTTP/3 fix it?">
+In HTTP/2 all streams share one TCP byte stream, so a single lost packet stalls every stream until retransmitted. QUIC implements streams independently over UDP, so loss only blocks the affected stream.
+</Accordion>
 
-> [!question]- Why is TLS 1.3 faster than TLS 1.2?
-> The client sends its key share in the first message, so the server can respond with its share, certificate and Finished in one flight: 1 RTT instead of 2. Resumption allows 0-RTT data (with replay risk).
+<Accordion title="Why is TLS 1.3 faster than TLS 1.2?">
+The client sends its key share in the first message, so the server can respond with its share, certificate and Finished in one flight: 1 RTT instead of 2. Resumption allows 0-RTT data (with replay risk).
+</Accordion>
 
-> [!question]- What is TCP slow start and why does it matter for web performance?
-> New connections start with a small congestion window that grows each RTT, so they can't use full bandwidth immediately. Reusing connections and reducing bytes in the first round trips (e.g. ~14 KB initial window) improves load time.
+<Accordion title="What is TCP slow start and why does it matter for web performance?">
+New connections start with a small congestion window that grows each RTT, so they can't use full bandwidth immediately. Reusing connections and reducing bytes in the first round trips (e.g. ~14 KB initial window) improves load time.
+</Accordion>
 
-> [!question]- L4 vs L7, in OSI terms?
-> L4 (transport) sees TCP/UDP ports and connections; L7 (application) understands HTTP and can route by path, headers or cookies.
+<Accordion title="L4 vs L7, in OSI terms?">
+L4 (transport) sees TCP/UDP ports and connections; L7 (application) understands HTTP and can route by path, headers or cookies.
+</Accordion>
 
-> [!question]- What does forward secrecy mean?
-> Session keys come from ephemeral key exchange, so compromising the server's long-term private key later doesn't let an attacker decrypt past recorded traffic.
+<Accordion title="What does forward secrecy mean?">
+Session keys come from ephemeral key exchange, so compromising the server's long-term private key later doesn't let an attacker decrypt past recorded traffic.
+</Accordion>
 
 ## Related
-- [[CS Fundamentals Index]]
-- [[How the Internet Works]] · [[Cryptography Basics for Engineers]] · [[Operating Systems Essentials]]
-- [[Networking - HTTP, Caching & Real-time]] · [[gRPC vs REST]] · [[Nginx]] · [[CDN & Edge Computing]] · [[Scalability Fundamentals]]
+- [CS Fundamentals Index](/Software%20Engineering/CS%20Fundamentals/CS%20Fundamentals%20Index)
+- [How the Internet Works](/Software%20Engineering/CS%20Fundamentals/How%20the%20Internet%20Works) · [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers) · [Operating Systems Essentials](/Software%20Engineering/CS%20Fundamentals/Operating%20Systems%20Essentials)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST) · [Nginx](/Software%20Engineering/Backend/Nginx) · [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals)
 
 ## Sources
 - Kurose & Ross, *Computer Networking: A Top-Down Approach*; Ilya Grigorik, [*High Performance Browser Networking*](https://hpbn.co/)

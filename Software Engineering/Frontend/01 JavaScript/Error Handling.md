@@ -1,12 +1,16 @@
 ---
+title: "Error Handling"
 tags: [frontend, frontend/javascript]
 aliases: [Errors, try catch, Error.cause, AggregateError, unhandledrejection, Custom errors]
 updated: 2026-09-27
 ---
 # Error Handling
 
-> [!tldr] TL;DR
-> Use `try/catch/finally` for synchronous code and `await` inside `try` (or `.catch`) for async code. Throw real `Error` objects (they carry a stack), wrap low-level errors with `{ cause }`, and use custom error classes to distinguish failure types. Catch errors **where you can do something about them**, and install global handlers (`error`, `unhandledrejection`) plus framework boundaries so nothing fails silently in production.
+<Note>
+**TL;DR**
+
+Use `try/catch/finally` for synchronous code and `await` inside `try` (or `.catch`) for async code. Throw real `Error` objects (they carry a stack), wrap low-level errors with `{ cause }`, and use custom error classes to distinguish failure types. Catch errors **where you can do something about them**, and install global handlers (`error`, `unhandledrejection`) plus framework boundaries so nothing fails silently in production.
+</Note>
 
 ## Error types
 
@@ -47,8 +51,11 @@ flowchart TD
   F --> N[continue, or propagate the pending throw/return]
 ```
 
-> [!warning] `finally` overrides
-> A `return` inside `finally` replaces the `try`'s return value **and swallows thrown errors**. Don't return from `finally`.
+<Warning>
+**`finally` overrides**
+
+A `return` inside `finally` replaces the `try`'s return value **and swallows thrown errors**. Don't return from `finally`.
+</Warning>
 
 - `try/catch` only catches errors thrown **synchronously** inside it. A callback scheduled with `setTimeout` or a `.then` runs later, outside the `try`:
 
@@ -81,7 +88,7 @@ async function load() {
 }
 ```
 
-Details (fetch doesn't reject on 4xx/5xx, `return await`, cancellation) are in [[Promises, Async-Await & Cancellation]].
+Details (fetch doesn't reject on 4xx/5xx, `return await`, cancellation) are in [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation).
 
 ## Throw `Error` objects, not strings
 
@@ -195,59 +202,72 @@ flowchart LR
 
 ## Error handling in UI apps
 
-- **React**: [error boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) catch errors thrown during rendering, lifecycle and constructors of their children. They do **not** catch errors in event handlers, async code (`setTimeout`, promises), SSR, or in the boundary itself. Handle those with `try/catch` and state. See [[Component Patterns]].
-- **Next.js**: `error.tsx` / `global-error.tsx` files are error boundaries per route segment. See [[Next.js App Router Fundamentals]].
-- **Angular**: a global `ErrorHandler` service. See [[Angular Fundamentals]].
+- **React**: [error boundaries](https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) catch errors thrown during rendering, lifecycle and constructors of their children. They do **not** catch errors in event handlers, async code (`setTimeout`, promises), SSR, or in the boundary itself. Handle those with `try/catch` and state. See [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns).
+- **Next.js**: `error.tsx` / `global-error.tsx` files are error boundaries per route segment. See [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals).
+- **Angular**: a global `ErrorHandler` service. See [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals).
 - Show a useful message to the user, log the technical details, and offer retry where possible. Don't leak stack traces or server details to the UI.
 
-> [!example] A small `safe` helper (Go-style tuples)
-> ```js
-> async function safe(promise) {
->   try { return [null, await promise]; }
->   catch (err) { return [err, null]; }
-> }
-> const [err, user] = await safe(getUser(id));
-> if (err) return showError(err);
-> ```
+<Info>
+**A small `safe` helper (Go-style tuples)**
 
-> [!warning] Common pitfalls
-> - Empty `catch {}` that swallows errors silently.
-> - Catching too broadly (wrapping the whole app in one try) and losing context.
-> - Forgetting `await` inside `try`, so the rejection escapes.
-> - `forEach(async ...)` errors become unhandled rejections.
-> - Using exceptions for normal control flow (e.g. validation of every keystroke).
-> - Returning from `finally`.
+```js
+async function safe(promise) {
+  try { return [null, await promise]; }
+  catch (err) { return [err, null]; }
+}
+const [err, user] = await safe(getUser(id));
+if (err) return showError(err);
+```
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- Empty `catch {}` that swallows errors silently.
+- Catching too broadly (wrapping the whole app in one try) and losing context.
+- Forgetting `await` inside `try`, so the rejection escapes.
+- `forEach(async ...)` errors become unhandled rejections.
+- Using exceptions for normal control flow (e.g. validation of every keystroke).
+- Returning from `finally`.
+</Warning>
 
 ## Interview questions
 
-> [!question]- How do you handle errors in async/await code?
-> Put the awaits inside `try/catch/finally`, or chain `.catch` on the returned promise. Check `res.ok` for fetch, rethrow errors you can't handle, and ensure no promise is left without a handler.
+<Accordion title="How do you handle errors in async/await code?">
+Put the awaits inside `try/catch/finally`, or chain `.catch` on the returned promise. Check `res.ok` for fetch, rethrow errors you can't handle, and ensure no promise is left without a handler.
+</Accordion>
 
-> [!question]- Why doesn't try/catch catch an error inside setTimeout?
-> The callback runs later in a different task, after the `try` block has already finished and its stack frame is gone. Catch inside the callback or use promises with `await`.
+<Accordion title="Why doesn't try/catch catch an error inside setTimeout?">
+The callback runs later in a different task, after the `try` block has already finished and its stack frame is gone. Catch inside the callback or use promises with `await`.
+</Accordion>
 
-> [!question]- What is `Error.cause` and why use it?
-> An ES2022 option `new Error(msg, { cause })` that attaches the original error when you rethrow with more context, preserving the full chain for debugging.
+<Accordion title="What is `Error.cause` and why use it?">
+An ES2022 option `new Error(msg, { cause })` that attaches the original error when you rethrow with more context, preserving the full chain for debugging.
+</Accordion>
 
-> [!question]- What is `AggregateError`?
-> An error that holds several errors in `.errors`; `Promise.any` rejects with it when every promise fails.
+<Accordion title="What is `AggregateError`?">
+An error that holds several errors in `.errors`; `Promise.any` rejects with it when every promise fails.
+</Accordion>
 
-> [!question]- How do you catch unhandled promise rejections globally?
-> `window.addEventListener('unhandledrejection', e => report(e.reason))` in browsers; `process.on('unhandledRejection')` in Node. Combine with the `error` event and a monitoring service.
+<Accordion title="How do you catch unhandled promise rejections globally?">
+`window.addEventListener('unhandledrejection', e => report(e.reason))` in browsers; `process.on('unhandledRejection')` in Node. Combine with the `error` event and a monitoring service.
+</Accordion>
 
-> [!question]- What don't React error boundaries catch?
-> Errors in event handlers, async code, server rendering, and errors thrown in the boundary itself.
+<Accordion title="What don't React error boundaries catch?">
+Errors in event handlers, async code, server rendering, and errors thrown in the boundary itself.
+</Accordion>
 
-> [!question]- How do you create a custom error type?
-> Extend `Error`, call `super(message, options)`, set `this.name`, and add fields (status, field). Distinguish with `instanceof` (or `Error.isError` + `name` across realms).
+<Accordion title="How do you create a custom error type?">
+Extend `Error`, call `super(message, options)`, set `this.name`, and add fields (status, field). Distinguish with `instanceof` (or `Error.isError` + `name` across realms).
+</Accordion>
 
 ## Related
-- [[Promises, Async-Await & Cancellation]]
-- [[Event Loop - Microtasks & Macrotasks]]
-- [[Component Patterns]]
-- [[Frontend Testing]]
-- [[React 19 to 19.3 & React Compiler]]
-- [[Modern JavaScript ES2022-ES2027]]
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
+- [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
+- [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
 
 ## Sources
 - MDN: [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error), [Error.cause](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause), [AggregateError](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError), [try...catch](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch), [unhandledrejection](https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event), [reportError](https://developer.mozilla.org/en-US/docs/Web/API/Window/reportError)

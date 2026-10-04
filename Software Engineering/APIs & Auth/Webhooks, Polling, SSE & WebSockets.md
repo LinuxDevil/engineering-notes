@@ -1,12 +1,16 @@
 ---
+title: "Webhooks, Polling, SSE & WebSockets"
 tags: [apis, apis/realtime, backend]
 aliases: [Webhooks, Polling, Long Polling, SSE, Server-Sent Events, WebSockets, Real-time APIs, Push vs Pull]
 updated: 2026-09-27
 ---
 # Webhooks, Polling, SSE & WebSockets
 
-> [!tldr] TL;DR
-> Four ways for a server to tell someone "something happened": **polling** (client asks repeatedly), **webhooks** (server POSTs to another *server*), **SSE** (server streams events to a client over one long HTTP response) and **WebSockets** (full-duplex socket). From the backend side the hard parts are not the protocols but **delivery guarantees** (retries, signatures, idempotency for webhooks) and **connection state at scale** (fan-out, sticky sessions, pub/sub backplane, proxy timeouts for SSE/WebSockets). This note is the server view; the browser view is in [[Networking - HTTP, Caching & Real-time]].
+<Note>
+**TL;DR**
+
+Four ways for a server to tell someone "something happened": **polling** (client asks repeatedly), **webhooks** (server POSTs to another *server*), **SSE** (server streams events to a client over one long HTTP response) and **WebSockets** (full-duplex socket). From the backend side the hard parts are not the protocols but **delivery guarantees** (retries, signatures, idempotency for webhooks) and **connection state at scale** (fan-out, sticky sessions, pub/sub backplane, proxy timeouts for SSE/WebSockets). This note is the server view; the browser view is in [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time).
+</Note>
 
 ## Choosing
 
@@ -68,7 +72,7 @@ sequenceDiagram
 ```
 
 - Use the **transactional outbox** so an event is never lost or sent for a rolled-back change.
-- Deliver from **background workers** ([[Background Jobs & Task Queues]]) with short timeouts (5–10 s), exponential backoff over hours/days, and a dead-letter queue.
+- Deliver from **background workers** ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)) with short timeouts (5–10 s), exponential backoff over hours/days, and a dead-letter queue.
 - Delivery is **at-least-once** and **unordered**: include a unique event `id`, a timestamp, and a type; tell consumers to dedupe.
 - **Sign every payload** and include a timestamp to prevent replay.
 - Security for the sender: prevent **SSRF** (customers can register `http://169.254.169.254/…`); resolve and block private IP ranges, use an egress proxy.
@@ -186,20 +190,26 @@ flowchart LR
 - L4/L7 load balancers need long idle timeouts; sticky sessions only if you keep per-connection state server-side.
 - Managed options: Ably, Pusher, AWS API Gateway WebSockets, Cloudflare Durable Objects; frameworks: Socket.IO (adds fallbacks, rooms, its own protocol), Phoenix Channels, ActionCable.
 
-> [!info]+ 🆕 2025–2026
-> - **MCP transports**: the 2025-03-26 MCP spec replaced its original HTTP+SSE transport with **Streamable HTTP** (a single endpoint that can reply with JSON or an SSE stream). The **2026-07-28** spec makes the protocol core **stateless** (removes the `initialize` handshake and `Mcp-Session-Id`), adds `Mcp-Method`/`Mcp-Name` routing headers, and formally **deprecates the legacy HTTP+SSE transport** with a one-year transition. See [[AI in Frontend - MCP, WebMCP & Built-in AI]].
-> - **2025-09:** OpenAPI 3.2 adds first-class **streaming media types** (SSE, JSON Lines), so SSE endpoints can finally be described properly (see [[REST API Design]]).
+<Info>
+**🆕 2025–2026**
+
+- **MCP transports**: the 2025-03-26 MCP spec replaced its original HTTP+SSE transport with **Streamable HTTP** (a single endpoint that can reply with JSON or an SSE stream). The **2026-07-28** spec makes the protocol core **stateless** (removes the `initialize` handshake and `Mcp-Session-Id`), adds `Mcp-Method`/`Mcp-Name` routing headers, and formally **deprecates the legacy HTTP+SSE transport** with a one-year transition. See [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI).
+- **2025-09:** OpenAPI 3.2 adds first-class **streaming media types** (SSE, JSON Lines), so SSE endpoints can finally be described properly (see [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design)).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Webhook receivers doing heavy work before returning 2xx (timeouts → duplicate deliveries).
-> - Verifying signatures on re-serialised JSON, or comparing with `===` (timing attack).
-> - No dedupe on the receiver; no replay protection (timestamp window).
-> - SSE behind a buffering proxy/compression layer: events arrive in big delayed chunks.
-> - Default proxy/LB idle timeouts (60 s) killing SSE/WebSockets; no heartbeats.
-> - Keeping per-user state in one WebSocket node's memory without a backplane.
-> - Sending webhooks synchronously inside the request that triggered them.
+<Warning>
+**Common mistakes**
+
+- Webhook receivers doing heavy work before returning 2xx (timeouts → duplicate deliveries).
+- Verifying signatures on re-serialised JSON, or comparing with `===` (timing attack).
+- No dedupe on the receiver; no replay protection (timestamp window).
+- SSE behind a buffering proxy/compression layer: events arrive in big delayed chunks.
+- Default proxy/LB idle timeouts (60 s) killing SSE/WebSockets; no heartbeats.
+- Keeping per-user state in one WebSocket node's memory without a backplane.
+- Sending webhooks synchronously inside the request that triggered them.
+</Warning>
 
 ## Senior perspective
 
@@ -211,26 +221,31 @@ flowchart LR
 
 ## Interview questions
 
-> [!question]- Webhooks vs polling: trade-offs?
-> Webhooks push events immediately and avoid wasted requests, but require the consumer to expose a public HTTPS endpoint, verify signatures, handle retries, duplicates and out-of-order delivery. Polling is simple and firewall-friendly but adds latency and load. Many providers offer both, with an events list API for catch-up.
+<Accordion title="Webhooks vs polling: trade-offs?">
+Webhooks push events immediately and avoid wasted requests, but require the consumer to expose a public HTTPS endpoint, verify signatures, handle retries, duplicates and out-of-order delivery. Polling is simple and firewall-friendly but adds latency and load. Many providers offer both, with an events list API for catch-up.
+</Accordion>
 
-> [!question]- How do you make webhook delivery reliable?
-> Write events with a transactional outbox, deliver from background workers with timeouts, exponential backoff and jitter over a long window, dead-letter after N attempts, include unique event IDs for dedupe, sign payloads with a timestamp, and provide delivery logs and manual replay.
+<Accordion title="How do you make webhook delivery reliable?">
+Write events with a transactional outbox, deliver from background workers with timeouts, exponential backoff and jitter over a long window, dead-letter after N attempts, include unique event IDs for dedupe, sign payloads with a timestamp, and provide delivery logs and manual replay.
+</Accordion>
 
-> [!question]- How do you verify a webhook?
-> Compute an HMAC (e.g. SHA-256) over the raw body plus ID and timestamp using the shared secret, compare in constant time, reject timestamps outside a small window, and dedupe by event ID.
+<Accordion title="How do you verify a webhook?">
+Compute an HMAC (e.g. SHA-256) over the raw body plus ID and timestamp using the shared secret, compare in constant time, reject timestamps outside a small window, and dedupe by event ID.
+</Accordion>
 
-> [!question]- SSE vs WebSockets?
-> SSE is one-way server→client over plain HTTP with automatic reconnect and Last-Event-ID resume; simple and proxy-friendly, text only. WebSockets are full-duplex, binary-capable, need an upgrade and an application protocol with your own reconnect logic. Use SSE for notifications and LLM streaming, WebSockets for chat, collaboration and games.
+<Accordion title="SSE vs WebSockets?">
+SSE is one-way server→client over plain HTTP with automatic reconnect and Last-Event-ID resume; simple and proxy-friendly, text only. WebSockets are full-duplex, binary-capable, need an upgrade and an application protocol with your own reconnect logic. Use SSE for notifications and LLM streaming, WebSockets for chat, collaboration and games.
+</Accordion>
 
-> [!question]- How do you scale WebSockets horizontally?
-> Put a pub/sub backplane (Redis, NATS, Kafka) behind the socket servers so any node can publish to users connected elsewhere; size by concurrent connections; configure long LB/proxy timeouts and heartbeats; drain on deploy and use jittered client reconnects.
+<Accordion title="How do you scale WebSockets horizontally?">
+Put a pub/sub backplane (Redis, NATS, Kafka) behind the socket servers so any node can publish to users connected elsewhere; size by concurrent connections; configure long LB/proxy timeouts and heartbeats; drain on deploy and use jittered client reconnects.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[Background Jobs & Task Queues]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[REST API Design]] · [[Nginx]] · [[API Gateways & Reverse Proxies]] · [[gRPC vs REST]]
-- Frontend: [[Networking - HTTP, Caching & Real-time]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]]
-- Other domains: [[Message Queues & Event Streaming]] · [[Distributed Systems Patterns]] · [[System Design Index]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [Nginx](/Software%20Engineering/Backend/Nginx) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST)
+- Frontend: [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
+- Other domains: [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
 
 ## Sources
 - [WHATWG HTML: Server-sent events](https://html.spec.whatwg.org/multipage/server-sent-events.html)

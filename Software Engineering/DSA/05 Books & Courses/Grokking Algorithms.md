@@ -1,28 +1,32 @@
 ---
+title: "Grokking Algorithms"
 tags: [dsa, dsa/books]
 aliases: [Grokking, Grokking Algorithms Book, Bhargava Algorithms]
 updated: 2026-09-27
 ---
 # Grokking Algorithms
 
-> [!tldr] TL;DR
-> Book notes on *Grokking Algorithms* by Aditya Y. Bhargava (Manning; 2nd edition February 2024), an illustrated, beginner-friendly introduction to algorithms. It covers binary search and Big-O, arrays vs linked lists, selection sort, recursion and the call stack, quicksort and divide and conquer, hash tables, BFS, trees, Dijkstra, greedy algorithms, dynamic programming and k-nearest neighbours. Each chapter below has my notes (bugs fixed), a short summary where the notes were missing, and a link to the full topic note.
+<Note>
+**TL;DR**
+
+Book notes on *Grokking Algorithms* by Aditya Y. Bhargava (Manning; 2nd edition February 2024), an illustrated, beginner-friendly introduction to algorithms. It covers binary search and Big-O, arrays vs linked lists, selection sort, recursion and the call stack, quicksort and divide and conquer, hash tables, BFS, trees, Dijkstra, greedy algorithms, dynamic programming and k-nearest neighbours. Each chapter below has my notes (bugs fixed), a short summary where the notes were missing, and a link to the full topic note.
+</Note>
 
 An algorithm is a set of instructions for solving a task.
 
 | Ch | Topic | Full note |
 |---|---|---|
-| 1 | Binary search, Big-O | [[Binary Search]], [[Big-O & Complexity Analysis]] |
-| 2 | Arrays vs linked lists, selection sort | [[Arrays & Strings]], [[Linked Lists]], [[Sorting Algorithms]] |
-| 3 | Recursion, the call stack | [[Recursion & Backtracking]] |
-| 4 | Quicksort, divide and conquer | [[Sorting Algorithms]] |
-| 5 | Hash tables | [[Hash Tables]] |
-| 6 | Breadth-first search | [[Graphs]], [[Graph BFS-DFS patterns]] |
-| 7 | Trees (2nd ed.) | [[Trees & Binary Search Trees]], [[Tree Traversal - DFS & BFS]] |
-| 8 | Balanced trees (2nd ed.) | [[Trees & Binary Search Trees]] |
-| 9 | Dijkstra's algorithm | [[Graphs]] |
-| 10 | Greedy algorithms, NP-complete problems | [[Greedy]] |
-| 11 | Dynamic programming | [[Dynamic Programming]] |
+| 1 | Binary search, Big-O | [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search), [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) |
+| 2 | Arrays vs linked lists, selection sort | [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings), [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists), [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) |
+| 3 | Recursion, the call stack | [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) |
+| 4 | Quicksort, divide and conquer | [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) |
+| 5 | Hash tables | [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) |
+| 6 | Breadth-first search | [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs), [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns) |
+| 7 | Trees (2nd ed.) | [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees), [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) |
+| 8 | Balanced trees (2nd ed.) | [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) |
+| 9 | Dijkstra's algorithm | [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) |
+| 10 | Greedy algorithms, NP-complete problems | [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) |
+| 11 | Dynamic programming | [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) |
 | 12 | k-nearest neighbours | (machine learning intro) |
 | 13 | Where to go next | |
 
@@ -43,12 +47,15 @@ It works by halving the search area each step. Look at the middle element of `[0
 
 **Logarithms** are the flip of exponentials: log₁₀ 100 = 2. In this book (and in Big-O generally) "log" means log₂: log₂ 8 = 3 because 2³ = 8.
 
-![[Screenshot_2025-02-06_at_2.58.15_PM.png]]
+![Screenshot_2025-02-06_at_2.58.15_PM](/Attachments/Screenshot_2025-02-06_at_2.58.15_PM.png)
 
 ### Code
 
-> [!warning] Fixed bug
-> The original had `const mid = low + high;`, which isn't the middle and jumps out of range. The middle is `Math.floor((low + high) / 2)`.
+<Warning>
+**Fixed bug**
+
+The original had `const mid = low + high;`, which isn't the middle and jumps out of range. The middle is `Math.floor((low + high) / 2)`.
+</Warning>
 
 ```javascript
 function binarySearch(list, item) {
@@ -74,11 +81,11 @@ console.log(binarySearch([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5)); // 5
 - Common run times, fastest to slowest: O(log n), O(n), O(n log n), O(n²), O(n!).
 - The traveling salesperson brute force is O(n!): there's no known fast exact algorithm.
 
-More in [[Big-O & Complexity Analysis]] and [[Binary Search]].
+More in [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) and [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search).
 
 ## Chapter 2: Selection sort (arrays vs linked lists)
 
-Arrays take a fixed, **contiguous** spot in memory. If you want to grow one and the next slots are taken, you have to move it to another address where the full length fits (dynamic arrays do this for you, see [[Arrays & Strings]]).
+Arrays take a fixed, **contiguous** spot in memory. If you want to grow one and the next slots are taken, you have to move it to another address where the full length fits (dynamic arrays do this for you, see [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)).
 
 In a linked list, items can be anywhere in memory: each item stores the address of the next one.
 
@@ -105,7 +112,7 @@ Selection sort is a neat algorithm, but it's not very fast: O(n²). Quicksort is
 
 The idea: repeatedly find the smallest remaining item and move it to the sorted part. For example in a music player, you have a list of songs and their play counts and want them sorted from most to least played: go through the whole list to find the most-played song, add it to a new list, repeat.
 
-![[Screenshot_2025-02-16_at_9.03.55_AM.png]]
+![Screenshot_2025-02-16_at_9.03.55_AM](/Attachments/Screenshot_2025-02-16_at_9.03.55_AM.png)
 
 So first define a function to find the smallest item's index:
 
@@ -125,8 +132,11 @@ function findSmallest(list) {
 
 Then write selection sort with it:
 
-> [!warning] Fixed bug
-> The original pushed the **index** returned by `findSmallest` into the new array and never removed the item from the list, so it returned the same index `n` times. The fix: remove the smallest item from a copy and push its **value**.
+<Warning>
+**Fixed bug**
+
+The original pushed the **index** returned by `findSmallest` into the new array and never removed the item from the list, so it returned the same index `n` times. The fix: remove the smallest item from a copy and push its **value**.
+</Warning>
 
 ```javascript
 function selectionSort(list) {
@@ -171,13 +181,13 @@ Every recursive function has two parts: the base case and the recursive case.
 - **Recursive case**: the function calls itself (on a smaller problem).
 - **Base case**: the function doesn't call itself, it stops. Without it you recurse forever (stack overflow).
 
-![[Screenshot_2025-02-16_at_9.40.35_AM.png]]
+![Screenshot_2025-02-16_at_9.40.35_AM](/Attachments/Screenshot_2025-02-16_at_9.40.35_AM.png)
 
 ### The stack
 
-The stack is like a pile of sticky notes: when you insert (**push**) an item it goes on top; when you read an item you only read the topmost one, and it's taken off (**pop**). Last in, first out. See [[Stacks & Queues]].
+The stack is like a pile of sticky notes: when you insert (**push**) an item it goes on top; when you read an item you only read the topmost one, and it's taken off (**pop**). Last in, first out. See [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues).
 
-![[Screenshot_2025-02-16_at_9.44.48_AM.png]]
+![Screenshot_2025-02-16_at_9.44.48_AM](/Attachments/Screenshot_2025-02-16_at_9.44.48_AM.png)
 
 ### The call stack
 
@@ -199,17 +209,17 @@ def bye():
 
 Whenever you call a function, the computer allocates a box of memory (a **stack frame**) for it, holding its arguments and local variables.
 
-![[Screenshot_2025-02-16_at_9.47.35_AM.png]]
+![Screenshot_2025-02-16_at_9.47.35_AM](/Attachments/Screenshot_2025-02-16_at_9.47.35_AM.png)
 
 Every time you call a function, its frame gets pushed onto the stack of functions.
 
-![[Screenshot_2025-02-16_at_9.48.03_AM.png]]
+![Screenshot_2025-02-16_at_9.48.03_AM](/Attachments/Screenshot_2025-02-16_at_9.48.03_AM.png)
 
 Why does `greet2` sit on top of `greet`? Because `greet` called it internally:
 
 > When you called the greet2 function, the greet function was partially completed. This is the big idea behind this section: when you call a function from another function, the calling function is paused in a partially completed state.
 
-![[Screenshot_2025-02-16_at_9.49.49_AM.png]]
+![Screenshot_2025-02-16_at_9.49.49_AM](/Attachments/Screenshot_2025-02-16_at_9.49.49_AM.png)
 
 Recursion uses the call stack too, for example the factorial function:
 
@@ -222,20 +232,29 @@ function factorial(n) {
 
 (The original used `factorial(--number)`, which works but mutates the variable before the multiplication reads it; `n - 1` is clearer.)
 
-![[Screenshot_2025-02-16_at_9.51.46_AM.png]]
+![Screenshot_2025-02-16_at_9.51.46_AM](/Attachments/Screenshot_2025-02-16_at_9.51.46_AM.png)
 
-> [!tip] 💡
-> Using the stack is convenient, but there's a cost: saving all that info can take up a lot of memory. Each call is a frame; very deep recursion can overflow the stack. Rewrite with a loop, or use tail recursion where the language optimizes it.
+<Tip>
+**💡**
+
+Using the stack is convenient, but there's a cost: saving all that info can take up a lot of memory. Each call is a frame; very deep recursion can overflow the stack. Rewrite with a loop, or use tail recursion where the language optimizes it.
+</Tip>
 
 ### Tail recursion
 
-> [!tip] 💡
-> **Tail recursion** is defined as a recursive function in which the recursive call is the last statement that is executed by the function. So basically nothing is left to execute after the recursion call.
+<Tip>
+**💡**
+
+**Tail recursion** is defined as a recursive function in which the recursive call is the last statement that is executed by the function. So basically nothing is left to execute after the recursion call.
+</Tip>
 
 Tail-recursive functions can be better than non-tail-recursive ones because the compiler can optimize them (**tail call elimination**).
 
-> [!tip] 💡
-> Compilers usually execute recursive procedures by using a **stack**. This stack consists of all the pertinent information, including the parameter values, for each recursive call. When a procedure is called, its information is **pushed** onto a stack, and when the function terminates the information is **popped** out of the stack. Thus for non-tail-recursive functions, the **stack depth** (maximum amount of stack space used at any time during execution) is larger.
+<Tip>
+**💡**
+
+Compilers usually execute recursive procedures by using a **stack**. This stack consists of all the pertinent information, including the parameter values, for each recursive call. When a procedure is called, its information is **pushed** onto a stack, and when the function terminates the information is **popped** out of the stack. Thus for non-tail-recursive functions, the **stack depth** (maximum amount of stack space used at any time during execution) is larger.
+</Tip>
 
 > The idea used by compilers to optimize tail-recursive functions is simple, since the recursive call is the last statement, there is nothing left to do in the current function, so saving the current function's stack frame is of no use ([See this for more details](https://www.geeksforgeeks.org/tail-call-elimination/)).
 
@@ -248,13 +267,19 @@ function factorial(n) {
 }
 ```
 
-> [!tip] 💡
-> Although it looks tail recursive at first look, if we take a closer look we can see that the value returned by `factorial(n - 1)` is used in `factorial(n)` (it still has to multiply). So the call to `factorial(n - 1)` is not the last thing done by `factorial(n)`.
+<Tip>
+**💡**
+
+Although it looks tail recursive at first look, if we take a closer look we can see that the value returned by `factorial(n - 1)` is used in `factorial(n)` (it still has to multiply). So the call to `factorial(n - 1)` is not the last thing done by `factorial(n)`.
+</Tip>
 
 To write it as tail recursion, carry the result in an **accumulator**:
 
-> [!warning] Fixed bugs
-> The original returned an undefined variable `a`, the wrapper always called `factTailRec(5, 1)` ignoring its argument, and `console.log(fact(5);` was missing a parenthesis.
+<Warning>
+**Fixed bugs**
+
+The original returned an undefined variable `a`, the wrapper always called `factTailRec(5, 1)` ignoring its argument, and `console.log(fact(5);` was missing a parenthesis.
+</Warning>
 
 ```javascript
 function factTailRec(n, acc) {
@@ -270,11 +295,17 @@ function fact(n) {
 console.log(fact(5)); // 120
 ```
 
-> [!tip] 💡
-> The idea is to use one more argument and accumulate the factorial value in it. When `n` reaches the base case, return the accumulated value.
+<Tip>
+**💡**
 
-> [!warning] Reality check
-> ES2015 specifies proper tail calls in strict mode, but **V8 (Chrome, Node.js) and SpiderMonkey (Firefox) don't implement them**; only Safari's JavaScriptCore does. **CPython** never does tail-call elimination either (default recursion limit 1000). So in JS and Python, tail recursion does not save stack space; convert deep recursion to a loop. See [[Recursion & Backtracking]].
+The idea is to use one more argument and accumulate the factorial value in it. When `n` reaches the base case, return the accumulated value.
+</Tip>
+
+<Warning>
+**Reality check**
+
+ES2015 specifies proper tail calls in strict mode, but **V8 (Chrome, Node.js) and SpiderMonkey (Firefox) don't implement them**; only Safari's JavaScriptCore does. **CPython** never does tail-call elimination either (default recursion limit 1000). So in JS and Python, tail recursion does not save stack space; convert deep recursion to a loop. See [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking).
+</Warning>
 
 ## Chapter 4: Quicksort and divide and conquer
 
@@ -291,7 +322,7 @@ Quicksort uses D&C: split the problem into partitions around a **pivot**. The ba
 
 Take the pivot, then find the elements smaller than the pivot and the elements larger than it:
 
-![[Screenshot_2025-02-16_at_1.53.21_PM.png]]
+![Screenshot_2025-02-16_at_1.53.21_PM](/Attachments/Screenshot_2025-02-16_at_1.53.21_PM.png)
 
 - a sub-array of all the numbers less than the pivot
 - the pivot
@@ -324,14 +355,17 @@ function quickSort(array) {
 console.log(quickSort([10, 5, 2, 3])); // [2, 3, 5, 10]
 ```
 
-**Choosing the pivot matters.** Picking the first element on an already-sorted array gives one empty side every time: O(n) levels × O(n) work = **O(n²)** worst case. Picking a **random** pivot gives O(log n) levels on average → **O(n log n)** average. This version also uses O(n) extra memory; production quicksorts partition in place (see [[Sorting Algorithms]]).
+**Choosing the pivot matters.** Picking the first element on an already-sorted array gives one empty side every time: O(n) levels × O(n) work = **O(n²)** worst case. Picking a **random** pivot gives O(log n) levels on average → **O(n log n)** average. This version also uses O(n) extra memory; production quicksorts partition in place (see [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms)).
 
 ### Inductive proofs
 
 **Inductive proofs** are a way to prove your algorithm works. They have two steps: the **base case** and the **inductive case**. Climbing a ladder: *if my legs are on a rung, I can put them on the next rung* (inductive case), and *my legs are on rung 1* (base case). Together they prove I can climb the whole ladder, one rung at a time. For quicksort: it works on arrays of size 0 and 1, and if it works on smaller arrays it works on the partitions, so it works on any size.
 
-> [!tip] 💡
-> Quicksort versus merge sort is one example where constants matter. Quicksort has a smaller constant than merge sort, so if they're both O(n log n), quicksort is faster in practice. And it hits the average case way more often than the worst case.
+<Tip>
+**💡**
+
+Quicksort versus merge sort is one example where constants matter. Quicksort has a smaller constant than merge sort, so if they're both O(n log n), quicksort is faster in practice. And it hits the average case way more often than the worst case.
+</Tip>
 
 ## Chapter 5: Hash tables
 
@@ -343,7 +377,7 @@ A **hash function** is a function that maps strings (or any key) to numbers. Req
 - It should map **different** inputs to **different** numbers as much as possible (spread keys evenly).
 - It should only return numbers within the array's size.
 
-![[Screenshot_2025-02-19_at_10.52.54_AM.png]]
+![Screenshot_2025-02-19_at_10.52.54_AM](/Attachments/Screenshot_2025-02-19_at_10.52.54_AM.png)
 
 Use cases from the book (my summary):
 - **Lookups**: a phone book, DNS (domain name → IP address).
@@ -360,7 +394,7 @@ Use cases from the book (my summary):
 | Insert | O(1) | O(n) |
 | Delete | O(1) | O(n) |
 
-In practice you use the language's built-in: `Map`/`Set` in JavaScript, `dict`/`set` in Python. More in [[Hash Tables]].
+In practice you use the language's built-in: `Map`/`Set` in JavaScript, `dict`/`set` in Python. More in [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables).
 
 ## Chapter 6: Breadth-first search (summary)
 - A **graph** models connections: nodes and edges. Directed edges have a direction; undirected ones don't.
@@ -370,14 +404,14 @@ In practice you use the language's built-in: `Map`/`Set` in JavaScript, `dict`/`
 - Running time **O(V + E)**.
 - **Topological sort** orders tasks so each comes after its dependencies (a DAG, like getting dressed).
 
-More in [[Graphs]] and [[Graph BFS-DFS patterns]].
+More in [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) and [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns).
 
 ## Chapter 7: Trees (2nd ed., summary)
 - A tree is a graph with no cycles where each node (except the root) has exactly one parent. File systems are trees.
 - **Depth-first search** explores one branch fully before backtracking; it's the natural fit for walking a directory tree recursively.
 - **Binary trees** have at most two children; **Huffman coding** uses a binary tree to give frequent characters shorter codes.
 
-More in [[Trees & Binary Search Trees]] and [[Tree Traversal - DFS & BFS]].
+More in [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) and [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS).
 
 ## Chapter 8: Balanced trees (2nd ed., summary)
 - A **binary search tree** keeps smaller keys on the left and larger on the right, giving O(log n) search and insert, **if it stays balanced**. Inserting sorted data into a plain BST produces a linked list: O(n).
@@ -388,30 +422,30 @@ More in [[Trees & Binary Search Trees]] and [[Tree Traversal - DFS & BFS]].
 - Repeatedly take the cheapest unprocessed node, update its neighbours' costs if going through it is cheaper, mark it processed. Track **parents** to reconstruct the path.
 - Works only with **non-negative weights**; with negative weights use **Bellman-Ford**.
 
-More in [[Graphs]].
+More in [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs).
 
 ## Chapter 10: Greedy algorithms (summary)
 - At each step, pick the locally optimal choice. Examples: classroom scheduling (pick the class that ends soonest), and set covering (radio stations).
 - Greedy is simple and fast, but only **approximately** right for some problems.
 - **NP-complete** problems (set cover, traveling salesperson) have no known fast exact solution; use approximation algorithms. Signs: "all combinations", "every possible order", can't break into smaller subproblems.
 
-More in [[Greedy]].
+More in [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy).
 
 ## Chapter 11: Dynamic programming (summary)
 - Solve a hard problem by solving subproblems first and storing their answers in a **grid** (table). The book's example: the knapsack problem (maximise the value of items that fit in a bag), plus longest common substring/subsequence.
 - Every DP solution involves a grid; the values in the cells are usually what you're optimising; each cell is a subproblem.
 - Works only when subproblems are **independent** (discrete items, not fractions).
 
-More in [[Dynamic Programming]].
+More in [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
 
 ## Chapter 12: k-nearest neighbours (summary)
 - Classify or predict something by looking at the `k` most similar data points (features as coordinates, distance via Pythagoras or cosine similarity).
 - Used for recommendations (Netflix-style) and regression. Picking good **features** is the key; a light intro to machine learning.
 
 ## Related
-- [[DSA Index]] · [[LeetCode Crash Course]]
-- [[Binary Search]] · [[Sorting Algorithms]] · [[Recursion & Backtracking]] · [[Hash Tables]] · [[Graphs]] · [[Dynamic Programming]] · [[Greedy]]
-- [[Execution Context & Call Stack]] (the call stack in JavaScript)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index) · [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
+- [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) · [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) (the call stack in JavaScript)
 
 ## Sources
 - Aditya Y. Bhargava, *Grokking Algorithms*, 2nd ed., Manning, February 2024: [manning.com](https://www.manning.com/books/grokking-algorithms-second-edition)

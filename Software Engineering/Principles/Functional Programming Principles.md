@@ -1,12 +1,16 @@
 ---
+title: "Functional Programming Principles"
 tags: [principles, principles/fp]
 aliases: [Functional Programming, FP, Pure Functions, Higher-Order Functions, Function Composition, Side Effects, Functional Core Imperative Shell, Referential Transparency]
 updated: 2026-09-27
 ---
 # Functional Programming Principles
 
-> [!tldr] TL;DR
-> **Functional programming** builds programs from **pure functions** (same input → same output, no side effects) over **immutable data**, combined with **higher-order functions** and **composition**. You don't need Haskell to benefit: in any language, push side effects (I/O, time, randomness, mutation) to the edges and keep the core as pure transformations (**functional core, imperative shell**). The payoff is code that's easier to test, reason about, parallelise and refactor.
+<Note>
+**TL;DR**
+
+**Functional programming** builds programs from **pure functions** (same input → same output, no side effects) over **immutable data**, combined with **higher-order functions** and **composition**. You don't need Haskell to benefit: in any language, push side effects (I/O, time, randomness, mutation) to the edges and keep the core as pure transformations (**functional core, imperative shell**). The payoff is code that's easier to test, reason about, parallelise and refactor.
+</Note>
 
 ## The idea
 
@@ -33,11 +37,11 @@ function applyDiscount(cart: Cart, today: Date): Cart {
 }
 ```
 
-Pure functions are **referentially transparent**: you can replace a call with its result without changing the program. That makes them trivially testable (no mocks), cacheable (memoisation, see [[Closures & Memory Model]]) and safe to run in parallel.
+Pure functions are **referentially transparent**: you can replace a call with its result without changing the program. That makes them trivially testable (no mocks), cacheable (memoisation, see [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model)) and safe to run in parallel.
 
 ## 2. Immutability
 
-Don't change data; create new versions. Shared immutable data can't be corrupted by another part of the program or another thread. Language tools are covered in [[Immutability Across Languages]].
+Don't change data; create new versions. Shared immutable data can't be corrupted by another part of the program or another thread. Language tools are covered in [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages).
 
 ```ts
 const addItem = (cart: Cart, item: Item): Cart => ({ ...cart, items: [...cart.items, item] });
@@ -69,7 +73,7 @@ BigDecimal total = orders.stream()
     .reduce(BigDecimal.ZERO, BigDecimal::add);
 ```
 
-Higher-order functions replace many OO patterns: Strategy, Command, Template Method and Decorator become "pass a function" (see [[Behavioral Patterns]]).
+Higher-order functions replace many OO patterns: Strategy, Command, Template Method and Decorator become "pass a function" (see [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns)).
 
 ## 4. Composition
 
@@ -86,7 +90,7 @@ const normalizeEmail = pipe<string>(
 normalizeEmail("  Ana+news@Example.com "); // "ana@example.com"
 ```
 
-Currying (turning `f(a, b)` into `f(a)(b)`) and partial application make functions easier to compose; see [[Functions - HOF, Callbacks & Currying]]. Point-free style is fine in moderation; readability wins over cleverness.
+Currying (turning `f(a, b)` into `f(a)(b)`) and partial application make functions easier to compose; see [Functions - HOF, Callbacks & Currying](/Software%20Engineering/Frontend/01%20JavaScript/Functions%20-%20HOF%2C%20Callbacks%20%26%20Currying). Point-free style is fine in moderation; readability wins over cleverness.
 
 ## 5. Declarative over imperative
 
@@ -134,7 +138,7 @@ export async function handleLoanRequest(req: Request) {
 }
 ```
 
-`decideLoan` is tested with plain values, no mocks. The shell has almost no logic, so a couple of integration tests cover it. This is the same shape as hexagonal architecture ([[Software Architecture Styles]]).
+`decideLoan` is tested with plain values, no mocks. The shell has almost no logic, so a couple of integration tests cover it. This is the same shape as hexagonal architecture ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles)).
 
 ## 7. Errors as values
 
@@ -168,7 +172,7 @@ type Req =
   | { status: "error"; error: string };
 ```
 
-Java 21+ sealed interfaces + records + `switch` patterns bring the same to the JVM (see [[OOP#Objects vs data (data-oriented programming)]]).
+Java 21+ sealed interfaces + records + `switch` patterns bring the same to the JVM (see [OOP](/Software%20Engineering/Principles/OOP#objects-vs-data-data-oriented-programming)).
 
 ## 9. Recursion and laziness
 
@@ -189,45 +193,54 @@ Pragmatic combination: immutable value objects, pure domain logic, objects/modul
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - "FP" code that still mutates: `array.sort()` and `reverse()` mutate in JS; `forEach` pushing into outer arrays.
-> - Over-abstracted point-free chains nobody can debug. Name intermediate steps.
-> - Performance traps: copying large structures in hot loops, `reduce` with spread (`acc => ({...acc, [k]: v})`) is O(n²). Use local mutation inside a function (invisible to callers) or persistent data structures.
-> - Hidden impurity: logging, `Date.now()`, `Math.random()`, environment variables inside "pure" functions.
-> - Monad-heavy libraries imposed on a team that doesn't know them: readability and hiring costs.
+<Warning>
+**Common mistakes**
+
+- "FP" code that still mutates: `array.sort()` and `reverse()` mutate in JS; `forEach` pushing into outer arrays.
+- Over-abstracted point-free chains nobody can debug. Name intermediate steps.
+- Performance traps: copying large structures in hot loops, `reduce` with spread (`acc => ({...acc, [k]: v})`) is O(n²). Use local mutation inside a function (invisible to callers) or persistent data structures.
+- Hidden impurity: logging, `Date.now()`, `Math.random()`, environment variables inside "pure" functions.
+- Monad-heavy libraries imposed on a team that doesn't know them: readability and hiring costs.
+</Warning>
 
 ## Senior perspective
 
 - The biggest win is architectural: **isolate side effects**. Most of your business logic can be pure functions, testable in milliseconds.
 - Local mutation is fine if it doesn't escape (a `for` loop building a result inside a function is still externally pure).
-- Immutability + pure functions make concurrency much easier ([[Concurrency And Parallelism]]): no shared mutable state, no locks.
+- Immutability + pure functions make concurrency much easier ([Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism)): no shared mutable state, no locks.
 - Frontend frameworks are FP-shaped: React's `UI = f(state)`, reducers, immutable updates, signals as derived computations.
 - In code review ask: "Can this decision be made in a pure function, with I/O moved to the caller?"
 
 ## Interview questions
 
-> [!question]- What is a pure function? Why does it matter?
-> A function whose result depends only on its arguments and that has no side effects. It's referentially transparent: easy to test without mocks, cacheable, safe to run in parallel, and easy to reason about and refactor.
+<Accordion title="What is a pure function? Why does it matter?">
+A function whose result depends only on its arguments and that has no side effects. It's referentially transparent: easy to test without mocks, cacheable, safe to run in parallel, and easy to reason about and refactor.
+</Accordion>
 
-> [!question]- What is a higher-order function? Give examples.
-> A function that takes a function as an argument or returns one: `map`, `filter`, `reduce`, `setTimeout`, middleware factories, `debounce`, `memoize`, Java's `Comparator.comparing`.
+<Accordion title="What is a higher-order function? Give examples.">
+A function that takes a function as an argument or returns one: `map`, `filter`, `reduce`, `setTimeout`, middleware factories, `debounce`, `memoize`, Java's `Comparator.comparing`.
+</Accordion>
 
-> [!question]- What does "functional core, imperative shell" mean?
-> Put all decision logic in pure functions (core) that take data and return data (including descriptions of what to do), and keep I/O in a thin outer layer (shell) that loads inputs, calls the core and executes the outputs. The core is unit-testable; the shell is small.
+<Accordion title="What does &quot;functional core, imperative shell&quot; mean?">
+Put all decision logic in pure functions (core) that take data and return data (including descriptions of what to do), and keep I/O in a thin outer layer (shell) that loads inputs, calls the core and executes the outputs. The core is unit-testable; the shell is small.
+</Accordion>
 
-> [!question]- How do you handle errors functionally?
-> Represent expected failures as values (`Result`/`Either`, `Option`) in the return type so callers must handle them, and compose them with `map`/`flatMap`. Reserve exceptions for unexpected, unrecoverable conditions.
+<Accordion title="How do you handle errors functionally?">
+Represent expected failures as values (`Result`/`Either`, `Option`) in the return type so callers must handle them, and compose them with `map`/`flatMap`. Reserve exceptions for unexpected, unrecoverable conditions.
+</Accordion>
 
-> [!question]- What does "make illegal states unrepresentable" mean?
-> Design types (sum types/discriminated unions, sealed hierarchies) so invalid combinations can't be constructed, e.g. a request is exactly one of idle/loading/success(data)/error(message) rather than an object with optional `loading`, `data` and `error` fields.
+<Accordion title="What does &quot;make illegal states unrepresentable&quot; mean?">
+Design types (sum types/discriminated unions, sealed hierarchies) so invalid combinations can't be constructed, e.g. a request is exactly one of idle/loading/success(data)/error(message) rather than an object with optional `loading`, `data` and `error` fields.
+</Accordion>
 
-> [!question]- Is FP better than OOP?
-> Neither universally. FP excels at data transformations, concurrency and testability; OOP at modelling long-lived entities with encapsulated invariants and at open extension with new types. Modern code mixes both: immutable values and pure logic inside, objects/modules for boundaries and resources.
+<Accordion title="Is FP better than OOP?">
+Neither universally. FP excels at data transformations, concurrency and testability; OOP at modelling long-lived entities with encapsulated invariants and at open extension with new types. Modern code mixes both: immutable values and pure logic inside, objects/modules for boundaries and resources.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Immutability Across Languages]] · [[OOP]] · [[Behavioral Patterns]] · [[Software Architecture Styles]] · [[Concurrency And Parallelism]]
-- JavaScript: [[Functions - HOF, Callbacks & Currying]] · [[Closures & Memory Model]] · [[Objects, Arrays & Immutability]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages) · [OOP](/Software%20Engineering/Principles/OOP) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism)
+- JavaScript: [Functions - HOF, Callbacks & Currying](/Software%20Engineering/Frontend/01%20JavaScript/Functions%20-%20HOF%2C%20Callbacks%20%26%20Currying) · [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) · [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability)
 
 ## Sources
 - [Gary Bernhardt: Boundaries / Functional Core, Imperative Shell (2012)](https://www.destroyallsoftware.com/screencasts/catalog/functional-core-imperative-shell)

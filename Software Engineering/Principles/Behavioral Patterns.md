@@ -1,18 +1,22 @@
 ---
+title: "Behavioral Patterns"
 tags: [principles, principles/patterns]
 aliases: [Behavioral Design Patterns, Behavioural Patterns, Strategy Pattern, Observer Pattern, Command Pattern, State Pattern, Template Method, Chain of Responsibility, Visitor Pattern, Mediator, Memento, Iterator Pattern]
 updated: 2026-09-27
 ---
 # Behavioral Patterns
 
-> [!tldr] TL;DR
-> Behavioral patterns are about **how objects communicate and share responsibility**. The ones you'll use weekly: **Strategy** (swap algorithms), **Observer** (notify subscribers), **Command** (requests as objects), **State** (behaviour depends on state), **Template Method** (fixed skeleton, variable steps), **Chain of Responsibility** (middleware) and **Iterator**. Less common but worth recognising: **Mediator, Memento, Visitor, Interpreter**. In modern languages many collapse into functions, events and pattern matching.
+<Note>
+**TL;DR**
 
-Overview and the other groups: [[Design Patterns]] · [[Creational Patterns]] · [[Structural Patterns]].
+Behavioral patterns are about **how objects communicate and share responsibility**. The ones you'll use weekly: **Strategy** (swap algorithms), **Observer** (notify subscribers), **Command** (requests as objects), **State** (behaviour depends on state), **Template Method** (fixed skeleton, variable steps), **Chain of Responsibility** (middleware) and **Iterator**. Less common but worth recognising: **Mediator, Memento, Visitor, Interpreter**. In modern languages many collapse into functions, events and pattern matching.
+</Note>
+
+Overview and the other groups: [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns) · [Structural Patterns](/Software%20Engineering/Principles/Structural%20Patterns).
 
 ## Strategy
 
-**Intent:** define a family of interchangeable algorithms, encapsulate each, and let the client choose at runtime. Replaces `if/switch` on "which algorithm". It's the most direct application of the Open–Closed Principle ([[SOLID]]).
+**Intent:** define a family of interchangeable algorithms, encapsulate each, and let the client choose at runtime. Replaces `if/switch` on "which algorithm". It's the most direct application of the Open–Closed Principle ([SOLID](/Software%20Engineering/Principles/SOLID)).
 
 ```ts
 type ShippingStrategy = (order: { weightKg: number; country: string }) => number;
@@ -51,7 +55,7 @@ orderPlaced.emit({ orderId: "o-1", email: "a@example.com" });
 unsubscribe();   // forgetting this is a classic memory leak
 ```
 
-Variants: DOM events, Node `EventEmitter`, RxJS/Reactor streams (Observer + Iterator), signals in Angular/Solid/Preact, **domain events** and **pub/sub** messaging (Kafka, SNS) at system scale (see [[Software Architecture Styles#Event-driven architecture]]).
+Variants: DOM events, Node `EventEmitter`, RxJS/Reactor streams (Observer + Iterator), signals in Angular/Solid/Preact, **domain events** and **pub/sub** messaging (Kafka, SNS) at system scale (see [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles#event-driven-architecture)).
 
 Pitfalls: memory leaks from forgotten subscriptions, unexpected ordering, cascades of updates, and exceptions in one observer breaking others.
 
@@ -178,7 +182,7 @@ function* paginate<T>(fetchPage: (cursor?: string) => { items: T[]; next?: strin
 for (const user of paginate(fetchUsersPage)) { /* callers never see pages or cursors */ }
 ```
 
-See [[Iterators, Generators & Iterator Helpers]].
+See [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers).
 
 ## Mediator
 
@@ -258,26 +262,31 @@ Classic Visitor still appears in compilers and tools (Babel/ESLint AST visitors,
 
 ## Interview questions
 
-> [!question]- Strategy vs State?
-> Same structure (context delegates to an interchangeable object). Strategy: the client picks an algorithm and it rarely changes during the object's life. State: the object switches its own state object as it moves through a lifecycle, changing behaviour.
+<Accordion title="Strategy vs State?">
+Same structure (context delegates to an interchangeable object). Strategy: the client picks an algorithm and it rarely changes during the object's life. State: the object switches its own state object as it moves through a lifecycle, changing behaviour.
+</Accordion>
 
-> [!question]- How is the Observer pattern used in frontend frameworks?
-> DOM event listeners, RxJS observables (Angular), signals (Angular, Solid, Preact), store subscriptions (Redux `subscribe`, Zustand), and React's `useSyncExternalStore`. Components subscribe to state and re-render when it changes.
+<Accordion title="How is the Observer pattern used in frontend frameworks?">
+DOM event listeners, RxJS observables (Angular), signals (Angular, Solid, Preact), store subscriptions (Redux `subscribe`, Zustand), and React's `useSyncExternalStore`. Components subscribe to state and re-render when it changes.
+</Accordion>
 
-> [!question]- How would you implement undo/redo?
-> Command pattern: each action is an object with `execute` and `undo`, kept on an undo stack (redo stack cleared on new actions). Alternatively Memento/immutable snapshots: store previous states and restore them.
+<Accordion title="How would you implement undo/redo?">
+Command pattern: each action is an object with `execute` and `undo`, kept on an undo stack (redo stack cleared on new actions). Alternatively Memento/immutable snapshots: store previous states and restore them.
+</Accordion>
 
-> [!question]- What is middleware, in pattern terms?
-> Chain of Responsibility: each handler receives the request and a `next` function, can act before/after, short-circuit (e.g. 401), or pass the request along.
+<Accordion title="What is middleware, in pattern terms?">
+Chain of Responsibility: each handler receives the request and a `next` function, can act before/after, short-circuit (e.g. 401), or pass the request along.
+</Accordion>
 
-> [!question]- Why is Visitor less needed in modern Java?
-> Java 21 finalised pattern matching for `switch` and record patterns; combined with sealed interfaces (Java 17) the compiler checks exhaustiveness, so a new operation is just a function with a `switch`, without `accept`/`visit` boilerplate.
+<Accordion title="Why is Visitor less needed in modern Java?">
+Java 21 finalised pattern matching for `switch` and record patterns; combined with sealed interfaces (Java 17) the compiler checks exhaustiveness, so a new operation is just a function with a `switch`, without `accept`/`visit` boilerplate.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Design Patterns]] · [[Creational Patterns]] · [[Structural Patterns]]
-- [[Functional Programming Principles]] · [[Software Architecture Styles]] · [[OOP]]
-- Frontend: [[Frontend Design Patterns]] · [[Iterators, Generators & Iterator Helpers]] · [[State Management Overview]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns) · [Structural Patterns](/Software%20Engineering/Principles/Structural%20Patterns)
+- [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [OOP](/Software%20Engineering/Principles/OOP)
+- Frontend: [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) · [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers) · [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview)
 
 ## Sources
 - Gamma et al., *Design Patterns* (1994), chapter 5 "Behavioral Patterns"

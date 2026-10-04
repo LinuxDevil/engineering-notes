@@ -1,18 +1,22 @@
 ---
+title: "Structural Patterns"
 tags: [principles, principles/patterns]
 aliases: [Structural Design Patterns, Adapter Pattern, Decorator Pattern, Facade, Proxy Pattern, Composite Pattern, Bridge Pattern, Flyweight]
 updated: 2026-09-27
 ---
 # Structural Patterns
 
-> [!tldr] TL;DR
-> Structural patterns describe **how objects and classes are composed** into larger structures while keeping them flexible. The seven GoF patterns: **Adapter** (make incompatible interfaces fit), **Decorator** (add behaviour by wrapping), **Proxy** (control access through a stand-in), **Facade** (simple front for a complex subsystem), **Composite** (treat trees and leaves alike), **Bridge** (split abstraction from implementation) and **Flyweight** (share state to save memory). Adapter, Decorator, Proxy and Facade look alike (a wrapper) but differ in **intent**.
+<Note>
+**TL;DR**
 
-Overview and the other groups: [[Design Patterns]] · [[Creational Patterns]] · [[Behavioral Patterns]].
+Structural patterns describe **how objects and classes are composed** into larger structures while keeping them flexible. The seven GoF patterns: **Adapter** (make incompatible interfaces fit), **Decorator** (add behaviour by wrapping), **Proxy** (control access through a stand-in), **Facade** (simple front for a complex subsystem), **Composite** (treat trees and leaves alike), **Bridge** (split abstraction from implementation) and **Flyweight** (share state to save memory). Adapter, Decorator, Proxy and Facade look alike (a wrapper) but differ in **intent**.
+</Note>
+
+Overview and the other groups: [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns).
 
 ## Adapter
 
-**Intent:** convert the interface of a class into another interface clients expect. Also known as **Wrapper**. Lets you keep your own domain interface and plug third-party code behind it (an *anti-corruption* layer in [[Domain-Driven Design (DDD)|DDD]] terms, a *driven adapter* in hexagonal architecture).
+**Intent:** convert the interface of a class into another interface clients expect. Also known as **Wrapper**. Lets you keep your own domain interface and plug third-party code behind it (an *anti-corruption* layer in [DDD](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)) terms, a *driven adapter* in hexagonal architecture).
 
 ```ts
 // Our port (what the domain wants)
@@ -87,8 +91,11 @@ const withRetry = <A extends unknown[], R>(fn: (...a: A) => Promise<R>, times = 
 const fetchUserWithRetry = withRetry(fetchUser);
 ```
 
-> [!note] Decorator pattern vs `@decorator` syntax
-> TypeScript/JS decorators (TC39 Stage 3, supported since TypeScript 5.0), Python decorators and Java annotations are **language features** for annotating or wrapping declarations. They are often used to implement the Decorator pattern (e.g. a `@memoize` method decorator), but they are not the same thing.
+<Note>
+**Decorator pattern vs `@decorator` syntax**
+
+TypeScript/JS decorators (TC39 Stage 3, supported since TypeScript 5.0), Python decorators and Java annotations are **language features** for annotating or wrapping declarations. They are often used to implement the Decorator pattern (e.g. a `@memoize` method decorator), but they are not the same thing.
+</Note>
 
 ## Proxy
 
@@ -223,26 +230,31 @@ Built-in examples: Java string interning and `Integer.valueOf` caching (-128..12
 
 ## Interview questions
 
-> [!question]- Decorator vs Proxy vs Adapter?
-> All wrap an object. Adapter changes the interface to one the client expects. Decorator keeps the interface and adds behaviour (stackable). Proxy keeps the interface and controls access (lazy loading, remote calls, authorisation, caching).
+<Accordion title="Decorator vs Proxy vs Adapter?">
+All wrap an object. Adapter changes the interface to one the client expects. Decorator keeps the interface and adds behaviour (stackable). Proxy keeps the interface and controls access (lazy loading, remote calls, authorisation, caching).
+</Accordion>
 
-> [!question]- Why prefer Decorator over subclassing for adding features?
-> Subclassing fixes combinations at compile time and explodes (LoggingCachingRetryingRepo). Decorators compose at runtime in any order and depend only on the interface.
+<Accordion title="Why prefer Decorator over subclassing for adding features?">
+Subclassing fixes combinations at compile time and explodes (LoggingCachingRetryingRepo). Decorators compose at runtime in any order and depend only on the interface.
+</Accordion>
 
-> [!question]- Where have you seen Composite?
-> DOM and component trees, file systems, menus, org charts, expression/AST trees; anywhere a node and a group of nodes need the same operations.
+<Accordion title="Where have you seen Composite?">
+DOM and component trees, file systems, menus, org charts, expression/AST trees; anywhere a node and a group of nodes need the same operations.
+</Accordion>
 
-> [!question]- Why does `@Transactional` sometimes not work in Spring?
-> Spring implements it with a proxy around the bean. Calling the annotated method from another method in the same class goes through `this`, not the proxy, so no transaction is started. Also, proxies only intercept public methods by default.
+<Accordion title="Why does `@Transactional` sometimes not work in Spring?">
+Spring implements it with a proxy around the bean. Calling the annotated method from another method in the same class goes through `this`, not the proxy, so no transaction is started. Also, proxies only intercept public methods by default.
+</Accordion>
 
-> [!question]- What is Bridge and when is it needed?
-> Separating an abstraction hierarchy from an implementation hierarchy connected by composition, so both vary independently and you avoid N×M subclasses. Examples: JDBC API vs drivers, shapes vs renderers, SLF4J vs logging backends.
+<Accordion title="What is Bridge and when is it needed?">
+Separating an abstraction hierarchy from an implementation hierarchy connected by composition, so both vary independently and you avoid N×M subclasses. Examples: JDBC API vs drivers, shapes vs renderers, SLF4J vs logging backends.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Design Patterns]] · [[Creational Patterns]] · [[Behavioral Patterns]]
-- [[Coupling, Cohesion & Modularity]] · [[Software Architecture Styles]] (ports & adapters) · [[Domain-Driven Design (DDD)]] (anti-corruption layer)
-- Frontend: [[Frontend Design Patterns]] · [[Component Patterns]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Creational Patterns](/Software%20Engineering/Principles/Creational%20Patterns) · [Behavioral Patterns](/Software%20Engineering/Principles/Behavioral%20Patterns)
+- [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) (ports & adapters) · [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)) (anti-corruption layer)
+- Frontend: [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) · [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
 
 ## Sources
 - Gamma et al., *Design Patterns* (1994), chapter 4 "Structural Patterns"

@@ -1,14 +1,18 @@
 ---
+title: "Deploying Next.js Micro-frontends to Kubernetes"
 tags: [devops, devops/kubernetes, frontend/nextjs, frontend/architecture]
 aliases: [Next.js Multi-Zones on Kubernetes, Next.js micro-frontends on K8s, Deploying shell catalog checkout, Self-hosting Next.js on Kubernetes]
 updated: 2026-09-27
 ---
 # Deploying Next.js Micro-frontends to Kubernetes
 
-> [!tldr] TL;DR
-> In 2026 the officially documented way to split a Next.js app into independently deployed micro-frontends is **Multi-Zones**: several normal Next.js apps, each owning a set of paths (`basePath` / `assetPrefix`), stitched together on one domain by a router. On Kubernetes that router is a **Gateway API `HTTPRoute`** with path prefixes. Each zone ships as an `output: 'standalone'` image run with `node server.js` as non-root, has its own Deployment/HPA/PDB and Argo CD Application, and can be released and rolled back on its own. What makes it work in production: one image promoted across environments (so avoid env-specific `NEXT_PUBLIC_*`), a shared cache handler (Redis) when you run more than one Pod, `deploymentId` plus long-lived static assets for version skew, and same-host cookies for auth. Cross-zone navigation is a full page load **by design**.
+<Note>
+**TL;DR**
 
-This note deploys the frontend of the **Acme Shop** example: `shell` (`/`), `catalog` (`/catalog/*`) and `checkout` (`/checkout/*`), all Next.js 16, images `ghcr.io/acme/{shell,catalog,checkout}`, on `shop.acme.dev`. The backend `orders-api` is covered in [[Deploying Node.js Apps to Kubernetes]]. Micro-frontend theory (why, principles, Module Federation mechanics) is in [[Micro-frontends & Module Federation]]; Next.js caching semantics are in [[Next.js Rendering & Caching]].
+In 2026 the officially documented way to split a Next.js app into independently deployed micro-frontends is **Multi-Zones**: several normal Next.js apps, each owning a set of paths (`basePath` / `assetPrefix`), stitched together on one domain by a router. On Kubernetes that router is a **Gateway API `HTTPRoute`** with path prefixes. Each zone ships as an `output: 'standalone'` image run with `node server.js` as non-root, has its own Deployment/HPA/PDB and Argo CD Application, and can be released and rolled back on its own. What makes it work in production: one image promoted across environments (so avoid env-specific `NEXT_PUBLIC_*`), a shared cache handler (Redis) when you run more than one Pod, `deploymentId` plus long-lived static assets for version skew, and same-host cookies for auth. Cross-zone navigation is a full page load **by design**.
+</Note>
+
+This note deploys the frontend of the **Acme Shop** example: `shell` (`/`), `catalog` (`/catalog/*`) and `checkout` (`/checkout/*`), all Next.js 16, images `ghcr.io/acme/{shell,catalog,checkout}`, on `shop.acme.dev`. The backend `orders-api` is covered in [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes). Micro-frontend theory (why, principles, Module Federation mechanics) is in [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation); Next.js caching semantics are in [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 
 ## 1. Choosing a micro-frontend approach for Next.js (2026)
 
@@ -34,7 +38,7 @@ The Next.js docs describe Multi-Zones as splitting one domain into several Next.
 
 ### Module Federation for Next.js: not an option for the App Router
 
-On **2024-11-01** the Module Federation maintainers announced that Next.js support is in **maintenance mode** (issue #3153): the App Router gets no support, the Pages Router only gets minimal fixes, and the plugin is planned to be fully deprecated around mid-to-end 2026. They recommend other frameworks (Modern.js, Remix, TanStack) for MF-based micro-frontends. The package is still being published (`8.8.x` in September 2026), so existing Pages Router setups keep working, but don't start new App Router work on it. Next.js 16's switch to Turbopack by default (webpack-based plugins need `--webpack`) makes it even less attractive; see [[Next.js 15 to 16.3]].
+On **2024-11-01** the Module Federation maintainers announced that Next.js support is in **maintenance mode** (issue #3153): the App Router gets no support, the Pages Router only gets minimal fixes, and the plugin is planned to be fully deprecated around mid-to-end 2026. They recommend other frameworks (Modern.js, Remix, TanStack) for MF-based micro-frontends. The package is still being published (`8.8.x` in September 2026), so existing Pages Router setups keep working, but don't start new App Router work on it. Next.js 16's switch to Turbopack by default (webpack-based plugins need `--webpack`) makes it even less attractive; see [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
 
 ### Build-time packages and client-side composition
 
@@ -45,21 +49,24 @@ On **2024-11-01** the Module Federation maintainers announced that Next.js suppo
 
 Vercel made its Microfrontends product **generally available on 2025-10-31**. Each micro-frontend is its own Vercel project; a `microfrontends.json` config (plus the `@vercel/microfrontends` package and a local development proxy) tells Vercel's network which paths go to which project. It is essentially managed Multi-Zones with routing at Vercel's edge, preview links across projects and toolbar overrides. Pricing at time of writing: 2 microfrontend projects included on Hobby/Pro, then $250 per extra project per month on Pro and $2 per million routed requests. On Kubernetes you build the same thing yourself: the Gateway is your router, Argo CD your per-project deployment.
 
-> [!info]+ 🆕 2025–2026
-> - **2024-11-01 → 2026**: Module Federation's `nextjs-mf` in maintenance mode (Pages Router only, no App Router), with full deprecation planned for mid-to-end 2026.
-> - **Next.js 16.0 (2025-10-21)**: Turbopack is the default bundler; **`cacheHandlers`** (plural) introduced for `'use cache'` / `'use cache: remote'`; `next/image` defaults changed (`minimumCacheTTL` 4 hours, `qualities: [75]`). See [[Next.js 15 to 16.3]].
-> - **Vercel Microfrontends GA (2025-10-31)**: managed Multi-Zones routing on Vercel.
-> - **Next.js 16.1.7 (2026-03-16)**: `images.maximumDiskCacheSize` caps the per-Pod optimized-image disk cache.
-> - **Next.js 16.2.0 (2026-03-18)**: with `deploymentId` set, the build ID is constant and skew is detected from the deployment ID (response header) instead.
-> - **Grafana Faro Web SDK v2 (stable from Nov 2025)**: web-vitals v5 (FID removed), simpler setup, legacy packages removed.
-> - **ingress-nginx retired (2026-03-24)**: zones are routed with Gateway API `HTTPRoute`s (see [[Kubernetes Networking - Services, Ingress & Gateway API]]).
+<Info>
+**🆕 2025–2026**
+
+- **2024-11-01 → 2026**: Module Federation's `nextjs-mf` in maintenance mode (Pages Router only, no App Router), with full deprecation planned for mid-to-end 2026.
+- **Next.js 16.0 (2025-10-21)**: Turbopack is the default bundler; **`cacheHandlers`** (plural) introduced for `'use cache'` / `'use cache: remote'`; `next/image` defaults changed (`minimumCacheTTL` 4 hours, `qualities: [75]`). See [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+- **Vercel Microfrontends GA (2025-10-31)**: managed Multi-Zones routing on Vercel.
+- **Next.js 16.1.7 (2026-03-16)**: `images.maximumDiskCacheSize` caps the per-Pod optimized-image disk cache.
+- **Next.js 16.2.0 (2026-03-18)**: with `deploymentId` set, the build ID is constant and skew is detected from the deployment ID (response header) instead.
+- **Grafana Faro Web SDK v2 (stable from Nov 2025)**: web-vitals v5 (FID removed), simpler setup, legacy packages removed.
+- **ingress-nginx retired (2026-03-24)**: zones are routed with Gateway API `HTTPRoute`s (see [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)).
+</Info>
 
 ### Recommendation for Acme Shop
 
 **Multi-Zones behind the Gateway API**, because:
 
 1. It is the approach the Next.js team documents and tests; each zone is a plain Next.js app with full App Router, RSC, streaming and Cache Components.
-2. Routing belongs to the infrastructure we already run (the shared `Gateway` from [[Kubernetes Networking - Services, Ingress & Gateway API]]); no zone is a single point of failure for the others.
+2. Routing belongs to the infrastructure we already run (the shared `Gateway` from [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)); no zone is a single point of failure for the others.
 3. Each team owns its repo, image, overlays and Argo CD Application, and can release and roll back alone.
 4. The seams are URL-shaped (`/catalog`, `/checkout`), which matches how the business splits ownership. The cost (a full page load between zones) is acceptable at those seams: browsing to checkout is a natural boundary.
 
@@ -219,7 +226,7 @@ CMD ["node", "server.js"]
 - `server.js` listens on `PORT` and `HOSTNAME`. Set `HOSTNAME=0.0.0.0`; Kubernetes sets `HOSTNAME` to the Pod name by default, which would make the server bind only to the Pod's own address resolution and can break probes or port-forwarding.
 - Since Next.js 15, `sharp` is used automatically with `next start` and standalone output; no manual install. On glibc Linux, sharp's memory use can grow with the default allocator (the docs point to sharp's allocator guidance); watch the Pod's working set.
 - `CMD ["node", "server.js"]` in exec form, so Node is PID 1 and receives SIGTERM (never `npm start`; see the Node note). Next's server finishes in-flight requests and pending `after()` callbacks on SIGTERM/SIGINT.
-- In a monorepo set `outputFileTracingRoot` to the repo root so shared packages are traced (see [[Monorepos]]).
+- In a monorepo set `outputFileTracingRoot` to the repo root so shared packages are traced (see [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)).
 - The build needs the `.next/cache` directory writable at runtime (ISR, images). With `readOnlyRootFilesystem: true`, mount an `emptyDir` there.
 
 ```gitignore
@@ -392,7 +399,7 @@ All zones are on the **same host** (`shop.acme.dev`), so a cookie set with `Path
 - One zone (or a dedicated auth service) issues the session; every zone validates it on the server (verify a signed JWT against a JWKS, or look the session up in Redis). Put the check in each zone's `proxy.ts` or a shared `@acme/auth` package.
 - Don't set cookies with `Path=/catalog` unless you mean it: checkout will not see them.
 - `dev.shop.acme.dev` and `shop.acme.dev` are different hosts, so dev and prod sessions never mix.
-- Details on token storage and CSRF: [[Authentication & Token Storage]], [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- Details on token storage and CSRF: [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage), [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ### Shared design system and version skew
 
@@ -419,7 +426,7 @@ During a rolling update, old and new Pods of the **same** zone serve traffic tog
 - Next does **not** route on `?dpl=`: a request can still reach a Pod of the other version, which then forces a reload. The asset-in-object-storage approach above removes the "chunk 404" part.
 - **`generateBuildId`** (e.g. the git SHA) matters if you ever build the same commit twice (one image per environment); every Pod of a release must share it. Better: build once.
 - **`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`**: each build otherwise generates its own key, and Pods from different builds fail with "Failed to find Server Action". Provide one key (base64, 16/24/32 bytes) at build time, as the Dockerfile does with a build secret.
-- **Acme Shop deploys `checkout` with Argo Rollouts blue-green, not canary.** A canary would send some requests to v2 Pods while the browser still holds v1 HTML and asks for v1 JS chunks (or vice versa); mixing HTML from one version with JS assets from another is exactly the skew above, and in checkout it costs orders. Blue-green brings the new version up behind a preview Service, runs smoke tests, then flips the active Service at once and keeps blue running for a fast `undo`. The cost is double capacity during the release. `shell` and `catalog` use plain rolling updates with the protections above. Details: [[Argo Rollouts - Canary & Blue-Green]].
+- **Acme Shop deploys `checkout` with Argo Rollouts blue-green, not canary.** A canary would send some requests to v2 Pods while the browser still holds v1 HTML and asks for v1 JS chunks (or vice versa); mixing HTML from one version with JS assets from another is exactly the skew above, and in checkout it costs orders. Blue-green brings the new version up behind a preview Service, runs smoke tests, then flips the active Service at once and keeps blue running for a fast `undo`. The cost is double capacity during the release. `shell` and `catalog` use plain rolling updates with the protections above. Details: [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green).
 
 ## 8. Multi-replica caching
 
@@ -706,7 +713,7 @@ spec:
         syncOptions: [ServerSideApply=true, PruneLast=true]
 ```
 
-Adding a fourth zone is a new directory under `apps/`; no Argo CD change. Deeper ApplicationSet patterns, RBAC per team (`AppProject` per zone) and progressive syncs are in [[Argo CD in Practice]].
+Adding a fourth zone is a new directory under `apps/`; no Argo CD change. Deeper ApplicationSet patterns, RBAC per team (`AppProject` per zone) and progressive syncs are in [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice).
 
 ### Independent release cadence and rollback
 
@@ -811,22 +818,25 @@ export function FaroInit({ config }: { config: { env: string; version: string } 
 sum by (app) (rate({namespace="shop-prod", app=~"shell|catalog|checkout"} | json | level >= 50 [5m]))
 ```
 
-Build one dashboard with a `zone` variable (`shell|catalog|checkout`) showing request rate and p95 from the Gateway's metrics per route, error logs, Pod restarts and memory, plus the Faro Web Vitals panel. See [[Grafana & the LGTM Stack]].
+Build one dashboard with a `zone` variable (`shell|catalog|checkout`) showing request rate and p95 from the Gateway's metrics per route, error logs, Pod restarts and memory, plus the Faro Web Vitals panel. See [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack).
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **basePath mistakes**: probes pointing at `/api/health` instead of `/catalog/api/health`; hard-coding `/catalog` inside `<Link href>` (becomes `/catalog/catalog/...`); forgetting the basePath in `next/image` `src` for `public/` files; two zones claiming the same prefix; an `HTTPRoute` with `URLRewrite` that strips the prefix the app expects.
-> - **Broken assets after deploy**: an old HTML page asks for chunks the new Pods don't have → 404 → blank or broken page. Fix with `deploymentId`, assets kept in object storage behind `assetPrefix`, and `maxUnavailable: 0` rollouts.
-> - **Using `<Link>` across zones**: prefetches hit the wrong app and navigation breaks. A full page reload between zones is **by design**; use `<a>`.
-> - **Cookie scope**: `Path=/checkout` cookies invisible to shell; `Domain=.acme.dev` leaking sessions to every subdomain; different `SameSite` settings per zone.
-> - **Env-specific `NEXT_PUBLIC_*`** in a build-once pipeline: prod silently uses the value baked in at build.
-> - **No shared cache with several Pods**: users see different versions of a page depending on the Pod; `revalidateTag` "works sometimes".
-> - **Different Server Actions keys** across builds: "Failed to find Server Action" during canaries.
-> - **Memory limits for Next servers**: RSC rendering, the in-memory caches (the incremental cache defaults to 50 MB) and sharp all use memory; a 256Mi limit OOMKills under load. Start around 1Gi, set heap to ~70% of the limit, keep `cacheMaxMemorySize: 0` when Redis holds the cache, and load test.
-> - **`HOSTNAME` not overridden**: Kubernetes sets it to the Pod name, and `server.js` may not listen where the probes connect.
-> - **`readOnlyRootFilesystem` without a writable `.next/cache`**: ISR and image optimization fail at runtime.
-> - **Buffering proxies** in front of Next: streaming and PPR lose their benefit; the page arrives all at once.
+<Warning>
+**Common mistakes**
+
+- **basePath mistakes**: probes pointing at `/api/health` instead of `/catalog/api/health`; hard-coding `/catalog` inside `<Link href>` (becomes `/catalog/catalog/...`); forgetting the basePath in `next/image` `src` for `public/` files; two zones claiming the same prefix; an `HTTPRoute` with `URLRewrite` that strips the prefix the app expects.
+- **Broken assets after deploy**: an old HTML page asks for chunks the new Pods don't have → 404 → blank or broken page. Fix with `deploymentId`, assets kept in object storage behind `assetPrefix`, and `maxUnavailable: 0` rollouts.
+- **Using `<Link>` across zones**: prefetches hit the wrong app and navigation breaks. A full page reload between zones is **by design**; use `<a>`.
+- **Cookie scope**: `Path=/checkout` cookies invisible to shell; `Domain=.acme.dev` leaking sessions to every subdomain; different `SameSite` settings per zone.
+- **Env-specific `NEXT_PUBLIC_*`** in a build-once pipeline: prod silently uses the value baked in at build.
+- **No shared cache with several Pods**: users see different versions of a page depending on the Pod; `revalidateTag` "works sometimes".
+- **Different Server Actions keys** across builds: "Failed to find Server Action" during canaries.
+- **Memory limits for Next servers**: RSC rendering, the in-memory caches (the incremental cache defaults to 50 MB) and sharp all use memory; a 256Mi limit OOMKills under load. Start around 1Gi, set heap to ~70% of the limit, keep `cacheMaxMemorySize: 0` when Redis holds the cache, and load test.
+- **`HOSTNAME` not overridden**: Kubernetes sets it to the Pod name, and `server.js` may not listen where the probes connect.
+- **`readOnlyRootFilesystem` without a writable `.next/cache`**: ISR and image optimization fail at runtime.
+- **Buffering proxies** in front of Next: streaming and PPR lose their benefit; the page arrives all at once.
+</Warning>
 
 ## Senior perspective
 
@@ -843,39 +853,47 @@ Other points a senior raises in review:
 
 ## Interview questions
 
-> [!question]- What options exist for Next.js micro-frontends in 2026, and which would you pick on Kubernetes?
-> Multi-Zones (officially documented: separate Next.js apps per path prefix, routed by a proxy or `rewrites`), Module Federation via `nextjs-mf` (maintenance mode since Nov 2024, no App Router support), build-time packages (shared code, not independent deploys), client-side composition (Web Components/iframes, loses SSR), and Vercel Microfrontends (managed Multi-Zones, GA Oct 2025, Vercel-only). On Kubernetes: Multi-Zones with Gateway API `HTTPRoute` path prefixes, because it's supported, keeps full App Router features and puts routing in shared infrastructure rather than in one app.
+<Accordion title="What options exist for Next.js micro-frontends in 2026, and which would you pick on Kubernetes?">
+Multi-Zones (officially documented: separate Next.js apps per path prefix, routed by a proxy or `rewrites`), Module Federation via `nextjs-mf` (maintenance mode since Nov 2024, no App Router support), build-time packages (shared code, not independent deploys), client-side composition (Web Components/iframes, loses SSR), and Vercel Microfrontends (managed Multi-Zones, GA Oct 2025, Vercel-only). On Kubernetes: Multi-Zones with Gateway API `HTTPRoute` path prefixes, because it's supported, keeps full App Router features and puts routing in shared infrastructure rather than in one app.
+</Accordion>
 
-> [!question]- Why is navigation between zones a full page reload, and how do you link correctly?
-> Each zone is a separate Next.js app with its own router, bundles and RSC payloads; the client router of one app can't render another app's routes. So cross-zone links must be plain `<a href="/checkout">`, which does a hard navigation. `<Link>` would try to prefetch and soft-navigate inside the current app and fail. Within a zone, `<Link>` (with basePath applied automatically) keeps soft navigation.
+<Accordion title="Why is navigation between zones a full page reload, and how do you link correctly?">
+Each zone is a separate Next.js app with its own router, bundles and RSC payloads; the client router of one app can't render another app's routes. So cross-zone links must be plain `<a href="/checkout">`, which does a hard navigation. `<Link>` would try to prefetch and soft-navigate inside the current app and fail. Within a zone, `<Link>` (with basePath applied automatically) keeps soft navigation.
+</Accordion>
 
-> [!question]- NEXT_PUBLIC_API_URL differs between staging and prod. How do you handle it with a build-once, promote-everywhere pipeline?
-> `NEXT_PUBLIC_*` is inlined at build, so it can't differ between environments for the same image. Options: build one image per environment (breaks artifact promotion), read plain env vars at request time on the server and pass them to the client (via a provider or a small config endpoint), or remove the need by using same-origin relative URLs such as `/api/orders` through the Gateway. I'd use relative URLs first and runtime config for the rest.
+<Accordion title="NEXT_PUBLIC_API_URL differs between staging and prod. How do you handle it with a build-once, promote-everywhere pipeline?">
+`NEXT_PUBLIC_*` is inlined at build, so it can't differ between environments for the same image. Options: build one image per environment (breaks artifact promotion), read plain env vars at request time on the server and pass them to the client (via a provider or a small config endpoint), or remove the need by using same-origin relative URLs such as `/api/orders` through the Gateway. I'd use relative URLs first and runtime config for the rest.
+</Accordion>
 
-> [!question]- You run three Pods of a Next.js zone that uses ISR and 'use cache'. What breaks and how do you fix it?
-> Each Pod has its own local cache, so pages differ between Pods and `revalidateTag` only invalidates the Pod that handled it. Configure `cacheHandler` (incremental/ISR cache) with `cacheMaxMemorySize: 0` and `cacheHandlers` (`default`/`remote` for `'use cache'`) backed by Redis; implement `updateTags`/`refreshTags`/`getExpiration` so tag invalidations propagate across Pods. Also share the Server Actions encryption key and a `deploymentId`, and handle the image cache (CDN in front or external optimizer).
+<Accordion title="You run three Pods of a Next.js zone that uses ISR and 'use cache'. What breaks and how do you fix it?">
+Each Pod has its own local cache, so pages differ between Pods and `revalidateTag` only invalidates the Pod that handled it. Configure `cacheHandler` (incremental/ISR cache) with `cacheMaxMemorySize: 0` and `cacheHandlers` (`default`/`remote` for `'use cache'`) backed by Redis; implement `updateTags`/`refreshTags`/`getExpiration` so tag invalidations propagate across Pods. Also share the Server Actions encryption key and a `deploymentId`, and handle the image cache (CDN in front or external optimizer).
+</Accordion>
 
-> [!question]- What is deployment skew in Next.js and how do you mitigate it during a rolling update?
-> Old and new versions serve traffic at the same time, so a client can request chunks that no longer exist, call Server Actions the other build doesn't know, or receive incompatible RSC payloads. Mitigations: set `deploymentId` (Next then hard-navigates on mismatch and busts asset caches with `?dpl=`), keep old static assets available (object storage + CDN via `assetPrefix`), use one Server Actions key across builds, and consider blue-green for risky releases.
+<Accordion title="What is deployment skew in Next.js and how do you mitigate it during a rolling update?">
+Old and new versions serve traffic at the same time, so a client can request chunks that no longer exist, call Server Actions the other build doesn't know, or receive incompatible RSC payloads. Mitigations: set `deploymentId` (Next then hard-navigates on mismatch and busts asset caches with `?dpl=`), keep old static assets available (object storage + CDN via `assetPrefix`), use one Server Actions key across builds, and consider blue-green for risky releases.
+</Accordion>
 
-> [!question]- Gateway routing vs rewrites in the shell app: trade-offs?
-> Gateway: no extra hop, independent scaling and blast radius, per-team route ownership, built-in weighted canaries; Kubernetes-specific and needs a local proxy for dev. Shell rewrites: portable and easy locally, but every request flows through the shell, making it a bottleneck and single point of failure and coupling routing changes to shell deploys.
+<Accordion title="Gateway routing vs rewrites in the shell app: trade-offs?">
+Gateway: no extra hop, independent scaling and blast radius, per-team route ownership, built-in weighted canaries; Kubernetes-specific and needs a local proxy for dev. Shell rewrites: portable and easy locally, but every request flows through the shell, making it a bottleneck and single point of failure and coupling routing changes to shell deploys.
+</Accordion>
 
-> [!question]- How do authentication cookies work across zones?
-> Zones share one host, so a host-only cookie with `Path=/` (ideally `__Host-` prefixed, `Secure`, `HttpOnly`, `SameSite=Lax`) is sent to every zone. Each zone validates the session server-side with shared logic. Pitfalls are path-scoped cookies, broad `Domain` attributes leaking to subdomains, and changing the cookie format without coordinating all zones.
+<Accordion title="How do authentication cookies work across zones?">
+Zones share one host, so a host-only cookie with `Path=/` (ideally `__Host-` prefixed, `Secure`, `HttpOnly`, `SameSite=Lax`) is sent to every zone. Each zone validates the session server-side with shared logic. Pitfalls are path-scoped cookies, broad `Domain` attributes leaking to subdomains, and changing the cookie format without coordinating all zones.
+</Accordion>
 
-> [!question]- When would you advise against micro-frontends?
-> When one or two teams own the frontend, when users constantly cross the proposed seams, or when the pain is really slow builds (fixable with Turbopack, caching, monorepo tooling). Micro-frontends trade runtime performance and operational complexity for team autonomy; only pay that when coordination costs are the actual bottleneck.
+<Accordion title="When would you advise against micro-frontends?">
+When one or two teams own the frontend, when users constantly cross the proposed seams, or when the pain is really slow builds (fixable with Turbopack, caching, monorepo tooling). Micro-frontends trade runtime performance and operational complexity for team autonomy; only pay that when coordination costs are the actual bottleneck.
+</Accordion>
 
 ## Related
 
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]]
-- [[Deploying Node.js Apps to Kubernetes]] (orders-api, graceful shutdown, Node memory)
-- [[Micro-frontends & Module Federation]] · [[Building Micro frontends with React 18]] · [[Monorepos]]
-- [[Next.js App Router Fundamentals]] · [[Next.js Rendering & Caching]] · [[Next.js 15 to 16.3]] · [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Kubernetes Workloads in Production]] · [[Kubernetes Networking - Services, Ingress & Gateway API]] · [[Helm & Kustomize]] · [[Kubernetes Operations - Logs, Debugging & Scheduling]]
-- [[Argo CD in Practice]] · [[Argo Rollouts - Canary & Blue-Green]] · [[Jenkins - Pipelines as Code]] · [[Grafana & the LGTM Stack]]
-- [[Dockerfile Best Practices & Image Security]] · [[Authentication & Token Storage]] · [[Networking - HTTP, Caching & Real-time]] · [[Frontend System Design Index]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) (orders-api, graceful shutdown, Node memory)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation) · [Building Micro frontends with React 18](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro%20frontends%20with%20React%2018) · [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals) · [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching) · [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3) · [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize) · [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling)
+- [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) · [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)
+- [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security) · [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
 
 ## Sources
 

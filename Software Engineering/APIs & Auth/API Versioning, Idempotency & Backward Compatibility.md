@@ -1,12 +1,16 @@
 ---
+title: "API Versioning, Idempotency & Backward Compatibility"
 tags: [apis, apis/design]
 aliases: [API Versioning, Idempotency, Idempotency Key, Backward Compatibility, Breaking Changes, Deprecation, Sunset Header]
 updated: 2026-09-27
 ---
 # API Versioning, Idempotency & Backward Compatibility
 
-> [!tldr] TL;DR
-> An API is a promise: once clients depend on it you can **add** but not **take away**. Prefer **additive, backward-compatible** evolution; when you must break, ship a **new version** (URL, header or date-based), announce it with `Deprecation`/`Sunset` headers, and measure usage before removal. **Idempotency** is the other half of reliability: networks fail, clients retry, so every write that can be retried must produce the same effect once, typically via an **`Idempotency-Key`** stored with the result.
+<Note>
+**TL;DR**
+
+An API is a promise: once clients depend on it you can **add** but not **take away**. Prefer **additive, backward-compatible** evolution; when you must break, ship a **new version** (URL, header or date-based), announce it with `Deprecation`/`Sunset` headers, and measure usage before removal. **Idempotency** is the other half of reliability: networks fail, clients retry, so every write that can be retried must produce the same effect once, typically via an **`Idempotency-Key`** stored with the result.
+</Note>
 
 ## Part 1: Backward compatibility
 
@@ -22,8 +26,11 @@ updated: 2026-09-27
 | Add an optional query parameter | Change status codes or error `type`s clients rely on |
 | | Change pagination, auth or rate-limit semantics |
 
-> [!note] Hyrum's Law
-> "With a sufficient number of users of an API, all observable behaviours of your system will be depended on by somebody." Even field order, timing or error text can break someone. Document what is contractual.
+<Note>
+**Hyrum's Law**
+
+"With a sufficient number of users of an API, all observable behaviours of your system will be depended on by somebody." Even field order, timing or error text can break someone. Document what is contractual.
+</Note>
 
 ### The tolerant reader
 
@@ -41,7 +48,7 @@ Clients should **ignore unknown fields**, not fail on new enum values, and not d
 
 **How Stripe-style date versioning works**: the core code always speaks the latest version; a chain of small transformation modules converts requests/responses back to whatever version the client is pinned to. New accounts get the latest; upgrades are explicit and per-account.
 
-For gRPC/protobuf the rules are field-number based: see [[gRPC vs REST]].
+For gRPC/protobuf the rules are field-number based: see [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST).
 
 ### Deprecation and sunset
 
@@ -71,7 +78,7 @@ sequenceDiagram
   S->>S: charge card again ❌ double charge
 ```
 
-`GET`, `PUT`, `DELETE` are idempotent by definition; `POST` and `PATCH` are not. Retries happen everywhere: client libraries, mobile apps on flaky networks, gateways, queues with at-least-once delivery ([[Background Jobs & Task Queues]]), webhook senders.
+`GET`, `PUT`, `DELETE` are idempotent by definition; `POST` and `PATCH` are not. Retries happen everywhere: client libraries, mobile apps on flaky networks, gateways, queues with at-least-once delivery ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)), webhook senders.
 
 ### The Idempotency-Key pattern
 
@@ -128,20 +135,26 @@ Subtleties:
 - Don't cache `5xx` responses caused by transient failures forever; Stripe re-runs requests that failed before any side effect.
 - Other techniques: **natural idempotency** (`PUT /orders/{client-generated-id}`), unique constraints (`UNIQUE(order_id)` on shipments), conditional updates (`UPDATE … WHERE status='pending'`), and deduplication tables for message consumers (the **inbox** pattern).
 
-> [!info]+ 🆕 2025–2026
-> - **2025-03:** RFC 9745 standardises the **`Deprecation`** header (with the `deprecation` link relation), complementing RFC 8594 `Sunset`.
-> - **2025-10-15:** `draft-ietf-httpapi-idempotency-key-header-07` published. `Idempotency-Key` is still an **Internet-Draft**, not an RFC, but widely implemented (Stripe, Adyen, PayPal-style APIs).
-> - **2025-09:** OpenAPI 3.2 lets you describe such headers and deprecations more precisely (see [[REST API Design]]).
+<Info>
+**🆕 2025–2026**
+
+- **2025-03:** RFC 9745 standardises the **`Deprecation`** header (with the `deprecation` link relation), complementing RFC 8594 `Sunset`.
+- **2025-10-15:** `draft-ietf-httpapi-idempotency-key-header-07` published. `Idempotency-Key` is still an **Internet-Draft**, not an RFC, but widely implemented (Stripe, Adyen, PayPal-style APIs).
+- **2025-09:** OpenAPI 3.2 lets you describe such headers and deprecations more precisely (see [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design)).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Versioning every tiny change (v1…v17) instead of evolving additively.
-> - "We'll just tell clients": no usage metrics per client, so you never know when it's safe to remove.
-> - Idempotency key stored **after** the side effect, so two concurrent retries both execute.
-> - Keys scoped globally rather than per account (one client can collide with another's key).
-> - Treating retries of non-idempotent calls as safe in gateways/service meshes (automatic retry of POST).
-> - Enums: adding a value that old clients `switch` on without a default.
+<Warning>
+**Common mistakes**
+
+- Versioning every tiny change (v1…v17) instead of evolving additively.
+- "We'll just tell clients": no usage metrics per client, so you never know when it's safe to remove.
+- Idempotency key stored **after** the side effect, so two concurrent retries both execute.
+- Keys scoped globally rather than per account (one client can collide with another's key).
+- Treating retries of non-idempotent calls as safe in gateways/service meshes (automatic retry of POST).
+- Enums: adding a value that old clients `switch` on without a default.
+</Warning>
 
 ## Senior perspective
 
@@ -153,25 +166,30 @@ Subtleties:
 
 ## Interview questions
 
-> [!question]- How would you version a public REST API?
-> Prefer additive evolution and a tolerant-reader contract so most changes need no version. For breaking changes pick one scheme and stay consistent: URL major versions (`/v2`) are simplest; date-based version headers pinned per account (Stripe) allow frequent small changes with one codebase. Announce with Deprecation/Sunset headers, track usage per client, and remove only when usage is gone.
+<Accordion title="How would you version a public REST API?">
+Prefer additive evolution and a tolerant-reader contract so most changes need no version. For breaking changes pick one scheme and stay consistent: URL major versions (`/v2`) are simplest; date-based version headers pinned per account (Stripe) allow frequent small changes with one codebase. Announce with Deprecation/Sunset headers, track usage per client, and remove only when usage is gone.
+</Accordion>
 
-> [!question]- What is idempotency and which HTTP methods are idempotent?
-> An operation is idempotent if doing it multiple times has the same effect as doing it once. GET, HEAD, OPTIONS, PUT and DELETE are idempotent by definition; POST and PATCH are not.
+<Accordion title="What is idempotency and which HTTP methods are idempotent?">
+An operation is idempotent if doing it multiple times has the same effect as doing it once. GET, HEAD, OPTIONS, PUT and DELETE are idempotent by definition; POST and PATCH are not.
+</Accordion>
 
-> [!question]- Design an idempotency-key mechanism for a payments API.
-> Client sends a UUID `Idempotency-Key` per operation. Server atomically inserts the key (scoped per account) with a request hash and in-progress status; if it already exists, compares the hash (422 on mismatch), returns 409 if still in progress, or replays the stored response. After processing, stores status and response. Keys expire after ~24h. Pass the key downstream so external calls are idempotent too.
+<Accordion title="Design an idempotency-key mechanism for a payments API.">
+Client sends a UUID `Idempotency-Key` per operation. Server atomically inserts the key (scoped per account) with a request hash and in-progress status; if it already exists, compares the hash (422 on mismatch), returns 409 if still in progress, or replays the stored response. After processing, stores status and response. Keys expire after ~24h. Pass the key downstream so external calls are idempotent too.
+</Accordion>
 
-> [!question]- Is adding a field to a response a breaking change?
-> Normally no, if clients are tolerant readers. It can break strict deserialisers or clients relying on exact shape, which is why you document the tolerant-reader expectation. Removing or renaming a field, changing its type or meaning is breaking.
+<Accordion title="Is adding a field to a response a breaking change?">
+Normally no, if clients are tolerant readers. It can break strict deserialisers or clients relying on exact shape, which is why you document the tolerant-reader expectation. Removing or renaming a field, changing its type or meaning is breaking.
+</Accordion>
 
-> [!question]- What are the Deprecation and Sunset headers?
-> Response headers that tell clients a resource is deprecated (RFC 9745, 2025) and when it will stop working (RFC 8594), usually with a `Link` to migration docs. They let tooling detect deprecated usage automatically.
+<Accordion title="What are the Deprecation and Sunset headers?">
+Response headers that tell clients a resource is deprecated (RFC 9745, 2025) and when it will stop working (RFC 8594), usually with a `Link` to migration docs. They let tooling detect deprecated usage automatically.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[REST API Design]] · [[HTTP Headers vs Body - Where Data Belongs]] · [[GraphQL vs REST]] · [[gRPC vs REST]] · [[Webhooks, Polling, SSE & WebSockets]] · [[Background Jobs & Task Queues]]
-- Other domains: [[Distributed Systems Patterns]] · [[System Design Index]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [HTTP Headers vs Body - Where Data Belongs](/Software%20Engineering/APIs%20%26%20Auth/HTTP%20Headers%20vs%20Body%20-%20Where%20Data%20Belongs) · [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST) · [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST) · [Webhooks, Polling, SSE & WebSockets](/Software%20Engineering/APIs%20%26%20Auth/Webhooks%2C%20Polling%2C%20SSE%20%26%20WebSockets) · [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)
+- Other domains: [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
 
 ## Sources
 - [draft-ietf-httpapi-idempotency-key-header (datatracker)](https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/)

@@ -1,14 +1,18 @@
 ---
+title: "Job Scheduler Dashboard with Next.js"
 tags: [backend, backend/jobs, frontend/nextjs]
 aliases: [ops-console, Jobs Dashboard, Scheduled Jobs UI, Job Control Dashboard, Cron Dashboard Next.js]
 updated: 2026-09-27
 ---
 # Job Scheduler Dashboard with Next.js
 
-> [!tldr] TL;DR
-> `ops-console` is a Next.js 16 App Router app at `ops.acme.dev` that lists every scheduled job in Acme Ops, shows run history and live logs, and lets operators **Pause, Resume, Run now and Stop** jobs, whether they run on BullMQ or as Kubernetes CronJobs. It is a **backend-for-frontend**: Server Components read from `jobs-api` with the user's access token through a server-only, zod-validated client; Server Actions do the mutations (with `useActionState` + `useOptimistic`, a fresh `Idempotency-Key` per click, and a role check in every action); Route Handlers proxy the `jobs-api` SSE streams so the browser gets live status without ever holding a token. Accessibility (status by text and icon, live regions, a real modal dialog for Stop) and failure states (skeletons, `error.tsx`, empty state, reconnecting streams) are part of the design, not polish.
+<Note>
+**TL;DR**
 
-This note builds the UI on top of the API described in [[Job Control API - Pause, Resume, Run Now & Stop]]. The architecture of the whole system is in [[Cron with Message Queues - Architecture]]; the BullMQ side in [[BullMQ Job Schedulers in Practice]]; the Kubernetes side in [[Kubernetes CronJobs in Practice]]. Next.js basics live in [[Next.js App Router Fundamentals]], and the login flow is reused from [[Next.js Authentication & Authorization]].
+`ops-console` is a Next.js 16 App Router app at `ops.acme.dev` that lists every scheduled job in Acme Ops, shows run history and live logs, and lets operators **Pause, Resume, Run now and Stop** jobs, whether they run on BullMQ or as Kubernetes CronJobs. It is a **backend-for-frontend**: Server Components read from `jobs-api` with the user's access token through a server-only, zod-validated client; Server Actions do the mutations (with `useActionState` + `useOptimistic`, a fresh `Idempotency-Key` per click, and a role check in every action); Route Handlers proxy the `jobs-api` SSE streams so the browser gets live status without ever holding a token. Accessibility (status by text and icon, live regions, a real modal dialog for Stop) and failure states (skeletons, `error.tsx`, empty state, reconnecting streams) are part of the design, not polish.
+</Note>
+
+This note builds the UI on top of the API described in [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop). The architecture of the whole system is in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture); the BullMQ side in [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice); the Kubernetes side in [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice). Next.js basics live in [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals), and the login flow is reused from [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization).
 
 ## 1. What the dashboard must do
 
@@ -28,7 +32,7 @@ The four jobs it manages (Acme Ops running example):
 | `nightly-sales-report` | `0 2 * * *` | BullMQ | CSV to S3, email link |
 | `sync-inventory` | `*/15 * * * *` | BullMQ | supplier API to Postgres |
 | `cleanup-expired-carts` | `0 * * * *` | K8s CronJob | delete carts older than 7 days |
-| `playwright-checkout-smoke` | `*/10 * * * *` | K8s CronJob | synthetic checkout check ([[Playwright Automation as a Cron Job]]) |
+| `playwright-checkout-smoke` | `*/10 * * * *` | K8s CronJob | synthetic checkout check ([Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)) |
 
 ### Action semantics the UI must respect
 
@@ -59,7 +63,7 @@ flowchart LR
 - **Reads**: Server Components call `jobs-api` directly from the server. No client-side data fetching library is needed.
 - **Writes**: Server Actions. They are public POST endpoints, so each one authenticates, authorizes and validates.
 - **Live**: two Route Handlers proxy SSE from `jobs-api`. The browser uses same-origin `EventSource` with its session cookie; the proxy adds the bearer token.
-- **Why a BFF**: the access token stays on the server (no XSS token theft), `jobs-api` is not exposed to the internet, and CORS disappears because everything is same-origin. See [[Next.js Route Handlers & Backend-for-Frontend]].
+- **Why a BFF**: the access token stays on the server (no XSS token theft), `jobs-api` is not exposed to the internet, and CORS disappears because everything is same-origin. See [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend).
 
 ### Wireframe
 
@@ -120,7 +124,7 @@ flowchart TD
 
 ## 3. Project structure
 
-The layout follows [[Next.js Project Structure & Architecture]] (`src/`, feature folders, everything with secrets under `server/` behind `import 'server-only'`).
+The layout follows [Next.js Project Structure & Architecture](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Project%20Structure%20%26%20Architecture) (`src/`, feature folders, everything with secrets under `server/` behind `import 'server-only'`).
 
 ```text
 ops-console/
@@ -177,7 +181,7 @@ const config: NextConfig = {
 export default config;
 ```
 
-Caching: every view here is per-user and live, so nothing is cached. `fetch` is uncached by default since Next 15, and in Next 16 caching is opt-in (`'use cache'`, see [[Next.js Rendering & Caching]]). If you enable `cacheComponents`, keep anything that reads the session inside `<Suspense>` (the layout already does; `loading.tsx` wraps each page).
+Caching: every view here is per-user and live, so nothing is cached. `fetch` is uncached by default since Next 15, and in Next 16 caching is opt-in (`'use cache'`, see [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)). If you enable `cacheComponents`, keep anything that reads the session inside `<Suspense>` (the layout already does; `loading.tsx` wraps each page).
 
 ```ts
 // src/env.ts
@@ -196,7 +200,7 @@ export const env = z
 
 ## 4. Auth and roles
 
-Login is the OIDC Authorization Code + PKCE flow with a server-side session from [[Next.js Authentication & Authorization]] (the `ops-console` example there): `/api/auth/login`, `/api/auth/callback`, a `__Host-session` cookie holding a random ID, tokens stored server-side, and DAL helpers `getViewer()`, `requireViewer()`, `requirePermission()`. Only what the dashboard adds is shown here.
+Login is the OIDC Authorization Code + PKCE flow with a server-side session from [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization) (the `ops-console` example there): `/api/auth/login`, `/api/auth/callback`, a `__Host-session` cookie holding a random ID, tokens stored server-side, and DAL helpers `getViewer()`, `requireViewer()`, `requirePermission()`. Only what the dashboard adds is shown here.
 
 ```ts
 // src/server/auth/permissions.ts
@@ -977,7 +981,7 @@ How the pieces behave:
 
 **Disabled states** come from the optimistic view, so a paused job can't be paused twice, Run now is disabled while a run is queued/running (for `Forbid` jobs), and Stop is only enabled for an in-flight run. They are UX, not safety: `jobs-api` still returns `409 Conflict` for an invalid transition, and the action turns it into a message.
 
-**Idempotency-Key per click.** Generated in the browser at submit time (not at render, which would differ between SSR and hydration). The same key is reused if the client's `fetch` to `jobs-api` retries after a network error, so a lost response never starts two runs. A second click is a second intent and gets a new key; the disabled-while-pending button stops accidental double clicks. `jobs-api` remembers keys for a retention window and replays the first response ([[Job Control API - Pause, Resume, Run Now & Stop]]).
+**Idempotency-Key per click.** Generated in the browser at submit time (not at render, which would differ between SSR and hydration). The same key is reused if the client's `fetch` to `jobs-api` retries after a network error, so a lost response never starts two runs. A second click is a second intent and gets a new key; the disabled-while-pending button stops accidental double clicks. `jobs-api` remembers keys for a retention window and replays the first response ([Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop)).
 
 ### Stop: a confirmation dialog that's actually accessible
 
@@ -1268,7 +1272,7 @@ export function LogViewer({ jobId, runId, live }: { jobId: string; runId: string
 - Text is rendered as React text nodes: log lines containing `<script>` stay text. Never `dangerouslySetInnerHTML` log output (logs contain user input, supplier API bodies, stack traces).
 - ANSI is stripped, not rendered. If you want colours, use a small ANSI-to-spans converter that outputs React elements, not HTML strings.
 - 5,000 lines in the DOM is fine. For 100k-line logs, virtualize (`@tanstack/react-virtual`) or offer "Download full log" from Loki instead.
-- Old runs: `jobs-api` replays the stored log then closes; the proxy appends `event: end`; the hook stops. Deep history lives in Loki with `job` and `run_id` labels ([[Grafana & the LGTM Stack]]); link out with a prebuilt Explore URL.
+- Old runs: `jobs-api` replays the stored log then closes; the proxy appends `event: end`; the hook stops. Deep history lives in Loki with `job` and `run_id` labels ([Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)); link out with a prebuilt Explore URL.
 
 ## 9. UI states
 
@@ -1335,7 +1339,7 @@ export default function JobNotFound() {
 | Partial | inline in `JobActions` | action errors as values, never a full-page error |
 | Stale / offline | live indicator | "reconnecting…" when SSE is down; data may be old |
 
-More patterns: [[Next.js Error Handling, Loading & Not-Found]].
+More patterns: [Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found).
 
 ## 10. Accessibility checklist
 
@@ -1458,7 +1462,7 @@ it("disables Run now while a run is in flight (Forbid)", () => {
 });
 ```
 
-Async Server Components themselves are best covered by E2E tests; see [[Next.js Testing - Unit, Integration & E2E]].
+Async Server Components themselves are best covered by E2E tests; see [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E).
 
 ### E2E (Playwright) against a stub `jobs-api`
 
@@ -1551,7 +1555,7 @@ test("read-only users see disabled controls, and the action is refused server si
 
 ## 12. Deployment on Kubernetes next to `jobs-api`
 
-Image: the standard `output: 'standalone'` multi-stage build, non-root, `node server.js` (full Dockerfile in [[Deploying Next.js Micro-frontends to Kubernetes]]). Manifests in `platform-gitops/apps/ops-console/`:
+Image: the standard `output: 'standalone'` multi-stage build, non-root, `node server.js` (full Dockerfile in [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes)). Manifests in `platform-gitops/apps/ops-console/`:
 
 ```yaml
 apiVersion: apps/v1
@@ -1629,7 +1633,7 @@ Deployment notes:
 - **Two replicas are fine without sticky sessions**: sessions live in the DB, and each SSE connection is independent. With several replicas also set a shared `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (and the same build), so Server Action IDs and encrypted closures are valid on every Pod.
 - **Streaming through proxies**: disable response buffering and long-request timeouts only on the SSE paths. Send an SSE comment (`: ping`) every ~15 s from `jobs-api` so idle-timeout middleboxes don't cut the stream.
 - **Internal only**: expose `ops.acme.dev` on an internal gateway or behind the VPN / zero-trust proxy. A control plane for production jobs is a high-value target.
-- **Release**: Jenkins builds and bumps the tag in `platform-gitops`, Argo CD syncs ([[Kubernetes Delivery Platform - End to End]]).
+- **Release**: Jenkins builds and bumps the tag in `platform-gitops`, Argo CD syncs ([Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End)).
 
 ## 13. Build or buy: alternatives
 
@@ -1647,18 +1651,21 @@ Rule of thumb: start with the backend's own UI (Bull Board, Headlamp). Build a c
 
 ## Common pitfalls
 
-> [!warning] Pitfalls
-> - **Auth only in the layout or `proxy.ts`.** Server Actions and Route Handlers are reachable directly. Check in every action and handler (and again in `jobs-api`).
-> - **Access token in the browser** (returned from a session endpoint or put in a client component's props) just to call `jobs-api` from the client. Use the BFF proxy.
-> - **Refresh-token races** with rotating refresh tokens: two tabs refresh at once and the session dies. Serialize refreshes.
-> - **SSE through default proxies**: buffering (events arrive in bursts or never), 30–60 s request timeouts, compression. Set `no-transform`, disable buffering, add heartbeats, raise timeouts on the SSE route only.
-> - **`EventSource` reconnect loops** on finished streams, or permanent death after one 502. Send an explicit `end` event; add your own backoff on `CLOSED`.
-> - **Hydration mismatches** from `new Date().toLocaleString()` or `crypto.randomUUID()` during render. Format with a fixed locale and timezone; create keys in event handlers.
-> - **Optimistic state that never reconciles** (a manual `setState` that ignores the server). `useOptimistic` resets to server truth automatically.
-> - **Idempotency key per render or per page load**: two clicks share a key and the second "Run now" is silently dropped; or a new key per retry, and a retry double-runs.
-> - **Confusing Pause with Stop.** Label them "Pause schedule" and "Stop run", and say in the dialog what isn't affected.
-> - **Strict zod enums without a plan**: `jobs-api` adds a `skipped` status and the whole page 500s. Either deploy the console first, or parse unknown values into an "Unknown" badge and alert on it.
-> - **Rendering logs as HTML.** Log lines are untrusted input.
+<Warning>
+**Pitfalls**
+
+- **Auth only in the layout or `proxy.ts`.** Server Actions and Route Handlers are reachable directly. Check in every action and handler (and again in `jobs-api`).
+- **Access token in the browser** (returned from a session endpoint or put in a client component's props) just to call `jobs-api` from the client. Use the BFF proxy.
+- **Refresh-token races** with rotating refresh tokens: two tabs refresh at once and the session dies. Serialize refreshes.
+- **SSE through default proxies**: buffering (events arrive in bursts or never), 30–60 s request timeouts, compression. Set `no-transform`, disable buffering, add heartbeats, raise timeouts on the SSE route only.
+- **`EventSource` reconnect loops** on finished streams, or permanent death after one 502. Send an explicit `end` event; add your own backoff on `CLOSED`.
+- **Hydration mismatches** from `new Date().toLocaleString()` or `crypto.randomUUID()` during render. Format with a fixed locale and timezone; create keys in event handlers.
+- **Optimistic state that never reconciles** (a manual `setState` that ignores the server). `useOptimistic` resets to server truth automatically.
+- **Idempotency key per render or per page load**: two clicks share a key and the second "Run now" is silently dropped; or a new key per retry, and a retry double-runs.
+- **Confusing Pause with Stop.** Label them "Pause schedule" and "Stop run", and say in the dialog what isn't affected.
+- **Strict zod enums without a plan**: `jobs-api` adds a `skipped` status and the whole page 500s. Either deploy the console first, or parse unknown values into an "Unknown" badge and alert on it.
+- **Rendering logs as HTML.** Log lines are untrusted input.
+</Warning>
 
 ## Senior perspective
 
@@ -1669,45 +1676,56 @@ Rule of thumb: start with the backend's own UI (Bull Board, Headlamp). Build a c
 - **Failure isolation**: if `jobs-api` is down, the console must say so clearly, and scheduled runs must continue. The console is never on the critical path of job execution.
 - **Questions to ask in review**: What happens if two operators press Run now at the same moment? If the SSE stream silently stalls, how does the user know the data is stale? Can a viewer reach any mutation by crafting a POST? Where is the audit trail and who reviews it? What does the page do when `jobs-api` returns a status it doesn't know?
 
-> [!info]+ 🆕 2025–2026
-> - **2025-09-22:** Auth.js (NextAuth) joined **Better Auth** and entered maintenance mode; new projects are pointed to Better Auth or a plain OIDC client such as `openid-client` v6 (the approach used here). See [[Next.js Authentication & Authorization]].
-> - **2025-10-01:** **React 19.2** made `useEffectEvent` stable; `useEventSource` uses it to read the latest handlers without re-subscribing.
-> - **2025-10-21:** **Next.js 16**: `proxy.ts` replaces `middleware.ts`, async request APIs are mandatory (`params`, `searchParams` are Promises), caching is opt-in, and `refresh()` / `updateTag()` were added for Server Actions. See [[Next.js 15 to 16.3]].
-> - **2026-01-21:** the **Kubernetes Dashboard was archived**; Headlamp (under SIG UI) is the recommended web UI. The Kubernetes blog explained the transition on 2026-06-01.
-> - **2026-09-22:** **Next.js 16.3.6** fixed a critical RCE in `next/og` `ImageResponse` (16.2.0 to 16.3.5). An internal ops console is still worth patching the same week.
+<Info>
+**🆕 2025–2026**
+
+- **2025-09-22:** Auth.js (NextAuth) joined **Better Auth** and entered maintenance mode; new projects are pointed to Better Auth or a plain OIDC client such as `openid-client` v6 (the approach used here). See [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization).
+- **2025-10-01:** **React 19.2** made `useEffectEvent` stable; `useEventSource` uses it to read the latest handlers without re-subscribing.
+- **2025-10-21:** **Next.js 16**: `proxy.ts` replaces `middleware.ts`, async request APIs are mandatory (`params`, `searchParams` are Promises), caching is opt-in, and `refresh()` / `updateTag()` were added for Server Actions. See [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+- **2026-01-21:** the **Kubernetes Dashboard was archived**; Headlamp (under SIG UI) is the recommended web UI. The Kubernetes blog explained the transition on 2026-06-01.
+- **2026-09-22:** **Next.js 16.3.6** fixed a critical RCE in `next/og` `ImageResponse` (16.2.0 to 16.3.5). An internal ops console is still worth patching the same week.
+</Info>
 
 ## Interview questions
 
-> [!question]- Why call jobs-api from the Next.js server instead of from the browser?
-> The access token stays server-side (no token theft through XSS), `jobs-api` isn't exposed publicly, there's no CORS, and responses are validated in one place. The browser only has an httpOnly session cookie. Live updates go through a Route Handler that proxies SSE and adds the bearer token.
+<Accordion title="Why call jobs-api from the Next.js server instead of from the browser?">
+The access token stays server-side (no token theft through XSS), `jobs-api` isn't exposed publicly, there's no CORS, and responses are validated in one place. The browser only has an httpOnly session cookie. Live updates go through a Route Handler that proxies SSE and adds the bearer token.
+</Accordion>
 
-> [!question]- How do useActionState and useOptimistic work together here?
-> The function given to `useActionState` runs inside a transition when the form submits. It first applies an optimistic patch (e.g. state = paused), then awaits the Server Action. While the transition is pending, `useOptimistic` shows the patched value; when it finishes, React discards the patch and renders the real props, which `revalidatePath` refreshed in the same response. On failure it snaps back automatically and the returned error is rendered.
+<Accordion title="How do useActionState and useOptimistic work together here?">
+The function given to `useActionState` runs inside a transition when the form submits. It first applies an optimistic patch (e.g. state = paused), then awaits the Server Action. While the transition is pending, `useOptimistic` shows the patched value; when it finishes, React discards the patch and renders the real props, which `revalidatePath` refreshed in the same response. On failure it snaps back automatically and the returned error is rendered.
+</Accordion>
 
-> [!question]- Where do you generate the Idempotency-Key and why there?
-> In the browser at submit time, one per click, added to the FormData. The Server Action forwards it to `jobs-api`, and any retry of that request reuses it, so a lost response can't start a second run. Generating it during render would mismatch between SSR and hydration and would be shared by repeated clicks.
+<Accordion title="Where do you generate the Idempotency-Key and why there?">
+In the browser at submit time, one per click, added to the FormData. The Server Action forwards it to `jobs-api`, and any retry of that request reuses it, so a lost response can't start a second run. Generating it during render would mismatch between SSR and hydration and would be shared by repeated clicks.
+</Accordion>
 
-> [!question]- A read-only user's buttons are disabled. Is that enough?
-> No. Disabled buttons are UX. Server Actions are public POST endpoints, so each action verifies the session and the `ops:jobs:write` permission, and `jobs-api` validates the token's role again. The UI shows why buttons are disabled so users understand the permission model.
+<Accordion title="A read-only user's buttons are disabled. Is that enough?">
+No. Disabled buttons are UX. Server Actions are public POST endpoints, so each action verifies the session and the `ops:jobs:write` permission, and `jobs-api` validates the token's role again. The UI shows why buttons are disabled so users understand the permission model.
+</Accordion>
 
-> [!question]- How do you make an SSE-based live view reliable?
-> Proxy with streaming and no buffering, `Cache-Control: no-transform`, heartbeats against idle timeouts, long timeouts only on the SSE route, `id:` + `Last-Event-ID` for resume, an explicit end event for finite streams, client backoff with jitter when `EventSource` gives up on non-200 responses, pause on hidden tabs, and a full refresh after reconnecting. Show connection state so users know when data might be stale.
+<Accordion title="How do you make an SSE-based live view reliable?">
+Proxy with streaming and no buffering, `Cache-Control: no-transform`, heartbeats against idle timeouts, long timeouts only on the SSE route, `id:` + `Last-Event-ID` for resume, an explicit end event for finite streams, client backoff with jitter when `EventSource` gives up on non-200 responses, pause on hidden tabs, and a full refresh after reconnecting. Show connection state so users know when data might be stale.
+</Accordion>
 
-> [!question]- How would you build the log viewer so it stays fast and safe?
-> Batch incoming lines per animation frame, keep a bounded buffer (or virtualize), strip ANSI codes, render as text nodes (never HTML), autoscroll only when the user is at the bottom, offer pause/jump-to-latest, and turn off live-region announcements for the stream itself. Link to Loki for full history.
+<Accordion title="How would you build the log viewer so it stays fast and safe?">
+Batch incoming lines per animation frame, keep a bounded buffer (or virtualize), strip ANSI codes, render as text nodes (never HTML), autoscroll only when the user is at the bottom, offer pause/jump-to-latest, and turn off live-region announcements for the stream itself. Link to Loki for full history.
+</Accordion>
 
-> [!question]- When would you use Bull Board or Headlamp instead of building a dashboard?
-> When there's one backend and the users are engineers who already have access to it: Bull Board for BullMQ queues, Headlamp for Kubernetes objects. Build your own when you have several backends behind one API, non-engineering users, strict RBAC and audit requirements, or workflows (confirmation, reasons, runbooks) the generic tools don't support.
+<Accordion title="When would you use Bull Board or Headlamp instead of building a dashboard?">
+When there's one backend and the users are engineers who already have access to it: Bull Board for BullMQ queues, Headlamp for Kubernetes objects. Build your own when you have several backends behind one API, non-engineering users, strict RBAC and audit requirements, or workflows (confirmation, reasons, runbooks) the generic tools don't support.
+</Accordion>
 
-> [!question]- How do you test Server Actions that call another service?
-> Unit-test the action with the session and API client mocked: read-only users are refused without an API call, inputs are validated, the idempotency key is forwarded, and expected API errors become values. E2E-test with a stub service started by Playwright's `webServer`, because server-side fetches can't be intercepted by `page.route()`.
+<Accordion title="How do you test Server Actions that call another service?">
+Unit-test the action with the session and API client mocked: read-only users are refused without an API call, inputs are validated, the idempotency key is forwarded, and expected API errors become values. E2E-test with a stub service started by Playwright's `webServer`, because server-side fetches can't be intercepted by `page.route()`.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]]
-- [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Kubernetes CronJobs in Practice]] · [[Playwright Automation as a Cron Job]]
-- Next.js: [[Next.js App Router Fundamentals]] · [[Next.js Authentication & Authorization]] · [[Next.js Data Fetching & Mutations Patterns]] · [[Next.js Route Handlers & Backend-for-Frontend]] · [[Next.js Error Handling, Loading & Not-Found]] · [[Next.js Testing - Unit, Integration & E2E]] · [[Next.js Project Structure & Architecture]] · [[Next.js 15 to 16.3]]
-- Platform: [[Deploying Next.js Micro-frontends to Kubernetes]] · [[Kubernetes Delivery Platform - End to End]] · [[Grafana & the LGTM Stack]] · [[Argo CD in Practice]]
-- [[Background Jobs & Task Queues]] · [[Cron Jobs]] · [[Frontend Testing]] · [[Networking - HTTP, Caching & Real-time]] · [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice) · [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- Next.js: [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals) · [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization) · [Next.js Data Fetching & Mutations Patterns](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Data%20Fetching%20%26%20Mutations%20Patterns) · [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend) · [Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found) · [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E) · [Next.js Project Structure & Architecture](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Project%20Structure%20%26%20Architecture) · [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- Platform: [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) · [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)
+- [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
 
 ## Sources
 - Next.js docs: [Server Actions / updating data](https://nextjs.org/docs/app/getting-started/updating-data) · [Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route) · [refresh](https://nextjs.org/docs/app/api-reference/functions/refresh) · [revalidatePath](https://nextjs.org/docs/app/api-reference/functions/revalidatePath) · [loading.js](https://nextjs.org/docs/app/api-reference/file-conventions/loading) · [error.js](https://nextjs.org/docs/app/api-reference/file-conventions/error) · [proxy.js](https://nextjs.org/docs/app/api-reference/file-conventions/proxy) · [Authentication guide](https://nextjs.org/docs/app/guides/authentication) · [Self-hosting (Server Actions encryption key, streaming)](https://nextjs.org/docs/app/guides/self-hosting) · [Next.js 16 blog](https://nextjs.org/blog/next-16) · [Security update 2026-09-22](https://nextjs.org/blog/nextjs-security-update-september-22-2026)

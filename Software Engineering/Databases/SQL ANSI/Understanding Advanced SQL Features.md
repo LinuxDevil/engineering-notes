@@ -1,14 +1,18 @@
 ---
+title: "Understanding Advanced SQL Features"
 tags: [databases, databases/sql]
 aliases: [Constraints, Primary Key Constraint, Foreign Key, CHECK Constraint, UNIQUE Constraint, Understanding Indexes, Understanding Triggers, Recursive CTE, WITH RECURSIVE]
 updated: 2026-09-27
 ---
 # Understanding Advanced SQL Features
 
-> [!tldr] TL;DR
-> The book's last lesson covers three tools that make the database protect and speed up your data: **constraints** (primary key, foreign key, unique, check) enforce integrity, **indexes** speed up searching and sorting at the cost of slower writes, and **triggers** run code automatically on data changes. Prefer constraints over triggers. This note adds the modern SQL features the book leaves out: **CTEs and recursive CTEs**, with pointers to window functions and `LATERAL`.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 22 · Prev: [[Using Cursors]] · Next: [[SQL Trigger Functions]] (PostgreSQL extras)
+The book's last lesson covers three tools that make the database protect and speed up your data: **constraints** (primary key, foreign key, unique, check) enforce integrity, **indexes** speed up searching and sorting at the cost of slower writes, and **triggers** run code automatically on data changes. Prefer constraints over triggers. This note adds the modern SQL features the book leaves out: **CTEs and recursive CTEs**, with pointers to window functions and `LATERAL`.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 22 · Prev: [Using Cursors](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Cursors) · Next: [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions) (PostgreSQL extras)
 
 Topics: *constraints, indexes, and triggers* (plus modern extras).
 
@@ -54,11 +58,17 @@ ADD CONSTRAINT vendors_pk PRIMARY KEY (vend_id);
 
 **Analysis:** the same key, defined with `CONSTRAINT` syntax, usable in both `CREATE TABLE` and `ALTER TABLE`.
 
-> [!warning] Correction: name the constraint
-> The original `ADD CONSTRAINT PRIMARY KEY (vend_id)` omits the constraint name. After `CONSTRAINT` the standard (and SQL Server, Oracle, DB2) requires a name. PostgreSQL and MySQL accept an unnamed `ALTER TABLE Vendors ADD PRIMARY KEY (vend_id);` (no `CONSTRAINT` keyword) and generate a name. Naming it yourself (`vendors_pk`) is best practice everywhere.
+<Warning>
+**Correction: name the constraint**
 
-> [!note] Keys in SQLite
-> SQLite can't add keys with `ALTER TABLE`; define them in the initial `CREATE TABLE`.
+The original `ADD CONSTRAINT PRIMARY KEY (vend_id)` omits the constraint name. After `CONSTRAINT` the standard (and SQL Server, Oracle, DB2) requires a name. PostgreSQL and MySQL accept an unnamed `ALTER TABLE Vendors ADD PRIMARY KEY (vend_id);` (no `CONSTRAINT` keyword) and generate a name. Naming it yourself (`vendors_pk`) is best practice everywhere.
+</Warning>
+
+<Note>
+**Keys in SQLite**
+
+SQLite can't add keys with `ALTER TABLE`; define them in the initial `CREATE TABLE`.
+</Note>
 
 ### Foreign keys
 
@@ -91,13 +101,16 @@ FOREIGN KEY (cust_id) REFERENCES Customers (cust_id);
 
 **Analysis:** the same thing with `CONSTRAINT` syntax (again, with a name).
 
-> [!note] Referential actions
-> Foreign keys also prevent deleting a customer who still has orders. You can change that with actions:
-> - `ON DELETE CASCADE`: deleting the parent deletes related child rows. (The book calls this *cascading delete*.)
-> - `ON DELETE SET NULL` / `SET DEFAULT`: clear the reference.
-> - `ON DELETE RESTRICT` / `NO ACTION` (default): refuse.
->
-> Cascades are convenient but can delete far more than expected. Use them for true ownership (order → order items), not for loose references.
+<Note>
+**Referential actions**
+
+Foreign keys also prevent deleting a customer who still has orders. You can change that with actions:
+- `ON DELETE CASCADE`: deleting the parent deletes related child rows. (The book calls this *cascading delete*.)
+- `ON DELETE SET NULL` / `SET DEFAULT`: clear the reference.
+- `ON DELETE RESTRICT` / `NO ACTION` (default): refuse.
+
+Cascades are convenient but can delete far more than expected. Use them for true ownership (order → order items), not for loose references.
+</Note>
 
 ### Unique constraints
 
@@ -143,8 +156,11 @@ ALTER TABLE Customers
 ADD CONSTRAINT customers_gender_ck CHECK (gender IN ('M', 'F'));
 ```
 
-> [!note] CHECK and NULL
-> A `CHECK` rejects rows only when the condition is **FALSE**. `NULL IN ('M','F')` is UNKNOWN, so `NULL` passes. Add `NOT NULL` if the value is required. (MySQL ignored `CHECK` constraints entirely until **8.0.16**.)
+<Note>
+**CHECK and NULL**
+
+A `CHECK` rejects rows only when the condition is **FALSE**. `NULL IN ('M','F')` is UNKNOWN, so `NULL` passes. Add `NOT NULL` if the value is required. (MySQL ignored `CHECK` constraints entirely until **8.0.16**.)
+</Note>
 
 ## Understanding indexes
 
@@ -162,12 +178,15 @@ Searching other columns is usually not as efficient. To find all customers in a 
 
 The solution is an index on one or more columns: the DBMS keeps a sorted structure of those values for itself, searches it to find matching locations, and then retrieves just those rows.
 
-> [!warning] Indexing trade-offs
-> 1. Indexes speed up reads but **slow down** inserts, updates and deletes, because every index must be updated too.
-> 2. Index data can take a lot of storage.
-> 3. Not all data benefits. Columns with few distinct values (like State) help less than columns with many (like last name), unless you query for a rare value.
-> 4. Indexes are used for filtering **and** sorting. If you often sort by a column, it may be worth indexing.
-> 5. Multi-column indexes (State + City) help only when queries use the **leading** column(s): State, or State and City. A query on City alone generally can't use it (PostgreSQL 18's skip scan can in some cases). This is the *leftmost-prefix rule*.
+<Warning>
+**Indexing trade-offs**
+
+1. Indexes speed up reads but **slow down** inserts, updates and deletes, because every index must be updated too.
+2. Index data can take a lot of storage.
+3. Not all data benefits. Columns with few distinct values (like State) help less than columns with many (like last name), unless you query for a rare value.
+4. Indexes are used for filtering **and** sorting. If you often sort by a column, it may be worth indexing.
+5. Multi-column indexes (State + City) help only when queries use the **leading** column(s): State, or State and City. A query on City alone generally can't use it (PostgreSQL 18's skip scan can in some cases). This is the *leftmost-prefix rule*.
+</Warning>
 
 ### Example 6
 
@@ -180,8 +199,11 @@ ON Products (prod_name);
 
 **Analysis:** every index needs a unique name, here `prod_name_ind`. `ON` names the table, and the indexed column(s) go in parentheses.
 
-> [!tip] Go deeper
-> Index types (B-tree, hash, GIN, GiST, BRIN), composite and covering indexes, partial and expression indexes, selectivity, the blocking-factor maths and how to find unused indexes: [[SQL Indexes Deep Dive]]. Internals (B+trees, LSM trees, scan types): [[Database Indexes]].
+<Tip>
+**Go deeper**
+
+Index types (B-tree, hash, GIN, GiST, BRIN), composite and covering indexes, partial and expression indexes, selectivity, the blocking-factor maths and how to find unused indexes: [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive). Internals (B+trees, LSM trees, scan types): [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes).
+</Tip>
 
 ## Understanding triggers
 
@@ -218,21 +240,27 @@ END;
 
 **Analysis:** intended to convert `cust_state` in `Customers` to uppercase on every `INSERT` and `UPDATE`. The `:OLD`/`:NEW` bind-variable style is **Oracle** syntax.
 
-> [!warning] This example won't run as-is
-> It's missing `ON Customers` and a `;` after the `UPDATE`, and in Oracle an `AFTER ... FOR EACH ROW` trigger that updates its own table raises "ORA-04091: table is mutating". (For an `INSERT`, `:OLD` is also all `NULL`.) The idiomatic version modifies the incoming row in a **BEFORE** trigger:
-> ```sql
-> -- Oracle
-> CREATE OR REPLACE TRIGGER customer_state
-> BEFORE INSERT OR UPDATE ON Customers
-> FOR EACH ROW
-> BEGIN
->   :NEW.cust_state := UPPER(:NEW.cust_state);
-> END;
-> ```
-> For the PostgreSQL version (trigger function + `CREATE TRIGGER ... EXECUTE FUNCTION`), an audit-log example, `TG_OP`, transition tables and pitfalls, see [[SQL Trigger Functions]].
+<Warning>
+**This example won't run as-is**
 
-> [!note] Constraints are faster than triggers
-> As a rule, constraints are processed faster than triggers (and are declarative, visible and can't be forgotten), so use constraints whenever possible. For "uppercase state", a `CHECK (cust_state = UPPER(cust_state))` plus fixing the data in the app, or a generated column, is often cleaner than a trigger.
+It's missing `ON Customers` and a `;` after the `UPDATE`, and in Oracle an `AFTER ... FOR EACH ROW` trigger that updates its own table raises "ORA-04091: table is mutating". (For an `INSERT`, `:OLD` is also all `NULL`.) The idiomatic version modifies the incoming row in a **BEFORE** trigger:
+```sql
+-- Oracle
+CREATE OR REPLACE TRIGGER customer_state
+BEFORE INSERT OR UPDATE ON Customers
+FOR EACH ROW
+BEGIN
+  :NEW.cust_state := UPPER(:NEW.cust_state);
+END;
+```
+For the PostgreSQL version (trigger function + `CREATE TRIGGER ... EXECUTE FUNCTION`), an audit-log example, `TG_OP`, transition tables and pitfalls, see [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions).
+</Warning>
+
+<Note>
+**Constraints are faster than triggers**
+
+As a rule, constraints are processed faster than triggers (and are declarative, visible and can't be forgotten), so use constraints whenever possible. For "uppercase state", a `CHECK (cust_state = UPPER(cust_state))` plus fixing the data in the app, or a generated column, is often cleaner than a trigger.
+</Note>
 
 ## Beyond the book: modern SQL features
 
@@ -240,7 +268,7 @@ The book stops at SQL:1999-era features. These are the ones a senior engineer us
 
 ### CTEs (`WITH`)
 
-Name intermediate results and read the query top-down. Covered in [[Working with Subqueries]].
+Name intermediate results and read the query top-down. Covered in [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries).
 
 ### Recursive CTEs
 
@@ -283,21 +311,21 @@ Supported by PostgreSQL, SQL Server (without the `RECURSIVE` keyword), Oracle 11
 
 ### Window functions
 
-Ranking, running totals, "previous row", top-N per group, without collapsing rows: full section with examples in [[Grouping Data]].
+Ranking, running totals, "previous row", top-N per group, without collapsing rows: full section with examples in [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data).
 
 ### `LATERAL` / `APPLY`
 
-A subquery per outer row that can return several rows (e.g. last 3 orders per customer): [[Working with Subqueries]].
+A subquery per outer row that can return several rows (e.g. last 3 orders per customer): [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries).
 
 ### Upserts, `MERGE`, `RETURNING`
 
-[[Inserting Data]].
+[Inserting Data](/Software%20Engineering/Databases/SQL%20ANSI/Inserting%20Data).
 
 ### Other constraint types worth knowing
 
-- **Exclusion constraints** (PostgreSQL): "no two bookings for the same room may overlap": `EXCLUDE USING gist (room_id WITH =, during WITH &&)`. PostgreSQL 18 adds `PRIMARY KEY (room_id, during WITHOUT OVERLAPS)` as the standard temporal form ([[Creating and Manipulating Tables]]).
+- **Exclusion constraints** (PostgreSQL): "no two bookings for the same room may overlap": `EXCLUDE USING gist (room_id WITH =, during WITH &&)`. PostgreSQL 18 adds `PRIMARY KEY (room_id, during WITHOUT OVERLAPS)` as the standard temporal form ([Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables)).
 - **Deferrable constraints**: `DEFERRABLE INITIALLY DEFERRED` checks at `COMMIT` instead of per statement, useful for circular references or swapping unique values.
-- **`NOT VALID` then `VALIDATE`**: add a constraint to a big table without a long lock ([[Creating and Manipulating Tables]]).
+- **`NOT VALID` then `VALIDATE`**: add a constraint to a big table without a long lock ([Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables)).
 
 ## Senior perspective
 
@@ -308,29 +336,35 @@ A subquery per outer row that can return several rows (e.g. last 3 orders per cu
 
 ## Interview questions
 
-> [!question]- What types of constraints are there?
-> `NOT NULL`, `PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK`, plus `DEFAULT` (a column property) and, in PostgreSQL, `EXCLUDE`.
+<Accordion title="What types of constraints are there?">
+`NOT NULL`, `PRIMARY KEY`, `UNIQUE`, `FOREIGN KEY`, `CHECK`, plus `DEFAULT` (a column property) and, in PostgreSQL, `EXCLUDE`.
+</Accordion>
 
-> [!question]- Can a foreign key reference a column that isn't the primary key?
-> Yes, any column set with a `UNIQUE` (or primary key) constraint.
+<Accordion title="Can a foreign key reference a column that isn't the primary key?">
+Yes, any column set with a `UNIQUE` (or primary key) constraint.
+</Accordion>
 
-> [!question]- Why prefer constraints over triggers?
-> They're declarative, faster, visible in the schema, and the optimizer can use them. Triggers are procedural, run per row, and hide logic.
+<Accordion title="Why prefer constraints over triggers?">
+They're declarative, faster, visible in the schema, and the optimizer can use them. Triggers are procedural, run per row, and hide logic.
+</Accordion>
 
-> [!question]- What does ON DELETE CASCADE do and what's the risk?
-> Deleting a parent row automatically deletes referencing child rows. The risk is deleting much more data than intended in one statement, and long lock times on big cascades.
+<Accordion title="What does ON DELETE CASCADE do and what's the risk?">
+Deleting a parent row automatically deletes referencing child rows. The risk is deleting much more data than intended in one statement, and long lock times on big cascades.
+</Accordion>
 
-> [!question]- Write a query to get an employee's whole management chain / all subordinates.
-> A recursive CTE: an anchor selecting the start employee, `UNION ALL` a recursive part joining `employees` to the CTE on `manager_id` (or `id` for the upward chain), with a depth limit or cycle guard.
+<Accordion title="Write a query to get an employee's whole management chain / all subordinates.">
+A recursive CTE: an anchor selecting the start employee, `UNION ALL` a recursive part joining `employees` to the CTE on `manager_id` (or `id` for the upward chain), with a depth limit or cycle guard.
+</Accordion>
 
-> [!question]- Why does a CHECK constraint let NULL through?
-> `CHECK` rejects only FALSE; a comparison with `NULL` is UNKNOWN. Combine with `NOT NULL` when a value is required.
+<Accordion title="Why does a CHECK constraint let NULL through?">
+`CHECK` rejects only FALSE; a comparison with `NULL` is UNKNOWN. Combine with `NOT NULL` when a value is required.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[SQL Indexes Deep Dive]] · [[Database Indexes]] · [[SQL Trigger Functions]] · [[Working with Stored Procedures]]
-- [[Grouping Data]] (window functions) · [[Working with Subqueries]] (CTEs, LATERAL) · [[Inserting Data]] (upsert, MERGE, RETURNING)
-- [[Data Modeling & Normalization]] · [[Primary vs Secondary Key]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions) · [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures)
+- [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data) (window functions) · [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries) (CTEs, LATERAL) · [Inserting Data](/Software%20Engineering/Databases/SQL%20ANSI/Inserting%20Data) (upsert, MERGE, RETURNING)
+- [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 22 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

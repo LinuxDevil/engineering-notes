@@ -1,12 +1,16 @@
 ---
+title: "Communication & Influence for Engineers"
 tags: [career, career/communication]
 aliases: [Communication for Engineers, Influence, Technical Communication, Stakeholder Management, Writing for Engineers]
 updated: 2026-09-27
 ---
 # Communication & Influence for Engineers
 
-> [!tldr] TL;DR
-> Past mid-level, your impact is limited less by your code than by how well you **explain, persuade and align** people. Communicate **bottom line first**, adapt to the audience (engineers want the how, managers want the impact and risk, executives want the decision), prefer **writing** for anything that needs thought or a record, and build **trust** before you need it. Influence without authority comes from credibility, understanding other people's goals, data, and making it easy to say yes.
+<Note>
+**TL;DR**
+
+Past mid-level, your impact is limited less by your code than by how well you **explain, persuade and align** people. Communicate **bottom line first**, adapt to the audience (engineers want the how, managers want the impact and risk, executives want the decision), prefer **writing** for anything that needs thought or a record, and build **trust** before you need it. Influence without authority comes from credibility, understanding other people's goals, data, and making it easy to say yes.
+</Note>
 
 ## The idea
 - Communication is part of the job, not overhead: a correct design no one understands doesn't ship.
@@ -16,10 +20,13 @@ updated: 2026-09-27
 ## Bottom line up front (BLUF)
 Start with the conclusion or the ask, then the supporting detail.
 
-> [!example] Status update: before and after
-> **Before:** "So we started looking at the payment retries on Monday and found the logs were incomplete, then Sam checked the mobile client and…"
->
-> **After:** "**We'll miss Friday's date by about one week.** Cause: duplicate charges come from mobile retries, which needs a server-side fix (idempotency keys). Options: (A) ship Friday without the retry fix, keeping the manual refund process, or (B) ship next Friday with the fix. I recommend B. I need a decision by Wednesday."
+<Info>
+**Status update: before and after**
+
+**Before:** "So we started looking at the payment retries on Monday and found the logs were incomplete, then Sam checked the mobile client and…"
+
+**After:** "**We'll miss Friday's date by about one week.** Cause: duplicate charges come from mobile retries, which needs a server-side fix (idempotency keys). Options: (A) ship Friday without the retry fix, keeping the manual refund process, or (B) ship next Friday with the fix. I recommend B. I need a decision by Wednesday."
+</Info>
 
 ## Know your audience
 | Audience | Cares about | Give them |
@@ -35,7 +42,7 @@ Translate technical problems into business terms: not "the DB needs sharding" bu
 
 ## Writing
 - **Write to think.** A written proposal exposes gaps a meeting hides.
-- Structure: summary → context → proposal → alternatives → ask ([[Technical Design Docs & RFCs]]).
+- Structure: summary → context → proposal → alternatives → ask ([Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs)).
 - Short sentences, headings, bullets, tables. Put the ask and deadline in bold.
 - Async by default for status and proposals; meetings for decisions that need discussion or conflict resolution.
 - Messages: one topic per message, with enough context to act on without a follow-up ("no hello" style: say the question in the first message).
@@ -54,7 +61,7 @@ Translate technical problems into business terms: not "the DB needs sharding" bu
 6. **Share credit** generously; let others co-own the idea.
 7. **Disagree and commit** when the decision goes the other way, and support it fully.
 
-See [[Mentoring & Leading Without Authority]] for leading projects and people.
+See [Mentoring & Leading Without Authority](/Software%20Engineering/Career/Mentoring%20%26%20Leading%20Without%20Authority) for leading projects and people.
 
 ## Handling disagreement
 - Separate the problem from the person; restate their position until they agree you understood it.
@@ -63,13 +70,16 @@ See [[Mentoring & Leading Without Authority]] for leading projects and people.
 - Give feedback with the SBI model: **S**ituation, **B**ehaviour, **I**mpact ("In yesterday's review (S), you rewrote the PR yourself (B); Ana felt her work wasn't trusted (I)").
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Burying the ask at the end of a long message.
-> - Jargon with non-engineers; condescension with anyone.
-> - Only communicating when things go badly (build trust with regular updates).
-> - Winning arguments and losing relationships.
-> - "Silent disagreement": agreeing in the meeting and resisting afterwards.
-> - Using AI to write long, generic messages; readers notice and skim. Use it to shorten and clarify.
+<Warning>
+**Common mistakes**
+
+- Burying the ask at the end of a long message.
+- Jargon with non-engineers; condescension with anyone.
+- Only communicating when things go badly (build trust with regular updates).
+- Winning arguments and losing relationships.
+- "Silent disagreement": agreeing in the meeting and resisting afterwards.
+- Using AI to write long, generic messages; readers notice and skim. Use it to shorten and clarify.
+</Warning>
 
 ## Senior perspective
 - Your writing is how you scale: design docs, strategy docs, onboarding guides and postmortems reach people you'll never meet.
@@ -78,22 +88,26 @@ See [[Mentoring & Leading Without Authority]] for leading projects and people.
 - Read the room politically without being political: know who decides, who influences, and what they care about.
 
 ## Interview questions
-> [!question]- How do you explain a technical trade-off to a non-technical stakeholder?
-> Start with the decision and its business impact, use an analogy, present two or three options with cost, risk and time in their terms, and give a recommendation.
+<Accordion title="How do you explain a technical trade-off to a non-technical stakeholder?">
+Start with the decision and its business impact, use an analogy, present two or three options with cost, risk and time in their terms, and give a recommendation.
+</Accordion>
 
-> [!question]- Tell me about a time you convinced another team to change their approach.
-> STAR: understood their goals, brought data or a prototype, socialised early, framed it as helping them, offered to do part of the work, shared credit. Include the outcome.
+<Accordion title="Tell me about a time you convinced another team to change their approach.">
+STAR: understood their goals, brought data or a prototype, socialised early, framed it as helping them, offered to do part of the work, shared credit. Include the outcome.
+</Accordion>
 
-> [!question]- How do you communicate bad news, like a missed deadline?
-> Early, directly, bottom line first, with the reason, the new forecast and options, and a recommendation. Never surprise people at the deadline.
+<Accordion title="How do you communicate bad news, like a missed deadline?">
+Early, directly, bottom line first, with the reason, the new forecast and options, and a recommendation. Never surprise people at the deadline.
+</Accordion>
 
-> [!question]- How do you handle a disagreement with your manager?
-> Understand their reasoning, share mine with data privately, agree on criteria, and if they still decide otherwise, disagree and commit, while noting risks in writing if they're significant.
+<Accordion title="How do you handle a disagreement with your manager?">
+Understand their reasoning, share mine with data privately, agree on criteria, and if they still decide otherwise, disagree and commit, while noting risks in writing if they're significant.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Mentoring & Leading Without Authority]] · [[Technical Design Docs & RFCs]] · [[Estimation & Planning]]
-- [[Behavioral Interviews & STAR Method]] · [[Engineering Levels - Junior to Staff]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Mentoring & Leading Without Authority](/Software%20Engineering/Career/Mentoring%20%26%20Leading%20Without%20Authority) · [Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs) · [Estimation & Planning](/Software%20Engineering/Career/Estimation%20%26%20Planning)
+- [Behavioral Interviews & STAR Method](/Software%20Engineering/Interviews/Behavioral%20Interviews%20%26%20STAR%20Method) · [Engineering Levels - Junior to Staff](/Software%20Engineering/Career/Engineering%20Levels%20-%20Junior%20to%20Staff)
 
 ## Sources
 - Tanya Reilly, *The Staff Engineer's Path* (O'Reilly, 2022)

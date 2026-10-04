@@ -1,12 +1,16 @@
 ---
+title: "Big-O & Complexity Analysis"
 tags: [dsa, dsa/foundations]
 aliases: [Big-O, Big O, Time Complexity, Space Complexity, Complexity Analysis, Asymptotic Analysis, Master Theorem]
 updated: 2026-09-27
 ---
 # Big-O & Complexity Analysis
 
-> [!tldr] TL;DR
-> Big-O describes how the **work** (time) or **memory** (space) of an algorithm **grows** as the input size `n` grows, ignoring constants and lower-order terms. You use it to compare approaches before writing code and to tell an interviewer *why* your optimized solution is better. Know the common classes (O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ), O(n!)), how to read them off loops and recursion, what **amortized** means, and the **Master Theorem** for divide-and-conquer recurrences.
+<Note>
+**TL;DR**
+
+Big-O describes how the **work** (time) or **memory** (space) of an algorithm **grows** as the input size `n` grows, ignoring constants and lower-order terms. You use it to compare approaches before writing code and to tell an interviewer *why* your optimized solution is better. Know the common classes (O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ), O(n!)), how to read them off loops and recursion, what **amortized** means, and the **Master Theorem** for divide-and-conquer recurrences.
+</Note>
 
 ## The idea
 
@@ -127,7 +131,7 @@ def count_doublings(n: int) -> int:           # O(log n)
     return steps
 ```
 
-A trap: this looks like O(n²) but is O(n), because `j` never moves backwards (the basis of [[Sliding Window]] and [[Two Pointers]]):
+A trap: this looks like O(n²) but is O(n), because `j` never moves backwards (the basis of [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) and [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers)):
 
 ```python
 j = 0
@@ -137,7 +141,7 @@ for i in range(n):          # i moves n times
 ```
 
 ### Recursion: the recursion tree
-Fibonacci without memoization branches twice per call, depth `n` → about **O(2ⁿ)** calls. With memoization each value is computed once → **O(n)**. See [[Dynamic Programming]].
+Fibonacci without memoization branches twice per call, depth `n` → about **O(2ⁿ)** calls. With memoization each value is computed once → **O(n)**. See [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
 
 ```mermaid
 graph TD
@@ -151,7 +155,7 @@ graph TD
   f3b --> f1b["fib(1)"]
 ```
 
-**Space of recursion** = maximum call stack depth × frame size. A recursive DFS on a 10⁵-node linked-list-shaped tree needs 10⁵ frames, which overflows the default limit in CPython (1000) and can overflow V8's stack. See [[Recursion & Backtracking]].
+**Space of recursion** = maximum call stack depth × frame size. A recursive DFS on a 10⁵-node linked-list-shaped tree needs 10⁵ frames, which overflows the default limit in CPython (1000) and can overflow V8's stack. See [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking).
 
 ## Space complexity
 - Count **extra** (auxiliary) memory: new arrays, hash maps, recursion stack.
@@ -169,7 +173,7 @@ capacity: 1 → 2 → 4 → 8 → 16
 copies:   1 + 2 + 4 + 8 = 15 for 16 appends  → < 2 copies per append
 ```
 
-Other amortized O(1) examples: a queue built from two stacks, [[Union-Find]] with path compression (nearly O(1), inverse Ackermann), hash table insert with resizing.
+Other amortized O(1) examples: a queue built from two stacks, [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find) with path compression (nearly O(1), inverse Ackermann), hash table insert with resizing.
 
 Amortized is **not** the same as average case: amortized is a guarantee over any sequence of operations, average case is an expectation over random inputs.
 
@@ -217,44 +221,51 @@ The theorem does **not** apply to uneven splits like quicksort's worst case `T(n
 - **Big-O hides memory hierarchy.** A linked list and an array are both O(n) to scan, but the array is many times faster because it is contiguous (CPU cache lines, prefetching).
 - **Forgetting string costs.** `s += c` in a loop is O(n²) in the worst case in many languages; build a list and `join`.
 - **Forgetting the recursion stack** in space analysis.
-- **Hash maps are O(1) average, not guaranteed.** Adversarial keys can force collisions (hash flooding). See [[Hash Tables]].
+- **Hash maps are O(1) average, not guaranteed.** Adversarial keys can force collisions (hash flooding). See [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables).
 - **Mixing variables**: a grid is O(rows × cols), a graph is O(V + E); don't collapse everything into `n`.
 
 ## Senior perspective
 - **Measure, then reason.** Big-O tells you how things scale; profilers tell you where time actually goes. A senior uses both: "this endpoint is O(n²) in the number of line items, which is fine at 50 items and a problem at 50 000".
 - **Watch for accidental quadratic code** in production: `array.includes` inside a loop, `find` inside `map`, ORM N+1 queries, repeated `JSON.parse` of the same blob, re-rendering a whole list on each keystroke. These are the complexity bugs that actually reach prod.
 - **Tail latency and worst case.** For request paths, worst-case and p99 matter more than average. Quickselect's O(n²) worst case or a hash map's degenerate case can become a DoS vector with attacker-controlled input.
-- **Space is money.** In-memory caches, per-request allocations and GC pressure are space complexity with a price tag. See [[Memory Management & Garbage Collection]].
+- **Space is money.** In-memory caches, per-request allocations and GC pressure are space complexity with a price tag. See [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection).
 - **In review, ask:** what is `n` in production today and in 2 years? Is this on a hot path? Is the input attacker-controlled? Could we paginate, stream, or index instead?
 
 ## Interview questions
 
-> [!question]- What does O(n log n) mean and where does the log come from?
-> The work grows proportionally to n times log n. The log appears whenever the problem size is repeatedly halved: merge sort splits into log₂ n levels and does O(n) merging work per level, so n · log n in total.
+<Accordion title="What does O(n log n) mean and where does the log come from?">
+The work grows proportionally to n times log n. The log appears whenever the problem size is repeatedly halved: merge sort splits into log₂ n levels and does O(n) merging work per level, so n · log n in total.
+</Accordion>
 
-> [!question]- What's the difference between amortized O(1) and average O(1)?
-> Amortized is a worst-case guarantee over a **sequence** of operations: some calls are expensive but the total cost of n calls is O(n) (dynamic array append). Average case is an expectation over **random inputs** and can still be bad for specific inputs (hash map with colliding keys).
+<Accordion title="What's the difference between amortized O(1) and average O(1)?">
+Amortized is a worst-case guarantee over a **sequence** of operations: some calls are expensive but the total cost of n calls is O(n) (dynamic array append). Average case is an expectation over **random inputs** and can still be bad for specific inputs (hash map with colliding keys).
+</Accordion>
 
-> [!question]- Why is appending to a dynamic array O(1) amortized?
-> The array grows geometrically (e.g. doubling). Copies happen at sizes 1, 2, 4, ..., n, which sum to less than 2n, so n appends do O(n) total work, O(1) each.
+<Accordion title="Why is appending to a dynamic array O(1) amortized?">
+The array grows geometrically (e.g. doubling). Copies happen at sizes 1, 2, 4, ..., n, which sum to less than 2n, so n appends do O(n) total work, O(1) each.
+</Accordion>
 
-> [!question]- What's the time and space complexity of recursive Fibonacci, with and without memoization?
-> Without: O(2ⁿ) time (more precisely O(φⁿ)), O(n) space for the stack. With memoization: O(n) time and O(n) space. Bottom-up with two variables: O(n) time, O(1) space.
+<Accordion title="What's the time and space complexity of recursive Fibonacci, with and without memoization?">
+Without: O(2ⁿ) time (more precisely O(φⁿ)), O(n) space for the stack. With memoization: O(n) time and O(n) space. Bottom-up with two variables: O(n) time, O(1) space.
+</Accordion>
 
-> [!question]- Apply the Master Theorem to T(n) = 2T(n/2) + O(n).
-> a = 2, b = 2, d = 1. log₂ 2 = 1 = d, so case 2: O(n log n). This is merge sort.
+<Accordion title="Apply the Master Theorem to T(n) = 2T(n/2) + O(n).">
+a = 2, b = 2, d = 1. log₂ 2 = 1 = d, so case 2: O(n log n). This is merge sort.
+</Accordion>
 
-> [!question]- Your solution is O(n²) and n ≤ 10⁵. Is that OK?
-> No. 10¹⁰ operations is far too slow (roughly 100 s at 10⁸ ops/s). You need O(n log n) or O(n): think sorting, hashing, two pointers, a heap, or binary search.
+<Accordion title="Your solution is O(n²) and n ≤ 10⁵. Is that OK?">
+No. 10¹⁰ operations is far too slow (roughly 100 s at 10⁸ ops/s). You need O(n log n) or O(n): think sorting, hashing, two pointers, a heap, or binary search.
+</Accordion>
 
-> [!question]- Why can an O(n) algorithm be slower than an O(n log n) one in practice?
-> Big-O hides constants and memory effects. Large constant factors, pointer chasing (cache misses), allocations or high GC pressure can make the "better" algorithm slower for realistic n.
+<Accordion title="Why can an O(n) algorithm be slower than an O(n log n) one in practice?">
+Big-O hides constants and memory effects. Large constant factors, pointer chasing (cache misses), allocations or high GC pressure can make the "better" algorithm slower for realistic n.
+</Accordion>
 
 ## Related
-- [[DSA Index]] · [[Problem Solving]]
-- [[Arrays & Strings]] · [[Hash Tables]] · [[Sorting Algorithms]] · [[Recursion & Backtracking]] · [[Dynamic Programming]]
-- [[Grokking Algorithms]] (chapter 1 introduces Big-O with binary search)
-- [[Memory Management & Garbage Collection]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index) · [Problem Solving](/Software%20Engineering/DSA/01%20Foundations/Problem%20Solving)
+- [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming)
+- [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (chapter 1 introduces Big-O with binary search)
+- [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 3 asymptotic notation, ch. 4 Master Theorem, ch. 16 amortized analysis)

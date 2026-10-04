@@ -1,12 +1,16 @@
 ---
+title: "React Router"
 tags: [frontend, frontend/react, frontend/routing]
 aliases: [React Router, RR, react-router-dom, Remix, React Router v7, React Router v8]
 updated: 2026-09-27
 ---
 # React Router
 
-> [!tldr] TL;DR
-> React Router maps URLs to components. **v6** gave us `<Routes>/<Route element>`, nested routes with `<Outlet>`, and hooks (`useParams`, `useSearchParams`, `useNavigate`). **v6.4** added **data routers**: route `loader`s and `action`s that fetch and mutate *before* rendering. **v7 (late 2024) merged Remix into React Router**, so it now has three modes: declarative, data and **framework** (Vite plugin, SSR, type-safe route modules). **v8 (2026-06-17)** is ESM-only, needs React 19.2.7+, makes middleware the default and drops the `react-router-dom` package.
+<Note>
+**TL;DR**
+
+React Router maps URLs to components. **v6** gave us `<Routes>/<Route element>`, nested routes with `<Outlet>`, and hooks (`useParams`, `useSearchParams`, `useNavigate`). **v6.4** added **data routers**: route `loader`s and `action`s that fetch and mutate *before* rendering. **v7 (late 2024) merged Remix into React Router**, so it now has three modes: declarative, data and **framework** (Vite plugin, SSR, type-safe route modules). **v8 (2026-06-17)** is ESM-only, needs React 19.2.7+, makes middleware the default and drops the `react-router-dom` package.
+</Note>
 
 ## 1. The routers (where the location lives)
 
@@ -23,8 +27,11 @@ updated: 2026-09-27
 - **`MemoryRouter`** keeps the history in memory instead of the URL.
 - **`StaticRouter`** is for environments where the app's location never changes, such as rendering one route to static HTML on the server.
 
-> [!warning] Correction
-> The old note said to use `MemoryRouter` "if you're developing a React Native application". React Native used a separate `NativeRouter` from `react-router-native` (v6). Most RN apps now use React Navigation or Expo Router. `MemoryRouter` is mainly for **tests and non-URL environments**.
+<Warning>
+**Correction**
+
+The old note said to use `MemoryRouter` "if you're developing a React Native application". React Native used a separate `NativeRouter` from `react-router-native` (v6). Most RN apps now use React Navigation or Expo Router. `MemoryRouter` is mainly for **tests and non-URL environments**.
+</Warning>
 
 ## 2. Declarative routing (v6 style, still supported)
 - **`<Route>`** maps a location to a component (`element`).
@@ -137,7 +144,7 @@ function FlightResults() {
   );
 }
 ```
-Keep filters, sorting and pagination in the URL. It makes them shareable, lets you bookmark them, and the back button works. See [[URL as State]].
+Keep filters, sorting and pagination in the URL. It makes them shareable, lets you bookmark them, and the back button works. See [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State).
 
 ### Passing state through navigation
 Data passed in a link's **`state`** prop shows up on **`location.state`**, which you read with **`useLocation`**. It isn't in the URL: it lives in the history entry, and it's lost if the user opens the link in a new tab.
@@ -235,44 +242,50 @@ Other data APIs:
 | **Data** | `createBrowserRouter` + `RouterProvider` | Loaders, actions, fetchers, pending UI |
 | **Framework** | `@react-router/dev` Vite plugin + `routes.ts` | Everything above plus SSR/SSG/SPA modes, type-safe route modules (generated `Route.*` types), code splitting per route, `clientLoader`/`clientAction`, `meta`/`links` |
 
-> [!example] Framework mode
-> ```ts
-> // app/routes.ts
-> import { type RouteConfig, route, index, layout } from '@react-router/dev/routes';
-> export default [
->   index('routes/home.tsx'),
->   layout('routes/app-layout.tsx', [
->     route('trips/:id', 'routes/trip.tsx'),
->   ]),
-> ] satisfies RouteConfig;
-> ```
-> ```tsx
-> // app/routes/trip.tsx
-> import type { Route } from './+types/trip';          // generated types
->
-> export async function loader({ params }: Route.LoaderArgs) {   // runs on the server (SSR) or at build (prerender)
->   return getTrip(params.id);
-> }
-> export async function action({ request }: Route.ActionArgs) {
->   const fd = await request.formData(); await updateTrip(fd); return { ok: true };
-> }
-> export function meta({ data }: Route.MetaArgs) { return [{ title: `Trip to ${data.city}` }]; }
->
-> export default function Trip({ loaderData }: Route.ComponentProps) {
->   return <h1>{loaderData.city}</h1>;                  // fully typed from loader's return
-> }
-> ```
+<Info>
+**Framework mode**
 
-> [!info]+ 🆕 2025–2026
-> - **React Router v8 (2026-06-17):**
->   - **ESM-only.** Needs **React 19.2.7+, Node 22.22+ and Vite 7+**.
->   - **Middleware** and the **Vite Environment API** are now defaults.
->   - The **`react-router-dom` package was removed**, so import from `react-router`.
->   - **RSC support is still unstable.**
->   - Majors now ship **yearly**. [blog](https://remix.run/blog/react-router-v8)
-> - **Remix 3** is now a **separate, non-React** full-stack framework (RC 2026-08-31, GA planned for 2026-10-02). Don't confuse it with "Remix = React Router framework mode". [blog](https://remix.run/blog/remix-3-release-candidate)
-> - **Security:** the Dec 2025 RSC RCE advisory (CVE-2025-55182) also affected React Router's RSC support. See [[React Server Components & Server Functions]].
-> - **Platform:** the **Navigation API** is Baseline Newly available (2026-01-13), and **URLPattern** is Newly available (2025-09-15). See [[Modern Web Platform APIs 2025-2026]].
+```ts
+// app/routes.ts
+import { type RouteConfig, route, index, layout } from '@react-router/dev/routes';
+export default [
+  index('routes/home.tsx'),
+  layout('routes/app-layout.tsx', [
+    route('trips/:id', 'routes/trip.tsx'),
+  ]),
+] satisfies RouteConfig;
+```
+```tsx
+// app/routes/trip.tsx
+import type { Route } from './+types/trip';          // generated types
+
+export async function loader({ params }: Route.LoaderArgs) {   // runs on the server (SSR) or at build (prerender)
+  return getTrip(params.id);
+}
+export async function action({ request }: Route.ActionArgs) {
+  const fd = await request.formData(); await updateTrip(fd); return { ok: true };
+}
+export function meta({ data }: Route.MetaArgs) { return [{ title: `Trip to ${data.city}` }]; }
+
+export default function Trip({ loaderData }: Route.ComponentProps) {
+  return <h1>{loaderData.city}</h1>;                  // fully typed from loader's return
+}
+```
+</Info>
+
+<Info>
+**🆕 2025–2026**
+
+- **React Router v8 (2026-06-17):**
+  - **ESM-only.** Needs **React 19.2.7+, Node 22.22+ and Vite 7+**.
+  - **Middleware** and the **Vite Environment API** are now defaults.
+  - The **`react-router-dom` package was removed**, so import from `react-router`.
+  - **RSC support is still unstable.**
+  - Majors now ship **yearly**. [blog](https://remix.run/blog/react-router-v8)
+- **Remix 3** is now a **separate, non-React** full-stack framework (RC 2026-08-31, GA planned for 2026-10-02). Don't confuse it with "Remix = React Router framework mode". [blog](https://remix.run/blog/remix-3-release-candidate)
+- **Security:** the Dec 2025 RSC RCE advisory (CVE-2025-55182) also affected React Router's RSC support. See [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions).
+- **Platform:** the **Navigation API** is Baseline Newly available (2026-01-13), and **URLPattern** is Newly available (2025-09-15). See [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026).
+</Info>
 
 **Upgrade path:**
 1. v6 → v7: turn on the v6 `future` flags first, then change imports to `react-router`.
@@ -280,31 +293,37 @@ Other data APIs:
 
 **Alternatives:**
 - **TanStack Router**: fully type-safe, search-param state.
-- **Next.js App Router**: file-system routing with RSC. See [[Next.js App Router Fundamentals]].
+- **Next.js App Router**: file-system routing with RSC. See [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals).
 
 ## Interview questions
-> [!question]- `BrowserRouter` vs `HashRouter` vs `MemoryRouter` vs `StaticRouter`?
-> Browser uses real URLs through the History API (needs a server fallback to `index.html`). Hash stores the path after `#` (no server config needed). Memory keeps history in memory (tests, embedded). Static renders a fixed location on the server.
+<Accordion title="`BrowserRouter` vs `HashRouter` vs `MemoryRouter` vs `StaticRouter`?">
+Browser uses real URLs through the History API (needs a server fallback to `index.html`). Hash stores the path after `#` (no server config needed). Memory keeps history in memory (tests, embedded). Static renders a fixed location on the server.
+</Accordion>
 
-> [!question]- How do nested routes work?
-> Child `<Route>`s are nested inside a parent route. The parent's component renders `<Outlet />` where the matched child should appear. Index routes render at the parent's exact path, and layout routes wrap children without a path segment.
+<Accordion title="How do nested routes work?">
+Child `<Route>`s are nested inside a parent route. The parent's component renders `<Outlet />` where the matched child should appear. Index routes render at the parent's exact path, and layout routes wrap children without a path segment.
+</Accordion>
 
-> [!question]- `useNavigate` vs `<Navigate>`?
-> `useNavigate` returns an imperative function for event handlers and after async work. `<Navigate>` is a component that redirects when rendered (declarative guards). In data routers, prefer `redirect()` inside loaders and actions.
+<Accordion title="`useNavigate` vs `<Navigate>`?">
+`useNavigate` returns an imperative function for event handlers and after async work. `<Navigate>` is a component that redirects when rendered (declarative guards). In data routers, prefer `redirect()` inside loaders and actions.
+</Accordion>
 
-> [!question]- What problem do loaders solve?
-> They move data fetching out of component effects, so it starts in parallel for all matched routes when navigation begins. That avoids render-then-fetch waterfalls, gives consistent pending/error UI, and lets actions automatically revalidate the data after mutations.
+<Accordion title="What problem do loaders solve?">
+They move data fetching out of component effects, so it starts in parallel for all matched routes when navigation begins. That avoids render-then-fetch waterfalls, gives consistent pending/error UI, and lets actions automatically revalidate the data after mutations.
+</Accordion>
 
-> [!question]- What changed in React Router v7 and v8?
-> v7 merged Remix into React Router, with declarative, data and framework modes, type-safe route modules, and SSR/prerendering through a Vite plugin. v8 (June 2026) is ESM-only, requires React 19.2.7+ / Node 22.22+ / Vite 7+, makes middleware the default and removes `react-router-dom`.
+<Accordion title="What changed in React Router v7 and v8?">
+v7 merged Remix into React Router, with declarative, data and framework modes, type-safe route modules, and SSR/prerendering through a Vite plugin. v8 (June 2026) is ESM-only, requires React 19.2.7+ / Node 22.22+ / Vite 7+, makes middleware the default and removes `react-router-dom`.
+</Accordion>
 
-> [!question]- How do you pass data between routes?
-> Use URL params or search params for anything that should be shareable. Use `location.state` for transient data (lost on refresh in a new tab). Loaders can refetch by ID.
+<Accordion title="How do you pass data between routes?">
+Use URL params or search params for anything that should be shareable. Use `location.state` for transient data (lost on refresh in a new tab). Loaders can refetch by ID.
+</Accordion>
 
 ## Related
-- [[React Index]] · [[URL as State]] · [[Forms & Actions in React]] · [[React Server Components & Server Functions]]
-- [[Next.js App Router Fundamentals]] · [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Modern Web Platform APIs 2025-2026]] (Navigation API, URLPattern)
+- [React Index](/Software%20Engineering/Frontend/05%20React/React%20Index) · [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State) · [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals) · [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026) (Navigation API, URLPattern)
 
 ## Sources
 - [reactrouter.com docs](https://reactrouter.com/) · [Picking a mode](https://reactrouter.com/start/modes) · [Upgrading from v6](https://reactrouter.com/upgrading/v6)

@@ -1,22 +1,26 @@
 ---
+title: "Concurrency And Parallelism"
 tags: [principles, principles/concurrency]
 aliases: [Concurrency, Parallelism, Concurrency vs Parallelism, Processes and Threads, Threads, Thread Pool, IPC, Sync vs Async, Race Condition, Deadlock, Virtual Threads]
 updated: 2026-09-27
 ---
 # Concurrency And Parallelism
 
-> [!tldr] TL;DR
-> **Concurrency** is *dealing with* many things at once (tasks interleave and make progress over overlapping time); **parallelism** is *doing* many things at once (tasks literally run simultaneously on multiple cores). A **process** is a running program with its own memory; a **thread** is a unit of execution inside a process that shares the heap with its siblings. Shared mutable state + threads = race conditions, so use locks, atomics, immutability or message passing. Modern runtimes lean on lightweight concurrency: event loops (Node.js), coroutines (Kotlin, Python asyncio), goroutines and **Java virtual threads**.
+<Note>
+**TL;DR**
+
+**Concurrency** is *dealing with* many things at once (tasks interleave and make progress over overlapping time); **parallelism** is *doing* many things at once (tasks literally run simultaneously on multiple cores). A **process** is a running program with its own memory; a **thread** is a unit of execution inside a process that shares the heap with its siblings. Shared mutable state + threads = race conditions, so use locks, atomics, immutability or message passing. Modern runtimes lean on lightweight concurrency: event loops (Node.js), coroutines (Kotlin, Python asyncio), goroutines and **Java virtual threads**.
+</Note>
 
 ## The idea
 
 - **Parallelism**: doing more than one thing **at the same time** (needs multiple cores/CPUs).
 
-![[Untitled 24.png]]
+![Untitled 24](/Attachments/Untitled%2024.png)
 
 - **Concurrency**: the **illusion** of doing more than one thing at the same time, by switching between tasks. On a single core it's achieved with **context switching**; on multiple cores it can also use parallelism.
 
-![[Untitled 25.png]]
+![Untitled 25](/Attachments/Untitled%2025.png)
 
 > "Concurrency is about dealing with lots of things at once. Parallelism is about doing lots of things at once." (Rob Pike, *Concurrency is not Parallelism*, 2012)
 
@@ -26,7 +30,7 @@ A barista analogy: one barista juggling three orders (grind, steam, pour, switch
 
 A **process** is an instance of a running program.
 
-![[Untitled 26.png]]
+![Untitled 26](/Attachments/Untitled%2026.png)
 
 - Each process has its **own isolated memory space**; one process can't read another's memory directly (the OS enforces this).
 - A runtime may use one or several processes. A **multi-process model** (e.g. running several Node.js processes via `cluster`/PM2, or Chrome's process-per-site) uses more memory and resources than a single multi-threaded process (e.g. one JVM), but a crash in one process doesn't take the others down.
@@ -55,7 +59,7 @@ ls | grep hello
 
 A **thread** is the smallest sequence of instructions the OS can schedule. A thread is what executes your code; every process has at least one (the main thread).
 
-![[Untitled 25.png]]
+![Untitled 25](/Attachments/Untitled%2025.png)
 
 A process typically has several threads, e.g. in the JVM:
 - code-execution thread(s)
@@ -114,23 +118,23 @@ Executing tasks one after another; each waits for the previous one to complete.
 
 Single thread:
 
-![[Untitled 28.png]]
+![Untitled 28](/Attachments/Untitled%2028.png)
 
 Multiple threads (each thread still runs its own tasks one by one):
 
-![[Untitled 29.png]]
+![Untitled 29](/Attachments/Untitled%2029.png)
 
 ### Asynchronous
 
 You can switch to a different task without waiting for the previous one to complete; you get notified (callback, promise/future, event) when it's done.
 
-Single thread (e.g. the Node.js event loop, see [[Event Loop - Microtasks & Macrotasks]]):
+Single thread (e.g. the Node.js event loop, see [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)):
 
-![[Untitled 30.png]]
+![Untitled 30](/Attachments/Untitled%2030.png)
 
 Multiple threads:
 
-![[Untitled 31.png]]
+![Untitled 31](/Attachments/Untitled%2031.png)
 
 - The async programming model helps you achieve **concurrency**.
 - Async programming in a **multi-threaded** environment is a way to achieve **parallelism**.
@@ -194,7 +198,7 @@ A **data race** (unsynchronised access where at least one is a write) is a speci
 | Data structures | `ConcurrentHashMap`, blocking queues, copy-on-write lists |
 | Executors | thread pools, `CompletableFuture`, fork/join |
 | Models | **message passing** (Go channels, actors in Erlang/Akka), **async/await** + event loop, **structured concurrency**, software transactional memory (Clojure) |
-| Design | **immutability** (see [[Immutability Across Languages]]), confinement (one owner thread), share-nothing processes |
+| Design | **immutability** (see [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages)), confinement (one owner thread), share-nothing processes |
 
 > "Do not communicate by sharing memory; instead, share memory by communicating." (Go proverb)
 
@@ -225,10 +229,13 @@ try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
 They help **I/O-bound** throughput, not CPU-bound speed, and you still need to limit access to scarce resources (DB connections) with semaphores or pools.
 
-> [!info]+ 🆕 2025–2026
-> - **Java 24 (March 2025), JEP 491**: virtual threads no longer get **pinned** to their carrier when blocking inside `synchronized` blocks. This removed the main caveat of Java 21 virtual threads; libraries no longer need to replace `synchronized` with `ReentrantLock` for virtual-thread friendliness.
-> - **Java 25 LTS (2025-09-16)**: **Scoped Values** finalised (JEP 506), an immutable, bounded alternative to `ThreadLocal` that works well with many virtual threads. **Structured Concurrency** remains in preview: fifth preview in Java 25 (JEP 505), sixth in Java 26 (JEP 525), seventh in Java 27 (JEP 533, GA 2026-09-15).
-> - **Python 3.14 (October 2025)**: the **free-threaded (no-GIL) build is officially supported** (PEP 779), though still optional; and **multiple interpreters** are available in the standard library (PEP 734, `concurrent.interpreters`), each with its own GIL, for parallelism inside one process.
+<Info>
+**🆕 2025–2026**
+
+- **Java 24 (March 2025), JEP 491**: virtual threads no longer get **pinned** to their carrier when blocking inside `synchronized` blocks. This removed the main caveat of Java 21 virtual threads; libraries no longer need to replace `synchronized` with `ReentrantLock` for virtual-thread friendliness.
+- **Java 25 LTS (2025-09-16)**: **Scoped Values** finalised (JEP 506), an immutable, bounded alternative to `ThreadLocal` that works well with many virtual threads. **Structured Concurrency** remains in preview: fifth preview in Java 25 (JEP 505), sixth in Java 26 (JEP 525), seventh in Java 27 (JEP 533, GA 2026-09-15).
+- **Python 3.14 (October 2025)**: the **free-threaded (no-GIL) build is officially supported** (PEP 779), though still optional; and **multiple interpreters** are available in the standard library (PEP 734, `concurrent.interpreters`), each with its own GIL, for parallelism inside one process.
+</Info>
 
 ### Structured concurrency
 
@@ -244,14 +251,17 @@ async def load_dashboard(user_id):
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Assuming `async` means "runs in parallel": in Node.js a CPU-heavy loop inside an async function still blocks the event loop.
-> - Unbounded parallelism: `Promise.all(10_000 requests)` or unbounded thread creation overwhelms downstream services. Use a limit (p-limit, semaphores, bounded pools).
-> - Check-then-act races: `if (!map.containsKey(k)) map.put(k, v)` → use `putIfAbsent` / `computeIfAbsent` or a DB unique constraint.
-> - Holding locks while doing I/O or calling unknown code.
-> - Blocking calls on event-loop or reactive threads.
-> - `ThreadLocal` leaks in thread pools (values survive into the next task).
-> - Forgetting that the **database** is the biggest shared resource: concurrency bugs often become lost updates in SQL (use transactions, `SELECT ... FOR UPDATE`, optimistic locking with version columns).
+<Warning>
+**Common mistakes**
+
+- Assuming `async` means "runs in parallel": in Node.js a CPU-heavy loop inside an async function still blocks the event loop.
+- Unbounded parallelism: `Promise.all(10_000 requests)` or unbounded thread creation overwhelms downstream services. Use a limit (p-limit, semaphores, bounded pools).
+- Check-then-act races: `if (!map.containsKey(k)) map.put(k, v)` → use `putIfAbsent` / `computeIfAbsent` or a DB unique constraint.
+- Holding locks while doing I/O or calling unknown code.
+- Blocking calls on event-loop or reactive threads.
+- `ThreadLocal` leaks in thread pools (values survive into the next task).
+- Forgetting that the **database** is the biggest shared resource: concurrency bugs often become lost updates in SQL (use transactions, `SELECT ... FOR UPDATE`, optimistic locking with version columns).
+</Warning>
 
 ## Senior perspective
 
@@ -259,35 +269,42 @@ async def load_dashboard(user_id):
 - Prefer designs that avoid shared mutable state: immutable messages, single-writer ownership, queues. Locks are the last resort, not the first.
 - Every concurrent system needs **backpressure** and **timeouts**; otherwise queues grow without bound under load.
 - Concurrency bugs are timing-dependent: rely on stress tests, race detectors (Go `-race`, ThreadSanitizer), and design reviews more than on example tests.
-- Across machines the same problems appear as distributed-systems problems (idempotency, ordering, exactly-once illusions). See [[Software Architecture Styles]].
+- Across machines the same problems appear as distributed-systems problems (idempotency, ordering, exactly-once illusions). See [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
 
 ## Interview questions
 
-> [!question]- What's the difference between concurrency and parallelism?
-> Concurrency: structuring a program so multiple tasks make progress over overlapping periods (interleaving, possible on one core). Parallelism: tasks executing at the same instant on multiple cores. Concurrency is about structure, parallelism about execution.
+<Accordion title="What's the difference between concurrency and parallelism?">
+Concurrency: structuring a program so multiple tasks make progress over overlapping periods (interleaving, possible on one core). Parallelism: tasks executing at the same instant on multiple cores. Concurrency is about structure, parallelism about execution.
+</Accordion>
 
-> [!question]- Process vs thread?
-> A process is an isolated running program with its own address space; creating one is expensive and communication needs IPC. Threads live inside a process, share its heap (each has its own stack), are cheaper to create and switch, but shared memory requires synchronisation.
+<Accordion title="Process vs thread?">
+A process is an isolated running program with its own address space; creating one is expensive and communication needs IPC. Threads live inside a process, share its heap (each has its own stack), are cheaper to create and switch, but shared memory requires synchronisation.
+</Accordion>
 
-> [!question]- What is a race condition and how do you prevent it?
-> When correctness depends on the timing of concurrent operations on shared state (e.g. lost updates from `count++`). Prevent it with atomic operations, locks, confinement, immutability, or message passing; at the DB level with transactions and constraints.
+<Accordion title="What is a race condition and how do you prevent it?">
+When correctness depends on the timing of concurrent operations on shared state (e.g. lost updates from `count++`). Prevent it with atomic operations, locks, confinement, immutability, or message passing; at the DB level with transactions and constraints.
+</Accordion>
 
-> [!question]- What conditions are required for a deadlock and how do you avoid one?
-> Mutual exclusion, hold and wait, no preemption, circular wait. Avoid by ordering lock acquisition globally, using timeouts/`tryLock`, reducing lock scope, or avoiding locks through message passing.
+<Accordion title="What conditions are required for a deadlock and how do you avoid one?">
+Mutual exclusion, hold and wait, no preemption, circular wait. Avoid by ordering lock acquisition globally, using timeouts/`tryLock`, reducing lock scope, or avoiding locks through message passing.
+</Accordion>
 
-> [!question]- How is Node.js concurrent if it's single-threaded?
-> JavaScript runs on one thread with an event loop; I/O is delegated to the OS (epoll/kqueue/IOCP) and libuv's thread pool. When an operation completes, its callback is queued and run by the loop. CPU-bound work blocks the loop, so it belongs in worker threads.
+<Accordion title="How is Node.js concurrent if it's single-threaded?">
+JavaScript runs on one thread with an event loop; I/O is delegated to the OS (epoll/kqueue/IOCP) and libuv's thread pool. When an operation completes, its callback is queued and run by the loop. CPU-bound work blocks the loop, so it belongs in worker threads.
+</Accordion>
 
-> [!question]- What problem do Java virtual threads solve?
-> Thread-per-request code blocks OS threads on I/O, and OS threads are expensive, so servers ran out of threads. Virtual threads are cheap and unmount while blocked, allowing millions of concurrent blocking tasks with simple synchronous code. They don't make CPU-bound code faster.
+<Accordion title="What problem do Java virtual threads solve?">
+Thread-per-request code blocks OS threads on I/O, and OS threads are expensive, so servers ran out of threads. Virtual threads are cheap and unmount while blocked, allowing millions of concurrent blocking tasks with simple synchronous code. They don't make CPU-bound code faster.
+</Accordion>
 
-> [!question]- Why do we use thread pools?
-> To reuse threads (avoid creation cost), bound concurrency (protect memory and downstream systems), and queue work under load. The trade-off: requests may wait or be rejected when the pool is saturated.
+<Accordion title="Why do we use thread pools?">
+To reuse threads (avoid creation cost), bound concurrency (protect memory and downstream systems), and queue work under load. The trade-off: requests may wait or be rejected when the pool is saturated.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Immutability Across Languages]] · [[Functional Programming Principles]] · [[Software Architecture Styles]]
-- JavaScript runtime: [[Event Loop - Microtasks & Macrotasks]] · [[Promises, Async-Await & Cancellation]] · [[Web Workers, Service Workers & PWAs]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Immutability Across Languages](/Software%20Engineering/Principles/Immutability%20Across%20Languages) · [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles)
+- JavaScript runtime: [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks) · [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) · [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs)
 
 ## Sources
 - [Rob Pike: Concurrency is not Parallelism (2012)](https://go.dev/blog/waza-talk)

@@ -1,17 +1,24 @@
 ---
+title: "Secrets Management"
 tags: [security, security/secrets]
 aliases: [Secrets, Secret Management, Vault, KMS, Credential Management, Secret Scanning]
 updated: 2026-09-27
 ---
 # Secrets Management
 
-> [!tldr] TL;DR
-> A secret is anything that grants access: API keys, DB passwords, private keys, tokens, signing keys. Keep secrets **out of code, images, logs and client bundles**; store them in a **secrets manager** (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault); deliver them at runtime to the workload's identity; prefer **short-lived, automatically issued credentials** (OIDC federation, workload identity, dynamic DB credentials) over long-lived static ones; **rotate**; and **scan** every commit. When a secret leaks, **revoke and rotate first**, then clean history.
+<Note>
+**TL;DR**
 
-> [!info]+ 🆕 2025–2026
-> - **2026-03**: GitGuardian's *State of Secrets Sprawl 2026* found about **29 million** new hard-coded secrets on public GitHub in 2025 (+34% year over year), and **1.27 million** leaked secrets for AI services (+81%). Many leaked credentials stay valid for years: over 64% of secrets valid in 2022 were still valid when retested in January 2026 ([GitGuardian](https://blog.gitguardian.com/the-state-of-secrets-sprawl-2026/)).
-> - 2025 npm supply-chain worms (e.g. the "Shai-Hulud" campaign, Sept 2025) specifically harvested developer and CI secrets from machines and pipelines; see [[Supply Chain Security]]. Lesson: CI tokens and local `.env` files are prime targets, so keep them short-lived and scoped.
-> - AI coding assistants and agents increase leak paths (secrets pasted into prompts, agents reading `.env` files, generated code with inline keys). Add ignore rules for agents and keep secrets out of the repo entirely.
+A secret is anything that grants access: API keys, DB passwords, private keys, tokens, signing keys. Keep secrets **out of code, images, logs and client bundles**; store them in a **secrets manager** (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault); deliver them at runtime to the workload's identity; prefer **short-lived, automatically issued credentials** (OIDC federation, workload identity, dynamic DB credentials) over long-lived static ones; **rotate**; and **scan** every commit. When a secret leaks, **revoke and rotate first**, then clean history.
+</Note>
+
+<Info>
+**🆕 2025–2026**
+
+- **2026-03**: GitGuardian's *State of Secrets Sprawl 2026* found about **29 million** new hard-coded secrets on public GitHub in 2025 (+34% year over year), and **1.27 million** leaked secrets for AI services (+81%). Many leaked credentials stay valid for years: over 64% of secrets valid in 2022 were still valid when retested in January 2026 ([GitGuardian](https://blog.gitguardian.com/the-state-of-secrets-sprawl-2026/)).
+- 2025 npm supply-chain worms (e.g. the "Shai-Hulud" campaign, Sept 2025) specifically harvested developer and CI secrets from machines and pipelines; see [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security). Lesson: CI tokens and local `.env` files are prime targets, so keep them short-lived and scoped.
+- AI coding assistants and agents increase leak paths (secrets pasted into prompts, agents reading `.env` files, generated code with inline keys). Add ignore rules for agents and keep secrets out of the repo entirely.
+</Info>
 
 ## What counts as a secret
 | Secret | Example | Better alternative |
@@ -112,14 +119,17 @@ trufflehog git file://. --only-verified          # show only secrets confirmed l
 4. Add a detection rule / pre-commit hook so it doesn't recur; write a short postmortem.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - "The repo is private": private repos get cloned to laptops, CI, vendors, and leaked.
-> - Deleting the commit instead of rotating the secret.
-> - Secrets in `ARG`/`ENV` of Dockerfiles (visible in image history); use BuildKit `--mount=type=secret`.
-> - Frontend env vars prefixed `NEXT_PUBLIC_` / `VITE_` are shipped to every browser: never put secrets there.
-> - One shared "prod" key for all services: no attribution, huge blast radius.
-> - Logging full config or request headers (includes `Authorization`).
-> - Environment variables passed to every child process and dumped in crash reports; prefer files mounted with tight permissions or fetching at runtime for high-value secrets.
+<Warning>
+**Common mistakes**
+
+- "The repo is private": private repos get cloned to laptops, CI, vendors, and leaked.
+- Deleting the commit instead of rotating the secret.
+- Secrets in `ARG`/`ENV` of Dockerfiles (visible in image history); use BuildKit `--mount=type=secret`.
+- Frontend env vars prefixed `NEXT_PUBLIC_` / `VITE_` are shipped to every browser: never put secrets there.
+- One shared "prod" key for all services: no attribution, huge blast radius.
+- Logging full config or request headers (includes `Authorization`).
+- Environment variables passed to every child process and dumped in crash reports; prefer files mounted with tight permissions or fetching at runtime for high-value secrets.
+</Warning>
 
 ## Senior perspective
 - Aim for **no long-lived secrets** in CI and services: OIDC federation, workload identity, dynamic credentials, trusted publishing for package registries.
@@ -129,25 +139,30 @@ trufflehog git file://. --only-verified          # show only secrets confirmed l
 - Measure mean time to revoke leaked secrets; drill it.
 
 ## Interview questions
-> [!question]- Where should an application get its database password?
-> Ideally it shouldn't have a static one: use IAM database authentication or dynamic credentials from Vault. Otherwise from a secrets manager at runtime, using the workload's identity for access, never from source code or the image.
+<Accordion title="Where should an application get its database password?">
+Ideally it shouldn't have a static one: use IAM database authentication or dynamic credentials from Vault. Otherwise from a secrets manager at runtime, using the workload's identity for access, never from source code or the image.
+</Accordion>
 
-> [!question]- A developer pushed an AWS key to a public repo. What do you do?
-> Deactivate and rotate the key immediately, check CloudTrail for use since the push, contain any damage, remove the key from code/history, and add push protection and pre-commit scanning. Rotation first: removing the commit doesn't help once it's been copied.
+<Accordion title="A developer pushed an AWS key to a public repo. What do you do?">
+Deactivate and rotate the key immediately, check CloudTrail for use since the push, contain any damage, remove the key from code/history, and add push protection and pre-commit scanning. Rotation first: removing the commit doesn't help once it's been copied.
+</Accordion>
 
-> [!question]- Are Kubernetes Secrets secure?
-> Not by themselves: they're base64-encoded and stored in etcd, readable by anyone with `get secrets` RBAC. Enable encryption at rest (ideally with a KMS provider), restrict RBAC, and consider syncing from an external secrets manager.
+<Accordion title="Are Kubernetes Secrets secure?">
+Not by themselves: they're base64-encoded and stored in etcd, readable by anyone with `get secrets` RBAC. Enable encryption at rest (ideally with a KMS provider), restrict RBAC, and consider syncing from an external secrets manager.
+</Accordion>
 
-> [!question]- How does OIDC federation remove CI secrets?
-> The CI platform issues a signed, short-lived OIDC token describing the job (repo, branch, environment). The cloud provider trusts that issuer and exchanges the token for temporary credentials for a specific role, so no long-lived cloud keys are stored in CI.
+<Accordion title="How does OIDC federation remove CI secrets?">
+The CI platform issues a signed, short-lived OIDC token describing the job (repo, branch, environment). The cloud provider trusts that issuer and exchanges the token for temporary credentials for a specific role, so no long-lived cloud keys are stored in CI.
+</Accordion>
 
-> [!question]- How do you rotate a signing key without downtime?
-> Publish the new key alongside the old one (JWKS with `kid`), start signing with the new one, keep verifying both until old tokens expire, then remove the old key.
+<Accordion title="How do you rotate a signing key without downtime?">
+Publish the new key alongside the old one (JWKS with `kid`), start signing with the new one, keep verifying both until old tokens expire, then remove the old key.
+</Accordion>
 
 ## Related
-- [[Security Index]]
-- [[Backend Security Essentials]] · [[Secure SDLC & Threat Modeling]] · [[API Security]]
-- [[Supply Chain Security]] · [[Cryptography Basics for Engineers]] · [[OAuth 2.x & OpenID Connect]]
+- [Security Index](/Software%20Engineering/Security/Security%20Index)
+- [Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials) · [Secure SDLC & Threat Modeling](/Software%20Engineering/Security/Secure%20SDLC%20%26%20Threat%20Modeling) · [API Security](/Software%20Engineering/Security/API%20Security)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers) · [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect)
 
 ## Sources
 - [OWASP Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)

@@ -1,16 +1,20 @@
 ---
+title: "Dynamic Programming"
 tags: [dsa, dsa/algorithms]
 aliases: [DP, Dynamic Programming, Memoization, Tabulation, Knapsack, LIS, LCS, Edit Distance]
 updated: 2026-09-27
 ---
 # Dynamic Programming
 
-> [!tldr] TL;DR
-> **Dynamic programming (DP)** solves problems whose answer can be built from answers to **smaller subproblems that repeat** (overlapping subproblems) and where the best overall answer is made of best sub-answers (optimal substructure). You define a **state**, a **transition** (recurrence) and **base cases**, then either recurse with a cache (**top-down memoization**) or fill a table in order (**bottom-up tabulation**). Time is roughly *number of states × work per transition*; space can often be cut to one or two rows.
+<Note>
+**TL;DR**
+
+**Dynamic programming (DP)** solves problems whose answer can be built from answers to **smaller subproblems that repeat** (overlapping subproblems) and where the best overall answer is made of best sub-answers (optimal substructure). You define a **state**, a **transition** (recurrence) and **base cases**, then either recurse with a cache (**top-down memoization**) or fill a table in order (**bottom-up tabulation**). Time is roughly *number of states × work per transition*; space can often be cut to one or two rows.
+</Note>
 
 ## The idea
 
-Naive recursion for Fibonacci recomputes `fib(2)` many times (see the recursion tree in [[Recursion & Backtracking]]). DP says: **compute each subproblem once, remember it**.
+Naive recursion for Fibonacci recomputes `fib(2)` many times (see the recursion tree in [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking)). DP says: **compute each subproblem once, remember it**.
 
 ```text
 Naive fib(5): 15 calls           DP fib(5): 6 states
@@ -251,7 +255,7 @@ def length_of_lis(nums: list[int]) -> int:
     return len(tails)
 ```
 
-`tails` is not an actual subsequence; it only has the right length. Reconstructing the sequence needs parent pointers. See [[Binary Search]].
+`tails` is not an actual subsequence; it only has the right length. Reconstructing the sequence needs parent pointers. See [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search).
 
 ### LCS and Edit Distance (two strings)
 
@@ -348,7 +352,7 @@ def longest_palindrome_subseq(s: str) -> int:
 
 ### DP on trees (brief): House Robber III (LeetCode 337)
 
-Postorder DFS returns a small tuple per node: `(best if we rob this node, best if we skip it)`. Parents combine children's tuples. See [[Tree Traversal - DFS & BFS]].
+Postorder DFS returns a small tuple per node: `(best if we rob this node, best if we skip it)`. Parents combine children's tuples. See [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS).
 
 ```ts
 type Node = { val: number; left: Node | null; right: Node | null };
@@ -376,7 +380,7 @@ def rob_tree(root) -> int:
 
 ### Bitmask DP (brief)
 
-When `n ≤ ~20`, a subset can be an integer mask, and the state is `dp[mask]` or `dp[mask][last]`. Classic: travelling salesman (Held-Karp), assigning `n` tasks to `n` workers, Partition to K Equal Sum Subsets (698). Transition: for each `i` not in `mask`, go to `mask | (1 << i)`. See [[Bit Manipulation]].
+When `n ≤ ~20`, a subset can be an integer mask, and the state is `dp[mask]` or `dp[mask][last]`. Classic: travelling salesman (Held-Karp), assigning `n` tasks to `n` workers, Partition to K Equal Sum Subsets (698). Transition: for each `i` not in `mask`, go to `mask | (1 << i)`. See [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation).
 
 ```ts
 // Min cost to assign n tasks to n workers; cost[w][t]. dp[mask] = min cost with tasks in mask done by workers 0..popcount-1
@@ -421,12 +425,12 @@ def min_assign(cost: list[list[int]]) -> int:
 - **Memo keys in JS**: arrays and objects are compared by reference; use `i * (n+1) + j` or a string key, or a 2D array.
 - **Sentinels**: `Infinity` in JS is fine, but `Infinity + 1` stays `Infinity` and `-1` sentinels can win a `max`. Be deliberate.
 - **Counting overflow**: counts grow exponentially; problems ask for `mod 1e9+7`. In JS, products of two values near `1e9` exceed `2^53`, so use `BigInt` or split multiplication.
-- **Greedy vs DP**: coin change with `[1, 3, 4]` and amount 6: greedy gives 4+1+1, DP gives 3+3. Prove greedy or use DP; see [[Greedy]].
+- **Greedy vs DP**: coin change with `[1, 3, 4]` and amount 6: greedy gives 4+1+1, DP gives 3+3. Prove greedy or use DP; see [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy).
 
 ## Senior perspective
 
 - **Where DP runs in production**: diff tools (`git diff`, Myers' algorithm is an LCS-style shortest edit script), spell checkers and fuzzy search (Levenshtein distance), DNA alignment (Needleman-Wunsch, Smith-Waterman), speech/HMM decoding (Viterbi), text layout line breaking (Knuth-Plass in TeX), query optimizers choosing join orders (System R style DP over subsets of tables), shortest paths (Bellman-Ford, Floyd-Warshall are DP).
-- **Memoization vs caching**: `functools.cache` / a `Map` in a closure is the same idea as an app-level cache, and it has the same problems: unbounded growth, keying on mutable objects, and purity requirements. See [[Closures & Memory Model]] and [[Memory Management & Garbage Collection]].
+- **Memoization vs caching**: `functools.cache` / a `Map` in a closure is the same idea as an app-level cache, and it has the same problems: unbounded growth, keying on mutable objects, and purity requirements. See [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) and [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection).
 - **Memory is the usual limit**: a `10^4 × 10^4` table is 100M cells (400 MB as int32, far more as Python lists). Rolling rows or Hirschberg's divide-and-conquer trick gets LCS/alignment to linear space.
 - **Cache locality**: bottom-up with row-major loops is much faster than top-down hash-map memo. Typed arrays (`Int32Array`, `Float64Array`) in JS avoid boxing.
 - **Interview communication**: say the state in words, give the recurrence, base cases, order, answer location, then complexity as states × transition. Start top-down if it is faster for you, and offer the space optimization as a follow-up. Interviewers care more about a clean recurrence than about a one-liner.
@@ -451,33 +455,40 @@ def min_assign(cost: list[list[int]]) -> int:
 
 ## Interview questions
 
-> [!question]- How do you know a problem needs dynamic programming?
-> It asks for a count, a min/max, or feasibility over choices; brute force explores overlapping subproblems (the same arguments recur); and optimal answers are built from optimal sub-answers. Greedy counterexamples are another hint. Constraints like `n ≤ 5000` point to `O(n^2)` DP, `n ≤ 20` to bitmask DP.
+<Accordion title="How do you know a problem needs dynamic programming?">
+It asks for a count, a min/max, or feasibility over choices; brute force explores overlapping subproblems (the same arguments recur); and optimal answers are built from optimal sub-answers. Greedy counterexamples are another hint. Constraints like `n ≤ 5000` point to `O(n^2)` DP, `n ≤ 20` to bitmask DP.
+</Accordion>
 
-> [!question]- Top-down memoization vs bottom-up tabulation: which do you prefer?
-> Top-down is closer to the recurrence and only computes reachable states, but it pays for recursion and can hit stack limits (CPython 1000, V8 has no TCO). Bottom-up avoids recursion, has better constants and locality, and makes space optimization easy, but you must work out the fill order. I usually write top-down first, then convert.
+<Accordion title="Top-down memoization vs bottom-up tabulation: which do you prefer?">
+Top-down is closer to the recurrence and only computes reachable states, but it pays for recursion and can hit stack limits (CPython 1000, V8 has no TCO). Bottom-up avoids recursion, has better constants and locality, and makes space optimization easy, but you must work out the fill order. I usually write top-down first, then convert.
+</Accordion>
 
-> [!question]- What are the steps to design a DP solution?
-> Define the state in words, write the transition, set base cases, choose a computation order where dependencies come first, identify which state holds the answer, then analyze time as states × transition cost and optimize space if only recent rows are used.
+<Accordion title="What are the steps to design a DP solution?">
+Define the state in words, write the transition, set base cases, choose a computation order where dependencies come first, identify which state holds the answer, then analyze time as states × transition cost and optimize space if only recent rows are used.
+</Accordion>
 
-> [!question]- Why does 0/1 knapsack iterate capacity backwards in the 1D version?
-> With one array, `dp[w - wt]` must still hold the value from before the current item was considered. Iterating downward guarantees that. Iterating upward lets the current item be used multiple times, which is the unbounded knapsack.
+<Accordion title="Why does 0/1 knapsack iterate capacity backwards in the 1D version?">
+With one array, `dp[w - wt]` must still hold the value from before the current item was considered. Iterating downward guarantees that. Iterating upward lets the current item be used multiple times, which is the unbounded knapsack.
+</Accordion>
 
-> [!question]- How do you get LIS in O(n log n)?
-> Keep `tails`, where `tails[k]` is the smallest possible tail of an increasing subsequence of length `k+1`. For each number, binary-search the first tail `>= x` and replace it (or append if none). `tails` stays sorted, and its length is the answer.
+<Accordion title="How do you get LIS in O(n log n)?">
+Keep `tails`, where `tails[k]` is the smallest possible tail of an increasing subsequence of length `k+1`. For each number, binary-search the first tail `>= x` and replace it (or append if none). `tails` stays sorted, and its length is the answer.
+</Accordion>
 
-> [!question]- Is O(n·W) knapsack polynomial?
-> No, it is pseudo-polynomial: polynomial in the numeric value of `W` but exponential in the number of bits needed to write `W`. 0/1 knapsack is NP-hard; the DP is efficient only when `W` is small.
+<Accordion title="Is O(n·W) knapsack polynomial?">
+No, it is pseudo-polynomial: polynomial in the numeric value of `W` but exponential in the number of bits needed to write `W`. 0/1 knapsack is NP-hard; the DP is efficient only when `W` is small.
+</Accordion>
 
-> [!question]- How would you reduce the memory of LCS or edit distance?
-> Each row only depends on the previous row (and the current row to the left), so keep two rows, or one row plus a saved diagonal value: `O(min(m, n))` space. If you also need the actual alignment, Hirschberg's algorithm recovers it in linear space with divide and conquer.
+<Accordion title="How would you reduce the memory of LCS or edit distance?">
+Each row only depends on the previous row (and the current row to the left), so keep two rows, or one row plus a saved diagonal value: `O(min(m, n))` space. If you also need the actual alignment, Hirschberg's algorithm recovers it in linear space with divide and conquer.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Recursion & Backtracking]] (memoization bridge) · [[Backtracking]] · [[Greedy]] · [[Binary Search]] · [[Bit Manipulation]] · [[Prefix Sum]]
-- [[Tree Traversal - DFS & BFS]] (tree DP) · [[Graphs]] (Bellman-Ford, DAG shortest paths)
-- [[Big-O & Complexity Analysis]] · [[Problem Solving]] · [[Grokking Algorithms]] (dynamic programming chapter: knapsack, longest common substring)
-- [[Closures & Memory Model]] (memoize helpers)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) (memoization bridge) · [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) · [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) · [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation) · [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum)
+- [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) (tree DP) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) (Bellman-Ford, DAG shortest paths)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Problem Solving](/Software%20Engineering/DSA/01%20Foundations/Problem%20Solving) · [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (dynamic programming chapter: knapsack, longest common substring)
+- [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) (memoize helpers)
 
 ## Sources
 - Cormen et al., *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 14 Dynamic Programming)

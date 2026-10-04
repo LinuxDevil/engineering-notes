@@ -1,12 +1,16 @@
 ---
+title: "Spring Boot 3 to 4 - What's New"
 tags: [backend, backend/java]
 aliases: [Spring Boot 4, Spring Framework 7, Spring Boot 3, Spring Boot 4.1, Spring 7 whats new, JSpecify, API versioning Spring, HTTP service clients]
 updated: 2026-09-27
 ---
 # Spring Boot 3 to 4 - What's New
 
-> [!tldr] TL;DR
-> **Spring Boot 3** (2022) moved Spring to **Java 17** and **Jakarta EE** (`javax.*` → `jakarta.*`), then added virtual threads, `RestClient`/`JdbcClient`, Testcontainers/Docker Compose integration and structured logging across 3.1–3.5. **Spring Framework 7.0 (2025-11-13)** and **Spring Boot 4.0 (2025-11-20)** start a new generation: **Jakarta EE 11**, **JSpecify null safety**, built-in **API versioning**, **HTTP service client** groups, core **resilience** annotations, **Jackson 3**, a fully **modularised** Boot with renamed starters, and `@MockBean` removed. Java 17 is still the baseline, Java 25 is first-class. **Boot 4.1 (2026-06-10)** added Spring gRPC and SSRF protection.
+<Note>
+**TL;DR**
+
+**Spring Boot 3** (2022) moved Spring to **Java 17** and **Jakarta EE** (`javax.*` → `jakarta.*`), then added virtual threads, `RestClient`/`JdbcClient`, Testcontainers/Docker Compose integration and structured logging across 3.1–3.5. **Spring Framework 7.0 (2025-11-13)** and **Spring Boot 4.0 (2025-11-20)** start a new generation: **Jakarta EE 11**, **JSpecify null safety**, built-in **API versioning**, **HTTP service client** groups, core **resilience** annotations, **Jackson 3**, a fully **modularised** Boot with renamed starters, and `@MockBean` removed. Java 17 is still the baseline, Java 25 is first-class. **Boot 4.1 (2026-06-10)** added Spring gRPC and SSRF protection.
+</Note>
 
 ## Timeline
 
@@ -36,16 +40,19 @@ timeline
 
 ## Spring Framework 7.0 (2025-11-13)
 
-> [!info]+ 🆕 2025: Spring Framework 7.0
-> - **Baselines**: Java 17 minimum, **Java 25** embraced; **Jakarta EE 11** (Servlet 6.1, JPA 3.2, Bean Validation 3.1); Kotlin 2.2; JUnit 6 support.
-> - **JSpecify null safety** across the portfolio (`@Nullable`, `@NullMarked`), replacing Spring's own `@Nullable` annotations.
-> - **API versioning** built into MVC and WebFlux.
-> - **HTTP interface client** configuration with `@ImportHttpServices` groups.
-> - **Resilience**: `@Retryable` and `@ConcurrencyLimit` in core (with `@EnableResilientMethods`).
-> - **Programmatic bean registration** (`BeanRegistrar`).
-> - **Jackson 3** support (Jackson 2 still supported, deprecated).
-> - `JmsClient`, `RestTestClient` for testing.
-> - `RestTemplate`: the 7.0 docs mark it deprecated in favour of **`RestClient`**; the Spring team's plan (2025-09-30) is a formal `@Deprecated(forRemoval)` in **7.1** (provisionally Nov 2026) and removal in 8.0.
+<Info>
+**🆕 2025: Spring Framework 7.0**
+
+- **Baselines**: Java 17 minimum, **Java 25** embraced; **Jakarta EE 11** (Servlet 6.1, JPA 3.2, Bean Validation 3.1); Kotlin 2.2; JUnit 6 support.
+- **JSpecify null safety** across the portfolio (`@Nullable`, `@NullMarked`), replacing Spring's own `@Nullable` annotations.
+- **API versioning** built into MVC and WebFlux.
+- **HTTP interface client** configuration with `@ImportHttpServices` groups.
+- **Resilience**: `@Retryable` and `@ConcurrencyLimit` in core (with `@EnableResilientMethods`).
+- **Programmatic bean registration** (`BeanRegistrar`).
+- **Jackson 3** support (Jackson 2 still supported, deprecated).
+- `JmsClient`, `RestTestClient` for testing.
+- `RestTemplate`: the 7.0 docs mark it deprecated in favour of **`RestClient`**; the Spring team's plan (2025-09-30) is a formal `@Deprecated(forRemoval)` in **7.1** (provisionally Nov 2026) and removal in 8.0.
+</Info>
 
 ### API versioning
 
@@ -116,22 +123,28 @@ Tools like NullAway (Error Prone) and IntelliJ then flag possible NPEs at compil
 
 ## Spring Boot 4.0 (2025-11-20)
 
-> [!info]+ 🆕 2025: Spring Boot 4.0
-> - Built on Spring Framework 7, **Spring Security 7**, **Hibernate 7.2**, Jakarta EE 11. **Java 17+** required, first-class **Java 25**.
-> - **Complete modularisation**: smaller focused jars and **renamed starters**, e.g. `spring-boot-starter-web` → **`spring-boot-starter-webmvc`**, `-web-services` → `-webservices`, OAuth starters gain a `security` prefix (`spring-boot-starter-security-oauth2-client`). Each technology has a companion **test starter** (`spring-boot-starter-webmvc-test`, `-data-jpa-test`). `spring-boot-starter-classic` / `-test-classic` give the old "everything" classpath for quick migration.
-> - **Jackson 3** by default (group id `tools.jackson`, except `jackson-annotations`); Jackson 2 support deprecated.
-> - **API versioning** and **HTTP service client** auto-configuration; JDK `HttpClient` auto-config uses **virtual threads** when enabled.
-> - `spring-boot-starter-opentelemetry` for OTLP metrics and traces; `spring-boot-starter-kotlin-serialization`.
-> - **Removed**: `@MockBean`/`@SpyBean` (use `@MockitoBean`/`@MockitoSpyBean`), **Undertow** (not Servlet 6.1 compatible yet), executable-jar launch scripts, Spock integration, Pulsar reactive, Spring Session Hazelcast/MongoDB direct support. Spring Batch runs in-memory by default (`spring-boot-starter-batch-jdbc` for DB metadata).
+<Info>
+**🆕 2025: Spring Boot 4.0**
+
+- Built on Spring Framework 7, **Spring Security 7**, **Hibernate 7.2**, Jakarta EE 11. **Java 17+** required, first-class **Java 25**.
+- **Complete modularisation**: smaller focused jars and **renamed starters**, e.g. `spring-boot-starter-web` → **`spring-boot-starter-webmvc`**, `-web-services` → `-webservices`, OAuth starters gain a `security` prefix (`spring-boot-starter-security-oauth2-client`). Each technology has a companion **test starter** (`spring-boot-starter-webmvc-test`, `-data-jpa-test`). `spring-boot-starter-classic` / `-test-classic` give the old "everything" classpath for quick migration.
+- **Jackson 3** by default (group id `tools.jackson`, except `jackson-annotations`); Jackson 2 support deprecated.
+- **API versioning** and **HTTP service client** auto-configuration; JDK `HttpClient` auto-config uses **virtual threads** when enabled.
+- `spring-boot-starter-opentelemetry` for OTLP metrics and traces; `spring-boot-starter-kotlin-serialization`.
+- **Removed**: `@MockBean`/`@SpyBean` (use `@MockitoBean`/`@MockitoSpyBean`), **Undertow** (not Servlet 6.1 compatible yet), executable-jar launch scripts, Spock integration, Pulsar reactive, Spring Session Hazelcast/MongoDB direct support. Spring Batch runs in-memory by default (`spring-boot-starter-batch-jdbc` for DB metadata).
+</Info>
 
 ## Spring Boot 4.1 (2026-06-10)
 
-> [!info]+ 🆕 2026: Spring Boot 4.1
-> - **Spring gRPC** support.
-> - **HTTP client SSRF mitigation** with `InetAddressFilter`.
-> - Updated Jackson configuration properties and customisation.
-> - OpenTelemetry updates; file rotation for Log4j.
-> - 4.1.1 released 2026-08-20; 4.2.0-M1 on 2026-08-20.
+<Info>
+**🆕 2026: Spring Boot 4.1**
+
+- **Spring gRPC** support.
+- **HTTP client SSRF mitigation** with `InetAddressFilter`.
+- Updated Jackson configuration properties and customisation.
+- OpenTelemetry updates; file rotation for Log4j.
+- 4.1.1 released 2026-08-20; 4.2.0-M1 on 2026-08-20.
+</Info>
 
 ## Migration playbook (3.x → 4.0)
 1. Upgrade to the **latest 3.5.x** first and fix all deprecation warnings (Boot removes things deprecated in 3.x).
@@ -139,7 +152,7 @@ Tools like NullAway (Error Prone) and IntelliJ then flag possible NPEs at compil
 3. Swap starters to the new names, or temporarily use `spring-boot-starter-classic` to get running, then trim.
 4. Jackson 3: change imports/group ids (`com.fasterxml.jackson.databind` → `tools.jackson.databind`) or keep Jackson 2 temporarily.
 5. Tests: `@MockBean` → `@MockitoBean`; add module test starters.
-6. Hibernate 7 / JPA 3.2 changes (see [[JPA, Hibernate & jOOQ - Data Access in Java]]); Spring Security 7 config changes.
+6. Hibernate 7 / JPA 3.2 changes (see [JPA, Hibernate & jOOQ - Data Access in Java](/Software%20Engineering/Backend/Java/JPA%2C%20Hibernate%20%26%20jOOQ%20-%20Data%20Access%20in%20Java)); Spring Security 7 config changes.
 7. Replace Undertow with Tomcat or Jetty; replace `RestTemplate` with `RestClient` over time.
 8. Use the **Spring Boot properties migrator** (`spring-boot-properties-migrator`) at runtime to flag renamed properties, and OpenRewrite recipes for mechanical changes.
 
@@ -157,25 +170,30 @@ Tools like NullAway (Error Prone) and IntelliJ then flag possible NPEs at compil
 
 ## Interview questions
 
-> [!question]- What were the big changes in Spring Boot 3?
-> Java 17 baseline, Jakarta EE namespace (`jakarta.*`), native images/AOT, Micrometer observation and tracing, then virtual threads, `RestClient`/`JdbcClient`, Testcontainers/Docker Compose integration and structured logging in later 3.x releases.
+<Accordion title="What were the big changes in Spring Boot 3?">
+Java 17 baseline, Jakarta EE namespace (`jakarta.*`), native images/AOT, Micrometer observation and tracing, then virtual threads, `RestClient`/`JdbcClient`, Testcontainers/Docker Compose integration and structured logging in later 3.x releases.
+</Accordion>
 
-> [!question]- What's new in Spring Framework 7 / Spring Boot 4?
-> Jakarta EE 11, JSpecify null safety, API versioning, HTTP service client groups, `@Retryable`/`@ConcurrencyLimit` in core, Jackson 3, `RestTestClient`, programmatic bean registration; Boot 4 is fully modularised with renamed starters and per-module test starters, removes `@MockBean` and Undertow, and adds an OpenTelemetry starter.
+<Accordion title="What's new in Spring Framework 7 / Spring Boot 4?">
+Jakarta EE 11, JSpecify null safety, API versioning, HTTP service client groups, `@Retryable`/`@ConcurrencyLimit` in core, Jackson 3, `RestTestClient`, programmatic bean registration; Boot 4 is fully modularised with renamed starters and per-module test starters, removes `@MockBean` and Undertow, and adds an OpenTelemetry starter.
+</Accordion>
 
-> [!question]- What should you use instead of `RestTemplate`?
-> `RestClient` for synchronous code (optionally behind declarative `@HttpExchange` interfaces), `WebClient` for reactive/streaming. `RestTemplate` is deprecated in 7.0 docs, formally deprecated for removal in 7.1 and to be removed in 8.0.
+<Accordion title="What should you use instead of `RestTemplate`?">
+`RestClient` for synchronous code (optionally behind declarative `@HttpExchange` interfaces), `WebClient` for reactive/streaming. `RestTemplate` is deprecated in 7.0 docs, formally deprecated for removal in 7.1 and to be removed in 8.0.
+</Accordion>
 
-> [!question]- How does API versioning work in Spring 7?
-> Configure a version resolution strategy (header, query parameter, path segment or media type) with `ApiVersionConfigurer` (or Boot properties), then add `version = "x"` to mapping annotations. Unsupported versions are rejected; deprecated ones can advertise deprecation headers.
+<Accordion title="How does API versioning work in Spring 7?">
+Configure a version resolution strategy (header, query parameter, path segment or media type) with `ApiVersionConfigurer` (or Boot properties), then add `version = "x"` to mapping annotations. Unsupported versions are rejected; deprecated ones can advertise deprecation headers.
+</Accordion>
 
-> [!question]- How would you migrate a service from Boot 3 to Boot 4?
-> Upgrade to latest 3.5 and clear deprecations, move to Java 21/25, rename starters (or use the classic starters temporarily), migrate to Jackson 3, update tests to `@MockitoBean` and module test starters, check Hibernate 7/Security 7 changes, run the properties migrator and OpenRewrite recipes, then roll out gradually.
+<Accordion title="How would you migrate a service from Boot 3 to Boot 4?">
+Upgrade to latest 3.5 and clear deprecations, move to Java 21/25, rename starters (or use the classic starters temporarily), migrate to Jackson 3, update tests to `@MockitoBean` and module test starters, check Hibernate 7/Security 7 changes, run the properties migrator and OpenRewrite recipes, then roll out gradually.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Spring Boot Essentials]] · [[JPA, Hibernate & jOOQ - Data Access in Java]] · [[Java Concurrency & Virtual Threads]] · [[Modern Java 17 to 25]]
-- [[Reactive Spring Book]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Spring Boot Essentials](/Software%20Engineering/Backend/Java/Spring%20Boot%20Essentials) · [JPA, Hibernate & jOOQ - Data Access in Java](/Software%20Engineering/Backend/Java/JPA%2C%20Hibernate%20%26%20jOOQ%20-%20Data%20Access%20in%20Java) · [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025)
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book)
 
 ## Sources
 - [Spring Framework 7.0 General Availability (2025-11-13)](https://spring.io/blog/2025/11/13/spring-framework-7-0-general-availability/)

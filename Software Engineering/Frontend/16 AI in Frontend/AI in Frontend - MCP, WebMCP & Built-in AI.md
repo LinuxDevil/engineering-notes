@@ -1,12 +1,16 @@
 ---
+title: "AI in Frontend - MCP, WebMCP & Built-in AI"
 tags: [frontend, frontend/ai]
 aliases: [Model Context Protocol, WebMCP, Built-in AI, AI in Frontend]
 updated: 2026-09-27
 ---
 # AI in Frontend - MCP, WebMCP & Built-in AI
 
-> [!tldr] TL;DR
-> AI touches front end work in three ways: (1) **agents use your tools** through the **Model Context Protocol (MCP)**: DevTools, framework dev servers, and now websites themselves via **WebMCP**; (2) **the browser ships models**: Chrome's built-in AI APIs (Translator, Summarizer, Prompt API...) run on-device; (3) **you build AI features** (chat, streaming answers, generative UI) with libraries like the Vercel AI SDK. The FE skills that matter are streaming UI, cancellation, error/latency UX, and security (prompt injection, never shipping API keys to the browser).
+<Note>
+**TL;DR**
+
+AI touches front end work in three ways: (1) **agents use your tools** through the **Model Context Protocol (MCP)**: DevTools, framework dev servers, and now websites themselves via **WebMCP**; (2) **the browser ships models**: Chrome's built-in AI APIs (Translator, Summarizer, Prompt API...) run on-device; (3) **you build AI features** (chat, streaming answers, generative UI) with libraries like the Vercel AI SDK. The FE skills that matter are streaming UI, cancellation, error/latency UX, and security (prompt injection, never shipping API keys to the browser).
+</Note>
 
 ```mermaid
 flowchart LR
@@ -67,15 +71,18 @@ sequenceDiagram
 - **stdio**: the host launches the server as a local process and talks over stdin/stdout. Most local dev tools work this way.
 - **Streamable HTTP**: the server is a remote HTTP endpoint (POST for requests, optional SSE streaming for responses/notifications). It replaced the older "HTTP + SSE" transport in the 2025 spec revisions. Remote servers use OAuth-based authorization.
 
-> [!example] A minimal MCP server config in a host (conceptual)
-> ```json
-> {
->   "mcpServers": {
->     "chrome-devtools": { "command": "npx", "args": ["chrome-devtools-mcp@latest"] }
->   }
-> }
-> ```
-> The exact config file and keys depend on the host; check its docs.
+<Info>
+**A minimal MCP server config in a host (conceptual)**
+
+```json
+{
+  "mcpServers": {
+    "chrome-devtools": { "command": "npx", "args": ["chrome-devtools-mcp@latest"] }
+  }
+}
+```
+The exact config file and keys depend on the host; check its docs.
+</Info>
 
 ### Governance
 On **2025-12-09** Anthropic donated MCP to the **Agentic AI Foundation** under the Linux Foundation, together with goose and AGENTS.md. MCP is now vendor-neutral.
@@ -87,12 +94,15 @@ On **2025-12-09** Anthropic donated MCP to the **Agentic AI Foundation** under t
 - **Playwright MCP** (a separate server) lets agents drive browsers for testing; Playwright 1.56 added Test Agents (planner, generator, healer).
 - **AGENTS.md**: a plain markdown file at the repo root that tells coding agents how to build, test and follow conventions (like a README for agents).
 
-> [!info]+ 🆕 2025–2026
-> - MCP joined the Agentic AI Foundation (Linux Foundation), 2025-12-09.
-> - Chrome DevTools for agents 1.0, 2026-05-19.
-> - Next.js DevTools MCP (16.0, Oct 2025); AGENTS.md in create-next-app (16.2, Mar 2026).
-> - Angular CLI MCP server stable (v21, Nov 2025).
-> - WebMCP origin trial from Chrome 149 (2026-06-09).
+<Info>
+**🆕 2025–2026**
+
+- MCP joined the Agentic AI Foundation (Linux Foundation), 2025-12-09.
+- Chrome DevTools for agents 1.0, 2026-05-19.
+- Next.js DevTools MCP (16.0, Oct 2025); AGENTS.md in create-next-app (16.2, Mar 2026).
+- Angular CLI MCP server stable (v21, Nov 2025).
+- WebMCP origin trial from Chrome 149 (2026-06-09).
+</Info>
 
 ## 2. WebMCP: your website as an MCP-style tool provider
 WebMCP lets a **web page** register tools that a browser-based agent can call, instead of the agent scraping the DOM and clicking buttons. The page exposes intent-level actions ("add to cart", "search flights") with schemas, running in the user's session.
@@ -102,18 +112,21 @@ WebMCP lets a **web page** register tools that a browser-based agent can call, i
 - The API lives on **`document.modelContext`** in the current docs (many articles cite `navigator.modelContext`, which is outdated).
 - Angular v22 ships experimental WebMCP helpers (`declareExperimentalWebMcpTool`).
 
-> [!example] Registering a tool (origin trial API, may change)
-> ```js
-> if ('modelContext' in document) {
->   await document.modelContext.registerTool({
->     name: 'add_to_cart',
->     description: 'Add product by id',
->     inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
->     execute: async ({ id }) => { await cart.add(id); return `Added ${id}`; },
->   });
-> }
-> ```
-> Feature-detect, treat inputs as untrusted (validate like any API input), and require user confirmation for anything with side effects like payments.
+<Info>
+**Registering a tool (origin trial API, may change)**
+
+```js
+if ('modelContext' in document) {
+  await document.modelContext.registerTool({
+    name: 'add_to_cart',
+    description: 'Add product by id',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
+    execute: async ({ id }) => { await cart.add(id); return `Added ${id}`; },
+  });
+}
+```
+Feature-detect, treat inputs as untrusted (validate like any API input), and require user confirmation for anything with side effects like payments.
+</Info>
 
 **Why it matters for FE**: the site defines the contract, so agents are faster and less brittle than DOM automation, and you keep control of what agents can do. It is the same design thinking as a public API: clear names, tight schemas, idempotent actions, good errors.
 
@@ -132,23 +145,26 @@ Chrome ships small on-device models (Gemini Nano) behind task APIs. Pros: no ser
 
 Edge shipped Translator in version 148.
 
-> [!example] Feature-detected usage
-> ```js
-> // Global-constructor shape from the current Chrome docs (older articles show `self.ai.*`, which is outdated).
-> // Re-check the live docs before shipping; these APIs are evolving.
-> async function summarize(text) {
->   if (!('Summarizer' in self)) return serverSummarize(text);          // fallback
->   const availability = await Summarizer.availability();
->   if (availability === 'unavailable') return serverSummarize(text);
->   const summarizer = await Summarizer.create({ type: 'key-points' }); // may trigger model download
->   return summarizer.summarize(text);
-> }
->
-> if ('LanguageModel' in self) {
->   const session = await LanguageModel.create();
->   const label = await session.prompt('Classify this review as positive or negative: ...');
-> }
-> ```
+<Info>
+**Feature-detected usage**
+
+```js
+// Global-constructor shape from the current Chrome docs (older articles show `self.ai.*`, which is outdated).
+// Re-check the live docs before shipping; these APIs are evolving.
+async function summarize(text) {
+  if (!('Summarizer' in self)) return serverSummarize(text);          // fallback
+  const availability = await Summarizer.availability();
+  if (availability === 'unavailable') return serverSummarize(text);
+  const summarizer = await Summarizer.create({ type: 'key-points' }); // may trigger model download
+  return summarizer.summarize(text);
+}
+
+if ('LanguageModel' in self) {
+  const session = await LanguageModel.create();
+  const label = await session.prompt('Classify this review as positive or negative: ...');
+}
+```
+</Info>
 
 Good FE use cases: translating user reviews in place, summarizing long content, smart form helpers, classifying/labeling locally before sending. For a travel site: "translate this hotel review to Arabic" on-device.
 
@@ -171,28 +187,31 @@ sequenceDiagram
 **Never call a model provider directly from the browser with your API key.** Anything in client JS is public. Proxy through your server (which also lets you add auth, rate limiting, logging and guardrails).
 
 ### Streaming without any library
-> [!example] Reading a streamed text response
-> ```js
-> const controller = new AbortController();
-> stopButton.onclick = () => controller.abort();
->
-> const res = await fetch('/api/chat', {
->   method: 'POST',
->   headers: { 'Content-Type': 'application/json' },
->   body: JSON.stringify({ messages }),
->   signal: controller.signal,
-> });
-> if (!res.ok) throw new Error(`HTTP ${res.status}`);
->
-> const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-> let answer = '';
-> while (true) {
->   const { value, done } = await reader.read();
->   if (done) break;
->   answer += value;
->   render(answer);      // batch renders (e.g., per animation frame) for long answers
-> }
-> ```
+<Info>
+**Reading a streamed text response**
+
+```js
+const controller = new AbortController();
+stopButton.onclick = () => controller.abort();
+
+const res = await fetch('/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ messages }),
+  signal: controller.signal,
+});
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+let answer = '';
+while (true) {
+  const { value, done } = await reader.read();
+  if (done) break;
+  answer += value;
+  render(answer);      // batch renders (e.g., per animation frame) for long answers
+}
+```
+</Info>
 
 ### Vercel AI SDK
 The AI SDK is a TypeScript toolkit that unifies providers on the server (`streamText`, tools) and gives UI hooks on the client (`useChat` in `@ai-sdk/react`, plus Vue/Svelte/Angular variants).
@@ -200,37 +219,40 @@ The AI SDK is a TypeScript toolkit that unifies providers on the server (`stream
 - **AI SDK 6** (2025-12-22): agents, tool approval.
 - **AI SDK 7** (2026-06-25): WorkflowAgent for durable runs, tool approvals with HMAC, HarnessAgent, MCP Apps, telemetry, realtime voice.
 
-> [!example] Conceptual `useChat` component (AI SDK 5+ style; check the docs of your version for exact APIs)
-> ```tsx
-> 'use client';
-> import { useChat } from '@ai-sdk/react';
-> import { useState } from 'react';
->
-> export function Chat() {
->   const { messages, sendMessage, status, stop, error } = useChat(); // talks to /api/chat by default
->   const [input, setInput] = useState('');
->
->   return (
->     <section aria-label="Assistant">
->       <ol aria-live="polite">
->         {messages.map(m => (
->           <li key={m.id} data-role={m.role}>
->             {m.parts.map((p, i) => (p.type === 'text' ? <p key={i}>{p.text}</p> : null))}
->           </li>
->         ))}
->       </ol>
->       {error && <p role="alert">Something went wrong. <button onClick={() => location.reload()}>Retry</button></p>}
->       <form onSubmit={e => { e.preventDefault(); sendMessage({ text: input }); setInput(''); }}>
->         <input value={input} onChange={e => setInput(e.target.value)} aria-label="Message" />
->         {status === 'streaming' || status === 'submitted'
->           ? <button type="button" onClick={stop}>Stop</button>
->           : <button type="submit" disabled={!input.trim()}>Send</button>}
->       </form>
->     </section>
->   );
-> }
-> ```
-> The server route calls `streamText` with the model and messages and returns a UI message stream response. The key idea: the client never sees the provider key; the hook manages message state, streaming status and cancellation.
+<Info>
+**Conceptual `useChat` component (AI SDK 5+ style; check the docs of your version for exact APIs)**
+
+```tsx
+'use client';
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
+
+export function Chat() {
+  const { messages, sendMessage, status, stop, error } = useChat(); // talks to /api/chat by default
+  const [input, setInput] = useState('');
+
+  return (
+    <section aria-label="Assistant">
+      <ol aria-live="polite">
+        {messages.map(m => (
+          <li key={m.id} data-role={m.role}>
+            {m.parts.map((p, i) => (p.type === 'text' ? <p key={i}>{p.text}</p> : null))}
+          </li>
+        ))}
+      </ol>
+      {error && <p role="alert">Something went wrong. <button onClick={() => location.reload()}>Retry</button></p>}
+      <form onSubmit={e => { e.preventDefault(); sendMessage({ text: input }); setInput(''); }}>
+        <input value={input} onChange={e => setInput(e.target.value)} aria-label="Message" />
+        {status === 'streaming' || status === 'submitted'
+          ? <button type="button" onClick={stop}>Stop</button>
+          : <button type="submit" disabled={!input.trim()}>Send</button>}
+      </form>
+    </section>
+  );
+}
+```
+The server route calls `streamText` with the model and messages and returns a UI message stream response. The key idea: the client never sees the provider key; the hook manages message state, streaming status and cancellation.
+</Info>
 
 ### Generative UI
 Instead of only text, the model returns **structured output or tool calls** and the UI renders real components for them: a flight card, a chart, a booking form.
@@ -258,43 +280,52 @@ Instead of only text, the model returns **structured output or tool calls** and 
   - Treat model output as **untrusted input**: validate tool arguments with schemas, never `eval` or inject it as HTML.
   - Least privilege for tools; require user confirmation for side effects; scope tokens.
   - Separate trusted instructions from untrusted content; don't let retrieved content trigger high-risk tools automatically.
-- **XSS via model output**: render markdown with a sanitizing renderer; no raw HTML; CSP + Trusted Types. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- **XSS via model output**: render markdown with a sanitizing renderer; no raw HTML; CSP + Trusted Types. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 - **Data leakage**: don't send PII/secrets to third-party models without consent/policy; on-device built-in AI helps for sensitive text.
-- **MCP servers are code you run**: install from trusted sources, pin versions, review permissions (the same supply-chain care as npm packages, see [[Supply Chain Security]]).
+- **MCP servers are code you run**: install from trusted sources, pin versions, review permissions (the same supply-chain care as npm packages, see [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)).
 - **WebMCP tools** are an API surface: validate input server-side, require auth, confirm side effects.
 
-> [!warning] Common pitfalls
-> - Shipping a provider key in the bundle "just for the demo".
-> - No Stop button and no abort on unmount (wasted tokens and money).
-> - Rendering model markdown with `dangerouslySetInnerHTML`.
-> - Assuming Chrome built-in AI is available everywhere: it is Chromium only and needs a model download.
-> - Using `navigator.modelContext` or `self.ai.*` from old articles.
+<Warning>
+**Common pitfalls**
+
+- Shipping a provider key in the bundle "just for the demo".
+- No Stop button and no abort on unmount (wasted tokens and money).
+- Rendering model markdown with `dangerouslySetInnerHTML`.
+- Assuming Chrome built-in AI is available everywhere: it is Chromium only and needs a model download.
+- Using `navigator.modelContext` or `self.ai.*` from old articles.
+</Warning>
 
 ## Interview questions
-> [!question]- What is MCP and what are its main building blocks?
-> An open JSON-RPC protocol for connecting AI apps to tools and data. A host (AI app) runs clients, each connected to a server. Servers expose tools (callable functions with JSON Schema inputs), resources (readable context by URI) and prompts (templates); hosts can offer sampling, roots and elicitation. Transports are stdio for local servers and Streamable HTTP for remote ones.
+<Accordion title="What is MCP and what are its main building blocks?">
+An open JSON-RPC protocol for connecting AI apps to tools and data. A host (AI app) runs clients, each connected to a server. Servers expose tools (callable functions with JSON Schema inputs), resources (readable context by URI) and prompts (templates); hosts can offer sampling, roots and elicitation. Transports are stdio for local servers and Streamable HTTP for remote ones.
+</Accordion>
 
-> [!question]- How is WebMCP different from an agent clicking through the DOM?
-> The page registers intent-level tools with schemas (`document.modelContext.registerTool`), so the agent calls `add_to_cart({id})` instead of guessing selectors. It is faster, more reliable and the site controls what is exposed. It is an origin trial in Chrome (from 149), so feature-detect it.
+<Accordion title="How is WebMCP different from an agent clicking through the DOM?">
+The page registers intent-level tools with schemas (`document.modelContext.registerTool`), so the agent calls `add_to_cart({id})` instead of guessing selectors. It is faster, more reliable and the site controls what is exposed. It is an origin trial in Chrome (from 149), so feature-detect it.
+</Accordion>
 
-> [!question]- How do you build a streaming chat UI?
-> The browser posts messages to your server route; the server calls the model with the secret key and streams tokens back (SSE or chunked). The client reads the stream (`res.body.getReader()` or a hook like `useChat`), renders incrementally, offers Stop via AbortController, and handles errors while keeping the prompt.
+<Accordion title="How do you build a streaming chat UI?">
+The browser posts messages to your server route; the server calls the model with the secret key and streams tokens back (SSE or chunked). The client reads the stream (`res.body.getReader()` or a hook like `useChat`), renders incrementally, offers Stop via AbortController, and handles errors while keeping the prompt.
+</Accordion>
 
-> [!question]- When would you use Chrome's built-in AI instead of a cloud model?
-> For privacy-sensitive or offline tasks, low latency, and zero per-call cost on simple tasks (translate, summarize, classify). It is Chromium only and needs a model download, so feature-detect and fall back to the server.
+<Accordion title="When would you use Chrome's built-in AI instead of a cloud model?">
+For privacy-sensitive or offline tasks, low latency, and zero per-call cost on simple tasks (translate, summarize, classify). It is Chromium only and needs a model download, so feature-detect and fall back to the server.
+</Accordion>
 
-> [!question]- What is prompt injection and how does the front end help defend against it?
-> Untrusted content containing instructions that hijack the model. FE defences: treat model output as untrusted (sanitize, schema-validate tool calls), require user confirmation for side effects, keep keys and privileged tools on the server, and clearly separate user-visible actions from model suggestions.
+<Accordion title="What is prompt injection and how does the front end help defend against it?">
+Untrusted content containing instructions that hijack the model. FE defences: treat model output as untrusted (sanitize, schema-validate tool calls), require user confirmation for side effects, keep keys and privileged tools on the server, and clearly separate user-visible actions from model suggestions.
+</Accordion>
 
-> [!question]- What is generative UI?
-> The model's structured output or tool calls are rendered as real components (cards, forms, charts) rather than plain text. You define the component vocabulary and schemas; the UI validates and renders them.
+<Accordion title="What is generative UI?">
+The model's structured output or tool calls are rendered as real components (cards, forms, charts) rather than plain text. You define the component vocabulary and schemas; the UI validates and renders them.
+</Accordion>
 
 ## Related
-- [[MCP]] (your existing MCP note in AI & ML)
-- [[What's New in Frontend 2025-2026]] · [[Modern Web Platform APIs 2025-2026]]
-- [[Networking - HTTP, Caching & Real-time]] (SSE, streaming) · [[Promises, Async-Await & Cancellation]] (AbortController)
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] · [[Supply Chain Security]]
-- [[Next.js 15 to 16.3]] · [[Modern Angular v17 to v22]] · [[Frontend Testing]]
+- [MCP](/Software%20Engineering/AI%20%26%20ML/MCP) (your existing MCP note in AI & ML)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026) · [Modern Web Platform APIs 2025-2026](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Modern%20Web%20Platform%20APIs%202025-2026)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) (SSE, streaming) · [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) (AbortController)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3) · [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22) · [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
 
 ## Sources
 - MCP specification & docs: https://modelcontextprotocol.io

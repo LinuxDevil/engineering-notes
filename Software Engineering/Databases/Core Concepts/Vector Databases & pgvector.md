@@ -1,12 +1,16 @@
 ---
+title: "Vector Databases & pgvector"
 tags: [databases, databases/vector, ai]
 aliases: [Vector Database, Vector DB, pgvector, Embeddings, HNSW, IVFFlat, ANN Search, Semantic Search]
 updated: 2026-09-27
 ---
 # Vector Databases & pgvector
 
-> [!tldr] TL;DR
-> An **embedding** is a vector of numbers that places text, images or other items in a space where "similar meaning" means "close together". A **vector database** stores these vectors and answers "find the k nearest neighbours" fast, using **approximate** indexes such as **HNSW** and **IVFFlat** that trade a little recall for huge speedups. **pgvector** adds this to Postgres, which is enough for most applications up to tens of millions of vectors. The hard parts in production are filtering, hybrid search, memory sizing and re-embedding when models change.
+<Note>
+**TL;DR**
+
+An **embedding** is a vector of numbers that places text, images or other items in a space where "similar meaning" means "close together". A **vector database** stores these vectors and answers "find the k nearest neighbours" fast, using **approximate** indexes such as **HNSW** and **IVFFlat** that trade a little recall for huge speedups. **pgvector** adds this to Postgres, which is enough for most applications up to tens of millions of vectors. The hard parts in production are filtering, hybrid search, memory sizing and re-embedding when models change.
+</Note>
 
 ## The idea: embeddings
 
@@ -238,7 +242,7 @@ Key choices: chunk size and boundaries (split on headings, not mid-sentence), me
 | **Weaviate** | Open source (Go) | Built-in vectorizer modules, hybrid search |
 | **Milvus / Zilliz** | Open source, distributed | Billions of vectors, many index types (IVF-PQ, DiskANN, GPU) |
 | **Chroma** | Open source, embedded | Prototyping, small apps |
-| **MongoDB Atlas Vector Search** | Document DB | `$vectorSearch` stage next to your documents ([[Unit 13 MongoDB Atlas Search]]) |
+| **MongoDB Atlas Vector Search** | Document DB | `$vectorSearch` stage next to your documents ([Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search)) |
 | **Redis vector sets / Redis Query Engine** | In-memory | Very low latency, RAM cost |
 | **Elasticsearch / OpenSearch** | Search engine | `dense_vector` / k-NN, strong hybrid with BM25 |
 
@@ -257,18 +261,21 @@ Key choices: chunk size and boundaries (split on headings, not mid-sentence), me
 4. Sweep `ef_search` / `probes` and plot recall vs p95 latency. Pick the knee.
 5. Separately, evaluate **retrieval quality** (does the right document come back?) with labeled pairs: recall@k, MRR, nDCG. A perfect index over a bad embedding model is still bad.
 
-> [!warning] Common pitfalls
-> - Using a different operator than the index's operator class (the index is silently ignored). Check with `EXPLAIN`, see [[Query Optimization & EXPLAIN]].
-> - Building IVFFlat on an empty or tiny table; centroids are garbage.
-> - Selective `WHERE` filters with HNSW returning fewer than k rows (enable iterative scans).
-> - Mixing embeddings from two models or versions in one column. Distances between them are meaningless.
-> - `ef_search` lower than `LIMIT`.
-> - Index build running out of `maintenance_work_mem` and spilling to disk (builds get dramatically slower).
-> - Storing only vectors without the source text and model version; you can't re-embed or debug.
+<Warning>
+**Common pitfalls**
+
+- Using a different operator than the index's operator class (the index is silently ignored). Check with `EXPLAIN`, see [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN).
+- Building IVFFlat on an empty or tiny table; centroids are garbage.
+- Selective `WHERE` filters with HNSW returning fewer than k rows (enable iterative scans).
+- Mixing embeddings from two models or versions in one column. Distances between them are meaningless.
+- `ef_search` lower than `LIMIT`.
+- Index build running out of `maintenance_work_mem` and spilling to disk (builds get dramatically slower).
+- Storing only vectors without the source text and model version; you can't re-embed or debug.
+</Warning>
 
 ## Senior perspective
 
-- **Embedding model versioning**: store `model` (and version) per row. Changing models means **re-embedding everything**. Plan it like a migration: new column or table, backfill in batches, build the new index, dual-query and compare, switch, drop the old one ([[Database Migrations & Schema Evolution]]).
+- **Embedding model versioning**: store `model` (and version) per row. Changing models means **re-embedding everything**. Plan it like a migration: new column or table, backfill in batches, build the new index, dual-query and compare, switch, drop the old one ([Database Migrations & Schema Evolution](/Software%20Engineering/Databases/Core%20Concepts/Database%20Migrations%20%26%20Schema%20Evolution)).
 - **Dimension cost**: memory ≈ rows × dims × 4 bytes for `vector` (2 for `halfvec`), plus HNSW graph overhead. 10M × 1536 × 4 B ≈ 61 GB before the graph. Models that support shorter outputs (Matryoshka embeddings) or `halfvec` can halve or quarter this with small quality loss.
 - **Memory sizing**: HNSW performs well when the index fits in RAM (shared_buffers + OS cache). Once it spills to disk, latency jumps. Consider disk-oriented indexes (DiskANN / pgvectorscale) or quantization.
 - **Index builds** on large tables take hours; use `CREATE INDEX CONCURRENTLY`, generous `maintenance_work_mem`, parallel workers, and build on a replica or new table when possible.
@@ -277,42 +284,52 @@ Key choices: chunk size and boundaries (split on headings, not mid-sentence), me
 - **Cost**: embedding API calls at ingest and query time, RAM for indexes, re-embedding runs. Cache query embeddings for frequent questions.
 - **Security**: embeddings can leak information about the source text; apply the same access controls as the text itself and filter by permissions at query time.
 
-> [!info]+ 🆕 2025–2026
-> - **pgvector 0.8.0** (2024-10-30) introduced **iterative index scans** (`hnsw.iterative_scan`, `ivfflat.iterative_scan`, `hnsw.max_scan_tuples`, `ivfflat.max_probes`), fixing most overfiltering problems. It is the baseline for 2025–2026 deployments.
-> - **pgvector 0.8.1** (2025-09-04) added **PostgreSQL 18** support.
-> - **pgvector 0.8.2** (2026-02-26) fixed **CVE-2026-3172**, a buffer overflow in **parallel HNSW index builds**. Upgrade is advised.
-> - **MongoDB acquired Voyage AI** (embedding and reranking models), announced 2025-02-24.
-> - **MongoDB 8.2** (2025-09-16) brought Search and Vector Search to self-managed Community/Enterprise Server in public preview; **MongoDB 8.3** (2026-05-07) made `$scoreFusion` (hybrid score fusion) generally available.
-> - **Redis 8** (2025) added **vector sets**, a native data type for vector similarity.
+<Info>
+**🆕 2025–2026**
+
+- **pgvector 0.8.0** (2024-10-30) introduced **iterative index scans** (`hnsw.iterative_scan`, `ivfflat.iterative_scan`, `hnsw.max_scan_tuples`, `ivfflat.max_probes`), fixing most overfiltering problems. It is the baseline for 2025–2026 deployments.
+- **pgvector 0.8.1** (2025-09-04) added **PostgreSQL 18** support.
+- **pgvector 0.8.2** (2026-02-26) fixed **CVE-2026-3172**, a buffer overflow in **parallel HNSW index builds**. Upgrade is advised.
+- **MongoDB acquired Voyage AI** (embedding and reranking models), announced 2025-02-24.
+- **MongoDB 8.2** (2025-09-16) brought Search and Vector Search to self-managed Community/Enterprise Server in public preview; **MongoDB 8.3** (2026-05-07) made `$scoreFusion` (hybrid score fusion) generally available.
+- **Redis 8** (2025) added **vector sets**, a native data type for vector similarity.
+</Info>
 
 ## Interview questions
 
-> [!question]- What is an embedding and why does nearest-neighbour search work on it?
-> A fixed-length vector produced by a model trained so that semantically similar inputs land close together. Similarity search therefore becomes a geometric nearest-neighbour problem using cosine, inner product or L2 distance.
+<Accordion title="What is an embedding and why does nearest-neighbour search work on it?">
+A fixed-length vector produced by a model trained so that semantically similar inputs land close together. Similarity search therefore becomes a geometric nearest-neighbour problem using cosine, inner product or L2 distance.
+</Accordion>
 
-> [!question]- HNSW vs IVFFlat?
-> HNSW is a layered proximity graph: better recall/latency, no training, supports inserts on an empty table, but slower builds and more memory. IVFFlat clusters vectors with k-means and scans the nearest `probes` lists: faster to build and smaller, but needs data before building, lower recall at the same speed, and rebuilds as data drifts.
+<Accordion title="HNSW vs IVFFlat?">
+HNSW is a layered proximity graph: better recall/latency, no training, supports inserts on an empty table, but slower builds and more memory. IVFFlat clusters vectors with k-means and scans the nearest `probes` lists: faster to build and smaller, but needs data before building, lower recall at the same speed, and rebuilds as data drifts.
+</Accordion>
 
-> [!question]- What happens when you combine a selective WHERE filter with an ANN index?
-> The index returns its top candidates, then the filter removes most of them, so you can get fewer than k results (overfiltering). Fixes: iterative index scans in pgvector 0.8+, partial indexes or partitions per filter value, pre-filtering with exact search on small subsets, or engines with filter-aware graph traversal.
+<Accordion title="What happens when you combine a selective WHERE filter with an ANN index?">
+The index returns its top candidates, then the filter removes most of them, so you can get fewer than k results (overfiltering). Fixes: iterative index scans in pgvector 0.8+, partial indexes or partitions per filter value, pre-filtering with exact search on small subsets, or engines with filter-aware graph traversal.
+</Accordion>
 
-> [!question]- What is hybrid search and how does RRF work?
-> Running keyword (BM25/full-text) and vector search and merging results. RRF scores each document as the sum of 1/(k + rank) over the lists it appears in (k ≈ 60), so documents ranked well by both rise to the top without needing comparable score scales.
+<Accordion title="What is hybrid search and how does RRF work?">
+Running keyword (BM25/full-text) and vector search and merging results. RRF scores each document as the sum of 1/(k + rank) over the lists it appears in (k ≈ 60), so documents ranked well by both rise to the top without needing comparable score scales.
+</Accordion>
 
-> [!question]- How would you size memory for 20M 1024-dim embeddings?
-> 20M × 1024 × 4 bytes ≈ 82 GB for float32 data, plus HNSW links (roughly m × 2 neighbours per node in layer 0, 4–8 bytes each) and heap overhead, so 100+ GB to keep hot. With `halfvec` about half; with binary quantization plus re-ranking much less. Then decide: bigger instance, quantization, disk-based index, or sharding.
+<Accordion title="How would you size memory for 20M 1024-dim embeddings?">
+20M × 1024 × 4 bytes ≈ 82 GB for float32 data, plus HNSW links (roughly m × 2 neighbours per node in layer 0, 4–8 bytes each) and heap overhead, so 100+ GB to keep hot. With `halfvec` about half; with binary quantization plus re-ranking much less. Then decide: bigger instance, quantization, disk-based index, or sharding.
+</Accordion>
 
-> [!question]- Your team wants to switch embedding models. What is the plan?
-> Treat it as a data migration: add a new column/table keyed by model version, backfill embeddings in rate-limited batches, build the new index concurrently, evaluate retrieval quality offline and with shadow traffic, switch reads, then drop the old column and index. Never mix vectors from different models in one index.
+<Accordion title="Your team wants to switch embedding models. What is the plan?">
+Treat it as a data migration: add a new column/table keyed by model version, backfill embeddings in rate-limited batches, build the new index concurrently, evaluate retrieval quality offline and with shadow traffic, switch reads, then drop the old column and index. Never mix vectors from different models in one index.
+</Accordion>
 
-> [!question]- When is pgvector not enough?
-> Very large collections (hundreds of millions+) where the index can't fit in RAM, extreme QPS requirements, need for advanced quantization or GPU indexes, or when vector workload would starve the OLTP primary. Then consider pgvectorscale, a read replica dedicated to vectors, or a dedicated vector DB.
+<Accordion title="When is pgvector not enough?">
+Very large collections (hundreds of millions+) where the index can't fit in RAM, extreme QPS requirements, need for advanced quantization or GPU indexes, or when vector workload would starve the OLTP primary. Then consider pgvectorscale, a read replica dedicated to vectors, or a dedicated vector DB.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]] · [[Databases Index]]
-- [[NoSQL Database Types]] · [[Database Indexes]] · [[Query Optimization & EXPLAIN]]
-- [[Unit 13 MongoDB Atlas Search]] · [[MongoDB]]
-- [[Database Migrations & Schema Evolution]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
+- [Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search) · [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB)
+- [Database Migrations & Schema Evolution](/Software%20Engineering/Databases/Core%20Concepts/Database%20Migrations%20%26%20Schema%20Evolution)
 
 ## Sources
 - [pgvector README (GitHub)](https://github.com/pgvector/pgvector)

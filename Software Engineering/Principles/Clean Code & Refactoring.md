@@ -1,12 +1,16 @@
 ---
+title: "Clean Code & Refactoring"
 tags: [principles, principles/clean-code]
 aliases: [Clean Code, Refactoring, Code Smells, Refactoring Catalogue, Naming, Tidy First]
 updated: 2026-09-27
 ---
 # Clean Code & Refactoring
 
-> [!tldr] TL;DR
-> **Clean code** is code that the next reader can understand and change safely: intention-revealing names, small focused functions, explicit error handling, no surprises. **Refactoring** is changing the structure of code **without changing its behaviour**, in small, safe, test-backed steps. **Code smells** are the symptoms that tell you where to refactor. Refactor continuously as part of feature work ("make the change easy, then make the easy change"), not in big-bang rewrites.
+<Note>
+**TL;DR**
+
+**Clean code** is code that the next reader can understand and change safely: intention-revealing names, small focused functions, explicit error handling, no surprises. **Refactoring** is changing the structure of code **without changing its behaviour**, in small, safe, test-backed steps. **Code smells** are the symptoms that tell you where to refactor. Refactor continuously as part of feature work ("make the change easy, then make the easy change"), not in big-bang rewrites.
+</Note>
 
 ## The idea
 
@@ -19,7 +23,7 @@ Code is read many more times than it is written. Clean code minimises the reader
 | Guideline | ❌ | ✅ |
 |---|---|---|
 | Reveal intent | `d`, `data2`, `tmp` | `elapsedDays`, `unpaidInvoices` |
-| Use domain language (see [[Domain-Driven Design (DDD)\|ubiquitous language]]) | `processRecord()` | `approveLoanApplication()` |
+| Use domain language (see [ubiquitous language](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))) | `processRecord()` | `approveLoanApplication()` |
 | Booleans read as questions | `flag`, `status` | `isActive`, `hasShipped`, `canRetry` |
 | Functions are verbs, classes are nouns | `class ProcessPayment`, `function user()` | `class PaymentProcessor`, `function loadUser()` |
 | No encodings or noise words | `strName`, `IUserInterface`, `UserInfoData` | `name`, `User` |
@@ -109,14 +113,14 @@ Smells (Fowler & Beck) are surface signs of a deeper design problem. Common ones
 | **Long Function** | Scrolls, many comments explaining sections | Extract Function, Decompose Conditional |
 | **Large Class / God Object** | Many fields and unrelated methods | Extract Class, Move Function |
 | **Long Parameter List** | 4+ params, booleans | Introduce Parameter Object, Preserve Whole Object |
-| **Duplicated Code** | Same logic in several places | Extract Function, Pull Up Method (see [[DRY, KISS & YAGNI]]) |
+| **Duplicated Code** | Same logic in several places | Extract Function, Pull Up Method (see [DRY, KISS & YAGNI](/Software%20Engineering/Principles/DRY%2C%20KISS%20%26%20YAGNI)) |
 | **Divergent Change** | One class changes for many different reasons | Split Phase, Extract Class (SRP) |
 | **Shotgun Surgery** | One change requires edits in many classes | Move Function/Field, Inline Class |
 | **Feature Envy** | A method uses another object's data more than its own | Move Function |
 | **Data Clumps** | Same group of fields travels together (`street, city, zip`) | Extract Class / value object |
 | **Primitive Obsession** | Strings/ints for money, emails, IDs | Replace Primitive with Object (value objects) |
 | **Repeated Switches** | Same `switch` on type in many places | Replace Conditional with Polymorphism |
-| **Message Chains** | `a.getB().getC().getD()` | Hide Delegate (Law of Demeter, see [[Coupling, Cohesion & Modularity]]) |
+| **Message Chains** | `a.getB().getC().getD()` | Hide Delegate (Law of Demeter, see [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)) |
 | **Middle Man** | A class that only delegates | Remove Middle Man, Inline |
 | **Speculative Generality** | Hooks and abstractions nobody uses | Collapse Hierarchy, Inline (YAGNI) |
 | **Temporary Field** | Fields only set in some situations | Extract Class |
@@ -209,52 +213,64 @@ const result = users
 - **Rule of three**: third time you see the same thing, refactor.
 - **Don't** refactor code you don't need to change, or right before a risky release without tests.
 
-For large changes: **branch by abstraction**, **parallel change** (expand–migrate–contract) and the **strangler fig** pattern let you restructure incrementally while shipping. See [[Software Architecture Styles]].
+For large changes: **branch by abstraction**, **parallel change** (expand–migrate–contract) and the **strangler fig** pattern let you restructure incrementally while shipping. See [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
 
-> [!info]+ 🆕 2025–2026
-> - **Clean Code, 2nd edition** (Robert C. Martin, Addison-Wesley, **October 2025**): a rewrite of the 2008 book, with examples in several languages and expanded testing, design and architecture material.
-> - **AI and refactoring**: GitClear's 2025 study (211M changed lines) reported that "moved" (refactored) code fell to under 10% of changes in 2024 while copy/pasted code rose, which they attribute partly to AI completion. Kent Beck's June 2025 essay **"Augmented Coding: Beyond the Vibes"** argues the opposite discipline: keep caring about code quality with AI agents by enforcing TDD and separating structural ("tidy") from behavioural changes, and watch for agents deleting or weakening tests. Practical rule: ask the assistant for refactorings as **separate, behaviour-preserving steps** with tests green between each, and review AI diffs for duplicated helpers.
+<Info>
+**🆕 2025–2026**
+
+- **Clean Code, 2nd edition** (Robert C. Martin, Addison-Wesley, **October 2025**): a rewrite of the 2008 book, with examples in several languages and expanded testing, design and architecture material.
+- **AI and refactoring**: GitClear's 2025 study (211M changed lines) reported that "moved" (refactored) code fell to under 10% of changes in 2024 while copy/pasted code rose, which they attribute partly to AI completion. Kent Beck's June 2025 essay **"Augmented Coding: Beyond the Vibes"** argues the opposite discipline: keep caring about code quality with AI agents by enforcing TDD and separating structural ("tidy") from behavioural changes, and watch for agents deleting or weakening tests. Practical rule: ask the assistant for refactorings as **separate, behaviour-preserving steps** with tests green between each, and review AI diffs for duplicated helpers.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - "Refactoring" that also changes behaviour: impossible to review, and bugs can't be bisected.
-> - Big-bang rewrites that stall for months while the old system keeps changing.
-> - Refactoring without tests (or with tests coupled to implementation details, which break on every structural change).
-> - Dogma: splitting into tiny functions until the reader has to jump through 15 files. Some critics (e.g. Ousterhout) argue many small, shallow methods increase complexity; aim for **deep** functions with simple interfaces (see [[Coupling, Cohesion & Modularity]]).
-> - Style wars in review. Automate formatting and lint rules so humans review design.
+<Warning>
+**Common mistakes**
+
+- "Refactoring" that also changes behaviour: impossible to review, and bugs can't be bisected.
+- Big-bang rewrites that stall for months while the old system keeps changing.
+- Refactoring without tests (or with tests coupled to implementation details, which break on every structural change).
+- Dogma: splitting into tiny functions until the reader has to jump through 15 files. Some critics (e.g. Ousterhout) argue many small, shallow methods increase complexity; aim for **deep** functions with simple interfaces (see [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)).
+- Style wars in review. Automate formatting and lint rules so humans review design.
+</Warning>
 
 ## Senior perspective
 
 - Budget refactoring **inside** feature estimates; separate "tidy" PRs make reviews fast.
 - Measure where refactoring pays: **hotspots** (files with high churn × high complexity, from `git log`) are where cleaning up has the biggest return (Adam Tornhill, *Your Code as a Crime Scene*).
 - Make code review about readability and design ("could a new team member change this safely?"), and let tools handle formatting.
-- Track deliberate shortcuts as technical debt with an owner. See [[Architecture Decision Records (ADRs) & Technical Debt]].
+- Track deliberate shortcuts as technical debt with an owner. See [Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt).
 
 ## Interview questions
 
-> [!question]- What is refactoring, and how is it different from rewriting?
-> Refactoring changes internal structure without changing observable behaviour, in small verified steps. A rewrite replaces the implementation wholesale and usually changes behaviour; it's riskier and harder to ship incrementally.
+<Accordion title="What is refactoring, and how is it different from rewriting?">
+Refactoring changes internal structure without changing observable behaviour, in small verified steps. A rewrite replaces the implementation wholesale and usually changes behaviour; it's riskier and harder to ship incrementally.
+</Accordion>
 
-> [!question]- Name some code smells and how you'd fix them.
-> Long function (extract function), large class (extract class), long parameter list (parameter object), duplicated code (extract and reuse), feature envy (move function), primitive obsession (value objects), repeated switches (polymorphism), shotgun surgery (move related code together).
+<Accordion title="Name some code smells and how you'd fix them.">
+Long function (extract function), large class (extract class), long parameter list (parameter object), duplicated code (extract and reuse), feature envy (move function), primitive obsession (value objects), repeated switches (polymorphism), shotgun surgery (move related code together).
+</Accordion>
 
-> [!question]- How do you refactor legacy code with no tests?
-> Add characterisation tests around the area you need to change (pin current behaviour, even if odd), find seams to break dependencies (extract interface, parameterise constructor), then refactor in small steps, using automated IDE refactorings where possible.
+<Accordion title="How do you refactor legacy code with no tests?">
+Add characterisation tests around the area you need to change (pin current behaviour, even if odd), find seams to break dependencies (extract interface, parameterise constructor), then refactor in small steps, using automated IDE refactorings where possible.
+</Accordion>
 
-> [!question]- What makes a good function name?
-> It states what the function does (or returns) in domain terms, at the right level of abstraction, with a verb for actions and a question form for booleans, consistent with the rest of the codebase. If it's hard to name, the function likely does too much.
+<Accordion title="What makes a good function name?">
+It states what the function does (or returns) in domain terms, at the right level of abstraction, with a verb for actions and a question form for booleans, consistent with the rest of the codebase. If it's hard to name, the function likely does too much.
+</Accordion>
 
-> [!question]- Should refactoring be a separate ticket?
-> Mostly no: do small refactorings as part of the feature that needs them (preparatory refactoring), in separate commits/PRs. Large structural changes deserve their own plan and tracking, delivered incrementally.
+<Accordion title="Should refactoring be a separate ticket?">
+Mostly no: do small refactorings as part of the feature that needs them (preparatory refactoring), in separate commits/PRs. Large structural changes deserve their own plan and tracking, delivered incrementally.
+</Accordion>
 
-> [!question]- How do you handle AI-generated code in review?
-> Same bar as human code: tests first or alongside, no behaviour change hidden in "refactors", check for duplicated helpers the codebase already has, unused speculative code, weakened or deleted tests, and naming that doesn't match the domain.
+<Accordion title="How do you handle AI-generated code in review?">
+Same bar as human code: tests first or alongside, no behaviour change hidden in "refactors", check for duplicated helpers the codebase already has, unused speculative code, weakened or deleted tests, and naming that doesn't match the domain.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[DRY, KISS & YAGNI]] · [[SOLID]] · [[Test-Driven Development (TDD)]] · [[Coupling, Cohesion & Modularity]]
-- [[Functional Programming Principles]] · [[Architecture Decision Records (ADRs) & Technical Debt]] · [[Design Patterns]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [DRY, KISS & YAGNI](/Software%20Engineering/Principles/DRY%2C%20KISS%20%26%20YAGNI) · [SOLID](/Software%20Engineering/Principles/SOLID) · [Test-Driven Development (TDD)](/Software%20Engineering/Principles/Test-Driven%20Development%20(TDD)) · [Coupling, Cohesion & Modularity](/Software%20Engineering/Principles/Coupling%2C%20Cohesion%20%26%20Modularity)
+- [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) · [Architecture Decision Records (ADRs) & Technical Debt](/Software%20Engineering/Principles/Architecture%20Decision%20Records%20(ADRs)%20%26%20Technical%20Debt) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)
 
 ## Sources
 - Martin Fowler, *Refactoring: Improving the Design of Existing Code*, 2nd ed. (Addison-Wesley, 2018) · [Refactoring catalog](https://refactoring.com/catalog/)

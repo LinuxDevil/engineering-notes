@@ -1,14 +1,18 @@
 ---
+title: "Unit 08 MongoDB CRUD Operations Replace and Delete Documents"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB updateOne, MongoDB replaceOne, MongoDB upsert, findAndModify, MongoDB Unit 8]
 updated: 2026-09-27
 ---
 # Unit 08 MongoDB CRUD Operations Replace and Delete Documents
 
-> [!tldr] TL;DR
-> `replaceOne()` swaps a whole document (keeping `_id`). `updateOne()` / `updateMany()` change specific fields with **update operators** (`$set`, `$inc`, `$push`, `$unset`, ...). `upsert: true` inserts when nothing matches. `findAndModify()` / `findOneAndUpdate()` update **and return** a document atomically. `deleteOne()` / `deleteMany()` remove documents. Each single-document write is atomic; `updateMany` is **not** atomic as a whole.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 8 · Prev: [[Unit 07 MongoDB CRUD Operations Insert and Find Documents]] · Next: [[Unit 09 MongoDB CRUD Operations Modifying Query Results]]
+`replaceOne()` swaps a whole document (keeping `_id`). `updateOne()` / `updateMany()` change specific fields with **update operators** (`$set`, `$inc`, `$push`, `$unset`, ...). `upsert: true` inserts when nothing matches. `findAndModify()` / `findOneAndUpdate()` update **and return** a document atomically. `deleteOne()` / `deleteMany()` remove documents. Each single-document write is atomic; `updateMany` is **not** atomic as a whole.
+</Note>
+
+> Course: MongoDB University, Unit 8 · Prev: [Unit 07 MongoDB CRUD Operations Insert and Find Documents](/Software%20Engineering/Databases/MongoDB/Unit%2007%20MongoDB%20CRUD%20Operations%20Insert%20and%20Find%20Documents) · Next: [Unit 09 MongoDB CRUD Operations Modifying Query Results](/Software%20Engineering/Databases/MongoDB/Unit%2009%20MongoDB%20CRUD%20Operations%20Modifying%20Query%20Results)
 
 ## What this unit covers
 Replacing whole documents, updating individual fields, upserting, and removing documents.
@@ -128,7 +132,7 @@ db.podcasts.deleteMany({ category: "crime" })
 ## Common pitfalls
 - Passing a plain object as `update` to `updateOne` (without operators) errors in modern shells; use `replaceOne` for full replacement.
 - Upsert with a filter on non-unique fields under concurrency can create duplicates; back it with a **unique index**.
-- `$push` onto an array forever creates an unbounded array ([[Unit 04 MongoDB Data Modeling Intro]]). Use `$push` with `$slice` to cap it.
+- `$push` onto an array forever creates an unbounded array ([Unit 04 MongoDB Data Modeling Intro](/Software%20Engineering/Databases/MongoDB/Unit%2004%20MongoDB%20Data%20Modeling%20Intro)). Use `$push` with `$slice` to cap it.
 
 ## Senior perspective
 - **Atomicity**: single-document operations are atomic, including multiple operators on one document. Design so business invariants live in one document.
@@ -138,21 +142,25 @@ db.podcasts.deleteMany({ category: "crime" })
 - **Soft deletes** (`deletedAt`) are common for audit, but every query then needs that filter and a matching index (partial index).
 
 ## Interview questions
-> [!question]- What's the difference between replaceOne and updateOne?
-> `replaceOne` replaces the entire document (except `_id`) with a new one. `updateOne` modifies specific fields using update operators and leaves the rest untouched.
+<Accordion title="What's the difference between replaceOne and updateOne?">
+`replaceOne` replaces the entire document (except `_id`) with a new one. `updateOne` modifies specific fields using update operators and leaves the rest untouched.
+</Accordion>
 
-> [!question]- What does upsert do and what is the risk?
-> If no document matches, it inserts a new one built from the filter's equality fields plus the update. Under concurrency two upserts can both insert; a unique index on the filter fields prevents duplicates (the loser gets a duplicate key error and can retry).
+<Accordion title="What does upsert do and what is the risk?">
+If no document matches, it inserts a new one built from the filter's equality fields plus the update. Under concurrency two upserts can both insert; a unique index on the filter fields prevents duplicates (the loser gets a duplicate key error and can retry).
+</Accordion>
 
-> [!question]- Why use findAndModify / findOneAndUpdate?
-> To modify a document and get it back (before or after) atomically in one operation, e.g. counters, job queues claiming a task, reservations.
+<Accordion title="Why use findAndModify / findOneAndUpdate?">
+To modify a document and get it back (before or after) atomically in one operation, e.g. counters, job queues claiming a task, reservations.
+</Accordion>
 
-> [!question]- Is updateMany atomic?
-> No. Each document's update is atomic, but the operation as a whole is not isolated or rolled back on failure. Use a multi-document transaction for all-or-nothing behaviour.
+<Accordion title="Is updateMany atomic?">
+No. Each document's update is atomic, but the operation as a whole is not isolated or rolled back on failure. Use a multi-document transaction for all-or-nothing behaviour.
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Transactions & ACID]] · [[Unit 10 MongoDB CRUD Operations in Node.js]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Unit 10 MongoDB CRUD Operations in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2010%20MongoDB%20CRUD%20Operations%20in%20Node.js)
 
 ## Sources
 - [MongoDB Manual: Update Documents](https://www.mongodb.com/docs/manual/tutorial/update-documents/)

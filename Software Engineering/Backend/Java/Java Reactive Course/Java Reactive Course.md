@@ -1,12 +1,16 @@
 ---
+title: "Java Reactive Course"
 tags: [backend, backend/java, course]
 aliases: [Reactive Course, Java Reactive Programming Course]
 updated: 2026-09-27
 ---
 # Java Reactive Course
 
-> [!tldr] TL;DR
-> Course notes on reactive programming in Java with **Project Reactor**. The starting point is the four I/O models (sync-blocking, async, non-blocking, non-blocking + async) and why reactive code tries to never hold a thread while waiting. The Reactor details (Mono, Flux, operators, schedulers, backpressure) are in [[Reactor - Mono & Flux]].
+<Note>
+**TL;DR**
+
+Course notes on reactive programming in Java with **Project Reactor**. The starting point is the four I/O models (sync-blocking, async, non-blocking, non-blocking + async) and why reactive code tries to never hold a thread while waiting. The Reactor details (Mono, Flux, operators, schedulers, backpressure) are in [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux).
+</Note>
 
 ## The four I/O models (the insurance-company phone call)
 
@@ -37,15 +41,15 @@ sequenceDiagram
   S-->>T: event: response ready → callback on any free thread
 ```
 
-Reactive programming (model 4) lets a handful of threads serve thousands of concurrent requests because no thread sits idle waiting for I/O. Since Java 21, **virtual threads** give similar scalability with plain blocking code; see [[Java Concurrency & Virtual Threads]] for when each fits.
+Reactive programming (model 4) lets a handful of threads serve thousands of concurrent requests because no thread sits idle waiting for I/O. Since Java 21, **virtual threads** give similar scalability with plain blocking code; see [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) for when each fits.
 
 ## Course notes
-- [[Reactor - Mono & Flux]]: publishers, laziness, `just` vs `fromSupplier`, operators, schedulers, backpressure
+- [Reactor - Mono & Flux](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Reactor%20-%20Mono%20%26%20Flux): publishers, laziness, `just` vs `fromSupplier`, operators, schedulers, backpressure
 
 ## Related
-- [[Java & Spring Index]]
-- [[Reactive Spring Book]] · [[Reactive Spring - Ch 4 IO & Reactive Streams]] · [[Reactive Spring - Ch 5 Reactor & Backpressure]]
-- [[Java Concurrency & Virtual Threads]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) · [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) · [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure)
+- [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads)
 
 ## Sources
 - [Project Reactor reference guide](https://projectreactor.io/docs/core/release/reference/)

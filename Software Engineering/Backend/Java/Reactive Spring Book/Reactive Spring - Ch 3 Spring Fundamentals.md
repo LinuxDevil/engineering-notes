@@ -1,14 +1,18 @@
 ---
+title: "Reactive Spring - Ch 3 Spring Fundamentals"
 tags: [backend, backend/java, book]
 aliases: [Spring Bootstrap, Spring fundamentals, BeanPostProcessor, Component scanning, Spring starters]
 updated: 2026-09-27
 ---
 # Reactive Spring - Ch 3 Spring Fundamentals
 
-> [!tldr] TL;DR
-> "Spring is just a big bag of beans." The chapter covers **DI/IoC**, **Java configuration** (`@Configuration` + `@Bean`), the **application context**, **AOP**, lifecycle hooks like **`BeanPostProcessor`**, **component scanning** with stereotype annotations and constructor injection, **profiles**, and Spring Boot's **starters** and **auto-configuration**.
+<Note>
+**TL;DR**
 
-*Part of [[Reactive Spring Book]] (book notes). Renamed from "Chapter 3". The up-to-date topic note is [[Spring Boot Essentials]].*
+"Spring is just a big bag of beans." The chapter covers **DI/IoC**, **Java configuration** (`@Configuration` + `@Bean`), the **application context**, **AOP**, lifecycle hooks like **`BeanPostProcessor`**, **component scanning** with stereotype annotations and constructor injection, **profiles**, and Spring Boot's **starters** and **auto-configuration**.
+</Note>
+
+*Part of [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) (book notes). Renamed from "Chapter 3". The up-to-date topic note is [Spring Boot Essentials](/Software%20Engineering/Backend/Java/Spring%20Boot%20Essentials).*
 
 ## What the chapter covers
 DI, IoC, Java configuration, the Spring application context, aspect-oriented programming (AOP), and Spring Boot auto-configuration.
@@ -98,18 +102,21 @@ flowchart LR
 
 ## Interview questions
 
-> [!question]- What is a `BeanPostProcessor` used for?
-> A hook called for every bean before and after initialisation. Frameworks use it to wrap beans in proxies (transactions, async, caching, security) or to apply cross-cutting initialisation.
+<Accordion title="What is a `BeanPostProcessor` used for?">
+A hook called for every bean before and after initialisation. Frameworks use it to wrap beans in proxies (transactions, async, caching, security) or to apply cross-cutting initialisation.
+</Accordion>
 
-> [!question]- How does Spring choose a constructor for a component?
-> If there's one constructor it uses it and resolves its parameters from the context. With several, it uses the one annotated `@Autowired` (or the no-arg one if present and none are annotated).
+<Accordion title="How does Spring choose a constructor for a component?">
+If there's one constructor it uses it and resolves its parameters from the context. With several, it uses the one annotated `@Autowired` (or the no-arg one if present and none are annotated).
+</Accordion>
 
-> [!question]- `@Configuration` + `@Bean` vs component scanning?
-> `@Bean` methods give explicit control and work for third-party classes you can't annotate. Component scanning is implicit and convenient for your own classes. Most apps use both.
+<Accordion title="`@Configuration` + `@Bean` vs component scanning?">
+`@Bean` methods give explicit control and work for third-party classes you can't annotate. Component scanning is implicit and convenient for your own classes. Most apps use both.
+</Accordion>
 
 ## Related
-- [[Reactive Spring Book]] · [[Java & Spring Index]]
-- [[Spring Boot Essentials]] · [[Reactive Spring - Ch 2 Java Refresher]] · [[Reactive Spring - Ch 4 IO & Reactive Streams]]
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Spring Boot Essentials](/Software%20Engineering/Backend/Java/Spring%20Boot%20Essentials) · [Reactive Spring - Ch 2 Java Refresher](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%202%20Java%20Refresher) · [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams)
 
 ## Sources
 - Josh Long, *Reactive Spring* (2020), chapter 3

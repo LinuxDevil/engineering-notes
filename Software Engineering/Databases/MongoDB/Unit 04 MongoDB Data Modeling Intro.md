@@ -1,14 +1,18 @@
 ---
+title: "Unit 04 MongoDB Data Modeling Intro"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB Data Modeling, Embedding vs Referencing, MongoDB Schema Design, MongoDB Schema Patterns, MongoDB Unit 4]
 updated: 2026-09-27
 ---
 # Unit 04 MongoDB Data Modeling Intro
 
-> [!tldr] TL;DR
-> Data modeling decides how data is stored and how entities relate. MongoDB's rule of thumb: **data that is accessed together should be stored together**. You model relationships (one-to-one, one-to-many, many-to-many) by **embedding** related data in a document or **referencing** it by `_id` in another collection. Embedding gives fast single-read access and atomic updates; referencing avoids duplication and unbounded growth. Watch for anti-patterns like unbounded arrays, bloated documents and too many collections.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 4 · Prev: [[Unit 03 MongoDB and the Document Model]] · Next: [[Unit 05 Connecting to a MongoDB Database]]
+Data modeling decides how data is stored and how entities relate. MongoDB's rule of thumb: **data that is accessed together should be stored together**. You model relationships (one-to-one, one-to-many, many-to-many) by **embedding** related data in a document or **referencing** it by `_id` in another collection. Embedding gives fast single-read access and atomic updates; referencing avoids duplication and unbounded growth. Watch for anti-patterns like unbounded arrays, bloated documents and too many collections.
+</Note>
+
+> Course: MongoDB University, Unit 4 · Prev: [Unit 03 MongoDB and the Document Model](/Software%20Engineering/Databases/MongoDB/Unit%2003%20MongoDB%20and%20the%20Document%20Model) · Next: [Unit 05 Connecting to a MongoDB Database](/Software%20Engineering/Databases/MongoDB/Unit%2005%20Connecting%20to%20a%20MongoDB%20Database)
 
 ## What data modeling is
 Data modeling is the process of defining how data is stored and what relationships exist among your entities. The organization of the data is the **schema**.
@@ -19,12 +23,16 @@ To design a schema, start from the application:
 3. How will users access this data?
 4. What data will be valuable to me?
 
-> [!important] Data that is accessed together should be stored together.
+<Tip>
+**Data that is accessed together should be stored together.**
+
+
+</Tip>
 
 You can still normalize data with references when that fits better. In MongoDB you design **for the application's queries first**, unlike relational design, which starts from the entities.
 
 ## Types of relationships
-![[Screenshot_2023-04-22_at_7.12.39_PM.png]]
+![Screenshot_2023-04-22_at_7.12.39_PM](/Attachments/Screenshot_2023-04-22_at_7.12.39_PM.png)
 
 ### One-to-one
 An entity in one set is connected to exactly one entity in another set (a user and their profile settings). Usually modelled inside a **single document**:
@@ -36,7 +44,7 @@ An entity in one set is connected to exactly one entity in another set (a user a
 ### One-to-many
 An entity in one set is connected to any number of entities in another set (a movie and its cast). One way to model it is a **nested array**:
 
-![[Screenshot_2023-04-22_at_7.14.56_PM.png]]
+![Screenshot_2023-04-22_at_7.14.56_PM](/Attachments/Screenshot_2023-04-22_at_7.14.56_PM.png)
 
 ```js
 { _id: 10, title: "The Matrix", cast: [ { name: "Keanu Reeves" }, { name: "Carrie-Anne Moss" } ] }
@@ -53,9 +61,9 @@ Any number of entities in one set are connected to any number in another (studen
 ```
 
 ## Two ways to model relationships
-![[Untitled 34.png]]
+![Untitled 34](/Attachments/Untitled%2034.png)
 
-![[Screenshot_2023-04-22_at_7.16.53_PM.png]]
+![Screenshot_2023-04-22_at_7.16.53_PM](/Attachments/Screenshot_2023-04-22_at_7.16.53_PM.png)
 
 ### Embedding
 Put related data **inside** the document.
@@ -63,10 +71,13 @@ Put related data **inside** the document.
 - Works for **all** relationship types: one-to-one, one-to-many and many-to-many. (The original note said "only one-to-many or many-to-many"; embedding is also the default for one-to-one.) It fits best when the child data is read with the parent, belongs to it, and is **bounded** in size.
 - Avoids application-side joins, gives better read performance (one read), and lets you update related data in a **single atomic write**.
 
-> [!warning] Costs of embedding
-> - Documents can become **large**, and large documents make reads slower: the whole document is loaded into memory (the WiredTiger cache), which can slow the application for end users.
-> - Continuously adding data without limit creates an **unbounded document** that can grow past the **16 MB** BSON limit. Updates to huge documents are also expensive because the storage engine rewrites the document.
-> - **Both large documents and unbounded documents are schema anti-patterns.**
+<Warning>
+**Costs of embedding**
+
+- Documents can become **large**, and large documents make reads slower: the whole document is loaded into memory (the WiredTiger cache), which can slow the application for end users.
+- Continuously adding data without limit creates an **unbounded document** that can grow past the **16 MB** BSON limit. Updates to huge documents are also expensive because the storage engine rewrites the document.
+- **Both large documents and unbounded documents are schema anti-patterns.**
+</Warning>
 
 ### Referencing
 Store the `_id` of a document from another collection as a **link** between the two. This is also called **linking** or **data normalization**.
@@ -79,7 +90,7 @@ Store the `_id` of a document from another collection as a **link** between the 
 ```
 
 - No duplication, documents stay small, each side can grow independently.
-- Reading related data needs a second query or a `$lookup` join ([[Unit 11 MongoDB Aggregation]]), which costs extra resources and impacts read performance.
+- Reading related data needs a second query or a `$lookup` join ([Unit 11 MongoDB Aggregation](/Software%20Engineering/Databases/MongoDB/Unit%2011%20MongoDB%20Aggregation)), which costs extra resources and impacts read performance.
 
 | | Embedding | Referencing |
 |---|---|---|
@@ -150,29 +161,34 @@ For time-series data specifically, prefer native **time series collections** (Mo
 - **Model from the workload**: list the top queries with their frequency and latency targets, then design documents so each hot query is one indexed read.
 - **Read/write ratio drives duplication**: duplicate (extended reference, computed) when reads dominate and the copied data rarely changes; accept the cost of updating copies.
 - **Unbounded growth is the most common production failure**: arrays that grow per event (comments, logs, followers) eventually hit 16 MB or make every update slow. Cap them (subset/bucket) or reference.
-- **Atomicity boundary = document**: whatever must change together atomically should ideally live in one document, so you do not need multi-document transactions ([[Transactions & ACID]]).
-- **Sharding**: embedded data co-locates on one shard automatically; references across collections may cross shards, making `$lookup` and transactions more expensive ([[Sharding & Partitioning]]).
-- Compare with relational normalization in [[Data Modeling & Normalization]].
+- **Atomicity boundary = document**: whatever must change together atomically should ideally live in one document, so you do not need multi-document transactions ([Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID)).
+- **Sharding**: embedded data co-locates on one shard automatically; references across collections may cross shards, making `$lookup` and transactions more expensive ([Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning)).
+- Compare with relational normalization in [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization).
 
 ## Interview questions
-> [!question]- When do you embed and when do you reference?
-> Embed when the data is read together, owned by the parent, and bounded (one-to-one, one-to-few). Reference when the related data is large, unbounded, shared by many parents, or queried independently. Hybrid patterns (extended reference, subset) sit in between.
+<Accordion title="When do you embed and when do you reference?">
+Embed when the data is read together, owned by the parent, and bounded (one-to-one, one-to-few). Reference when the related data is large, unbounded, shared by many parents, or queried independently. Hybrid patterns (extended reference, subset) sit in between.
+</Accordion>
 
-> [!question]- What is an unbounded array and why is it a problem?
-> An array that grows without limit (e.g. all comments on a post). It can exceed the 16 MB limit, makes documents slow to read and update, and bloats indexes on the array (multikey). Fix with the subset or bucket pattern, or move items to their own collection.
+<Accordion title="What is an unbounded array and why is it a problem?">
+An array that grows without limit (e.g. all comments on a post). It can exceed the 16 MB limit, makes documents slow to read and update, and bloats indexes on the array (multikey). Fix with the subset or bucket pattern, or move items to their own collection.
+</Accordion>
 
-> [!question]- Explain the bucket and computed patterns.
-> Bucket groups many small related items (time-series points) into one document per time window or size, cutting document count and index size. Computed stores derived values (totals, counts) updated at write time so reads don't recompute them.
+<Accordion title="Explain the bucket and computed patterns.">
+Bucket groups many small related items (time-series points) into one document per time window or size, cutting document count and index size. Computed stores derived values (totals, counts) updated at write time so reads don't recompute them.
+</Accordion>
 
-> [!question]- How would you model a many-to-many relationship like students and courses?
-> Arrays of references on one or both sides (`course_ids` on students, maybe `student_ids` on courses if bounded), optionally with an extended reference of the course title. If enrollment has its own data (grade, date), use a separate `enrollments` collection, like a join table.
+<Accordion title="How would you model a many-to-many relationship like students and courses?">
+Arrays of references on one or both sides (`course_ids` on students, maybe `student_ids` on courses if bounded), optionally with an extended reference of the course title. If enrollment has its own data (grade, date), use a separate `enrollments` collection, like a join table.
+</Accordion>
 
-> [!question]- How do you find schema problems in an existing Atlas deployment?
-> Performance Advisor (slow queries, index suggestions), the schema anti-pattern checks in Data Explorer, `explain()` on hot queries, and collection stats for document sizes and index usage (`$indexStats`).
+<Accordion title="How do you find schema problems in an existing Atlas deployment?">
+Performance Advisor (slow queries, index suggestions), the schema anti-pattern checks in Data Explorer, `explain()` on hot queries, and collection stats for document sizes and index usage (`$indexStats`).
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Data Modeling & Normalization]] · [[NoSQL Database Types]] · [[Transactions & ACID]] · [[Sharding & Partitioning]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning)
 
 ## Sources
 - [MongoDB Manual: Data Modeling](https://www.mongodb.com/docs/manual/data-modeling/)

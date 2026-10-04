@@ -1,12 +1,16 @@
 ---
+title: "Angular Change Detection, Zones & Signals"
 tags: [frontend, frontend/angular, frontend/performance]
 aliases: [Angular change detection, zone.js, NgZone, Angular signals, zoneless Angular, OnPush]
 updated: 2026-09-27
 ---
 # Angular Change Detection, Zones & Signals
 
-> [!tldr] TL;DR
-> **Change detection (CD)** is how Angular keeps the DOM in sync with component state. For years Angular used **zone.js** to find out *when* something might have changed, then checked the whole component tree (the old `Default` strategy) or only "dirty" branches (`OnPush`). **Signals** tell Angular exactly *what* changed, which enables **zoneless** apps (default for new apps since v21) and makes `OnPush` the default in v22. Knowing both worlds matters, because most production apps are somewhere in between.
+<Note>
+**TL;DR**
+
+**Change detection (CD)** is how Angular keeps the DOM in sync with component state. For years Angular used **zone.js** to find out *when* something might have changed, then checked the whole component tree (the old `Default` strategy) or only "dirty" branches (`OnPush`). **Signals** tell Angular exactly *what* changed, which enables **zoneless** apps (default for new apps since v21) and makes `OnPush` the default in v22. Knowing both worlds matters, because most production apps are somewhere in between.
+</Note>
 
 ## 1. What change detection does
 
@@ -70,16 +74,19 @@ export class FareCardComponent {
 }
 ```
 
-> [!example] Why OnPush "doesn't update"
-> ```ts
-> // Parent
-> fares: Fare[] = [];
-> ngOnInit() {
->   this.api.load().subscribe(list => this.fares.push(...list));  // mutation: OnPush child with [fares] won't refresh
->   this.api.load().subscribe(list => this.fares = list);          // new reference: works
-> }
-> ```
-> With signals the problem disappears: `fares = signal<Fare[]>([])` then `this.fares.set(list)` marks every template that reads `fares()`.
+<Info>
+**Why OnPush "doesn't update"**
+
+```ts
+// Parent
+fares: Fare[] = [];
+ngOnInit() {
+  this.api.load().subscribe(list => this.fares.push(...list));  // mutation: OnPush child with [fares] won't refresh
+  this.api.load().subscribe(list => this.fares = list);          // new reference: works
+}
+```
+With signals the problem disappears: `fares = signal<Fare[]>([])` then `this.fares.set(list)` marks every template that reads `fares()`.
+</Info>
 
 `ChangeDetectorRef` tools: `markForCheck()` (mark this view and ancestors dirty for the next pass), `detectChanges()` (check this view and its children now, synchronously), `detach()`/`reattach()`.
 
@@ -114,10 +121,13 @@ options = input.required<Seat[]>();
 selected = linkedSignal(() => this.options()[0]);
 ```
 
-> [!warning] effect() pitfalls
-> - Don't use `effect` to copy one signal into another; that's what `computed` or `linkedSignal` are for.
-> - Effects run asynchronously as part of CD, not synchronously on `set()`.
-> - Signals are **glitch-free**: a `computed` never sees a half-updated state, and consumers are notified once per batch.
+<Warning>
+**effect() pitfalls**
+
+- Don't use `effect` to copy one signal into another; that's what `computed` or `linkedSignal` are for.
+- Effects run asynchronously as part of CD, not synchronously on `set()`.
+- Signals are **glitch-free**: a `computed` never sees a half-updated state, and consumers are notified once per batch.
+</Warning>
 
 ### How signals drive change detection
 Each component template is a reactive consumer. When a signal it read changes, Angular marks **that** view for refresh and marks its ancestors as "has a child to refresh" without re-checking them. For OnPush components this means a signal change refreshes **only the components that read it**, not the whole path from the root. This is often called local or targeted change detection.
@@ -152,10 +162,13 @@ wx = httpResource<{ temp: number }>(() => `/api/wx/${this.city()}`);
 
 A resource exposes `value()`, `status()`, `isLoading()`, `error()`, `hasValue()` and `reload()`. When `city` changes, the previous request is cancelled, which is the signal-world equivalent of RxJS `switchMap`.
 
-> [!info]+ 🆕 2025–2026
-> - v20 (May 28, 2025): `resource`/`httpResource` experimental.
-> - v22 (June 3, 2026): `resource`, `rxResource` and `httpResource` **stable**, with a new `chain()` API and an SSR cache `id`. v22 also ships an experimental `debounced()` helper.
-> - v22.2 (Sept 2026): router resources in developer preview.
+<Info>
+**🆕 2025–2026**
+
+- v20 (May 28, 2025): `resource`/`httpResource` experimental.
+- v22 (June 3, 2026): `resource`, `rxResource` and `httpResource` **stable**, with a new `chain()` API and an SSR cache `id`. v22 also ships an experimental `debounced()` helper.
+- v22.2 (Sept 2026): router resources in developer preview.
+</Info>
 
 ## 6. Zoneless Angular
 
@@ -172,16 +185,22 @@ bootstrapApplication(AppComponent, {
 // and remove "zone.js" from the polyfills in angular.json
 ```
 
-> [!warning] What breaks when you go zoneless
-> - Code that mutates a plain field in `setTimeout`, a manual `subscribe`, or a third-party callback and expects the view to update. Fix: store it in a signal, or call `markForCheck()`.
-> - Code that relies on `NgZone.onStable`/`onMicrotaskEmpty`. Use `afterNextRender` / `afterEveryRender` instead.
-> - SSR needs to know when the app is "stable". Angular tracks pending HTTP requests itself; for your own async work use the `PendingTasks` service.
+<Warning>
+**What breaks when you go zoneless**
 
-> [!info]+ 🆕 2025–2026 timeline
-> - v18: experimental zoneless.
-> - v20 (May 2025): developer preview; **stable in v20.2**.
-> - v21 (Nov 19, 2025): **new apps are zoneless by default**.
-> - v22 (June 3, 2026): **OnPush is the default** change detection strategy, and `ChangeDetectionStrategy.Default` is renamed **`Eager`**.
+- Code that mutates a plain field in `setTimeout`, a manual `subscribe`, or a third-party callback and expects the view to update. Fix: store it in a signal, or call `markForCheck()`.
+- Code that relies on `NgZone.onStable`/`onMicrotaskEmpty`. Use `afterNextRender` / `afterEveryRender` instead.
+- SSR needs to know when the app is "stable". Angular tracks pending HTTP requests itself; for your own async work use the `PendingTasks` service.
+</Warning>
+
+<Info>
+**🆕 2025–2026 timeline**
+
+- v18: experimental zoneless.
+- v20 (May 2025): developer preview; **stable in v20.2**.
+- v21 (Nov 19, 2025): **new apps are zoneless by default**.
+- v22 (June 3, 2026): **OnPush is the default** change detection strategy, and `ChangeDetectionStrategy.Default` is renamed **`Eager`**.
+</Info>
 
 ## 7. What the v22 OnPush default changes
 
@@ -202,39 +221,46 @@ bootstrapApplication(AppComponent, {
 | Async scheduling | Synchronous tick after the task | Scheduled (microtask/rAF) | Batched, concurrent rendering with priorities (transitions) |
 | Mutation of state | Works (Eager), breaks OnPush | Use `set`/`update` | Must be immutable |
 
-Key interview takeaway: React re-runs **components** and diffs output; Angular re-checks **bindings**. Signals move Angular towards fine-grained reactivity (like Solid), while React stays with component re-rendering but automates memoization with the Compiler. See [[How React Renders - Reconciliation & Fiber]].
+Key interview takeaway: React re-runs **components** and diffs output; Angular re-checks **bindings**. Signals move Angular towards fine-grained reactivity (like Solid), while React stays with component re-rendering but automates memoization with the Compiler. See [How React Renders - Reconciliation & Fiber](/Software%20Engineering/Frontend/05%20React/How%20React%20Renders%20-%20Reconciliation%20%26%20Fiber).
 
 ## Interview questions
 
-> [!question]- What is zone.js and why is Angular moving away from it?
-> It patches async browser APIs so Angular knows when a task finished and can run `ApplicationRef.tick()`. It can't tell Angular *what* changed, so CD is broad; it costs bundle size and startup time, fires CD for noisy events, and complicates debugging. Signals give precise change notifications, so zoneless is stable since v20.2 and the default for new apps since v21.
+<Accordion title="What is zone.js and why is Angular moving away from it?">
+It patches async browser APIs so Angular knows when a task finished and can run `ApplicationRef.tick()`. It can't tell Angular *what* changed, so CD is broad; it costs bundle size and startup time, fires CD for noisy events, and complicates debugging. Signals give precise change notifications, so zoneless is stable since v20.2 and the default for new apps since v21.
+</Accordion>
 
-> [!question]- When is an OnPush component checked?
-> When its input references change via the template, when an event fires in its template (or a child's), when the `async` pipe emits, when a signal read in its template changes, or when `markForCheck()` is called. Mutating an object passed as input does not mark it dirty.
+<Accordion title="When is an OnPush component checked?">
+When its input references change via the template, when an event fires in its template (or a child's), when the `async` pipe emits, when a signal read in its template changes, or when `markForCheck()` is called. Mutating an object passed as input does not mark it dirty.
+</Accordion>
 
-> [!question]- `markForCheck()` vs `detectChanges()`?
-> `markForCheck()` marks the view and its ancestors dirty so the **next** CD pass checks them. `detectChanges()` synchronously checks this view and its children **now**.
+<Accordion title="`markForCheck()` vs `detectChanges()`?">
+`markForCheck()` marks the view and its ancestors dirty so the **next** CD pass checks them. `detectChanges()` synchronously checks this view and its children **now**.
+</Accordion>
 
-> [!question]- `computed` vs `effect` vs `linkedSignal`?
-> `computed`: read-only derived value, lazy and memoized. `effect`: side effects outside the signal graph (logging, storage, imperative APIs). `linkedSignal`: a writable signal that resets from a source when it changes (e.g. a default selection).
+<Accordion title="`computed` vs `effect` vs `linkedSignal`?">
+`computed`: read-only derived value, lazy and memoized. `effect`: side effects outside the signal graph (logging, storage, imperative APIs). `linkedSignal`: a writable signal that resets from a source when it changes (e.g. a default selection).
+</Accordion>
 
-> [!question]- What causes `ExpressionChangedAfterItHasBeenCheckedError`?
-> In dev mode Angular checks twice. If a binding's value changes between the passes, usually because a child or a lifecycle hook (`ngAfterViewInit`) updates parent state during CD, it throws. Fix by moving the update earlier, deriving with `computed`, or deferring it.
+<Accordion title="What causes `ExpressionChangedAfterItHasBeenCheckedError`?">
+In dev mode Angular checks twice. If a binding's value changes between the passes, usually because a child or a lifecycle hook (`ngAfterViewInit`) updates parent state during CD, it throws. Fix by moving the update earlier, deriving with `computed`, or deferring it.
+</Accordion>
 
-> [!question]- How would you migrate a large app to zoneless?
-> Adopt `OnPush` everywhere first and fix what breaks; move component state to signals; replace manual subscriptions with `toSignal`/`async`; replace `NgZone.onStable` usage with `afterNextRender`; add `provideZonelessChangeDetection()`, remove `zone.js` from polyfills; test SSR stability with `PendingTasks`.
+<Accordion title="How would you migrate a large app to zoneless?">
+Adopt `OnPush` everywhere first and fix what breaks; move component state to signals; replace manual subscriptions with `toSignal`/`async`; replace `NgZone.onStable` usage with `afterNextRender`; add `provideZonelessChangeDetection()`, remove `zone.js` from polyfills; test SSR stability with `PendingTasks`.
+</Accordion>
 
-> [!question]- How does Angular's change detection compare with React's?
-> See the table above: Angular checks bindings (no VDOM) and with signals refreshes only views that read changed state; React re-runs component functions and reconciles a virtual DOM, optimised by memoization or React Compiler.
+<Accordion title="How does Angular's change detection compare with React's?">
+See the table above: Angular checks bindings (no VDOM) and with signals refreshes only views that read changed state; React re-runs component functions and reconciles a virtual DOM, optimised by memoization or React Compiler.
+</Accordion>
 
 ## Related
-- [[Angular Fundamentals]]
-- [[Modern Angular v17 to v22]]
-- [[Angular Interview Q&A]]
-- [[How React Renders - Reconciliation & Fiber]]
-- [[React Performance]]
-- [[Event Loop - Microtasks & Macrotasks]]
-- [[Other Frameworks - Vue, Svelte, Solid, Astro]]
+- [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
+- [Angular Interview Q&A](/Software%20Engineering/Frontend/08%20Angular/Angular%20Interview%20Q%26A)
+- [How React Renders - Reconciliation & Fiber](/Software%20Engineering/Frontend/05%20React/How%20React%20Renders%20-%20Reconciliation%20%26%20Fiber)
+- [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks)
+- [Other Frameworks - Vue, Svelte, Solid, Astro](/Software%20Engineering/Frontend/09%20Architecture/Other%20Frameworks%20-%20Vue%2C%20Svelte%2C%20Solid%2C%20Astro)
 
 ## Sources
 - https://indepth.dev/posts/1064/what-every-front-end-developer-should-know-about-change-detection-in-angular-and-react

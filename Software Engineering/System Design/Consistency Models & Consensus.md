@@ -1,12 +1,16 @@
 ---
+title: "Consistency Models & Consensus"
 tags: [system-design, system-design/distributed-systems]
 aliases: [Consistency Models, Consensus, Raft, Paxos, Quorum, Vector Clocks, CRDT, Leader Election, Eventual Consistency, Linearizability]
 updated: 2026-09-27
 ---
 # Consistency Models & Consensus
 
-> [!tldr] TL;DR
-> A **consistency model** is a contract about what reads can return when data is replicated. From strongest to weakest: **linearizable** (behaves like one copy), **sequential**, **causal** (cause is seen before effect), **read-your-writes / monotonic reads** (session guarantees), **eventual** (replicas converge if writes stop). Stronger models cost latency and availability during partitions ([[CAP Theorem]], PACELC). **Consensus** (Paxos, Raft) lets a group of nodes agree on a sequence of values despite failures; it powers leader election, replicated logs and coordination stores (etcd, ZooKeeper, KRaft). **Quorums**, **vector clocks** and **CRDTs** are the tools for leaderless and multi-leader systems.
+<Note>
+**TL;DR**
+
+A **consistency model** is a contract about what reads can return when data is replicated. From strongest to weakest: **linearizable** (behaves like one copy), **sequential**, **causal** (cause is seen before effect), **read-your-writes / monotonic reads** (session guarantees), **eventual** (replicas converge if writes stop). Stronger models cost latency and availability during partitions ([CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem), PACELC). **Consensus** (Paxos, Raft) lets a group of nodes agree on a sequence of values despite failures; it powers leader election, replicated logs and coordination stores (etcd, ZooKeeper, KRaft). **Quorums**, **vector clocks** and **CRDTs** are the tools for leaderless and multi-leader systems.
+</Note>
 
 ## Why this matters
 As soon as data lives on more than one node (replicas, caches, regions), two clients can see different values. You must decide which anomalies are acceptable per feature: a "like" count can be eventually consistent; a bank balance or a username uniqueness check cannot.
@@ -21,10 +25,13 @@ As soon as data lives on more than one node (replicas, caches, regions), two cli
 | **Monotonic reads** | A client never sees time go backwards | Comment appears, then vanishes on refresh | Sticky replica or version tokens |
 | **Eventual** | Replicas converge if writes stop | Nothing (only convergence) | Cheapest, highest availability |
 
-Note: **ACID "C"** (invariants) and **isolation levels** (serializable, snapshot) are about transactions on one database; see [[Transactions & ACID]] and [[Isolation Levels & Read Phenomena]]. *Strict serializability* = serializable + linearizable.
+Note: **ACID "C"** (invariants) and **isolation levels** (serializable, snapshot) are about transactions on one database; see [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) and [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena). *Strict serializability* = serializable + linearizable.
 
-> [!example] Read-your-writes with replicas
-> User updates their bio (goes to primary), page reloads, read hits a lagging replica → old bio. Fixes: read from primary for N seconds after a write; route the user's reads to the primary; or return the write's LSN/version and have the replica wait until it has caught up to it.
+<Info>
+**Read-your-writes with replicas**
+
+User updates their bio (goes to primary), page reloads, read hits a lagging replica → old bio. Fixes: read from primary for N seconds after a write; route the user's reads to the primary; or return the write's LSN/version and have the replica wait until it has caught up to it.
+</Info>
 
 ## PACELC
 CAP only talks about partitions. PACELC: **if Partition**, choose **A**vailability or **C**onsistency; **Else**, choose **L**atency or **C**onsistency. DynamoDB/Cassandra default to PA/EL; Spanner and etcd are PC/EC.
@@ -68,8 +75,11 @@ Proposers pick a proposal number, ask acceptors to **promise** not to accept low
 - **Linearizable key-value store** (etcd, ZooKeeper) for config, service discovery, locks.
 - **Replicated state machines**: same log + deterministic apply = same state.
 
-> [!warning] Distributed locks need fencing tokens
-> A lock holder can pause (GC, VM stall) past its lease and keep writing after someone else got the lock. Issue a monotonically increasing **fencing token** with each lock grant and have the storage reject writes with older tokens. Redis-based locks (Redlock) are debated for this reason; use etcd/ZooKeeper or DB row locks when correctness matters.
+<Warning>
+**Distributed locks need fencing tokens**
+
+A lock holder can pause (GC, VM stall) past its lease and keep writing after someone else got the lock. Issue a monotonically increasing **fencing token** with each lock grant and have the storage reject writes with older tokens. Redis-based locks (Redlock) are debated for this reason; use etcd/ZooKeeper or DB row locks when correctness matters.
+</Warning>
 
 ## Time and ordering
 - Physical clocks drift; NTP gives ms-level skew; **last-write-wins by timestamp silently drops writes**.
@@ -110,35 +120,45 @@ Used in Redis Enterprise active-active, Riak, Figma/Linear-style multiplayer, Yj
 - Test with fault injection (Jepsen-style): partitions, clock skew, paused processes.
 - Ask in review: "What happens during a network partition between AZs? Which side keeps accepting writes? How are conflicts resolved?"
 
-> [!info]+ 🆕 2025–2026
-> Kafka 4.0 (2025-03-18) removed ZooKeeper completely; cluster metadata now lives in a Raft-based quorum (**KRaft**) inside Kafka itself, a good real-world example of replacing an external coordination service with an embedded consensus log. ([Apache Kafka 4.0 announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/))
+<Info>
+**🆕 2025–2026**
+
+Kafka 4.0 (2025-03-18) removed ZooKeeper completely; cluster metadata now lives in a Raft-based quorum (**KRaft**) inside Kafka itself, a good real-world example of replacing an external coordination service with an embedded consensus log. ([Apache Kafka 4.0 announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/))
+</Info>
 
 ## Interview questions
-> [!question]- Linearizability vs serializability?
-> Linearizability is a recency guarantee on single objects: once a write completes, all later reads see it. Serializability is a transaction isolation guarantee: concurrent transactions behave as if run in some serial order (not necessarily real-time order). Strict serializability is both.
+<Accordion title="Linearizability vs serializability?">
+Linearizability is a recency guarantee on single objects: once a write completes, all later reads see it. Serializability is a transaction isolation guarantee: concurrent transactions behave as if run in some serial order (not necessarily real-time order). Strict serializability is both.
+</Accordion>
 
-> [!question]- Why does W + R > N give consistent reads?
-> Any read set of R nodes and write set of W nodes must share at least one node, so the read sees the latest acknowledged write (then picks the newest version). It's still not full linearizability under concurrent writes and sloppy quorums.
+<Accordion title="Why does W + R > N give consistent reads?">
+Any read set of R nodes and write set of W nodes must share at least one node, so the read sees the latest acknowledged write (then picks the newest version). It's still not full linearizability under concurrent writes and sloppy quorums.
+</Accordion>
 
-> [!question]- How does Raft elect a leader?
-> Followers expecting heartbeats time out after a randomized interval, become candidates, increment the term, vote for themselves and request votes. Nodes grant one vote per term to candidates with an up-to-date log. A majority makes a leader; randomized timeouts make split votes rare.
+<Accordion title="How does Raft elect a leader?">
+Followers expecting heartbeats time out after a randomized interval, become candidates, increment the term, vote for themselves and request votes. Nodes grant one vote per term to candidates with an up-to-date log. A majority makes a leader; randomized timeouts make split votes rare.
+</Accordion>
 
-> [!question]- Why do consensus clusters have an odd number of nodes?
-> Tolerance depends on a majority: 3 nodes tolerate 1 failure, 4 nodes still only tolerate 1 (majority is 3). An even node adds cost without adding fault tolerance.
+<Accordion title="Why do consensus clusters have an odd number of nodes?">
+Tolerance depends on a majority: 3 nodes tolerate 1 failure, 4 nodes still only tolerate 1 (majority is 3). An even node adds cost without adding fault tolerance.
+</Accordion>
 
-> [!question]- What problem do vector clocks solve?
-> Detecting whether two versions are causally ordered or concurrent. With physical timestamps you'd silently drop one concurrent write; vector clocks let you keep both (siblings) and merge.
+<Accordion title="What problem do vector clocks solve?">
+Detecting whether two versions are causally ordered or concurrent. With physical timestamps you'd silently drop one concurrent write; vector clocks let you keep both (siblings) and merge.
+</Accordion>
 
-> [!question]- What is a CRDT and when would you use it?
-> A data type whose replicas can be updated independently and merged deterministically to the same state. Use for multi-region active-active counters/sets, offline-first and collaborative editing, where coordination is too slow or impossible.
+<Accordion title="What is a CRDT and when would you use it?">
+A data type whose replicas can be updated independently and merged deterministically to the same state. Use for multi-region active-active counters/sets, offline-first and collaborative editing, where coordination is too slow or impossible.
+</Accordion>
 
-> [!question]- How do you give read-your-writes on top of async replicas?
-> Route the user's reads to the primary for a short window after a write, or pass the write's log position/version and have reads wait for or select a replica that has caught up to it.
+<Accordion title="How do you give read-your-writes on top of async replicas?">
+Route the user's reads to the primary for a short window after a write, or pass the write's log position/version and have reads wait for or select a replica that has caught up to it.
+</Accordion>
 
 ## Related
-- [[System Design Index]]
-- [[CAP Theorem]] · [[Replication & 2PC 3PC]] · [[Transactions & ACID]] · [[Isolation Levels & Read Phenomena]]
-- [[Distributed Systems Patterns]] · [[Consistent Hashing]] · [[Message Queues & Event Streaming]] · [[Case Study - Distributed Cache]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
+- [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena)
+- [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns) · [Consistent Hashing](/Software%20Engineering/System%20Design/Consistent%20Hashing) · [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Case Study - Distributed Cache](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Distributed%20Cache)
 
 ## Sources
 - Martin Kleppmann, *Designing Data-Intensive Applications*, ch. 5, 8, 9

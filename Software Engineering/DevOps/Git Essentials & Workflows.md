@@ -1,12 +1,16 @@
 ---
+title: "Git Essentials & Workflows"
 tags: [devops, devops/git]
 aliases: [Git, Git Workflows, Git Internals, Rebase vs Merge, Trunk-Based Development, GitFlow, Conventional Commits, git reflog]
 updated: 2026-09-27
 ---
 # Git Essentials & Workflows
 
-> [!tldr] TL;DR
-> Git is a **content-addressed object store** (blobs, trees, commits, tags) plus **refs** (branches, tags, HEAD) that point at commits. Branches are just movable pointers, which is why branching is cheap and why almost nothing is truly lost (see `git reflog`). Teams choose a workflow: **trunk-based development** (short-lived branches, feature flags, continuous delivery) is the high-performing default; **GitFlow** suits versioned, scheduled releases. Use **rebase** to tidy your own local history and **merge** (or squash-merge) to integrate shared work.
+<Note>
+**TL;DR**
+
+Git is a **content-addressed object store** (blobs, trees, commits, tags) plus **refs** (branches, tags, HEAD) that point at commits. Branches are just movable pointers, which is why branching is cheap and why almost nothing is truly lost (see `git reflog`). Teams choose a workflow: **trunk-based development** (short-lived branches, feature flags, continuous delivery) is the high-performing default; **GitFlow** suits versioned, scheduled releases. Use **rebase** to tidy your own local history and **merge** (or squash-merge) to integrate shared work.
+</Note>
 
 ## 1. Mental model: the three areas
 
@@ -96,7 +100,7 @@ Common team policy: rebase your local feature branch on `main` to stay current (
 - Everyone integrates into `main` at least daily via **short-lived branches** (hours to a couple of days) or direct commits with pair review.
 - Unfinished features hide behind **feature flags**.
 - `main` is always releasable; CI runs on every commit; releases are tags or continuous deploys.
-- Strongly associated with high DORA performance (see [[CI-CD Pipelines]]).
+- Strongly associated with high DORA performance (see [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines)).
 
 ### GitFlow
 - Long-lived `main` (released) and `develop` (integration), plus `feature/*`, `release/*`, `hotfix/*` branches.
@@ -168,23 +172,29 @@ Great for reviewing a PR while your feature build runs, and for running several 
 - **Signed commits/tags** (GPG, SSH or Sigstore gitsign) + branch protection requiring signatures.
 - **Branch protection / rulesets**: required reviews, status checks, linear history, no force pushes on `main`.
 - **CODEOWNERS** for automatic reviewer assignment.
-- **Monorepo scale**: `git sparse-checkout`, partial clone (`--filter=blob:none`), `git maintenance start`, Scalar. See [[Monorepos]].
+- **Monorepo scale**: `git sparse-checkout`, partial clone (`--filter=blob:none`), `git maintenance start`, Scalar. See [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos).
 - **Large files**: Git LFS; never commit build artifacts or datasets.
 - **Hooks**: pre-commit (lint/format), commit-msg (conventional commits). Client hooks are advisory; enforce in CI.
 - **Secrets**: once pushed, a secret is compromised. Rotate first, then purge with `git filter-repo` if needed. Enable push protection / secret scanning.
 
-> [!info]+ 🆕 2025–2026
-> - **Git 3.0 is being prepared** (no release date announced as of 2026-09). Accepted breaking changes in the official BreakingChanges document: **SHA-256** as default hash for new repos, **reftable** as default ref storage, **`main`** as default initial branch, `safe.bareRepository` defaulting to explicit, and **Rust becoming mandatory** in phases (auto-detected from Git 2.52, enabled by default from 2.55, required in 3.0). Removals include `git whatchanged` and `git pack-redundant`. The last 2.x release will be a long-term support release. Existing SHA-1 repositories keep working.
-> - Worktrees became mainstream in 2025–2026 as the standard way to run multiple coding agents in parallel on one repo.
+<Info>
+**🆕 2025–2026**
+
+- **Git 3.0 is being prepared** (no release date announced as of 2026-09). Accepted breaking changes in the official BreakingChanges document: **SHA-256** as default hash for new repos, **reftable** as default ref storage, **`main`** as default initial branch, `safe.bareRepository` defaulting to explicit, and **Rust becoming mandatory** in phases (auto-detected from Git 2.52, enabled by default from 2.55, required in 3.0). Removals include `git whatchanged` and `git pack-redundant`. The last 2.x release will be a long-term support release. Existing SHA-1 repositories keep working.
+- Worktrees became mainstream in 2025–2026 as the standard way to run multiple coding agents in parallel on one repo.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Rebasing or force-pushing a shared branch: teammates' history diverges. Use `--force-with-lease` and only on your own branches.
-> - Giant PRs from long-lived branches: slow reviews, painful conflicts. Keep PRs small.
-> - `git add .` committing `.env`, build output or huge files. Maintain `.gitignore`, use `git add -p`.
-> - `git reset --hard` with uncommitted work: that work is not in the reflog (only commits are).
-> - Merge commits from `git pull` cluttering history: set `git config --global pull.rebase true`.
+<Warning>
+**Common pitfalls**
+
+- Rebasing or force-pushing a shared branch: teammates' history diverges. Use `--force-with-lease` and only on your own branches.
+- Giant PRs from long-lived branches: slow reviews, painful conflicts. Keep PRs small.
+- `git add .` committing `.env`, build output or huge files. Maintain `.gitignore`, use `git add -p`.
+- `git reset --hard` with uncommitted work: that work is not in the reflog (only commits are).
+- Merge commits from `git pull` cluttering history: set `git config --global pull.rebase true`.
+</Warning>
 
 ## Senior perspective
 
@@ -195,29 +205,36 @@ Great for reviewing a PR while your feature build runs, and for running several 
 
 ## Interview questions
 
-> [!question]- What is a Git commit, internally?
-> An immutable object containing a pointer to a root tree (the snapshot), parent commit hash(es), author/committer metadata and a message. Its ID is the hash of that content, so changing anything creates a new commit.
+<Accordion title="What is a Git commit, internally?">
+An immutable object containing a pointer to a root tree (the snapshot), parent commit hash(es), author/committer metadata and a message. Its ID is the hash of that content, so changing anything creates a new commit.
+</Accordion>
 
-> [!question]- Merge vs rebase: when do you use each?
-> Rebase to update and clean up your own unpublished branch (linear history). Merge (or squash-merge via PR) to integrate into shared branches. Never rebase commits others have based work on.
+<Accordion title="Merge vs rebase: when do you use each?">
+Rebase to update and clean up your own unpublished branch (linear history). Merge (or squash-merge via PR) to integrate into shared branches. Never rebase commits others have based work on.
+</Accordion>
 
-> [!question]- How do you recover a commit you "lost" after `git reset --hard`?
-> `git reflog` shows previous positions of HEAD; find the commit and `git reset --hard <sha>` or create a branch at it. Works until the objects are garbage-collected (default ~90 days for reachable reflog entries, 30 for unreachable).
+<Accordion title="How do you recover a commit you &quot;lost&quot; after `git reset --hard`?">
+`git reflog` shows previous positions of HEAD; find the commit and `git reset --hard <sha>` or create a branch at it. Works until the objects are garbage-collected (default ~90 days for reachable reflog entries, 30 for unreachable).
+</Accordion>
 
-> [!question]- Trunk-based development vs GitFlow?
-> Trunk-based: everyone integrates into main frequently via short-lived branches, feature flags hide incomplete work, main is always deployable, ideal for continuous delivery. GitFlow: develop/release/hotfix branches for scheduled versioned releases; more ceremony and merge overhead.
+<Accordion title="Trunk-based development vs GitFlow?">
+Trunk-based: everyone integrates into main frequently via short-lived branches, feature flags hide incomplete work, main is always deployable, ideal for continuous delivery. GitFlow: develop/release/hotfix branches for scheduled versioned releases; more ceremony and merge overhead.
+</Accordion>
 
-> [!question]- `git revert` vs `git reset`?
-> `reset` moves the branch pointer (rewrites history; fine locally). `revert` adds a new commit that undoes a previous one (safe on shared branches).
+<Accordion title="`git revert` vs `git reset`?">
+`reset` moves the branch pointer (rewrites history; fine locally). `revert` adds a new commit that undoes a previous one (safe on shared branches).
+</Accordion>
 
-> [!question]- What are Conventional Commits good for?
-> A structured commit message format (`feat:`, `fix:`, `!` for breaking) that enables automated semantic versioning, changelog generation and readable history.
+<Accordion title="What are Conventional Commits good for?">
+A structured commit message format (`feat:`, `fix:`, `!` for breaking) that enables automated semantic versioning, changelog generation and readable history.
+</Accordion>
 
-> [!question]- What is `git bisect`?
-> A binary search over history to find the commit that introduced a bug; mark good and bad commits (or run a test script automatically) and Git halves the range each step.
+<Accordion title="What is `git bisect`?">
+A binary search over history to find the commit that introduced a bug; mark good and bad commits (or run a test script automatically) and Git halves the range each step.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[CI-CD Pipelines]] · [[GitOps - Argo CD & Flux]] · [[Monorepos]] · [[Linux & Shell Essentials]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux) · [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos) · [Linux & Shell Essentials](/Software%20Engineering/DevOps/Linux%20%26%20Shell%20Essentials)
 
 ## Sources
 - [Pro Git book (Scott Chacon, Ben Straub)](https://git-scm.com/book/en/v2), especially ch. 10 *Git Internals*

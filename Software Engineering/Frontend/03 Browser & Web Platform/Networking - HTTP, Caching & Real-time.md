@@ -1,12 +1,16 @@
 ---
+title: "Networking - HTTP, Caching & Real-time"
 tags: [frontend, frontend/browser, frontend/networking]
 aliases: [Networking, HTTP Caching, Cache-Control, CORS, WebSockets vs SSE, Long polling, HTTP/2, HTTP/3]
 updated: 2026-09-27
 ---
 # Networking - HTTP, Caching & Real-time
 
-> [!tldr] TL;DR
-> Front end performance is mostly network performance. Know how **HTTP/1.1, HTTP/2 and HTTP/3** differ (connections, multiplexing, head-of-line blocking), how the **HTTP cache** decides whether to reuse a response (`Cache-Control`, `ETag`, `Last-Modified`, `Expires`), how **CORS** and preflight work, how to use `fetch` properly (errors, timeouts, cancellation), and how to pick a **real-time** transport: polling, long-polling, SSE, WebSockets or WebTransport.
+<Note>
+**TL;DR**
+
+Front end performance is mostly network performance. Know how **HTTP/1.1, HTTP/2 and HTTP/3** differ (connections, multiplexing, head-of-line blocking), how the **HTTP cache** decides whether to reuse a response (`Cache-Control`, `ETag`, `Last-Modified`, `Expires`), how **CORS** and preflight work, how to use `fetch` properly (errors, timeouts, cancellation), and how to pick a **real-time** transport: polling, long-polling, SSE, WebSockets or WebTransport.
+</Note>
 
 ## 1. Browser networking in one picture
 
@@ -24,7 +28,7 @@ sequenceDiagram
 ```
 
 - **Latency** (round trips) usually matters more than bandwidth for web pages. A new HTTPS connection over TCP costs ~2–3 round trips before the first request (TCP + TLS 1.2; TLS 1.3 saves one). HTTP/3 over QUIC combines transport and TLS handshakes (1 RTT, 0-RTT on resumption).
-- Reuse connections (keep-alive, HTTP/2 multiplexing), move content closer (CDN edge), and warm up origins early (`preconnect`, see [[How Browsers Render - Critical Rendering Path]]).
+- Reuse connections (keep-alive, HTTP/2 multiplexing), move content closer (CDN edge), and warm up origins early (`preconnect`, see [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)).
 - Browsers open ~6 TCP connections per origin for HTTP/1.1; one connection per origin for HTTP/2 and HTTP/3.
 
 ## 2. HTTP/1.1 vs HTTP/2 vs HTTP/3
@@ -103,32 +107,35 @@ An **absolute** expiry date from HTTP/1.0: `Expires: Wed, 21 Oct 2026 07:28:00 G
 | `stale-while-revalidate=N` | After expiry, may serve the stale copy for up to N more seconds while revalidating in the background. |
 | `stale-if-error=N` | May serve stale if the origin errors (supported by some CDNs). |
 
-> [!example] Caching recipe for a typical SPA / Next.js app
-> ```http
-> # Hashed static assets: /assets/app.3f9a2c.js, /_next/static/...
-> Cache-Control: public, max-age=31536000, immutable
->
-> # HTML documents: always check, but allow 304s
-> Cache-Control: no-cache
-> ETag: "page-v42"
->
-> # Public API data that can be a bit stale (airport list)
-> Cache-Control: public, max-age=60, stale-while-revalidate=600
->
-> # Per-user API responses
-> Cache-Control: private, no-cache
->
-> # Sensitive data
-> Cache-Control: no-store
-> ```
-> Why this works: HTML is revalidated so it always points to the latest hashed bundle names; bundles themselves can be cached "forever" because a change produces a new filename (**cache busting**).
+<Info>
+**Caching recipe for a typical SPA / Next.js app**
+
+```http
+# Hashed static assets: /assets/app.3f9a2c.js, /_next/static/...
+Cache-Control: public, max-age=31536000, immutable
+
+# HTML documents: always check, but allow 304s
+Cache-Control: no-cache
+ETag: "page-v42"
+
+# Public API data that can be a bit stale (airport list)
+Cache-Control: public, max-age=60, stale-while-revalidate=600
+
+# Per-user API responses
+Cache-Control: private, no-cache
+
+# Sensitive data
+Cache-Control: no-store
+```
+Why this works: HTML is revalidated so it always points to the latest hashed bundle names; bundles themselves can be cached "forever" because a change produces a new filename (**cache busting**).
+</Info>
 
 Other cache-related points:
 - `Vary: Accept-Encoding, Accept-Language` tells caches to store separate variants per request header. `Vary: Cookie` effectively kills CDN caching.
 - Reload behaviour: a normal reload revalidates the main document; hard reload (Ctrl+Shift+R) bypasses the cache.
-- Layers of caches: memory cache → **service worker** ([[Web Workers, Service Workers & PWAs]]) → HTTP disk cache → CDN → origin. Plus the **bfcache** (back/forward cache) which keeps whole pages in memory; `Cache-Control: no-store` on the document and `unload` listeners can prevent it.
+- Layers of caches: memory cache → **service worker** ([Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs)) → HTTP disk cache → CDN → origin. Plus the **bfcache** (back/forward cache) which keeps whole pages in memory; `Cache-Control: no-store` on the document and `unload` listeners can prevent it.
 - `fetch(url, { cache: 'no-store' | 'reload' | 'no-cache' | 'force-cache' })` controls the HTTP cache per request.
-- Framework data caches are a separate layer: [[Next.js Rendering & Caching]], [[Server State - TanStack Query & RTK Query]].
+- Framework data caches are a separate layer: [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching), [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query).
 
 ## 4. CORS and preflight
 
@@ -188,26 +195,29 @@ async function getJSON(url, { timeout = 8000, signal, ...init } = {}) {
 
 - `fetch` resolves on any HTTP status; check `res.ok`/`res.status`.
 - The body can be consumed **once** (`res.clone()` if you need it twice).
-- Cancellation: `AbortController` / `AbortSignal.timeout()` / `AbortSignal.any()`; errors are `AbortError` / `TimeoutError` ([[Promises, Async-Await & Cancellation]]).
+- Cancellation: `AbortController` / `AbortSignal.timeout()` / `AbortSignal.any()`; errors are `AbortError` / `TimeoutError` ([Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)).
 - Streaming responses: `res.body` is a `ReadableStream`; decompress with `DecompressionStream` (Compression Streams are Baseline Widely available, 2025-11-09).
 - `keepalive: true` (or `navigator.sendBeacon`) for analytics sent while the page unloads.
 - Old APIs: `XMLHttpRequest` still exists (and is the only built-in way to get **upload progress** events), `axios` wraps it.
 
-> [!example] Race-condition-safe search (typeahead)
-> ```js
-> let controller;
-> input.addEventListener('input', debounce(async (e) => {
->   controller?.abort();                  // cancel the previous in-flight request
->   controller = new AbortController();
->   try {
->     const data = await getJSON(`/api/airports?q=${encodeURIComponent(e.target.value)}`, { signal: controller.signal });
->     render(data);
->   } catch (err) {
->     if (err.name !== 'AbortError') showError(err);
->   }
-> }, 250));
-> ```
-> See [[Case Study - Autocomplete]].
+<Info>
+**Race-condition-safe search (typeahead)**
+
+```js
+let controller;
+input.addEventListener('input', debounce(async (e) => {
+  controller?.abort();                  // cancel the previous in-flight request
+  controller = new AbortController();
+  try {
+    const data = await getJSON(`/api/airports?q=${encodeURIComponent(e.target.value)}`, { signal: controller.signal });
+    render(data);
+  } catch (err) {
+    if (err.name !== 'AbortError') showError(err);
+  }
+}, 250));
+```
+See [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete).
+</Info>
 
 ## 6. Real-time communication
 
@@ -247,58 +257,67 @@ sequenceDiagram
 | Infra | Trivial | Easy, but many open requests | Easy, works with HTTP/2 proxies/CDNs | Needs sticky/stateful servers, LB support | Needs HTTP/3 server |
 | Good for | Rare updates, simple dashboards | Legacy/fallback | Notifications, live prices, feeds, **LLM token streaming** | Chat, collaboration, multiplayer, trading | Games, media, high-frequency low-latency data |
 
-> [!example] Long polling
-> ```js
-> async function poll(cursor) {
->   try {
->     const res = await fetch(`/api/updates?cursor=${cursor}`, { signal: AbortSignal.timeout(35_000) });
->     if (res.status === 204) return poll(cursor);          // server timeout, nothing new
->     const { events, next } = await res.json();
->     events.forEach(apply);
->     poll(next);
->   } catch {
->     setTimeout(() => poll(cursor), 2000);                 // back off on error
->   }
-> }
-> ```
+<Info>
+**Long polling**
 
-> [!example] Server-Sent Events: live fare updates
-> ```js
-> const es = new EventSource('/api/fares/stream?route=DXB-LHR', { withCredentials: true });
-> es.addEventListener('price', (e) => updatePrice(JSON.parse(e.data)));
-> es.onerror = () => { /* the browser reconnects automatically */ };
-> // es.close();
-> ```
-> ```text
-> # Server response (Content-Type: text/event-stream)
-> event: price
-> id: 1042
-> data: {"flight":"EK1","amount":812}
->
-> retry: 5000
-> ```
-> `EventSource` can't send custom headers (e.g. `Authorization`); use cookies, or read a streamed `fetch()` body yourself (which is how most AI chat UIs stream tokens). With HTTP/1.1, each SSE connection uses one of the ~6 per-origin connections; HTTP/2 removes that limit.
+```js
+async function poll(cursor) {
+  try {
+    const res = await fetch(`/api/updates?cursor=${cursor}`, { signal: AbortSignal.timeout(35_000) });
+    if (res.status === 204) return poll(cursor);          // server timeout, nothing new
+    const { events, next } = await res.json();
+    events.forEach(apply);
+    poll(next);
+  } catch {
+    setTimeout(() => poll(cursor), 2000);                 // back off on error
+  }
+}
+```
+</Info>
 
-> [!example] WebSocket with reconnect + heartbeat
-> ```js
-> function connect(url, onMessage, attempt = 0) {
->   const ws = new WebSocket(url);
->   let heartbeat;
->   ws.onopen = () => {
->     attempt = 0;
->     ws.send(JSON.stringify({ type: 'subscribe', channel: 'booking:42' }));
->     heartbeat = setInterval(() => ws.send('{"type":"ping"}'), 25_000);
->   };
->   ws.onmessage = (e) => onMessage(JSON.parse(e.data));
->   ws.onclose = () => {
->     clearInterval(heartbeat);
->     const delay = Math.min(30_000, 1000 * 2 ** attempt) + Math.random() * 1000; // exponential backoff + jitter
->     setTimeout(() => connect(url, onMessage, attempt + 1), delay);
->   };
->   return ws;
-> }
-> ```
-> Notes: messages can be lost while disconnected, so resync state on reconnect (send a last-seen id). WebSocket has no built-in backpressure; `bufferedAmount` tells you how much is queued. Use one socket per app (or a SharedWorker to share across tabs).
+<Info>
+**Server-Sent Events: live fare updates**
+
+```js
+const es = new EventSource('/api/fares/stream?route=DXB-LHR', { withCredentials: true });
+es.addEventListener('price', (e) => updatePrice(JSON.parse(e.data)));
+es.onerror = () => { /* the browser reconnects automatically */ };
+// es.close();
+```
+```text
+# Server response (Content-Type: text/event-stream)
+event: price
+id: 1042
+data: {"flight":"EK1","amount":812}
+
+retry: 5000
+```
+`EventSource` can't send custom headers (e.g. `Authorization`); use cookies, or read a streamed `fetch()` body yourself (which is how most AI chat UIs stream tokens). With HTTP/1.1, each SSE connection uses one of the ~6 per-origin connections; HTTP/2 removes that limit.
+</Info>
+
+<Info>
+**WebSocket with reconnect + heartbeat**
+
+```js
+function connect(url, onMessage, attempt = 0) {
+  const ws = new WebSocket(url);
+  let heartbeat;
+  ws.onopen = () => {
+    attempt = 0;
+    ws.send(JSON.stringify({ type: 'subscribe', channel: 'booking:42' }));
+    heartbeat = setInterval(() => ws.send('{"type":"ping"}'), 25_000);
+  };
+  ws.onmessage = (e) => onMessage(JSON.parse(e.data));
+  ws.onclose = () => {
+    clearInterval(heartbeat);
+    const delay = Math.min(30_000, 1000 * 2 ** attempt) + Math.random() * 1000; // exponential backoff + jitter
+    setTimeout(() => connect(url, onMessage, attempt + 1), delay);
+  };
+  return ws;
+}
+```
+Notes: messages can be lost while disconnected, so resync state on reconnect (send a last-seen id). WebSocket has no built-in backpressure; `bufferedAmount` tells you how much is queued. Use one socket per app (or a SharedWorker to share across tabs).
+</Info>
 
 **WebTransport** (HTTP/3-based) offers multiple independent streams and unreliable datagrams. It isn't Baseline yet; it is one of the **Interop 2026** focus areas, so feature-detect `'WebTransport' in window`.
 
@@ -316,52 +335,63 @@ Other related APIs: **WebRTC** (peer-to-peer audio/video/data channels, also in 
 - **REST**: resources + HTTP verbs; great HTTP caching, simple; risk of over/under-fetching and many round trips.
 - **GraphQL**: one endpoint, client asks for exactly the fields it needs; great for complex UIs aggregating many sources; caching moves into the client (Apollo/urql normalized cache); POST-by-default defeats HTTP caching (use persisted queries + GET).
 - **gRPC / tRPC / RPC-style server functions** (React Server Functions, Next.js Server Actions) are other options.
-- Full comparison: [[GraphQL vs REST]], [[gRPC vs REST]].
+- Full comparison: [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST), [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST).
 
-> [!info]+ 🆕 2025–2026
-> - **Compression Streams**: Baseline **Widely** available (2025-11-09); Firefox 147 added Brotli.
-> - **Interop 2026** (announced 2026-02-12) includes **fetch uploads and ranges**, **WebTransport** and **WebRTC** as focus areas.
-> - **Angular v22**: `HttpClient` uses `fetch` by default (see [[Modern Angular v17 to v22]]).
-> - **Next.js 16** replaced `middleware.ts` with `proxy.ts` (Node runtime), often where CORS headers and auth redirects now live ([[Next.js 15 to 16.3]]).
+<Info>
+**🆕 2025–2026**
+
+- **Compression Streams**: Baseline **Widely** available (2025-11-09); Firefox 147 added Brotli.
+- **Interop 2026** (announced 2026-02-12) includes **fetch uploads and ranges**, **WebTransport** and **WebRTC** as focus areas.
+- **Angular v22**: `HttpClient` uses `fetch` by default (see [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)).
+- **Next.js 16** replaced `middleware.ts` with `proxy.ts` (Node runtime), often where CORS headers and auth redirects now live ([Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)).
+</Info>
 
 ## Interview questions
 
-> [!question]- no-cache vs no-store?
-> `no-cache` allows storing but requires revalidation (ETag/Last-Modified → 304) before each use. `no-store` forbids storing at all. Use `no-cache` for HTML, `no-store` for sensitive data.
+<Accordion title="no-cache vs no-store?">
+`no-cache` allows storing but requires revalidation (ETag/Last-Modified → 304) before each use. `no-store` forbids storing at all. Use `no-cache` for HTML, `no-store` for sensitive data.
+</Accordion>
 
-> [!question]- How do ETag and Last-Modified work together with 304?
-> The server sends a validator; after expiry the browser sends `If-None-Match` (ETag) or `If-Modified-Since` (date). If unchanged, the server responds `304 Not Modified` with no body and the cached body is reused. ETag wins if both exist.
+<Accordion title="How do ETag and Last-Modified work together with 304?">
+The server sends a validator; after expiry the browser sends `If-None-Match` (ETag) or `If-Modified-Since` (date). If unchanged, the server responds `304 Not Modified` with no body and the cached body is reused. ETag wins if both exist.
+</Accordion>
 
-> [!question]- How would you cache a React SPA's assets?
-> Content-hashed JS/CSS with `max-age=31536000, immutable`; `index.html` with `no-cache` (+ ETag) so deploys are picked up immediately; APIs per endpoint (`private`, `no-cache`, or short max-age + stale-while-revalidate).
+<Accordion title="How would you cache a React SPA's assets?">
+Content-hashed JS/CSS with `max-age=31536000, immutable`; `index.html` with `no-cache` (+ ETag) so deploys are picked up immediately; APIs per endpoint (`private`, `no-cache`, or short max-age + stale-while-revalidate).
+</Accordion>
 
-> [!question]- What is a CORS preflight and when does it happen?
-> An automatic `OPTIONS` request the browser sends before a non-simple cross-origin request (non-GET/POST methods, JSON content type, custom headers) to ask the server which origins/methods/headers are allowed. Cached via `Access-Control-Max-Age`.
+<Accordion title="What is a CORS preflight and when does it happen?">
+An automatic `OPTIONS` request the browser sends before a non-simple cross-origin request (non-GET/POST methods, JSON content type, custom headers) to ask the server which origins/methods/headers are allowed. Cached via `Access-Control-Max-Age`.
+</Accordion>
 
-> [!question]- HTTP/2 vs HTTP/3?
-> Both multiplex streams over one connection with header compression. HTTP/2 runs on TCP, so a lost packet blocks all streams (TCP head-of-line blocking). HTTP/3 runs on QUIC (UDP) with per-stream loss recovery, faster handshakes and connection migration.
+<Accordion title="HTTP/2 vs HTTP/3?">
+Both multiplex streams over one connection with header compression. HTTP/2 runs on TCP, so a lost packet blocks all streams (TCP head-of-line blocking). HTTP/3 runs on QUIC (UDP) with per-stream loss recovery, faster handshakes and connection migration.
+</Accordion>
 
-> [!question]- WebSockets vs SSE vs long polling: which for live flight status? For chat?
-> Flight status (server → client, infrequent): SSE, simple and auto-reconnecting (long polling as a fallback). Chat (bidirectional, low latency): WebSockets. Polling if updates are rare and simplicity wins.
+<Accordion title="WebSockets vs SSE vs long polling: which for live flight status? For chat?">
+Flight status (server → client, infrequent): SSE, simple and auto-reconnecting (long polling as a fallback). Chat (bidirectional, low latency): WebSockets. Polling if updates are rare and simplicity wins.
+</Accordion>
 
-> [!question]- Why doesn't fetch reject on a 500?
-> A 500 is a valid HTTP response. `fetch` only rejects on network failures, CORS failures or aborts. Check `res.ok`.
+<Accordion title="Why doesn't fetch reject on a 500?">
+A 500 is a valid HTTP response. `fetch` only rejects on network failures, CORS failures or aborts. Check `res.ok`.
+</Accordion>
 
-> [!question]- How do you prevent race conditions in search-as-you-type?
-> Debounce input, abort the previous request with AbortController (or ignore stale responses by request id), and cache results per query.
+<Accordion title="How do you prevent race conditions in search-as-you-type?">
+Debounce input, abort the previous request with AbortController (or ignore stale responses by request id), and cache results per query.
+</Accordion>
 
 ## Related
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Web Workers, Service Workers & PWAs]]
-- [[Browser Storage - Cookies, Web Storage & IndexedDB]]
-- [[Promises, Async-Await & Cancellation]]
-- [[Server State - TanStack Query & RTK Query]]
-- [[Next.js Rendering & Caching]]
-- [[GraphQL vs REST]]
-- [[gRPC vs REST]]
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Case Study - Autocomplete]]
-- [[Frontend System Design Index]]
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Web Workers, Service Workers & PWAs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Workers%2C%20Service%20Workers%20%26%20PWAs)
+- [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
+- [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
+- [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)
+- [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST)
+- [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete)
+- [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
 
 ## Sources
 - MDN: [HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching), [Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control), [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag), [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), [Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch), [Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events), [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API), [WebTransport](https://developer.mozilla.org/en-US/docs/Web/API/WebTransport_API), [Evolution of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Evolution_of_HTTP)

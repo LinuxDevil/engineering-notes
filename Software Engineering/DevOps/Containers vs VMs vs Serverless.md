@@ -1,12 +1,16 @@
 ---
+title: "Containers vs VMs vs Serverless"
 tags: [devops, devops/cloud, devops/docker]
 aliases: [Containers vs VMs, Serverless vs Containers, Compute Models, FaaS, MicroVMs]
 updated: 2026-09-27
 ---
 # Containers vs VMs vs Serverless
 
-> [!tldr] TL;DR
-> **VMs** virtualise hardware and run a full guest OS: strongest isolation, slowest to start. **Containers** are isolated processes sharing the host kernel: lightweight, portable, start in milliseconds to seconds. **Serverless** (functions or serverless containers) hides servers entirely, scales to zero and bills per request or per second, at the cost of limits, cold starts and less control. **MicroVMs** (Firecracker, Kata) blur the line: VM isolation with near-container speed, and they power most serverless platforms.
+<Note>
+**TL;DR**
+
+**VMs** virtualise hardware and run a full guest OS: strongest isolation, slowest to start. **Containers** are isolated processes sharing the host kernel: lightweight, portable, start in milliseconds to seconds. **Serverless** (functions or serverless containers) hides servers entirely, scales to zero and bills per request or per second, at the cost of limits, cold starts and less control. **MicroVMs** (Firecracker, Kata) blur the line: VM isolation with near-container speed, and they power most serverless platforms.
+</Note>
 
 ## The spectrum
 
@@ -67,19 +71,25 @@ A new function instance must start a microVM/sandbox, load the runtime and your 
 - **Sandboxed runtimes** for untrusted code: **gVisor** (user-space kernel), **Kata Containers** (each Pod in a lightweight VM), **Firecracker** microVMs (Lambda, Fargate). Kubernetes selects them via `RuntimeClass`.
 - **WebAssembly** (Wasm/WASI) is an emerging, even lighter sandbox for edge functions (Cloudflare Workers-style isolates, Fermyon/SpinKube).
 
-> [!info]+ 🆕 2025–2026
-> - **Kubernetes v1.36 (2026-04-22)** made **User Namespaces GA**: root inside a container maps to an unprivileged user on the host, closing a big part of the isolation gap between containers and VMs.
-> - **Kubernetes v1.37 (2026-08-26)** brought **HPA scale-to-zero to beta, enabled by default**, so plain Kubernetes workloads can idle at zero replicas like serverless (wake-up needs an external/object metric such as queue depth).
-> - The rise of AI coding agents made **sandboxed execution** (microVMs, gVisor, per-agent containers) a mainstream DevOps concern in 2025–2026: agents run untrusted, generated code and need strong isolation plus network egress controls.
+<Info>
+**🆕 2025–2026**
+
+- **Kubernetes v1.36 (2026-04-22)** made **User Namespaces GA**: root inside a container maps to an unprivileged user on the host, closing a big part of the isolation gap between containers and VMs.
+- **Kubernetes v1.37 (2026-08-26)** brought **HPA scale-to-zero to beta, enabled by default**, so plain Kubernetes workloads can idle at zero replicas like serverless (wake-up needs an external/object metric such as queue depth).
+- The rise of AI coding agents made **sandboxed execution** (microVMs, gVisor, per-agent containers) a mainstream DevOps concern in 2025–2026: agents run untrusted, generated code and need strong isolation plus network egress controls.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Treating containers as lightweight VMs (SSH inside, multiple daemons, state on local disk).
-> - Lambda for long-running or constant high-throughput jobs: timeouts and a big bill.
-> - Ignoring connection limits: thousands of function instances each opening DB connections (use RDS Proxy, connection poolers, HTTP-based data APIs).
-> - Kubernetes for a single small app: operational cost exceeds benefit.
-> - Forgetting that serverless still has servers: regional outages and quota limits still apply.
+<Warning>
+**Common pitfalls**
+
+- Treating containers as lightweight VMs (SSH inside, multiple daemons, state on local disk).
+- Lambda for long-running or constant high-throughput jobs: timeouts and a big bill.
+- Ignoring connection limits: thousands of function instances each opening DB connections (use RDS Proxy, connection poolers, HTTP-based data APIs).
+- Kubernetes for a single small app: operational cost exceeds benefit.
+- Forgetting that serverless still has servers: regional outages and quota limits still apply.
+</Warning>
 
 ## Senior perspective
 
@@ -90,23 +100,28 @@ A new function instance must start a microVM/sandbox, load the runtime and your 
 
 ## Interview questions
 
-> [!question]- Why do containers start faster than VMs?
-> A container is just a process with namespaces and cgroups on an already running kernel; there is no guest OS to boot. A VM must boot a full OS on virtual hardware.
+<Accordion title="Why do containers start faster than VMs?">
+A container is just a process with namespaces and cgroups on an already running kernel; there is no guest OS to boot. A VM must boot a full OS on virtual hardware.
+</Accordion>
 
-> [!question]- Is a container as secure as a VM?
-> Not by default: containers share the host kernel, so a kernel exploit or misconfiguration can escape. VMs have a smaller shared surface (the hypervisor). Hardening, user namespaces and sandboxed runtimes (gVisor, Kata, Firecracker) narrow the gap.
+<Accordion title="Is a container as secure as a VM?">
+Not by default: containers share the host kernel, so a kernel exploit or misconfiguration can escape. VMs have a smaller shared surface (the hypervisor). Hardening, user namespaces and sandboxed runtimes (gVisor, Kata, Firecracker) narrow the gap.
+</Accordion>
 
-> [!question]- What is a cold start and how do you reduce it?
-> The latency of creating a new function/container instance (sandbox + runtime + init code) when no warm instance is available. Reduce with smaller packages, faster runtimes, lazy init, snapshotting (SnapStart), and provisioned concurrency / minimum instances.
+<Accordion title="What is a cold start and how do you reduce it?">
+The latency of creating a new function/container instance (sandbox + runtime + init code) when no warm instance is available. Reduce with smaller packages, faster runtimes, lazy init, snapshotting (SnapStart), and provisioned concurrency / minimum instances.
+</Accordion>
 
-> [!question]- When is serverless more expensive than containers?
-> At high, steady utilisation: per-invocation and per-GB-second pricing adds up, while reserved nodes packed with containers amortise well. Serverless wins for idle-heavy or spiky workloads and when ops time is expensive.
+<Accordion title="When is serverless more expensive than containers?">
+At high, steady utilisation: per-invocation and per-GB-second pricing adds up, while reserved nodes packed with containers amortise well. Serverless wins for idle-heavy or spiky workloads and when ops time is expensive.
+</Accordion>
 
-> [!question]- What is a microVM?
-> A minimal virtual machine (e.g. Firecracker) with a tiny device model that boots in ~100 ms with small memory overhead, giving VM-level isolation at near-container density. AWS Lambda and Fargate use Firecracker.
+<Accordion title="What is a microVM?">
+A minimal virtual machine (e.g. Firecracker) with a tiny device model that boots in ~100 ms with small memory overhead, giving VM-level isolation at near-container density. AWS Lambda and Fargate use Firecracker.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Docker Basics]] · [[Kubernetes]] · [[Cloud Fundamentals]] · [[Microservices Architecture]] · [[Linux & Shell Essentials]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) · [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) · [Cloud Fundamentals](/Software%20Engineering/DevOps/Cloud%20Fundamentals) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Linux & Shell Essentials](/Software%20Engineering/DevOps/Linux%20%26%20Shell%20Essentials)
 
 ## Sources
 - [Docker docs: What is a container?](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)

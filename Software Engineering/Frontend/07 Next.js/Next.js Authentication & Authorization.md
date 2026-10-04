@@ -1,14 +1,18 @@
 ---
+title: "Next.js Authentication & Authorization"
 tags: [frontend, frontend/nextjs, frontend/security, auth]
 aliases: [Next.js Auth, Next.js Authentication, Next.js RBAC, Next.js OIDC, Better Auth, Auth.js, NextAuth, CVE-2025-29927, forbidden(), unauthorized()]
 updated: 2026-09-27
 ---
 # Next.js Authentication & Authorization
 
-> [!tldr] TL;DR
-> Auth in Next.js has three parts: **authentication** (who are you: OIDC, passkeys, password), **session management** (a signed/encrypted cookie, or a cookie holding an opaque ID for a DB session) and **authorization** (what can you do). `proxy.ts` is only for **optimistic** checks (cookie present? redirect to `/login`); the **real** checks belong in a `server-only` Data Access Layer called by pages, Server Actions and Route Handlers. The March 2025 middleware bypass (CVE-2025-29927) is the reason. In 2026 the usual choices are **Better Auth** (Auth.js/NextAuth moved into its care and maintenance mode in Sept 2025), a hosted provider such as **Clerk/Auth0/WorkOS**, or **custom OIDC** with `openid-client` when you already run an IdP. `forbidden()`/`unauthorized()` exist but are still **experimental** (`authInterrupts`).
+<Note>
+**TL;DR**
 
-General theory lives elsewhere: [[Authentication vs Authorization]], [[OAuth 2.x & OpenID Connect]], [[JWT vs Cookies]], [[Authentication & Token Storage]], [[Passkeys, WebAuthn & MFA]]. This note is about doing it correctly in the App Router.
+Auth in Next.js has three parts: **authentication** (who are you: OIDC, passkeys, password), **session management** (a signed/encrypted cookie, or a cookie holding an opaque ID for a DB session) and **authorization** (what can you do). `proxy.ts` is only for **optimistic** checks (cookie present? redirect to `/login`); the **real** checks belong in a `server-only` Data Access Layer called by pages, Server Actions and Route Handlers. The March 2025 middleware bypass (CVE-2025-29927) is the reason. In 2026 the usual choices are **Better Auth** (Auth.js/NextAuth moved into its care and maintenance mode in Sept 2025), a hosted provider such as **Clerk/Auth0/WorkOS**, or **custom OIDC** with `openid-client` when you already run an IdP. `forbidden()`/`unauthorized()` exist but are still **experimental** (`authInterrupts`).
+</Note>
+
+General theory lives elsewhere: [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization), [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect), [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies), [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage), [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA). This note is about doing it correctly in the App Router.
 
 ## The mental model
 
@@ -42,10 +46,13 @@ Why several entry points matter: a page and the Server Actions it renders are **
 
 The Next.js guide shows both, recommends a session library (`iron-session` or `jose`) rather than hand-rolled crypto, and recommends these cookie options: `HttpOnly`, `Secure`, `SameSite` (`lax` is a sensible default), `Max-Age`/`Expires`, `Path=/`. Set cookies only on the server. Keep the payload minimal (IDs and roles, no PII).
 
-> [!tip] Cookie naming
-> Prefix the cookie with `__Host-` (e.g. `__Host-session`). Browsers then require `Secure`, `Path=/` and no `Domain`, which blocks subdomain cookie injection. Browsers treat `http://localhost` as secure, so this works in development too.
+<Tip>
+**Cookie naming**
 
-"JWT vs cookies" is a false choice: a JWT can live in a cookie. The real questions are where the token is stored (httpOnly cookie, not `localStorage`) and whether you need server-side revocation ([[JWT vs Cookies]]).
+Prefix the cookie with `__Host-` (e.g. `__Host-session`). Browsers then require `Secure`, `Path=/` and no `Domain`, which blocks subdomain cookie injection. Browsers treat `http://localhost` as secure, so this works in development too.
+</Tip>
+
+"JWT vs cookies" is a false choice: a JWT can live in a cookie. The real questions are where the token is stored (httpOnly cookie, not `localStorage`) and whether you need server-side revocation ([JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies)).
 
 ## Libraries in 2026
 
@@ -145,8 +152,8 @@ Proxy runs on the Node.js runtime in Next 16 (the `runtime` option isn't allowed
 
 The lessons, which also explain the rename to `proxy.ts` in Next 16:
 1. **Defense in depth.** Authorization must be enforced next to the data (DAL), so bypassing one layer doesn't expose anything.
-2. **Strip internal headers at the edge.** Your ingress should drop framework-internal and hop-by-hop headers from untrusted clients ([[API Gateways & Reverse Proxies]]).
-3. **Patch fast.** Subscribe to Next.js/React advisories; automate dependency updates ([[Supply Chain Security]]).
+2. **Strip internal headers at the edge.** Your ingress should drop framework-internal and hop-by-hop headers from untrusted clients ([API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies)).
+3. **Patch fast.** Subscribe to Next.js/React advisories; automate dependency updates ([Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)).
 
 ## RBAC in Server Components and Actions
 
@@ -210,11 +217,11 @@ Without the flag, use `redirect('/login')` for unauthenticated and `notFound()` 
 - **Server Actions:** only `POST`; Next compares `Origin` with `Host`/`X-Forwarded-Host` and rejects mismatches. Combined with `SameSite=Lax` cookies this blocks classic CSRF. Behind a proxy/CDN on another host, list it in `serverActions.allowedOrigins`. Make sure your reverse proxy sets `X-Forwarded-Host` correctly and doesn't let clients spoof it.
 - **Route Handlers:** **no automatic CSRF protection.** For cookie-authenticated, state-changing handlers, check `Origin` yourself (or require a custom header / CSRF token), keep `SameSite=Lax` or `Strict`, and never change state on `GET`.
 - **Rendering must not mutate.** Next blocks setting cookies and revalidating during render; log out through an action, not `?logout=1`.
-- More: [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- More: [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## Full example: OIDC login, DB session, protected layout, role-gated action
 
-The `ops-console` (see [[Job Scheduler Dashboard with Next.js]]) logs in against the company IdP with OIDC Authorization Code + PKCE. Tokens never reach the browser: the app is a **BFF** that stores tokens in a server-side session and calls `jobs-api` with the access token ([[Next.js Route Handlers & Backend-for-Frontend]]).
+The `ops-console` (see [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)) logs in against the company IdP with OIDC Authorization Code + PKCE. Tokens never reach the browser: the app is a **BFF** that stores tokens in a server-side session and calls `jobs-api` with the access token ([Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)).
 
 ```mermaid
 sequenceDiagram
@@ -471,17 +478,20 @@ export async function logout() {
 
 ## Common pitfalls
 
-> [!warning] Pitfalls
-> - Auth only in `proxy.ts`/middleware (the CVE-2025-29927 failure mode), or only in a layout.
-> - `return null` in a layout for unauthorized users, SPA-style. Child segments and actions are still reachable.
-> - Checking authentication but not authorization per resource (IDOR): "logged in" is not "owns this job".
-> - Tokens in `localStorage` or in a non-httpOnly cookie.
-> - PII or large claims in a stateless session cookie (4 KB limit, and it's readable if only signed).
-> - Open redirects via `?next=` / `callbackUrl`.
-> - DB queries in proxy for every request, including prefetches.
-> - `forbidden()`/`redirect()` inside `try/catch`.
-> - Caching per-user data with `'use cache'` under a key that doesn't include the user or tenant.
-> - Starting a new project on Auth.js in 2026 without considering its maintenance status.
+<Warning>
+**Pitfalls**
+
+- Auth only in `proxy.ts`/middleware (the CVE-2025-29927 failure mode), or only in a layout.
+- `return null` in a layout for unauthorized users, SPA-style. Child segments and actions are still reachable.
+- Checking authentication but not authorization per resource (IDOR): "logged in" is not "owns this job".
+- Tokens in `localStorage` or in a non-httpOnly cookie.
+- PII or large claims in a stateless session cookie (4 KB limit, and it's readable if only signed).
+- Open redirects via `?next=` / `callbackUrl`.
+- DB queries in proxy for every request, including prefetches.
+- `forbidden()`/`redirect()` inside `try/catch`.
+- Caching per-user data with `'use cache'` under a key that doesn't include the user or tenant.
+- Starting a new project on Auth.js in 2026 without considering its maintenance status.
+</Warning>
 
 ## Senior perspective
 
@@ -489,48 +499,58 @@ export async function logout() {
 - **Session policy is a product decision:** idle vs absolute timeout, step-up auth (re-authenticate before destructive actions), "sign out all devices", session listing. DB sessions make these easy.
 - **Token handling in a BFF:** refresh access tokens server-side before expiry (with a lock to avoid parallel refreshes), encrypt tokens at rest, never forward them to the browser, and scope audience per downstream API.
 - **Multi-instance deploys:** share session storage, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` and signing keys across instances; plan key rotation (support two keys during rollover).
-- **Auditability:** log security-relevant events (login, logout, role changes, destructive actions) with actor, target and request ID; ship to your log pipeline ([[Observability - Logs, Metrics & Traces]]).
+- **Auditability:** log security-relevant events (login, logout, role changes, destructive actions) with actor, target and request ID; ship to your log pipeline ([Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)).
 - **Caching and auth interact:** with Cache Components, read cookies outside `'use cache'` and pass IDs in; Next has a dedicated guide on authentication with Cache Components. A shared static route protected only in proxy is fine for paywalled-but-identical content, never for per-user data.
 - Questions in review: "Which DAL function enforces this?", "What does an unauthenticated POST to this action do?", "How is a revoked user kicked out, and how fast?", "Which headers does our ingress strip?"
 
-> [!info]+ 🆕 2025–2026
-> - **15.1 (Dec 2024)**: experimental `forbidden()` / `unauthorized()` (`authInterrupts`); still experimental in the 16.3.6 docs (Sept 2026).
-> - **2025-03-21**: **CVE-2025-29927** middleware bypass made public (patched 15.2.3 / 14.2.25 / 13.5.9 / 12.3.5).
-> - **15.5 (Aug 18, 2025)**: Node.js runtime for middleware stable (full Node crypto/DB drivers available).
-> - **2025-09-22**: **Auth.js joins Better Auth**; Auth.js in maintenance mode, new projects advised to use Better Auth.
-> - **16.0 (Oct 21, 2025)**: `middleware.ts` renamed to **`proxy.ts`**, Node.js runtime by default; the docs call proxy a last resort and position it for optimistic checks.
-> - **2025-12-03**: RSC Server Function RCE (CVE-2025-55182): another reminder that every action is an unauthenticated entry point until your code says otherwise.
+<Info>
+**🆕 2025–2026**
+
+- **15.1 (Dec 2024)**: experimental `forbidden()` / `unauthorized()` (`authInterrupts`); still experimental in the 16.3.6 docs (Sept 2026).
+- **2025-03-21**: **CVE-2025-29927** middleware bypass made public (patched 15.2.3 / 14.2.25 / 13.5.9 / 12.3.5).
+- **15.5 (Aug 18, 2025)**: Node.js runtime for middleware stable (full Node crypto/DB drivers available).
+- **2025-09-22**: **Auth.js joins Better Auth**; Auth.js in maintenance mode, new projects advised to use Better Auth.
+- **16.0 (Oct 21, 2025)**: `middleware.ts` renamed to **`proxy.ts`**, Node.js runtime by default; the docs call proxy a last resort and position it for optimistic checks.
+- **2025-12-03**: RSC Server Function RCE (CVE-2025-55182): another reminder that every action is an unauthenticated entry point until your code says otherwise.
+</Info>
 
 ## Interview questions
 
-> [!question]- Why shouldn't you rely on middleware/proxy for authorization?
-> It's a single layer that can be bypassed (CVE-2025-29927 let attackers skip it with a header), its matcher may not cover every path or Server Action, and it runs before you know which data will be accessed. Use it for optimistic redirects; enforce authn/authz in a DAL called by every page, action and route handler.
+<Accordion title="Why shouldn't you rely on middleware/proxy for authorization?">
+It's a single layer that can be bypassed (CVE-2025-29927 let attackers skip it with a header), its matcher may not cover every path or Server Action, and it runs before you know which data will be accessed. Use it for optimistic redirects; enforce authn/authz in a DAL called by every page, action and route handler.
+</Accordion>
 
-> [!question]- Stateless JWT sessions vs database sessions?
-> Stateless: signed/encrypted payload in a cookie, no DB hit, but hard to revoke and stale on role changes. Database: opaque ID in a cookie, lookup per request (cacheable per request), easy revocation and immediate role changes. Many production apps use DB sessions for internal/B2B tools and short-lived tokens with refresh where scale or edge execution matter.
+<Accordion title="Stateless JWT sessions vs database sessions?">
+Stateless: signed/encrypted payload in a cookie, no DB hit, but hard to revoke and stale on role changes. Database: opaque ID in a cookie, lookup per request (cacheable per request), easy revocation and immediate role changes. Many production apps use DB sessions for internal/B2B tools and short-lived tokens with refresh where scale or edge execution matter.
+</Accordion>
 
-> [!question]- How do you implement RBAC in the App Router?
-> Map roles to permissions in a server-only module; a DAL helper like `requirePermission(p)` verifies the session and permission and redirects/throws (`forbidden()` if `authInterrupts` is on). Call it in pages for role-specific UI and in every Server Action/Route Handler before mutating. Resource-level rules go into the query (`WHERE id AND org_id`). Client-side hiding is cosmetic only.
+<Accordion title="How do you implement RBAC in the App Router?">
+Map roles to permissions in a server-only module; a DAL helper like `requirePermission(p)` verifies the session and permission and redirects/throws (`forbidden()` if `authInterrupts` is on). Call it in pages for role-specific UI and in every Server Action/Route Handler before mutating. Resource-level rules go into the query (`WHERE id AND org_id`). Client-side hiding is cosmetic only.
+</Accordion>
 
-> [!question]- How does Next.js protect Server Actions from CSRF, and what's left to you?
-> Actions are POST-only and Next rejects requests whose `Origin` doesn't match `Host`/`X-Forwarded-Host` (configurable via `serverActions.allowedOrigins`); SameSite cookies add protection. You still must authenticate and authorize inside each action. Route Handlers get no automatic CSRF check, so verify `Origin` or use tokens for cookie-authenticated mutations.
+<Accordion title="How does Next.js protect Server Actions from CSRF, and what's left to you?">
+Actions are POST-only and Next rejects requests whose `Origin` doesn't match `Host`/`X-Forwarded-Host` (configurable via `serverActions.allowedOrigins`); SameSite cookies add protection. You still must authenticate and authorize inside each action. Route Handlers get no automatic CSRF check, so verify `Origin` or use tokens for cookie-authenticated mutations.
+</Accordion>
 
-> [!question]- What happened to NextAuth/Auth.js?
-> In Sept 2025 Auth.js became part of Better Auth. Auth.js is in maintenance mode (security and urgent fixes), and the maintainers recommend Better Auth for new projects unless you need something it lacks, such as stateless DB-less sessions.
+<Accordion title="What happened to NextAuth/Auth.js?">
+In Sept 2025 Auth.js became part of Better Auth. Auth.js is in maintenance mode (security and urgent fixes), and the maintainers recommend Better Auth for new projects unless you need something it lacks, such as stateless DB-less sessions.
+</Accordion>
 
-> [!question]- Why is checking auth in a layout not enough?
-> Layouts don't re-render on client-side navigation between their children, so the check doesn't re-run; and a layout doesn't control whether child segments or parallel slots render or whether actions posted to those routes execute. Check near the data instead.
+<Accordion title="Why is checking auth in a layout not enough?">
+Layouts don't re-render on client-side navigation between their children, so the check doesn't re-run; and a layout doesn't control whether child segments or parallel slots render or whether actions posted to those routes execute. Check near the data instead.
+</Accordion>
 
-> [!question]- Describe a secure OIDC login in a Next.js BFF.
-> Authorization Code + PKCE, with state and nonce stored in a short-lived encrypted httpOnly cookie. The callback route exchanges the code server-side, validates the ID token, creates a server-side session holding tokens, and sets an httpOnly `__Host-` session cookie with an opaque ID. The browser never sees access tokens; server code calls APIs with them and refreshes them. Logout deletes the session and redirects to the IdP's end-session endpoint.
+<Accordion title="Describe a secure OIDC login in a Next.js BFF.">
+Authorization Code + PKCE, with state and nonce stored in a short-lived encrypted httpOnly cookie. The callback route exchanges the code server-side, validates the ID token, creates a server-side session holding tokens, and sets an httpOnly `__Host-` session cookie with an opaque ID. The browser never sees access tokens; server code calls APIs with them and refreshes them. Logout deletes the session and redirects to the IdP's end-session endpoint.
+</Accordion>
 
 ## Related
-- [[Next.js Index]]
-- [[Next.js Project Structure & Architecture]] · [[Next.js Data Fetching & Mutations Patterns]] · [[Next.js Route Handlers & Backend-for-Frontend]] · [[Next.js Error Handling, Loading & Not-Found]]
-- [[Next.js 15 to 16.3]] · [[Next.js App Router Fundamentals]]
-- [[Authentication vs Authorization]] · [[OAuth 2.x & OpenID Connect]] · [[JWT vs Cookies]] · [[Passkeys, WebAuthn & MFA]]
-- [[Authentication & Token Storage]] · [[Frontend Security - XSS, CSRF, CSP & Trusted Types]] · [[Supply Chain Security]]
-- [[API Gateways & Reverse Proxies]] · [[Job Scheduler Dashboard with Next.js]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index)
+- [Next.js Project Structure & Architecture](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Project%20Structure%20%26%20Architecture) · [Next.js Data Fetching & Mutations Patterns](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Data%20Fetching%20%26%20Mutations%20Patterns) · [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend) · [Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3) · [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization) · [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) · [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA)
+- [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
+- [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)
 
 ## Sources
 - [Next.js docs: How to implement authentication](https://nextjs.org/docs/app/guides/authentication) (v16.3.6: sessions, DAL, optimistic proxy checks, auth libraries list)

@@ -1,12 +1,16 @@
 ---
+title: "Coupling, Cohesion & Modularity"
 tags: [principles, principles/modularity]
 aliases: [Coupling, Cohesion, Modularity, Deep Modules, Information Hiding, Law of Demeter, Composition over Inheritance, Connascence, A Philosophy of Software Design]
 updated: 2026-09-27
 ---
 # Coupling, Cohesion & Modularity
 
-> [!tldr] TL;DR
-> **Coupling** is how much one module depends on another; **cohesion** is how strongly the things inside one module belong together. Good design is **high cohesion, low (or well-placed) coupling**, achieved through **information hiding**: each module hides a design decision likely to change behind a small interface. John Ousterhout's **deep modules** (lots of functionality, simple interface) are the goal; **shallow modules** (interface as complex as the implementation) add complexity. Supporting rules: the **Law of Demeter** (talk to friends, not strangers) and **composition over inheritance**.
+<Note>
+**TL;DR**
+
+**Coupling** is how much one module depends on another; **cohesion** is how strongly the things inside one module belong together. Good design is **high cohesion, low (or well-placed) coupling**, achieved through **information hiding**: each module hides a design decision likely to change behind a small interface. John Ousterhout's **deep modules** (lots of functionality, simple interface) are the goal; **shallow modules** (interface as complex as the implementation) add complexity. Supporting rules: the **Law of Demeter** (talk to friends, not strangers) and **composition over inheritance**.
+</Note>
 
 ## The idea
 
@@ -120,8 +124,11 @@ Related ideas from the book:
 - **General-purpose-ish interfaces**: somewhat general interfaces are often simpler and deeper than special-purpose ones.
 - **Design it twice**: sketch at least two radically different designs before choosing.
 
-> [!info]+ 🆕 2025: Ousterhout vs Martin
-> *Clean Code* encourages very short methods and classes; Ousterhout warns that splitting into many shallow pieces **increases** complexity because the reader must hold more interfaces in mind. The two authors held a written debate (September 2024 – February 2025, published on GitHub as `aposd-vs-clean-code`) on method length, comments and TDD, without reaching consensus. Synthesis for practice: split when the pieces are **independently understandable** and hide something; don't split just to hit a line count. Martin's *Clean Code* 2nd edition followed in October 2025. See [[Clean Code & Refactoring]].
+<Info>
+**🆕 2025: Ousterhout vs Martin**
+
+*Clean Code* encourages very short methods and classes; Ousterhout warns that splitting into many shallow pieces **increases** complexity because the reader must hold more interfaces in mind. The two authors held a written debate (September 2024 – February 2025, published on GitHub as `aposd-vs-clean-code`) on method length, comments and TDD, without reaching consensus. Synthesis for practice: split when the pieces are **independently understandable** and hide something; don't split just to hit a line count. Martin's *Clean Code* 2nd edition followed in October 2025. See [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring).
+</Info>
 
 ## Law of Demeter
 
@@ -173,26 +180,29 @@ new Animal("penguin", [swimming]);
 new Animal("duck", [flying, swimming]);
 ```
 
-Mechanisms: delegation, Strategy and Decorator ([[Design Patterns]]), mixins/traits, React component composition, Go struct embedding, Kotlin `by` delegation (`class LoggingList<T>(inner: MutableList<T>) : MutableList<T> by inner`).
+Mechanisms: delegation, Strategy and Decorator ([Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)), mixins/traits, React component composition, Go struct embedding, Kotlin `by` delegation (`class LoggingList<T>(inner: MutableList<T>) : MutableList<T> by inner`).
 
 ## Modularity at larger scales
 
 The same rules apply to packages, services and teams:
 - **Package/module level**: package by feature, keep most classes non-public, no dependency cycles (Acyclic Dependencies Principle), depend in the direction of stability (Stable Dependencies Principle, Martin).
-- **System level**: bounded contexts, modular monolith, services owning their data ([[Software Architecture Styles]], [[Domain-Driven Design (DDD)]]).
+- **System level**: bounded contexts, modular monolith, services owning their data ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles), [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))).
 - **Organisation level**: **Conway's law**: systems mirror the communication structure of the teams that build them. Team Topologies' "inverse Conway manoeuvre" designs teams to get the architecture you want.
 
 Enforce boundaries with tools, not wikis: ArchUnit (Java), Spring Modulith, Packwerk (Ruby), dependency-cruiser / Nx lint rules / ESLint `no-restricted-imports` (TS), import-linter (Python).
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - `utils`/`common`/`shared` packages that everything depends on: coincidental cohesion and a coupling hub.
-> - "Decoupling" with interfaces everywhere while every change still touches five files: indirection is not decoupling if the **knowledge** is still shared.
-> - Shallow wrappers and pass-through layers ("service calls repository calls DAO" with no logic).
-> - Shared databases between modules/services (content coupling at scale).
-> - Circular dependencies between packages.
-> - Over-applying Demeter with piles of delegate methods.
+<Warning>
+**Common mistakes**
+
+- `utils`/`common`/`shared` packages that everything depends on: coincidental cohesion and a coupling hub.
+- "Decoupling" with interfaces everywhere while every change still touches five files: indirection is not decoupling if the **knowledge** is still shared.
+- Shallow wrappers and pass-through layers ("service calls repository calls DAO" with no logic).
+- Shared databases between modules/services (content coupling at scale).
+- Circular dependencies between packages.
+- Over-applying Demeter with piles of delegate methods.
+</Warning>
 
 ## Senior perspective
 
@@ -204,29 +214,35 @@ Enforce boundaries with tools, not wikis: ArchUnit (Java), Spring Modulith, Pack
 
 ## Interview questions
 
-> [!question]- Define coupling and cohesion. What should you aim for?
-> Coupling: degree of interdependence between modules. Cohesion: how closely the responsibilities inside a module relate. Aim for high cohesion and low coupling, or more precisely, strong coupling only between things that are close together and change together.
+<Accordion title="Define coupling and cohesion. What should you aim for?">
+Coupling: degree of interdependence between modules. Cohesion: how closely the responsibilities inside a module relate. Aim for high cohesion and low coupling, or more precisely, strong coupling only between things that are close together and change together.
+</Accordion>
 
-> [!question]- What is a deep module?
-> Ousterhout's term for a module whose interface is simple relative to the functionality it provides, hiding significant complexity (e.g. Unix file I/O). Shallow modules have interfaces as complex as their implementation and add cognitive load without hiding much.
+<Accordion title="What is a deep module?">
+Ousterhout's term for a module whose interface is simple relative to the functionality it provides, hiding significant complexity (e.g. Unix file I/O). Shallow modules have interfaces as complex as their implementation and add cognitive load without hiding much.
+</Accordion>
 
-> [!question]- What is information hiding?
-> Parnas' principle: each module hides a design decision likely to change (data format, algorithm, storage) behind an interface, so the decision can change without affecting other modules. It's the basis of encapsulation and modular design.
+<Accordion title="What is information hiding?">
+Parnas' principle: each module hides a design decision likely to change (data format, algorithm, storage) behind an interface, so the decision can change without affecting other modules. It's the basis of encapsulation and modular design.
+</Accordion>
 
-> [!question]- Explain the Law of Demeter with an example.
-> A method should only call methods on itself, its parameters, objects it creates and its direct components, not on objects returned by those. `order.getCustomer().getAddress().getZip()` couples the caller to the object graph; `order.shippingZip()` hides it.
+<Accordion title="Explain the Law of Demeter with an example.">
+A method should only call methods on itself, its parameters, objects it creates and its direct components, not on objects returned by those. `order.getCustomer().getAddress().getZip()` couples the caller to the object graph; `order.shippingZip()` hides it.
+</Accordion>
 
-> [!question]- Why favor composition over inheritance?
-> Inheritance couples subclasses to parent implementation, is fixed at compile time and leads to class explosions and LSP violations. Composition depends on interfaces, can change at runtime, and combines behaviours freely. Keep inheritance for genuine substitutable is-a relationships.
+<Accordion title="Why favor composition over inheritance?">
+Inheritance couples subclasses to parent implementation, is fixed at compile time and leads to class explosions and LSP violations. Composition depends on interfaces, can change at runtime, and combines behaviours freely. Keep inheritance for genuine substitutable is-a relationships.
+</Accordion>
 
-> [!question]- How do you detect bad coupling in an existing codebase?
-> Change coupling in git history, dependency graphs with cycles, "shotgun surgery" PRs, shared tables, `utils` hubs with high fan-in, tests needing many mocks, and modules that can't be built or tested alone.
+<Accordion title="How do you detect bad coupling in an existing codebase?">
+Change coupling in git history, dependency graphs with cycles, "shotgun surgery" PRs, shared tables, `utils` hubs with high fan-in, tests needing many mocks, and modules that can't be built or tested alone.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[SOLID]] · [[OOP]] · [[Design Patterns]] · [[Clean Code & Refactoring]] · [[Dependency Injection & Inversion of Control]]
-- [[Software Architecture Styles]] · [[Domain-Driven Design (DDD)]]
-- Frontend: [[Monorepos]] · [[Component Patterns]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [SOLID](/Software%20Engineering/Principles/SOLID) · [OOP](/Software%20Engineering/Principles/OOP) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Clean Code & Refactoring](/Software%20Engineering/Principles/Clean%20Code%20%26%20Refactoring) · [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control)
+- [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))
+- Frontend: [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos) · [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
 
 ## Sources
 - John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (Yaknyam Press, 2021) · [Ousterhout's Stanford page](https://web.stanford.edu/~ouster/cgi-bin/book.php)

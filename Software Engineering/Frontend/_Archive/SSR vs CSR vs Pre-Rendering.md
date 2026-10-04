@@ -1,3 +1,6 @@
+---
+title: "SSR vs CSR vs Pre-Rendering"
+---
 **Client-rendered Application**
     Since frameworks like Angular, Ember.js, and Backbone exists, front-end developers have tended to render everything client-side. Thanks to Google and its ability to “read” JavaScript, it works pretty well, and it’s even SEO friendly.
     With a client-side rendering solution, you redirect the request to a single HTML file and the server will deliver it without any content (or with a loading screen) until you fetch all the JavaScript and let the browser compile everything before rendering the content.

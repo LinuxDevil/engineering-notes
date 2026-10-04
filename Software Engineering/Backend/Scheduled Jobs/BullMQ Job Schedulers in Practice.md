@@ -1,14 +1,18 @@
 ---
+title: "BullMQ Job Schedulers in Practice"
 tags: [backend, backend/jobs, backend/node, devops/kubernetes]
 aliases: [BullMQ Job Schedulers, upsertJobScheduler, BullMQ in Production, jobs-worker, BullMQ Cancellation, BullMQ v6]
 updated: 2026-09-27
 ---
 # BullMQ Job Schedulers in Practice
 
-> [!tldr] TL;DR
-> BullMQ runs recurring work with **Job Schedulers**: `queue.upsertJobScheduler(id, { pattern, tz }, template)` keeps exactly one delayed job for the next tick with a deterministic id `repeat:<id>:<millis>`, so N replicas upserting the same scheduler never duplicate ticks. Manage them with `getJobSchedulers()`, `getJobScheduler(id)` and `removeJobScheduler(id)`. Since **BullMQ 6.0.0 (2026-07-30)** the old repeatable-jobs API is **removed**. Build workers with concurrency, rate limits, `attempts` + backoff, `removeOnComplete`/`removeOnFail`, and sandboxed processors for CPU work; stop runs with the built-in **`worker.cancelJob()` + `AbortSignal`** (since 5.64.0), reached across pods via Redis pub/sub; shut down on SIGTERM with `worker.close()`; export metrics with `queue.exportPrometheusMetrics()`; and run Redis with **`maxmemory-policy noeviction`** and AOF.
+<Note>
+**TL;DR**
 
-This note builds the **`jobs-worker`** of Acme Ops (Node 24 + TypeScript) for the two BullMQ jobs, `nightly-sales-report` and `sync-inventory`. The architecture and the reasoning behind idempotency keys, overlap and misfires are in [[Cron with Message Queues - Architecture]]; the control plane that pauses, triggers and stops these jobs is [[Job Control API - Pause, Resume, Run Now & Stop]].
+BullMQ runs recurring work with **Job Schedulers**: `queue.upsertJobScheduler(id, { pattern, tz }, template)` keeps exactly one delayed job for the next tick with a deterministic id `repeat:<id>:<millis>`, so N replicas upserting the same scheduler never duplicate ticks. Manage them with `getJobSchedulers()`, `getJobScheduler(id)` and `removeJobScheduler(id)`. Since **BullMQ 6.0.0 (2026-07-30)** the old repeatable-jobs API is **removed**. Build workers with concurrency, rate limits, `attempts` + backoff, `removeOnComplete`/`removeOnFail`, and sandboxed processors for CPU work; stop runs with the built-in **`worker.cancelJob()` + `AbortSignal`** (since 5.64.0), reached across pods via Redis pub/sub; shut down on SIGTERM with `worker.close()`; export metrics with `queue.exportPrometheusMetrics()`; and run Redis with **`maxmemory-policy noeviction`** and AOF.
+</Note>
+
+This note builds the **`jobs-worker`** of Acme Ops (Node 24 + TypeScript) for the two BullMQ jobs, `nightly-sales-report` and `sync-inventory`. The architecture and the reasoning behind idempotency keys, overlap and misfires are in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture); the control plane that pauses, triggers and stops these jobs is [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop).
 
 ## 1. Versions and API status (checked 2026-09-27)
 
@@ -211,11 +215,14 @@ export async function removeOrphans(queue: Queue, def: JobDefinition) {
 
 `getJobScheduler(id)` returns a `JobSchedulerJson`: `{ key, name, pattern?, every?, tz?, next?, iterationCount?, limit?, startDate?, endDate?, template? }`. `next` (epoch ms) is what `jobs-api` shows as `nextRunAt`.
 
-> [!warning] Scheduler gotchas
-> - **`every` vs `pattern`**: since 5.19 a *new* `every` scheduler fires immediately, and `every` aligns to the clock (every 2000 ms fires at even seconds). Resume-by-reinsert of an `every` scheduler would therefore run at once. Acme uses cron `pattern`s, whose first job waits for the next match.
-> - **Next job is created when the current one starts**. If the queue is busy or paused, ticks are produced *less* often than the pattern, never more.
-> - **Custom job ids are not allowed** on scheduler jobs; use the job `name` to tell them apart.
-> - **Patterns** use cron-parser: 5 fields, or 6 with seconds first (`'0 15 3 * * *'` = 03:15:00). Don't copy Quartz expressions.
+<Warning>
+**Scheduler gotchas**
+
+- **`every` vs `pattern`**: since 5.19 a *new* `every` scheduler fires immediately, and `every` aligns to the clock (every 2000 ms fires at even seconds). Resume-by-reinsert of an `every` scheduler would therefore run at once. Acme uses cron `pattern`s, whose first job waits for the next match.
+- **Next job is created when the current one starts**. If the queue is busy or paused, ticks are produced *less* often than the pattern, never more.
+- **Custom job ids are not allowed** on scheduler jobs; use the job `name` to tell them apart.
+- **Patterns** use cron-parser: 5 fields, or 6 with seconds first (`'0 15 3 * * *'` = 03:15:00). Don't copy Quartz expressions.
+</Warning>
 
 ## 6. Workers: concurrency, rate limits, retries, retention
 
@@ -609,7 +616,7 @@ events.on('failed',    ({ jobId, failedReason }) => publish({
 }));
 ```
 
-`jobs-api` turns these into the `GET /api/jobs/events` SSE stream that the [[Job Scheduler Dashboard with Next.js]] consumes. Job logs live in Redis with the job and disappear with `removeOnComplete`; for long-term logs also write JSON to stdout (Loki) with `job` and `run_id` fields.
+`jobs-api` turns these into the `GET /api/jobs/events` SSE stream that the [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) consumes. Job logs live in Redis with the job and disappear with `removeOnComplete`; for long-term logs also write JSON to stdout (Loki) with `job` and `run_id` fields.
 
 ## 12. Admin UIs
 
@@ -683,7 +690,7 @@ export function startMetricsServer(queues: Queue[], log: Logger) {
 }
 ```
 
-`jobs_last_success_timestamp_seconds` is per pod; alert on `max by (job)` of it (or push it to Redis and export from one place). `jobs_paused{job}` (1/0) is exported by `jobs-api`, which owns pause state. The alert rules are in [[Cron with Message Queues - Architecture#14. Observability]].
+`jobs_last_success_timestamp_seconds` is per pod; alert on `max by (job)` of it (or push it to Redis and export from one place). `jobs_paused{job}` (1/0) is exported by `jobs-api`, which owns pause state. The alert rules are in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture#14-observability).
 
 ## 14. Testing workers
 
@@ -750,7 +757,7 @@ Also test: DST behaviour of your patterns (compute the next ticks with `cron-par
 
 ## 15. Deploying `jobs-worker` on Kubernetes
 
-The base setup (image, probes, JSON logs, Kustomize overlays, Argo CD) is the same as `orders-api` in [[Deploying Node.js Apps to Kubernetes]]. Worker-specific parts:
+The base setup (image, probes, JSON logs, Kustomize overlays, Argo CD) is the same as `orders-api` in [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes). Worker-specific parts:
 
 ```yaml
 # apps/jobs-worker/base/deployment.yaml (excerpt)
@@ -810,17 +817,20 @@ Scaling only helps queues whose global concurrency is above 1. With Forbid (`set
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Using v5 tutorials on v6: `repeat` options and `getRepeatableJobs()` are gone; v6 throws on legacy repeatable data in Redis.
-> - `maxmemory-policy allkeys-lru` on the Redis that holds queues (a cache config copied over).
-> - Keeping finished jobs forever (no `removeOnComplete`): Redis fills up, then `noeviction` makes writes fail.
-> - Custom job ids with `:` or all digits (`"123"`): rejected or mis-parsed. Use `-`/`_` and a prefix.
-> - CPU-heavy processors inline: the lock isn't renewed, the job "stalls" and runs twice. Use sandboxed processors.
-> - `worker.close()` without a deadline, then SIGKILL: jobs stall and re-run after ~30 s.
-> - Expecting `cancelJob` to stop a job on another pod, or to stop code that never checks the signal.
-> - Treating `queue.pause()` as "pause the schedule": manual runs stop too, and a catch-up tick fires on resume.
-> - `every` schedulers for daily work: a new `every` scheduler fires immediately and aligns to the epoch, not local midnight.
-> - Scaling workers for a queue with global concurrency 1 and wondering why nothing got faster.
+<Warning>
+**Common mistakes**
+
+- Using v5 tutorials on v6: `repeat` options and `getRepeatableJobs()` are gone; v6 throws on legacy repeatable data in Redis.
+- `maxmemory-policy allkeys-lru` on the Redis that holds queues (a cache config copied over).
+- Keeping finished jobs forever (no `removeOnComplete`): Redis fills up, then `noeviction` makes writes fail.
+- Custom job ids with `:` or all digits (`"123"`): rejected or mis-parsed. Use `-`/`_` and a prefix.
+- CPU-heavy processors inline: the lock isn't renewed, the job "stalls" and runs twice. Use sandboxed processors.
+- `worker.close()` without a deadline, then SIGKILL: jobs stall and re-run after ~30 s.
+- Expecting `cancelJob` to stop a job on another pod, or to stop code that never checks the signal.
+- Treating `queue.pause()` as "pause the schedule": manual runs stop too, and a catch-up tick fires on resume.
+- `every` schedulers for daily work: a new `every` scheduler fires immediately and aligns to the epoch, not local midnight.
+- Scaling workers for a queue with global concurrency 1 and wondering why nothing got faster.
+</Warning>
 
 ## Senior perspective
 
@@ -831,45 +841,56 @@ Scaling only helps queues whose global concurrency is above 1. With Forbid (`set
 - **Know your failure budget**: how long can `sync-inventory` be down before customers see wrong stock? That number sets the alert thresholds, retry counts and whether you need a hot standby Redis.
 - Review questions: *What happens on a double tick? Where does this processor check `signal`? What's retained in Redis and for how long? What's the drain deadline versus `terminationGracePeriodSeconds`? Is this Redis shared with a cache?*
 
-> [!info]+ 🆕 2025–2026
-> - **2025-01-25 · BullMQ 5.37.0:** built-in Prometheus exporter, `queue.exportPrometheusMetrics(globalLabels?)`, gauge `bullmq_job_count{queue,state}`.
-> - **2025-11-20 · BullMQ 5.64.0:** job cancellation with `worker.cancelJob(jobId, reason?)`, `worker.cancelAllJobs(reason?)` and an `AbortSignal` passed as the processor's third argument. **2026-02-21 · 5.70.0:** also for sandboxed processors.
-> - **2026-03-25:** BullMQ's guide *Properly cancelling jobs* recommends a Redis pub/sub control channel for cancelling from another process.
-> - **2026-07-30 · BullMQ 6.0.0:** pluggable backends with an optional **PostgreSQL backend**, legacy repeatable jobs removed, `ioredis` an optional peer dependency (install it yourself), Redis internals (`Queue#client`, `Worker#blockingClient`) removed, `debounce` → `deduplication`, `Worker#resume()`/`Queue#resume()` must be awaited, flow ids default to UUIDs. Latest is **6.3.9 (2026-09-25)**.
-> - **2026-07-31 · ioredis 6.0.0:** adds RESP3; BullMQ's peer range accepts ioredis ≥ 5.
-> - **2026-09-23 · KEDA 2.21.0** (no dedicated BullMQ scaler; use the Prometheus or Redis Lists scaler).
+<Info>
+**🆕 2025–2026**
+
+- **2025-01-25 · BullMQ 5.37.0:** built-in Prometheus exporter, `queue.exportPrometheusMetrics(globalLabels?)`, gauge `bullmq_job_count{queue,state}`.
+- **2025-11-20 · BullMQ 5.64.0:** job cancellation with `worker.cancelJob(jobId, reason?)`, `worker.cancelAllJobs(reason?)` and an `AbortSignal` passed as the processor's third argument. **2026-02-21 · 5.70.0:** also for sandboxed processors.
+- **2026-03-25:** BullMQ's guide *Properly cancelling jobs* recommends a Redis pub/sub control channel for cancelling from another process.
+- **2026-07-30 · BullMQ 6.0.0:** pluggable backends with an optional **PostgreSQL backend**, legacy repeatable jobs removed, `ioredis` an optional peer dependency (install it yourself), Redis internals (`Queue#client`, `Worker#blockingClient`) removed, `debounce` → `deduplication`, `Worker#resume()`/`Queue#resume()` must be awaited, flow ids default to UUIDs. Latest is **6.3.9 (2026-09-25)**.
+- **2026-07-31 · ioredis 6.0.0:** adds RESP3; BullMQ's peer range accepts ioredis ≥ 5.
+- **2026-09-23 · KEDA 2.21.0** (no dedicated BullMQ scaler; use the Prometheus or Redis Lists scaler).
+</Info>
 
 ## Interview questions
 
-> [!question]- How does a BullMQ Job Scheduler avoid duplicate ticks when several processes call `upsertJobScheduler`?
-> The scheduler is stored in Redis under its id, and upsert creates or updates it atomically. It keeps a single delayed job whose id is derived from the scheduler id and the next timestamp (`repeat:<id>:<millis>`). A second process computing the same tick produces the same id, so no duplicate is added.
+<Accordion title="How does a BullMQ Job Scheduler avoid duplicate ticks when several processes call `upsertJobScheduler`?">
+The scheduler is stored in Redis under its id, and upsert creates or updates it atomically. It keeps a single delayed job whose id is derived from the scheduler id and the next timestamp (`repeat:<id>:<millis>`). A second process computing the same tick produces the same id, so no duplicate is added.
+</Accordion>
 
-> [!question]- What replaced repeatable jobs and what changed in BullMQ 6?
-> Job Schedulers (`upsertJobScheduler`, `getJobSchedulers`, `getJobScheduler`, `removeJobScheduler`) since 5.16. BullMQ 6.0.0 removed the legacy `repeat` option and repeatable APIs entirely, removed `repeat.utc` (use `tz: 'UTC'`), made ioredis an optional peer dependency and added pluggable backends including PostgreSQL.
+<Accordion title="What replaced repeatable jobs and what changed in BullMQ 6?">
+Job Schedulers (`upsertJobScheduler`, `getJobSchedulers`, `getJobScheduler`, `removeJobScheduler`) since 5.16. BullMQ 6.0.0 removed the legacy `repeat` option and repeatable APIs entirely, removed `repeat.utc` (use `tz: 'UTC'`), made ioredis an optional peer dependency and added pluggable backends including PostgreSQL.
+</Accordion>
 
-> [!question]- `queue.pause()` vs `worker.pause()` vs `removeJobScheduler()`?
-> `queue.pause()` stops all workers from taking any job from that queue (scheduled or manual) while producers can still add jobs. `worker.pause()` stops one worker instance only. `removeJobScheduler()` stops future scheduled jobs but leaves the queue working for manual jobs. Active jobs finish in all three cases.
+<Accordion title="`queue.pause()` vs `worker.pause()` vs `removeJobScheduler()`?">
+`queue.pause()` stops all workers from taking any job from that queue (scheduled or manual) while producers can still add jobs. `worker.pause()` stops one worker instance only. `removeJobScheduler()` stops future scheduled jobs but leaves the queue working for manual jobs. Active jobs finish in all three cases.
+</Accordion>
 
-> [!question]- How do you cancel a job that's running on another pod?
-> Use BullMQ's built-in cancellation: the processor receives an `AbortSignal`, and `worker.cancelJob(id, reason)` aborts it, but only on the worker that holds the job. So the API sets a durable cancel flag and publishes a cancel message on Redis pub/sub; every worker calls `cancelJob`, the owner aborts. The processor throws `UnrecoverableError` so the job fails as cancelled without retries. The flag also covers queued jobs and missed pub/sub messages.
+<Accordion title="How do you cancel a job that's running on another pod?">
+Use BullMQ's built-in cancellation: the processor receives an `AbortSignal`, and `worker.cancelJob(id, reason)` aborts it, but only on the worker that holds the job. So the API sets a durable cancel flag and publishes a cancel message on Redis pub/sub; every worker calls `cancelJob`, the owner aborts. The processor throws `UnrecoverableError` so the job fails as cancelled without retries. The flag also covers queued jobs and missed pub/sub messages.
+</Accordion>
 
-> [!question]- Why must Redis use `maxmemory-policy noeviction` for BullMQ?
-> Any eviction policy can delete arbitrary keys (job hashes, lists, scheduler entries) under memory pressure, silently corrupting queues. `noeviction` makes writes fail instead, which is visible and alertable. Pair it with AOF persistence and retention limits.
+<Accordion title="Why must Redis use `maxmemory-policy noeviction` for BullMQ?">
+Any eviction policy can delete arbitrary keys (job hashes, lists, scheduler entries) under memory pressure, silently corrupting queues. `noeviction` makes writes fail instead, which is visible and alertable. Pair it with AOF persistence and retention limits.
+</Accordion>
 
-> [!question]- What causes stalled jobs and how do you prevent them?
-> A worker must renew the job lock periodically; if it crashes or blocks the event loop longer than the lock duration, the stalled checker moves the job back to waiting (or fails it after `maxStalledCount`). Prevent with sandboxed processors for CPU work, graceful shutdown on SIGTERM, and idempotent processors for the cases you can't prevent.
+<Accordion title="What causes stalled jobs and how do you prevent them?">
+A worker must renew the job lock periodically; if it crashes or blocks the event loop longer than the lock duration, the stalled checker moves the job back to waiting (or fails it after `maxStalledCount`). Prevent with sandboxed processors for CPU work, graceful shutdown on SIGTERM, and idempotent processors for the cases you can't prevent.
+</Accordion>
 
-> [!question]- How would you autoscale BullMQ workers on Kubernetes?
-> KEDA with a Prometheus trigger on `bullmq_job_count{state="waiting"}` from BullMQ's exporter (or the Redis Lists scaler on the queue's wait list). Keep a minimum replica count so scheduled ticks are processed, and remember that global concurrency caps throughput regardless of replicas.
+<Accordion title="How would you autoscale BullMQ workers on Kubernetes?">
+KEDA with a Prometheus trigger on `bullmq_job_count{state="waiting"}` from BullMQ's exporter (or the Redis Lists scaler on the queue's wait list). Keep a minimum replica count so scheduled ticks are processed, and remember that global concurrency caps throughput regardless of replicas.
+</Accordion>
 
-> [!question]- How do you model "parent runs after all children finish" in BullMQ?
-> Flows: `FlowProducer.add({ ..., children: [...] })` when the tree is known upfront, or add children at runtime with the `parent` option and call `job.moveToWaitingChildren(token)`, throwing `WaitingChildrenError` so the parent sleeps. When children complete, the parent is processed again and reads `getChildrenValues()`.
+<Accordion title="How do you model &quot;parent runs after all children finish&quot; in BullMQ?">
+Flows: `FlowProducer.add({ ..., children: [...] })` when the tree is known upfront, or add children at runtime with the `parent` option and call `job.moveToWaitingChildren(token)`, throwing `WaitingChildrenError` so the parent sleeps. When children complete, the parent is processed again and reads `getChildrenValues()`.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]] · [[Node.js Index]]
-- [[Cron with Message Queues - Architecture]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]] · [[Kubernetes CronJobs in Practice]]
-- [[Background Jobs & Task Queues]] · [[Cron Jobs]] · [[Message Queues & Event Streaming]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Grafana & the LGTM Stack]] · [[Kubernetes Workloads in Production]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index) · [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) · [Kubernetes CronJobs in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/Kubernetes%20CronJobs%20in%20Practice)
+- [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)
 
 ## Sources
 - [BullMQ docs: Job Schedulers](https://docs.bullmq.io/guide/job-schedulers) · [Repeat options](https://docs.bullmq.io/guide/job-schedulers/repeat-options) · [Manage Job Schedulers](https://docs.bullmq.io/guide/job-schedulers/manage-job-schedulers)

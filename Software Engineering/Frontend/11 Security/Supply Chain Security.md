@@ -1,12 +1,16 @@
 ---
+title: "Supply Chain Security"
 tags: [frontend, frontend/security, frontend/tooling]
 aliases: [npm security, Dependency security, Software supply chain]
 updated: 2026-09-27
 ---
 # Supply Chain Security
 
-> [!tldr] TL;DR
-> A typical frontend app runs code from **hundreds of npm maintainers** — at install time (lifecycle scripts on your laptop and CI) and at runtime (in your users' browsers). 2025 proved how fragile this is: a phished maintainer shipped a **browser crypto-stealer** inside `chalk`/`debug`, and **Shai-Hulud** became the first **self-replicating npm worm**. Defend with lockfiles, frozen installs, **release-age cooldowns**, disabling install scripts, **trusted publishing + provenance**, 2FA/FIDO, least-privilege CI tokens, and continuous auditing.
+<Note>
+**TL;DR**
+
+A typical frontend app runs code from **hundreds of npm maintainers** — at install time (lifecycle scripts on your laptop and CI) and at runtime (in your users' browsers). 2025 proved how fragile this is: a phished maintainer shipped a **browser crypto-stealer** inside `chalk`/`debug`, and **Shai-Hulud** became the first **self-replicating npm worm**. Defend with lockfiles, frozen installs, **release-age cooldowns**, disabling install scripts, **trusted publishing + provenance**, 2FA/FIDO, least-privilege CI tokens, and continuous auditing.
+</Note>
 
 ## Where the attack surface is
 
@@ -163,7 +167,7 @@ jobs:
 - Self-host and bundle where possible; otherwise **SRI** hashes on versioned CDN URLs.
 - **CSP** limits where scripts can load from and where data can be sent (`connect-src`), which can block exfiltration.
 - Load tags through a tag manager with governance, or sandbox them in iframes / Web Workers (e.g. Partytown).
-- See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 
 ## Incident response: "a package we use was compromised"
 1. **Identify exposure**: `npm ls chalk` / `pnpm why chalk`, check lockfiles across repos for the bad versions and the time window.
@@ -179,61 +183,76 @@ jobs:
 
 ## Checklist
 
-> [!check] Supply chain checklist
-> - [ ] Lockfile committed; CI uses `npm ci` / `--frozen-lockfile`
-> - [ ] Lockfile changes reviewed in PRs
-> - [ ] Release-age cooldown: pnpm `minimumReleaseAge`, Renovate `minimumReleaseAge`, Dependabot `cooldown`
-> - [ ] Dependency install scripts disabled or allow-listed
-> - [ ] `npm audit` + Dependabot alerts + dependency review in CI; a behavioural scanner for new packages
-> - [ ] `npm audit signatures` / provenance checked for critical deps
-> - [ ] Publishing via trusted publishing (OIDC) with `--provenance`; no long-lived npm tokens
-> - [ ] Phishing-resistant 2FA on npm and GitHub for all maintainers
-> - [ ] GitHub Actions pinned to SHAs, minimal `permissions`
-> - [ ] Scoped private packages mapped to the private registry
-> - [ ] Third-party runtime scripts: self-hosted or SRI + CSP
-> - [ ] Incident playbook: find, override, rotate secrets, redeploy
+<Check>
+**Supply chain checklist**
 
-> [!warning] Common pitfalls
-> - `npm install` in CI (can rewrite the lockfile) instead of `npm ci`.
-> - Auto-merging every Dependabot/Renovate PR the minute a version is published.
-> - Believing "it's only a dev dependency" is safe — dev dependencies run install scripts with your credentials and can inject code into the bundle.
-> - Rotating the npm token but not the cloud/GitHub secrets that were also on the machine.
+- [ ] Lockfile committed; CI uses `npm ci` / `--frozen-lockfile`
+- [ ] Lockfile changes reviewed in PRs
+- [ ] Release-age cooldown: pnpm `minimumReleaseAge`, Renovate `minimumReleaseAge`, Dependabot `cooldown`
+- [ ] Dependency install scripts disabled or allow-listed
+- [ ] `npm audit` + Dependabot alerts + dependency review in CI; a behavioural scanner for new packages
+- [ ] `npm audit signatures` / provenance checked for critical deps
+- [ ] Publishing via trusted publishing (OIDC) with `--provenance`; no long-lived npm tokens
+- [ ] Phishing-resistant 2FA on npm and GitHub for all maintainers
+- [ ] GitHub Actions pinned to SHAs, minimal `permissions`
+- [ ] Scoped private packages mapped to the private registry
+- [ ] Third-party runtime scripts: self-hosted or SRI + CSP
+- [ ] Incident playbook: find, override, rotate secrets, redeploy
+</Check>
 
-> [!info]+ 🆕 2025–2026
-> - **2025-07-31** npm trusted publishing (OIDC) GA.
-> - **2025-09-08** chalk/debug compromise (phishing via `npmjs.help`, browser crypto hijacker, 18+ packages).
-> - **2025-09-14** Shai-Hulud self-replicating worm (500+ packages removed); **Shai-Hulud 2.0** late 2025 (GitHub post 2025-12-23) registered self-hosted runners.
-> - **2025-09-22** npm plan: 2FA-only publishing, 7-day max granular tokens, trusted publishing, classic tokens retired, TOTP → FIDO. Later roadmap: bulk OIDC onboarding, more OIDC providers, staged publishing.
-> - **pnpm 11 (2026-04-28)**: `minimumReleaseAge` = 1 day by default, `blockExoticSubdeps` on. **pnpm 12 (2026-08-26)**: Rust rewrite.
-> - Framework-level supply risk too: React RSC RCE **CVE-2025-55182** (CVSS 10) and the Next.js `ImageResponse` RCE (fixed in 16.3.6, Sept 2026) — keep frameworks patched.
+<Warning>
+**Common pitfalls**
+
+- `npm install` in CI (can rewrite the lockfile) instead of `npm ci`.
+- Auto-merging every Dependabot/Renovate PR the minute a version is published.
+- Believing "it's only a dev dependency" is safe — dev dependencies run install scripts with your credentials and can inject code into the bundle.
+- Rotating the npm token but not the cloud/GitHub secrets that were also on the machine.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **2025-07-31** npm trusted publishing (OIDC) GA.
+- **2025-09-08** chalk/debug compromise (phishing via `npmjs.help`, browser crypto hijacker, 18+ packages).
+- **2025-09-14** Shai-Hulud self-replicating worm (500+ packages removed); **Shai-Hulud 2.0** late 2025 (GitHub post 2025-12-23) registered self-hosted runners.
+- **2025-09-22** npm plan: 2FA-only publishing, 7-day max granular tokens, trusted publishing, classic tokens retired, TOTP → FIDO. Later roadmap: bulk OIDC onboarding, more OIDC providers, staged publishing.
+- **pnpm 11 (2026-04-28)**: `minimumReleaseAge` = 1 day by default, `blockExoticSubdeps` on. **pnpm 12 (2026-08-26)**: Rust rewrite.
+- Framework-level supply risk too: React RSC RCE **CVE-2025-55182** (CVSS 10) and the Next.js `ImageResponse` RCE (fixed in 16.3.6, Sept 2026) — keep frameworks patched.
+</Info>
 
 ## Interview questions
 
-> [!question]- How would you protect a frontend project from malicious npm packages?
-> Commit lockfiles and use frozen installs in CI; add a release-age cooldown (pnpm `minimumReleaseAge`, Renovate/Dependabot cooldown); disable or allow-list install scripts; run `npm audit`, dependency review and a behavioural scanner; verify provenance; minimise dependencies; use phishing-resistant 2FA and trusted publishing for our own packages; SRI/CSP for runtime third parties.
+<Accordion title="How would you protect a frontend project from malicious npm packages?">
+Commit lockfiles and use frozen installs in CI; add a release-age cooldown (pnpm `minimumReleaseAge`, Renovate/Dependabot cooldown); disable or allow-list install scripts; run `npm audit`, dependency review and a behavioural scanner; verify provenance; minimise dependencies; use phishing-resistant 2FA and trusted publishing for our own packages; SRI/CSP for runtime third parties.
+</Accordion>
 
-> [!question]- What happened in the chalk/debug and Shai-Hulud incidents?
-> Sept 2025: a maintainer was phished via a fake npm 2FA-reset email and malicious versions of chalk, debug and ~18 packages shipped a browser-side crypto-address hijacker. Days later Shai-Hulud, a self-replicating worm, used post-install scripts to steal tokens and republish victims' packages with itself inside; 500+ packages were removed.
+<Accordion title="What happened in the chalk/debug and Shai-Hulud incidents?">
+Sept 2025: a maintainer was phished via a fake npm 2FA-reset email and malicious versions of chalk, debug and ~18 packages shipped a browser-side crypto-address hijacker. Days later Shai-Hulud, a self-replicating worm, used post-install scripts to steal tokens and republish victims' packages with itself inside; 500+ packages were removed.
+</Accordion>
 
-> [!question]- What is npm trusted publishing and provenance?
-> Trusted publishing lets a CI workflow publish using a short-lived OIDC identity instead of a stored token. Provenance is a signed attestation proving which repo, commit and workflow built the tarball; consumers verify with `npm audit signatures`.
+<Accordion title="What is npm trusted publishing and provenance?">
+Trusted publishing lets a CI workflow publish using a short-lived OIDC identity instead of a stored token. Provenance is a signed attestation proving which repo, commit and workflow built the tarball; consumers verify with `npm audit signatures`.
+</Accordion>
 
-> [!question]- Why does a lockfile matter if I already pin versions in package.json?
-> package.json pins only direct dependencies (and usually with ranges); the lockfile pins the entire transitive tree with integrity hashes, so every install is identical and a new malicious transitive version can't sneak in unless the lockfile changes.
+<Accordion title="Why does a lockfile matter if I already pin versions in package.json?">
+package.json pins only direct dependencies (and usually with ranges); the lockfile pins the entire transitive tree with integrity hashes, so every install is identical and a new malicious transitive version can't sneak in unless the lockfile changes.
+</Accordion>
 
-> [!question]- What is dependency confusion?
-> An attacker publishes a public package with the same name as your internal package and a higher version; misconfigured installs pick the public one. Prevent with scoped names mapped to your private registry.
+<Accordion title="What is dependency confusion?">
+An attacker publishes a public package with the same name as your internal package and a higher version; misconfigured installs pick the public one. Prevent with scoped names mapped to your private registry.
+</Accordion>
 
-> [!question]- Does `npm audit` protect against malware?
-> Not really — it reports known advisories. Fresh malware isn't in the database yet; cooldowns, script blocking, behavioural scanners and provenance cover that gap.
+<Accordion title="Does `npm audit` protect against malware?">
+Not really — it reports known advisories. Fresh malware isn't in the database yet; cooldowns, script blocking, behavioural scanners and provenance cover that gap.
+</Accordion>
 
 ## Related
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Authentication & Token Storage]]
-- [[Linting, Formatting, Package Managers & Runtimes]]
-- [[Monorepos]]
-- [[Build Tools & Bundlers]]
-- [[What's New in Frontend 2025-2026]]
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
+- [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
 
 ## Sources
 - [StepSecurity – chalk/debug compromise](https://www.stepsecurity.io/blog/20-popular-npm-packages-compromised-chalk-debug-strip-ansi-color-convert-wrap-ansi)

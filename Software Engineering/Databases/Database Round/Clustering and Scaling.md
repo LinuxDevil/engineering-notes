@@ -1,12 +1,16 @@
 ---
+title: "Clustering and Scaling"
 tags: [databases, databases/distributed, databases/operations]
 aliases: [Clustering, Scaling, Vertical Scaling, Horizontal Scaling, Failover, Redundancy, High Availability, Read Replicas]
 updated: 2026-09-27
 ---
 # Clustering and Scaling
 
-> [!tldr] TL;DR
-> **Scale up** (bigger machine) first; it's simple and modern servers are huge. **Scale out** (more machines) when you must: read replicas for read load, caching, then partitioning/sharding for write load. A **cluster** is several servers that act as one system to provide **high availability** (failover), **load balancing** and more **capacity**. Redundancy comes from **replication** (copies across servers) and **RAID** (copies across disks). Every step out adds consistency and operational complexity.
+<Note>
+**TL;DR**
+
+**Scale up** (bigger machine) first; it's simple and modern servers are huge. **Scale out** (more machines) when you must: read replicas for read load, caching, then partitioning/sharding for write load. A **cluster** is several servers that act as one system to provide **high availability** (failover), **load balancing** and more **capacity**. Redundancy comes from **replication** (copies across servers) and **RAID** (copies across disks). Every step out adds consistency and operational complexity.
+</Note>
 
 ## Failover
 
@@ -18,10 +22,10 @@ Key concerns: **detection** (health checks, timeouts), **promotion** (pick the m
 
 Duplicating critical components or functions to increase reliability, storing the same data in more than one place. Two ways:
 
-1. **Replication**: the same data stored on multiple database servers. Protects against a whole machine or zone failing. See [[Replication & 2PC 3PC]].
+1. **Replication**: the same data stored on multiple database servers. Protects against a whole machine or zone failing. See [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC).
 2. **RAID (Redundant Array of Independent Disks)**: storage virtualization combining several disks into one logical unit for redundancy and/or performance. RAID 1 mirrors, RAID 10 stripes across mirrors (common for databases), RAID 5/6 use parity (slower writes). Protects against disk failure only, not server loss or mistakes.
 
-Neither is a backup: see [[Database Backup]].
+Neither is a backup: see [Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup).
 
 ## Scaling
 
@@ -45,7 +49,7 @@ flowchart LR
   A[Measure: CPU, IO, locks,<br/>slow queries] --> B[Fix queries &<br/>indexes] --> C[Scale up] --> D[Connection pooling] --> E[Cache hot reads] --> F[Read replicas] --> G[Partition big tables] --> H[Split by function<br/>/ service] --> I[Shard writes]
 ```
 
-Most slowness is missing indexes or bad queries; fix those before buying hardware. Sharding is last because it's hard to undo. See [[Sharding & Partitioning]].
+Most slowness is missing indexes or bad queries; fix those before buying hardware. Sharding is last because it's hard to undo. See [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
 
 ## Clustering
 
@@ -69,11 +73,14 @@ Architectures: **shared-nothing** (each node has its own disk and data; most mod
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Adding read replicas without handling **replication lag**: users don't see what they just wrote.
-> - Failover that was never tested; clients caching the old primary's IP; split brain.
-> - Scaling out the app tier without a connection pooler, exhausting DB connections ([[Connection Pooling]]).
-> - Sharding prematurely: cross-shard joins and transactions become application problems.
+<Warning>
+**Common pitfalls**
+
+- Adding read replicas without handling **replication lag**: users don't see what they just wrote.
+- Failover that was never tested; clients caching the old primary's IP; split brain.
+- Scaling out the app tier without a connection pooler, exhausting DB connections ([Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling)).
+- Sharding prematurely: cross-shard joins and transactions become application problems.
+</Warning>
 
 ## Senior perspective
 
@@ -84,21 +91,25 @@ Architectures: **shared-nothing** (each node has its own disk and data; most mod
 
 ## Interview questions
 
-> [!question]- Vertical vs horizontal scaling for a database?
-> Vertical adds resources to one server: simple, keeps transactions and joins, but has a ceiling and is a single point of failure. Horizontal adds servers (replicas, shards): higher ceiling and resilience but introduces replication lag, distributed transactions and operational complexity.
+<Accordion title="Vertical vs horizontal scaling for a database?">
+Vertical adds resources to one server: simple, keeps transactions and joins, but has a ceiling and is a single point of failure. Horizontal adds servers (replicas, shards): higher ceiling and resilience but introduces replication lag, distributed transactions and operational complexity.
+</Accordion>
 
-> [!question]- How does automatic failover work and what can go wrong?
-> Health checks detect the primary's failure, a coordinator (or majority vote) promotes the most up-to-date replica, and clients are redirected. Risks: false positives causing unnecessary failovers, split brain without fencing, data loss with async replication, and clients still pointing at the old primary.
+<Accordion title="How does automatic failover work and what can go wrong?">
+Health checks detect the primary's failure, a coordinator (or majority vote) promotes the most up-to-date replica, and clients are redirected. Risks: false positives causing unnecessary failovers, split brain without fencing, data loss with async replication, and clients still pointing at the old primary.
+</Accordion>
 
-> [!question]- What's the difference between replication and RAID?
-> RAID provides redundancy across disks within one server; replication copies data to other servers (possibly other zones/regions). RAID survives a disk failure; replication survives a machine or site failure. Neither protects against logical errors.
+<Accordion title="What's the difference between replication and RAID?">
+RAID provides redundancy across disks within one server; replication copies data to other servers (possibly other zones/regions). RAID survives a disk failure; replication survives a machine or site failure. Neither protects against logical errors.
+</Accordion>
 
-> [!question]- Your read traffic grows 10x. What do you do?
-> Check queries and indexes, add caching for hot reads, add read replicas with lag-aware routing (read-your-writes on the primary), and use a pooler. Writes aren't affected by replicas; if writes grow, consider partitioning or sharding.
+<Accordion title="Your read traffic grows 10x. What do you do?">
+Check queries and indexes, add caching for hot reads, add read replicas with lag-aware routing (read-your-writes on the primary), and use a pooler. Writes aren't affected by replicas; if writes grow, consider partitioning or sharding.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Replication & 2PC 3PC]] · [[Sharding & Partitioning]] · [[CAP Theorem]] · [[Connection Pooling]] · [[Database Backup]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling) · [Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup)
 
 ## Sources
 - PostgreSQL docs, High Availability, Load Balancing, and Replication: https://www.postgresql.org/docs/current/high-availability.html

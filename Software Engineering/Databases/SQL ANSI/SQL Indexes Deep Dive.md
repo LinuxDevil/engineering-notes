@@ -1,16 +1,20 @@
 ---
+title: "SQL Indexes Deep Dive"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [SQL Index, SQL Indexes, Index Types, Composite Index, Covering Index, Partial Index, Expression Index, CREATE INDEX CONCURRENTLY, GIN, BRIN]
 updated: 2026-09-27
 ---
 # SQL Indexes Deep Dive
 
-> [!tldr] TL;DR
-> An index is a separate, sorted (or hashed) structure that maps column values to rows, turning a full scan into a few page reads. Pick the **type** for the operator (B-tree for `=`/ranges/sorting, GIN for arrays/JSONB/full-text/trigrams, GiST for geometry and ranges, BRIN for huge naturally ordered tables, hash for equality only). Design **composite** indexes by the leftmost-prefix rule, make hot queries **covering** (index-only scans), use **partial** and **expression** indexes for special cases, build with `CONCURRENTLY` in production, and drop the ones nobody uses. There's no magic selectivity threshold: the planner compares estimated costs.
+<Note>
+**TL;DR**
 
-> PostgreSQL extra, after the course. Book intro to indexes: [[Understanding Advanced SQL Features]] · Internals (B+trees, LSM trees, bloom filters, scan types): [[Database Indexes]] · Prev extra: [[SQL Trigger Functions]] · Next extra: [[SQL Table Partitioning]]
+An index is a separate, sorted (or hashed) structure that maps column values to rows, turning a full scan into a few page reads. Pick the **type** for the operator (B-tree for `=`/ranges/sorting, GIN for arrays/JSONB/full-text/trigrams, GiST for geometry and ranges, BRIN for huge naturally ordered tables, hash for equality only). Design **composite** indexes by the leftmost-prefix rule, make hot queries **covering** (index-only scans), use **partial** and **expression** indexes for special cases, build with `CONCURRENTLY` in production, and drop the ones nobody uses. There's no magic selectivity threshold: the planner compares estimated costs.
+</Note>
 
-This note replaces the old "SQL Index" note. The Forta "Understanding Indexes" text (the book-index analogy and indexing warnings) that was duplicated here now lives only in [[Understanding Advanced SQL Features]].
+> PostgreSQL extra, after the course. Book intro to indexes: [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) · Internals (B+trees, LSM trees, bloom filters, scan types): [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · Prev extra: [SQL Trigger Functions](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Trigger%20Functions) · Next extra: [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning)
+
+This note replaces the old "SQL Index" note. The Forta "Understanding Indexes" text (the book-index analogy and indexing warnings) that was duplicated here now lives only in [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features).
 
 ## Why indexes?
 
@@ -52,7 +56,7 @@ What gets indexed automatically:
 
 MySQL InnoDB mainly uses B+tree indexes (plus `FULLTEXT` and `SPATIAL` R-trees; its "adaptive hash index" is internal). SQL Server has rowstore B-trees plus **columnstore indexes** (introduced in SQL Server 2012) for analytics.
 
-How a B-tree/B+tree works (node layout, page splits, why height stays 3 to 4 levels), how hash indexes compare, and LSM trees: [[Database Indexes]].
+How a B-tree/B+tree works (node layout, page splits, why height stays 3 to 4 levels), how hash indexes compare, and LSM trees: [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes).
 
 ### The hash index trade-off
 
@@ -71,7 +75,7 @@ CREATE INDEX employee_name_hash ON employee USING hash (employee_name);
 | Examples | InnoDB primary key; SQL Server clustered index (by default on the PK) | Every PostgreSQL index; InnoDB/SQL Server secondary indexes |
 | Pointer | n/a | InnoDB: the primary key; SQL Server heap: RID (row identifier), or the clustering key; PostgreSQL: TID `(page, offset)` |
 
-Rule of thumb from the original note: *unique → non-clustered, primary → clustered* (SQL Server's defaults). PostgreSQL tables are always **heaps**; `CLUSTER table USING index` reorders rows once but doesn't maintain the order. Details and why PK choice matters in InnoDB: [[Primary vs Secondary Key]].
+Rule of thumb from the original note: *unique → non-clustered, primary → clustered* (SQL Server's defaults). PostgreSQL tables are always **heaps**; `CLUSTER table USING index` reorders rows once but doesn't maintain the order. Details and why PK choice matters in InnoDB: [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key).
 
 ## Composite indexes and the leftmost-prefix rule
 
@@ -143,8 +147,11 @@ The query must use the **same expression**. MySQL 8.0.13+ supports functional ke
 - An index scan reads the index and then does (possibly random) page reads into the table. If a predicate matches a **large** fraction of rows, reading the whole table sequentially is cheaper.
 - The planner decides with **statistics** (`pg_stats`: distinct counts, most-common values and their frequencies, histograms, physical correlation) and **cost estimates** (`seq_page_cost`, `random_page_cost`, `cpu_*` settings). It compares the estimated cost of a seq scan, an index scan and a bitmap scan and picks the cheapest.
 
-> [!warning] Correction: there is no fixed "30%" rule
-> The original note said "the query optimizer will avoid using the index if the cardinality is less than 30% of the record number". That's folklore. There's **no fixed threshold**. The crossover depends on the table and index size, how well the column's order correlates with the physical row order, whether an index-only scan is possible, `random_page_cost` (lower on SSDs), what's cached, and `LIMIT`. An index on a low-cardinality column can still be excellent when you query the **rare** value (`status = 'failed'` when 0.1% of rows fail); that's what partial indexes and most-common-value statistics are for. Check with `EXPLAIN ANALYZE`.
+<Warning>
+**Correction: there is no fixed "30%" rule**
+
+The original note said "the query optimizer will avoid using the index if the cardinality is less than 30% of the record number". That's folklore. There's **no fixed threshold**. The crossover depends on the table and index size, how well the column's order correlates with the physical row order, whether an index-only scan is possible, `random_page_cost` (lower on SSDs), what's cached, and `LIMIT`. An index on a low-cardinality column can still be excellent when you query the **rare** value (`status = 'failed'` when 0.1% of rows fail); that's what partial indexes and most-common-value statistics are for. Check with `EXPLAIN ANALYZE`.
+</Warning>
 
 ```sql
 -- See what the planner knows about a column
@@ -153,7 +160,7 @@ FROM pg_stats
 WHERE tablename = 'orders' AND attname = 'status';
 ```
 
-Keep statistics fresh (`ANALYZE`, autovacuum). For correlated columns (`city`, `zip`), `CREATE STATISTICS` gives the planner multi-column knowledge. More in [[Query Optimization & EXPLAIN]].
+Keep statistics fresh (`ANALYZE`, autovacuum). For correlated columns (`city`, `zip`), `CREATE STATISTICS` gives the planner multi-column knowledge. More in [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN).
 
 ## Worked example: blocking factor and block accesses
 
@@ -211,7 +218,7 @@ firstName         Char(50)       50 bytes
 - Low-selectivity columns queried for common values (use a partial index for the rare ones).
 - Write-heavy tables where the read benefit is small (logs, queues), beyond the essentials.
 - Duplicates: `(a)` when `(a, b)` exists; two indexes on the same columns.
-- Queries that can't use it anyway: `LIKE '%x%'` on a B-tree (use `pg_trgm`, see [[Using Wildcard Filtering]]), `func(col)` without an expression index, mismatched types.
+- Queries that can't use it anyway: `LIKE '%x%'` on a B-tree (use `pg_trgm`, see [Using Wildcard Filtering](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Wildcard%20Filtering)), `func(col)` without an expression index, mismatched types.
 
 ## Creating indexes safely in production
 
@@ -242,14 +249,17 @@ WHERE s.idx_scan = 0
 ORDER BY pg_relation_size(s.indexrelid) DESC;
 ```
 
-Check on the primary **and** replicas (stats are per server) and over a long enough window (month-end jobs) before dropping. For missing indexes, start from the slowest queries in `pg_stat_statements`, then read their plans ([[Query Optimization & EXPLAIN]]). Tables with high `seq_scan` counts in `pg_stat_user_tables` are candidates.
+Check on the primary **and** replicas (stats are per server) and over a long enough window (month-end jobs) before dropping. For missing indexes, start from the slowest queries in `pg_stat_statements`, then read their plans ([Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)). Tables with high `seq_scan` counts in `pg_stat_user_tables` are candidates.
 
-> [!info]+ 🆕 2025–2026
-> **PostgreSQL 18 (released 2025-09-25)**:
-> - **B-tree skip scan:** multicolumn B-tree indexes can now be used when the query has no `=` condition on one or more **leading** columns. For an index on `(cust_id, order_date)`, `WHERE order_date >= '2026-01-01'` can "skip" through the distinct `cust_id` values instead of scanning everything. It works best when the skipped column has few distinct values; the leftmost-prefix rule is still the right default for design.
-> - **Better `OR` handling:** queries with `OR` conditions in `WHERE` can be optimized to use an index, instead of falling back to a seq scan or bitmap OR.
-> - **Parallel GIN index builds**, joining B-tree and BRIN, which speeds up building JSONB, array and full-text indexes.
-> - **`uuidv7()`**: timestamp-ordered UUIDs. Random UUIDv4 primary keys insert at random positions in the B-tree (page splits, poor cache locality, more WAL); UUIDv7 keys arrive in roughly increasing order, like a sequence, while still being globally unique. See [[Creating and Manipulating Tables]].
+<Info>
+**🆕 2025–2026**
+
+**PostgreSQL 18 (released 2025-09-25)**:
+- **B-tree skip scan:** multicolumn B-tree indexes can now be used when the query has no `=` condition on one or more **leading** columns. For an index on `(cust_id, order_date)`, `WHERE order_date >= '2026-01-01'` can "skip" through the distinct `cust_id` values instead of scanning everything. It works best when the skipped column has few distinct values; the leftmost-prefix rule is still the right default for design.
+- **Better `OR` handling:** queries with `OR` conditions in `WHERE` can be optimized to use an index, instead of falling back to a seq scan or bitmap OR.
+- **Parallel GIN index builds**, joining B-tree and BRIN, which speeds up building JSONB, array and full-text indexes.
+- **`uuidv7()`**: timestamp-ordered UUIDs. Random UUIDv4 primary keys insert at random positions in the B-tree (page splits, poor cache locality, more WAL); UUIDv7 keys arrive in roughly increasing order, like a sequence, while still being globally unique. See [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables).
+</Info>
 
 ## Beyond the book / Senior perspective
 
@@ -257,39 +267,47 @@ Check on the primary **and** replicas (stats are per server) and over a long eno
 - **Write amplification is the hidden cost.** Ten indexes on a hot table can make writes several times slower and bloat WAL and replicas.
 - **Keep the working set in memory.** Index size vs RAM is often the real constraint; partial and BRIN indexes help.
 - **Sargability** discipline in code review: no functions on indexed columns in `WHERE`, matching types in joins, no leading `%`.
-- **Unique constraints on partitioned tables** must include the partition key, because PostgreSQL indexes are per partition ([[SQL Table Partitioning]]).
-- **Verify, don't guess:** `EXPLAIN (ANALYZE, BUFFERS)` before and after. See [[Query Optimization & EXPLAIN]].
+- **Unique constraints on partitioned tables** must include the partition key, because PostgreSQL indexes are per partition ([SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning)).
+- **Verify, don't guess:** `EXPLAIN (ANALYZE, BUFFERS)` before and after. See [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN).
 
 ## Interview questions
 
-> [!question]- How does an index speed up a query, and what does it cost?
-> It keeps a sorted (or hashed) structure of column values with row pointers, so lookups take O(log n) page reads instead of a full scan. Costs: storage, slower writes (every index is updated), maintenance and build-time locks.
+<Accordion title="How does an index speed up a query, and what does it cost?">
+It keeps a sorted (or hashed) structure of column values with row pointers, so lookups take O(log n) page reads instead of a full scan. Costs: storage, slower writes (every index is updated), maintenance and build-time locks.
+</Accordion>
 
-> [!question]- Explain the leftmost-prefix rule.
-> A composite index on `(a, b, c)` is sorted by `a`, then `b`, then `c`. It can efficiently serve predicates on `a`, `a,b`, or `a,b,c` (and sorting in that order), but not on `b` or `c` alone, except via PostgreSQL 18's skip scan when `a` has few distinct values.
+<Accordion title="Explain the leftmost-prefix rule.">
+A composite index on `(a, b, c)` is sorted by `a`, then `b`, then `c`. It can efficiently serve predicates on `a`, `a,b`, or `a,b,c` (and sorting in that order), but not on `b` or `c` alone, except via PostgreSQL 18's skip scan when `a` has few distinct values.
+</Accordion>
 
-> [!question]- What's a covering index / index-only scan?
-> An index that contains every column the query needs (as keys or `INCLUDE` columns), so the database can answer from the index without visiting the table. In PostgreSQL it also needs the visibility map to be current.
+<Accordion title="What's a covering index / index-only scan?">
+An index that contains every column the query needs (as keys or `INCLUDE` columns), so the database can answer from the index without visiting the table. In PostgreSQL it also needs the visibility map to be current.
+</Accordion>
 
-> [!question]- Clustered vs non-clustered index?
-> A clustered index stores the table rows in index order (one per table: InnoDB PK, SQL Server clustered index). A non-clustered index is separate and points to the rows. PostgreSQL has only non-clustered indexes on heap tables.
+<Accordion title="Clustered vs non-clustered index?">
+A clustered index stores the table rows in index order (one per table: InnoDB PK, SQL Server clustered index). A non-clustered index is separate and points to the rows. PostgreSQL has only non-clustered indexes on heap tables.
+</Accordion>
 
-> [!question]- Why might the database ignore my index?
-> The predicate isn't selective enough (a seq scan is estimated cheaper), statistics are stale, the query isn't sargable (function on the column, type mismatch, leading wildcard), the leading column of a composite index isn't used, or the table is tiny.
+<Accordion title="Why might the database ignore my index?">
+The predicate isn't selective enough (a seq scan is estimated cheaper), statistics are stale, the query isn't sargable (function on the column, type mismatch, leading wildcard), the leading column of a composite index isn't used, or the table is tiny.
+</Accordion>
 
-> [!question]- B-tree vs hash vs GIN vs BRIN?
-> B-tree: default, equality + ranges + sorting. Hash: equality only. GIN: many keys per row (JSONB, arrays, full-text, trigrams). BRIN: tiny min/max summaries for huge tables whose column follows physical order (time series).
+<Accordion title="B-tree vs hash vs GIN vs BRIN?">
+B-tree: default, equality + ranges + sorting. Hash: equality only. GIN: many keys per row (JSONB, arrays, full-text, trigrams). BRIN: tiny min/max summaries for huge tables whose column follows physical order (time series).
+</Accordion>
 
-> [!question]- How do you add an index to a big production table without downtime?
-> PostgreSQL: `CREATE INDEX CONCURRENTLY` (outside a transaction; check for and drop invalid indexes if it fails). MySQL: online DDL with `ALGORITHM=INPLACE, LOCK=NONE`. SQL Server: `ONLINE = ON`.
+<Accordion title="How do you add an index to a big production table without downtime?">
+PostgreSQL: `CREATE INDEX CONCURRENTLY` (outside a transaction; check for and drop invalid indexes if it fails). MySQL: online DDL with `ALGORITHM=INPLACE, LOCK=NONE`. SQL Server: `ONLINE = ON`.
+</Accordion>
 
-> [!question]- Why are random UUIDs bad primary keys, and what's the fix?
-> UUIDv4 values insert at random places in the B-tree, causing page splits, poor cache locality and more WAL. Use a sequence/identity or time-ordered UUIDv7 (`uuidv7()` in PostgreSQL 18).
+<Accordion title="Why are random UUIDs bad primary keys, and what's the fix?">
+UUIDv4 values insert at random places in the B-tree, causing page splits, poor cache locality and more WAL. Use a sequence/identity or time-ordered UUIDv7 (`uuidv7()` in PostgreSQL 18).
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Database Indexes]] (internals) · [[Primary vs Secondary Key]] · [[Understanding Advanced SQL Features]] (book intro)
-- [[Query Optimization & EXPLAIN]] · [[Using Wildcard Filtering]] (pg_trgm) · [[SQL Table Partitioning]] · [[Creating and Manipulating Tables]] (uuidv7)
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) (internals) · [Primary vs Secondary Key](/Software%20Engineering/Databases/Database%20Round/Indexes/Primary%20vs%20Secondary%20Key) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (book intro)
+- [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [Using Wildcard Filtering](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Wildcard%20Filtering) (pg_trgm) · [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning) · [Creating and Manipulating Tables](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20and%20Manipulating%20Tables) (uuidv7)
 
 ## Sources
 - [PostgreSQL docs: Indexes (types, multicolumn, index-only scans, partial, expression)](https://www.postgresql.org/docs/current/indexes.html)

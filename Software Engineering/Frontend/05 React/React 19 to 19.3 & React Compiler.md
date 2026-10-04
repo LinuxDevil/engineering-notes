@@ -1,16 +1,20 @@
 ---
+title: "React 19 to 19.3 & React Compiler"
 tags: [frontend, frontend/react, frontend/whats-new]
 aliases: [React 19, React 19.2, React 19.3, React Compiler, What's new in React]
 updated: 2026-09-27
 ---
 # React 19 to 19.3 & React Compiler
 
-> [!tldr] TL;DR
-> - **React 19.0 (Dec 2024)** is the baseline now: Actions, `use`, `useActionState`, `useOptimistic`, `ref` as a prop, `<Context>` as provider, metadata hoisting, Server Components/Functions.
-> - **19.2 (Oct 2025)** added `<Activity>`, `useEffectEvent`, `cacheSignal` and Performance Tracks.
-> - **19.3 (Sept 2026)** made `<ViewTransition>` and Fragment refs stable, and added Trusted Types support.
-> - **React Compiler 1.0 (Oct 2025)** memoizes automatically at build time.
-> - **Create React App is sunset.** React is now governed by the **React Foundation** (Linux Foundation).
+<Note>
+**TL;DR**
+
+- **React 19.0 (Dec 2024)** is the baseline now: Actions, `use`, `useActionState`, `useOptimistic`, `ref` as a prop, `<Context>` as provider, metadata hoisting, Server Components/Functions.
+- **19.2 (Oct 2025)** added `<Activity>`, `useEffectEvent`, `cacheSignal` and Performance Tracks.
+- **19.3 (Sept 2026)** made `<ViewTransition>` and Fragment refs stable, and added Trusted Types support.
+- **React Compiler 1.0 (Oct 2025)** memoizes automatically at build time.
+- **Create React App is sunset.** React is now governed by the **React Foundation** (Linux Foundation).
+</Note>
 
 ## Timeline
 
@@ -34,7 +38,7 @@ flowchart LR
 | 2025-04-23 | React Labs post | View Transitions and Activity previewed |
 | 2025-10-01 | **React 19.2** | `<Activity>`, `useEffectEvent`, `cacheSignal`, Performance Tracks, partial pre-rendering |
 | 2025-10-07 | **React Compiler 1.0** | Stable automatic memoization. React Foundation announced |
-| 2025-12-03 / 12-11 | Security advisories | RSC RCE (CVSS 10) + DoS / source exposure. See [[React Server Components & Server Functions]] |
+| 2025-12-03 / 12-11 | Security advisories | RSC RCE (CVSS 10) + DoS / source exposure. See [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions) |
 | 2026-02-24 | **React Foundation** launched | Linux Foundation owns React, React Native, JSX |
 | 2026-09-09 | **React 19.3** | `<ViewTransition>` and Fragment refs stable, `browser()`, Trusted Types |
 
@@ -112,7 +116,7 @@ preload('/fonts/brand.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'an
 ```
 
 ### Also in 19.0
-- **Server Components and Server Functions** (`'use server'`) are stable for frameworks. See [[React Server Components & Server Functions]].
+- **Server Components and Server Functions** (`'use server'`) are stable for frameworks. See [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions).
 - `useDeferredValue(value, initialValue)`.
 - Better hydration-mismatch errors, with a single diff.
 - Full support for Custom Elements.
@@ -153,7 +157,7 @@ const getData = cache(async (id) => (await fetch(`/api/${id}`, { signal: cacheSi
 ```
 
 ### Performance Tracks in Chrome DevTools
-React's Scheduler and Components tracks show up in the Performance panel. See [[React Performance]].
+React's Scheduler and Components tracks show up in the Performance panel. See [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance).
 
 ### Partial pre-rendering in React DOM
 ```js
@@ -194,7 +198,7 @@ function MapWidget() { use(browser()); return <LeafletMap />; } // rendered only
 ```
 
 ### Other 19.3 changes
-- **Trusted Types support** in React DOM. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- **Trusted Types support** in React DOM. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 - **RSC can render `<Context value>`** from a `'use client'` module directly.
 - Transitions render independently.
 - `<Activity>` is supported in Flight (the RSC payload format).
@@ -211,7 +215,7 @@ function MapWidget() { use(browser()); return <LeafletMap />; } // rendered only
 - **Next.js 16:** `reactCompiler: true` is stable (not on by default).
 - **Next.js 16.3:** an experimental **Rust port** (`experimental.turbopackRustReactCompiler`).
 
-**How it works:** it compiles your component into code with a per-component cache array. It re-computes JSX and values only when their inputs change. It skips (bails out of) code that breaks the Rules of React. Before/after example in [[React Performance]].
+**How it works:** it compiles your component into code with a per-component cache array. It re-computes JSX and values only when their inputs change. It skips (bails out of) code that breaks the Rules of React. Before/after example in [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance).
 
 ### Setup
 ```bash
@@ -267,7 +271,7 @@ function LegacyWidget() {
 - CRA is **deprecated** for new apps. The React team recommends:
   - **a framework:** Next.js, React Router framework mode, Expo for native,
   - or **a build tool** for SPAs: **Vite**, Parcel, Rsbuild.
-- Migrating an existing CRA app to Vite: change `index.html` into the entry, rename `REACT_APP_*` env vars to `VITE_*`, and replace `react-scripts` scripts. See [[Build Tools & Bundlers]].
+- Migrating an existing CRA app to Vite: change `index.html` into the entry, rename `REACT_APP_*` env vars to `VITE_*`, and replace `react-scripts` scripts. See [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
 
 ## React Foundation (launched 2026-02-24)
 - It is hosted by the **Linux Foundation** and now owns **React, React Native and JSX**. Meta owned them before.
@@ -293,32 +297,40 @@ function LegacyWidget() {
    - `useEffectEvent`,
    - `<Activity>` for tabs and routes.
 9. Turn on `eslint-plugin-react-hooks` v6+ (flat config), then React Compiler.
-10. If you're on React Router, **v8 needs React 19.2.7+**. See [[React Router]].
+10. If you're on React Router, **v8 needs React 19.2.7+**. See [React Router](/Software%20Engineering/Frontend/05%20React/React%20Router).
 
-> [!warning] Common pitfalls
-> - Returning something from a ref callback (e.g. `ref={el => (this.el = el)}`) now counts as a cleanup. Use a block body.
-> - `useFormStatus` only works in a child of the `<form>`.
-> - Assuming the Compiler fixes impure code. It **skips** it (bails out) or can change behaviour if the code breaks the rules undetected. Keep the lint rules on.
+<Warning>
+**Common pitfalls**
+
+- Returning something from a ref callback (e.g. `ref={el => (this.el = el)}`) now counts as a cleanup. Use a block body.
+- `useFormStatus` only works in a child of the `<form>`.
+- Assuming the Compiler fixes impure code. It **skips** it (bails out) or can change behaviour if the code breaks the rules undetected. Keep the lint rules on.
+</Warning>
 
 ## Interview questions
-> [!question]- What are the biggest changes in React 19?
-> Actions (async transitions with automatic pending, error and optimistic handling) and their hooks (`useActionState`, `useFormStatus`, `useOptimistic`). `use()` for promises and context. `ref` as a normal prop plus ref cleanups. `<Context>` as the provider. Built-in metadata and stylesheet handling. Stable Server Components and Server Functions. Legacy APIs removed (`ReactDOM.render`, string refs, `propTypes`).
+<Accordion title="What are the biggest changes in React 19?">
+Actions (async transitions with automatic pending, error and optimistic handling) and their hooks (`useActionState`, `useFormStatus`, `useOptimistic`). `use()` for promises and context. `ref` as a normal prop plus ref cleanups. `<Context>` as the provider. Built-in metadata and stylesheet handling. Stable Server Components and Server Functions. Legacy APIs removed (`ReactDOM.render`, string refs, `propTypes`).
+</Accordion>
 
-> [!question]- What did React 19.2 and 19.3 add?
-> 19.2: `<Activity>` (keep hidden UI's state), `useEffectEvent`, `cacheSignal` for RSC, Chrome Performance Tracks, partial pre-rendering. 19.3: stable `<ViewTransition>`, Fragment refs, `browser()` to skip SSR for a subtree, Trusted Types support, RSC rendering `<Context value>`.
+<Accordion title="What did React 19.2 and 19.3 add?">
+19.2: `<Activity>` (keep hidden UI's state), `useEffectEvent`, `cacheSignal` for RSC, Chrome Performance Tracks, partial pre-rendering. 19.3: stable `<ViewTransition>`, Fragment refs, `browser()` to skip SSR for a subtree, Trusted Types support, RSC rendering `<Context value>`.
+</Accordion>
 
-> [!question]- What is React Compiler and does it replace `useMemo`?
-> A build-time plugin (1.0 in Oct 2025) that auto-memoizes components, hooks and JSX based on data-flow analysis. It removes most manual `useMemo`/`useCallback`/`memo`. It needs code that follows the Rules of React, and manual memo can still be useful for effect-dep identity. Its lint rules ship in `eslint-plugin-react-hooks`.
+<Accordion title="What is React Compiler and does it replace `useMemo`?">
+A build-time plugin (1.0 in Oct 2025) that auto-memoizes components, hooks and JSX based on data-flow analysis. It removes most manual `useMemo`/`useCallback`/`memo`. It needs code that follows the Rules of React, and manual memo can still be useful for effect-dep identity. Its lint rules ship in `eslint-plugin-react-hooks`.
+</Accordion>
 
-> [!question]- Why was Create React App deprecated? What do you use instead?
-> CRA was unmaintained and slow (webpack). It had no routing, data fetching or SSR story, which pushed apps toward waterfalls. The React team recommends a framework (Next.js, React Router, Expo) or a modern build tool (Vite, Parcel, Rsbuild) for pure SPAs.
+<Accordion title="Why was Create React App deprecated? What do you use instead?">
+CRA was unmaintained and slow (webpack). It had no routing, data fetching or SSR story, which pushed apps toward waterfalls. The React team recommends a framework (Next.js, React Router, Expo) or a modern build tool (Vite, Parcel, Rsbuild) for pure SPAs.
+</Accordion>
 
-> [!question]- What is the React Foundation?
-> A Linux Foundation-hosted foundation, launched Feb 2026, that owns React, React Native and JSX (previously Meta's). Its founding members include Meta, Microsoft, Vercel, Amazon, Expo and Callstack. Technical governance is kept separate from the board.
+<Accordion title="What is the React Foundation?">
+A Linux Foundation-hosted foundation, launched Feb 2026, that owns React, React Native and JSX (previously Meta's). Its founding members include Meta, Microsoft, Vercel, Amazon, Expo and Callstack. Technical governance is kept separate from the board.
+</Accordion>
 
 ## Related
-- [[React Index]] · [[Hooks Reference]] · [[Forms & Actions in React]] · [[React Performance]] · [[React Server Components & Server Functions]] · [[React Router]]
-- [[What's New in Frontend 2025-2026]] · [[Next.js 15 to 16.3]] · [[Build Tools & Bundlers]] · [[Linting, Formatting, Package Managers & Runtimes]]
+- [React Index](/Software%20Engineering/Frontend/05%20React/React%20Index) · [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference) · [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance) · [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions) · [React Router](/Software%20Engineering/Frontend/05%20React/React%20Router)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026) · [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3) · [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers) · [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes)
 
 ## Sources
 - [react.dev blog](https://react.dev/blog) · [React 19](https://react.dev/blog/2024/12/05/react-19) · [React 19 Upgrade Guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide)

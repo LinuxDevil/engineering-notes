@@ -1,16 +1,20 @@
 ---
+title: "Top-K & Heaps pattern"
 tags: [dsa, dsa/patterns]
 aliases: [Top-K, Top K, K-way merge, Two Heaps, Kth Largest, Heap pattern, Quickselect]
 updated: 2026-09-27
 ---
 # Top-K & Heaps pattern
 
-> [!tldr] TL;DR
-> When a problem asks for the **k largest / smallest / most frequent / closest** items, keep a **heap of size k** instead of sorting everything: O(n log k) time, O(k) space. The same tool gives you **k-way merge** (a heap holding one "head" per sorted list) and the **two heaps** trick for a running median. When you only need the k-th element once, **quickselect** is O(n) on average, and for "top-k frequent" a **bucket sort** by frequency is O(n).
+<Note>
+**TL;DR**
+
+When a problem asks for the **k largest / smallest / most frequent / closest** items, keep a **heap of size k** instead of sorting everything: O(n log k) time, O(k) space. The same tool gives you **k-way merge** (a heap holding one "head" per sorted list) and the **two heaps** trick for a running median. When you only need the k-th element once, **quickselect** is O(n) on average, and for "top-k frequent" a **bucket sort** by frequency is O(n).
+</Note>
 
 ## The idea
 
-A heap always gives you the best item at the top in O(1) and lets you add or remove in O(log n) (see [[Heaps & Priority Queues]]). The trick for top-k is counter-intuitive:
+A heap always gives you the best item at the top in O(1) and lets you add or remove in O(log n) (see [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues)). The trick for top-k is counter-intuitive:
 
 - To keep the **k largest**, use a **min-heap** of size k. The top is the *smallest of the winners*, the one to kick out when something bigger arrives.
 - To keep the **k smallest**, use a **max-heap** of size k.
@@ -151,16 +155,19 @@ def top_k_largest(nums: list[int], k: int) -> list[int]:
 
 For the "k closest / k smallest by key" variant, key the heap by a tuple: `(-distance, x, y)` in Python (negated so a min-heap acts as a max-heap), or a comparator in TS.
 
-> [!info]+ 🆕 2025–2026
-> **Python 3.14** (released 2025-10-07) added public max-heap functions to `heapq`: `heapify_max`, `heappush_max`, `heappop_max`, `heapreplace_max` and `heappushpop_max`. Before 3.14 the idiom is to **negate** values (`heappush(h, -x)`) or push tuples with a negated key. Negation still works and is what you will see in most interview solutions; on 3.14+ the `_max` functions are clearer.
-> ```python
-> # Python 3.14+
-> import heapq
-> lo: list[int] = []
-> heapq.heappush_max(lo, 5)
-> heapq.heappush_max(lo, 9)
-> heapq.heappop_max(lo)   # 9
-> ```
+<Info>
+**🆕 2025–2026**
+
+**Python 3.14** (released 2025-10-07) added public max-heap functions to `heapq`: `heapify_max`, `heappush_max`, `heappop_max`, `heapreplace_max` and `heappushpop_max`. Before 3.14 the idiom is to **negate** values (`heappush(h, -x)`) or push tuples with a negated key. Negation still works and is what you will see in most interview solutions; on 3.14+ the `_max` functions are clearer.
+```python
+# Python 3.14+
+import heapq
+lo: list[int] = []
+heapq.heappush_max(lo, 5)
+heapq.heappush_max(lo, 9)
+heapq.heappop_max(lo)   # 9
+```
+</Info>
 
 ## Worked example
 
@@ -417,32 +424,39 @@ def top_k_frequent(nums: list[int], k: int) -> list[int]:
 
 ## Interview questions
 
-> [!question]- Why a min-heap to find the k largest elements?
-> The heap holds the current k best candidates. The one to evict when a better element arrives is the *smallest* of them, and a min-heap exposes exactly that at the top in O(1), with O(log k) removal.
+<Accordion title="Why a min-heap to find the k largest elements?">
+The heap holds the current k best candidates. The one to evict when a better element arrives is the *smallest* of them, and a min-heap exposes exactly that at the top in O(1), with O(log k) removal.
+</Accordion>
 
-> [!question]- Heap vs sort vs quickselect for "k-th largest": which and when?
-> Sort: O(n log n), simplest, fine for small n. Heap: O(n log k), O(k) memory, works on streams and does not mutate input. Quickselect: O(n) average but O(n²) worst, mutates the array, needs all data in memory. Pick the heap for streams or small k, quickselect for one-off queries on an in-memory array.
+<Accordion title="Heap vs sort vs quickselect for &quot;k-th largest&quot;: which and when?">
+Sort: O(n log n), simplest, fine for small n. Heap: O(n log k), O(k) memory, works on streams and does not mutate input. Quickselect: O(n) average but O(n²) worst, mutates the array, needs all data in memory. Pick the heap for streams or small k, quickselect for one-off queries on an in-memory array.
+</Accordion>
 
-> [!question]- What is the complexity of merging k sorted lists with N total nodes?
-> O(N log k) time: each node is pushed and popped once on a heap of at most k items. O(k) extra space. Pairwise divide-and-conquer merging also gives O(N log k); merging lists one by one is O(N k).
+<Accordion title="What is the complexity of merging k sorted lists with N total nodes?">
+O(N log k) time: each node is pushed and popped once on a heap of at most k items. O(k) extra space. Pairwise divide-and-conquer merging also gives O(N log k); merging lists one by one is O(N k).
+</Accordion>
 
-> [!question]- How does the two-heaps median work, and what invariant do you keep?
-> Max-heap for the lower half, min-heap for the upper half. Invariants: every element in `lo` is at most every element in `hi`, and `len(lo)` equals `len(hi)` or `len(hi) + 1`. The median is the top of `lo`, or the average of both tops. Insert O(log n), query O(1).
+<Accordion title="How does the two-heaps median work, and what invariant do you keep?">
+Max-heap for the lower half, min-heap for the upper half. Invariants: every element in `lo` is at most every element in `hi`, and `len(lo)` equals `len(hi)` or `len(hi) + 1`. The median is the top of `lo`, or the average of both tops. Insert O(log n), query O(1).
+</Accordion>
 
-> [!question]- How do you get a max-heap in Python?
-> Before 3.14: push negated values (`-x`) or tuples with a negated key. From Python 3.14 (Oct 2025), `heapq` has `heappush_max`, `heappop_max`, `heapify_max`, `heapreplace_max` and `heappushpop_max`.
+<Accordion title="How do you get a max-heap in Python?">
+Before 3.14: push negated values (`-x`) or tuples with a negated key. From Python 3.14 (Oct 2025), `heapq` has `heappush_max`, `heappop_max`, `heapify_max`, `heapreplace_max` and `heappushpop_max`.
+</Accordion>
 
-> [!question]- Top-k frequent in better than O(n log k)?
-> Yes. Counts are between 1 and n, so bucket by count into an array of n + 1 lists and read from the highest bucket down: O(n) time and space.
+<Accordion title="Top-k frequent in better than O(n log k)?">
+Yes. Counts are between 1 and n, so bucket by count into an array of n + 1 lists and read from the highest bucket down: O(n) time and space.
+</Accordion>
 
-> [!question]- The data is a 1 TB log file. Find the 100 most frequent IPs.
-> Hash-partition lines by IP into files that fit in memory (same IP always lands in the same file), count each file with a hash map and keep a size-100 min-heap per file, then merge the per-file candidates with one more size-100 heap. If approximate is fine, use Count-Min Sketch plus a heap in one pass.
+<Accordion title="The data is a 1 TB log file. Find the 100 most frequent IPs.">
+Hash-partition lines by IP into files that fit in memory (same IP always lands in the same file), count each file with a hash map and keep a size-100 min-heap per file, then merge the per-file candidates with one more size-100 heap. If approximate is fine, use Count-Min Sketch plus a heap in one pass.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Heaps & Priority Queues]] · [[Sorting Algorithms]] · [[Hash Tables]] · [[Linked Lists]]
-- [[Intervals]] (meeting rooms with a min-heap) · [[Greedy]] (task scheduler) · [[Graph BFS-DFS patterns]] (Dijkstra uses a heap)
-- [[Big-O & Complexity Analysis]] · [[Problem Solving]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists)
+- [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals) (meeting rooms with a min-heap) · [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) (task scheduler) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns) (Dijkstra uses a heap)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Problem Solving](/Software%20Engineering/DSA/01%20Foundations/Problem%20Solving)
 
 ## Sources
 - [Python docs: heapq](https://docs.python.org/3/library/heapq.html)

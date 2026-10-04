@@ -1,12 +1,16 @@
 ---
+title: "Cloud Fundamentals"
 tags: [devops, devops/cloud]
 aliases: [Cloud Computing, IaaS PaaS SaaS, AWS vs GCP vs Azure, Shared Responsibility Model, FinOps, Regions and Availability Zones]
 updated: 2026-09-27
 ---
 # Cloud Fundamentals
 
-> [!tldr] TL;DR
-> Cloud computing rents compute, storage, networking and managed services on demand, billed by usage. Service models go from **IaaS** (you manage the OS) through **PaaS** and **serverless** (you manage code) to **SaaS** (you manage data and users). Providers are organised in **regions** made of isolated **availability zones**; design for zone failure by default and region failure when the business needs it. Security follows the **shared responsibility model**, and cost is an engineering concern (**FinOps**).
+<Note>
+**TL;DR**
+
+Cloud computing rents compute, storage, networking and managed services on demand, billed by usage. Service models go from **IaaS** (you manage the OS) through **PaaS** and **serverless** (you manage code) to **SaaS** (you manage data and users). Providers are organised in **regions** made of isolated **availability zones**; design for zone failure by default and region failure when the business needs it. Security follows the **shared responsibility model**, and cost is an engineering concern (**FinOps**).
+</Note>
 
 ## 1. Service models
 
@@ -29,7 +33,7 @@ flowchart LR
 | **Serverless** | Functions/containers + config | Everything else, scale to zero | Lambda, Cloud Run, Cloud Functions, Azure Functions |
 | **SaaS** | Data, users, settings | The entire application | Gmail, Salesforce, GitHub |
 
-Deeper comparison of compute choices: [[Containers vs VMs vs Serverless]].
+Deeper comparison of compute choices: [Containers vs VMs vs Serverless](/Software%20Engineering/DevOps/Containers%20vs%20VMs%20vs%20Serverless).
 
 ## 2. Global infrastructure
 
@@ -125,24 +129,30 @@ aws budgets create-budget ...                 # budget alerts per account/team
 infracost breakdown --path .                  # cost diff on Terraform PRs
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **2025-10-19/20: AWS us-east-1 outage (~14.5 h)**. A race condition in DynamoDB's automated DNS management left the regional DynamoDB endpoint with an empty DNS record; the failure cascaded to EC2 launches, Network Load Balancers, Lambda, ECS/EKS/Fargate, STS/IAM sign-in and many customer apps worldwide. Lessons: know your **hidden dependencies on one region and on control planes**, prefer static stability (keep serving with what is already running), and test regional failover. See [[Site Reliability Engineering & Incident Management]].
-> - **2025-11-18: Cloudflare global outage (~6 h)**: a database permission change doubled a Bot Management feature file, exceeding a hard limit in the proxy and crashing it. Config and data pushes need the same staged rollout as code.
-> - **FinOps Framework 2026 updates** (March–April 2026) refined **Scopes** and brought data centres and AI/agentic use cases into FinOps practice, reflecting that AI/GPU spend is now a major cost line.
+<Info>
+**🆕 2025–2026**
+
+- **2025-10-19/20: AWS us-east-1 outage (~14.5 h)**. A race condition in DynamoDB's automated DNS management left the regional DynamoDB endpoint with an empty DNS record; the failure cascaded to EC2 launches, Network Load Balancers, Lambda, ECS/EKS/Fargate, STS/IAM sign-in and many customer apps worldwide. Lessons: know your **hidden dependencies on one region and on control planes**, prefer static stability (keep serving with what is already running), and test regional failover. See [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management).
+- **2025-11-18: Cloudflare global outage (~6 h)**: a database permission change doubled a Bot Management feature file, exceeding a hard limit in the proxy and crashing it. Config and data pushes need the same staged rollout as code.
+- **FinOps Framework 2026 updates** (March–April 2026) refined **Scopes** and brought data centres and AI/agentic use cases into FinOps practice, reflecting that AI/GPU spend is now a major cost line.
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Everything in one account/project: no blast-radius isolation, messy billing.
-> - Long-lived access keys on laptops and in CI. Use SSO and OIDC.
-> - Multi-AZ app, single-AZ database (or single NAT gateway).
-> - Ignoring egress and cross-AZ traffic in architecture decisions.
-> - "Lift and shift" VMs and expecting cloud-native savings.
-> - Assuming "multi-cloud" gives resilience for free: it usually doubles complexity; multi-region within one provider is often the better first step.
+<Warning>
+**Common pitfalls**
+
+- Everything in one account/project: no blast-radius isolation, messy billing.
+- Long-lived access keys on laptops and in CI. Use SSO and OIDC.
+- Multi-AZ app, single-AZ database (or single NAT gateway).
+- Ignoring egress and cross-AZ traffic in architecture decisions.
+- "Lift and shift" VMs and expecting cloud-native savings.
+- Assuming "multi-cloud" gives resilience for free: it usually doubles complexity; multi-region within one provider is often the better first step.
+</Warning>
 
 ## Senior perspective
 
-- Start with a **landing zone**: organisation, accounts per environment/team, SSO, guardrail policies, centralised logging, network topology, tagging standards, all as code ([[Infrastructure as Code]]).
+- Start with a **landing zone**: organisation, accounts per environment/team, SSO, guardrail policies, centralised logging, network topology, tagging standards, all as code ([Infrastructure as Code](/Software%20Engineering/DevOps/Infrastructure%20as%20Code)).
 - Choose managed services by default; run it yourself only with a clear reason (cost at scale, missing features, portability).
 - Decide explicit **RTO/RPO** per system with the business; they drive multi-AZ vs multi-region and backup strategy.
 - Architecture reviews should include a cost estimate and the top 3 cost drivers.
@@ -150,24 +160,29 @@ infracost breakdown --path .                  # cost diff on Terraform PRs
 
 ## Interview questions
 
-> [!question]- IaaS vs PaaS vs SaaS vs serverless?
-> IaaS: rent VMs, you manage OS and up. PaaS: deploy code, platform manages OS/runtime/scaling. Serverless: functions or containers that scale automatically (to zero) and bill per use. SaaS: use finished software. Each step trades control for less operational work.
+<Accordion title="IaaS vs PaaS vs SaaS vs serverless?">
+IaaS: rent VMs, you manage OS and up. PaaS: deploy code, platform manages OS/runtime/scaling. Serverless: functions or containers that scale automatically (to zero) and bill per use. SaaS: use finished software. Each step trades control for less operational work.
+</Accordion>
 
-> [!question]- Region vs availability zone?
-> A region is a geographic area; AZs are isolated failure domains (separate power/network) inside a region with low latency between them. Multi-AZ protects against data-centre failure; multi-region against regional failure.
+<Accordion title="Region vs availability zone?">
+A region is a geographic area; AZs are isolated failure domains (separate power/network) inside a region with low latency between them. Multi-AZ protects against data-centre failure; multi-region against regional failure.
+</Accordion>
 
-> [!question]- Explain the shared responsibility model.
-> The provider secures the cloud (hardware, facilities, virtualisation, managed service internals); the customer secures what they put in it (data, identities, configuration, application, and OS for IaaS). The boundary moves with the service model.
+<Accordion title="Explain the shared responsibility model.">
+The provider secures the cloud (hardware, facilities, virtualisation, managed service internals); the customer secures what they put in it (data, identities, configuration, application, and OS for IaaS). The boundary moves with the service model.
+</Accordion>
 
-> [!question]- How would you reduce a cloud bill by 30%?
-> Get visibility first (tags, cost per service/team), remove idle resources, rightsize, use commitments for steady baseline and spot for tolerant workloads, autoscale and schedule non-prod shutdowns, move cold data to cheaper tiers, reduce egress/cross-AZ traffic and log volume, adopt ARM instances.
+<Accordion title="How would you reduce a cloud bill by 30%?">
+Get visibility first (tags, cost per service/team), remove idle resources, rightsize, use commitments for steady baseline and spot for tolerant workloads, autoscale and schedule non-prod shutdowns, move cold data to cheaper tiers, reduce egress/cross-AZ traffic and log volume, adopt ARM instances.
+</Accordion>
 
-> [!question]- What did the October 2025 AWS outage teach?
-> That a regional failure in a foundational service (DynamoDB DNS) cascades through dependent services and control planes. Teams need to map hidden dependencies, design for static stability, avoid depending on control-plane operations (launching instances) during recovery, and have tested multi-region plans for critical systems.
+<Accordion title="What did the October 2025 AWS outage teach?">
+That a regional failure in a foundational service (DynamoDB DNS) cascades through dependent services and control planes. Teams need to map hidden dependencies, design for static stability, avoid depending on control-plane operations (launching instances) during recovery, and have tested multi-region plans for critical systems.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Containers vs VMs vs Serverless]] · [[Infrastructure as Code]] · [[Observability - Logs, Metrics & Traces]]
-- [[Site Reliability Engineering & Incident Management]] · [[Microservices Architecture]] · [[Networking - HTTP, Caching & Real-time]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Containers vs VMs vs Serverless](/Software%20Engineering/DevOps/Containers%20vs%20VMs%20vs%20Serverless) · [Infrastructure as Code](/Software%20Engineering/DevOps/Infrastructure%20as%20Code) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
+- [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management) · [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
 
 ## Sources
 - [NIST SP 800-145: The NIST Definition of Cloud Computing](https://csrc.nist.gov/pubs/sp/800/145/final)

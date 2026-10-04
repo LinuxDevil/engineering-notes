@@ -1,12 +1,16 @@
 ---
+title: "Step 3 Train the model"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Train the Model, ML Step 3, Model Training, Loss Function, Hyperparameters]
 updated: 2026-09-27
 ---
 # Step 3 Train the model
 
-> [!tldr] TL;DR
-> *Model training is a process where the model's parameters are iteratively updated to minimise a loss function that was defined beforehand.* First **split** the data (typically ~80% train / 20% test, often with a validation split too). Then loop: feed training data in, compute the **loss**, update the **parameters** in the direction that reduces it. Start with simple models (linear, tree-based) as baselines before reaching for deep learning.
+<Note>
+**TL;DR**
+
+*Model training is a process where the model's parameters are iteratively updated to minimise a loss function that was defined beforehand.* First **split** the data (typically ~80% train / 20% test, often with a validation split too). Then loop: feed training data in, compute the **loss**, update the **parameters** in the direction that reduces it. Start with simple models (linear, tree-based) as baselines before reaching for deep learning.
+</Note>
 
 ## Model families
 
@@ -23,7 +27,7 @@ Loosely based on how the brain works. A **neural network** is made of **neurons*
 - **RNN / LSTM (recurrent)**: carry state while iterating over a sequence, like a `for` loop.
 - **Transformer**: the modern replacement for RNN/LSTMs; uses attention and trains in parallel on very large sequence datasets. Powers LLMs.
 
-Details: [[Neural Networks & Deep Learning Basics]] · [[Transformers & How LLMs Work]].
+Details: [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics) · [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work).
 
 | Model | Best for | Pros | Cons |
 |---|---|---|---|
@@ -88,7 +92,7 @@ flowchart LR
 - Always beat a **dumb baseline** (predict the mean / majority class) and a **simple model** before shipping something complex.
 - Track experiments (MLflow, Weights & Biases): data version, code commit, hyperparameters, metrics. Unreproducible models are unmaintainable.
 - Tune hyperparameters on validation data or with cross-validation, never on the test set.
-- Watch the train vs validation loss curves: training loss falling while validation loss rises means **overfitting** (see [[Step 4 Evaluate the model]] and [[Neural Networks & Deep Learning Basics]]).
+- Watch the train vs validation loss curves: training loss falling while validation loss rises means **overfitting** (see [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model) and [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics)).
 
 ## Key terms
 - **Hyperparameters**: settings not changed during training that affect how fast or reliably it trains (e.g. number of clusters).
@@ -99,19 +103,22 @@ flowchart LR
 
 ## Interview questions
 
-> [!question]- Why split into train, validation and test sets?
-> Train to fit parameters, validation to choose hyperparameters and models, test for a single unbiased final estimate. Reusing test data for decisions leaks information and overstates performance.
+<Accordion title="Why split into train, validation and test sets?">
+Train to fit parameters, validation to choose hyperparameters and models, test for a single unbiased final estimate. Reusing test data for decisions leaks information and overstates performance.
+</Accordion>
 
-> [!question]- Explain gradient descent in one minute.
-> Compute the loss, compute its gradient with respect to each parameter (which direction increases loss), take a small step in the opposite direction scaled by the learning rate, repeat. Too large a learning rate diverges; too small is slow.
+<Accordion title="Explain gradient descent in one minute.">
+Compute the loss, compute its gradient with respect to each parameter (which direction increases loss), take a small step in the opposite direction scaled by the learning rate, repeat. Too large a learning rate diverges; too small is slow.
+</Accordion>
 
-> [!question]- Why start with a linear or tree model?
-> They're fast, need less data, are easier to explain, and give a baseline. If a deep model can't clearly beat them, the extra cost and complexity aren't worth it. For tabular data, gradient-boosted trees often win outright.
+<Accordion title="Why start with a linear or tree model?">
+They're fast, need less data, are easier to explain, and give a baseline. If a deep model can't clearly beat them, the extra cost and complexity aren't worth it. For tabular data, gradient-boosted trees often win outright.
+</Accordion>
 
 ## Related
-- [[Major steps in ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Step 2 Building Dataset]] · Next: [[Step 4 Evaluate the model]]
-- [[Components of ML]] · [[Neural Networks & Deep Learning Basics]]
+- [Major steps in ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Major%20steps%20in%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Step 2 Building Dataset](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%202%20Building%20Dataset) · Next: [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model)
+- [Components of ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Components%20of%20ML) · [Neural Networks & Deep Learning Basics](/Software%20Engineering/AI%20%26%20ML/Neural%20Networks%20%26%20Deep%20Learning%20Basics)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

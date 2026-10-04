@@ -1,12 +1,16 @@
 ---
+title: "Web Components & Shadow DOM"
 tags: [frontend, frontend/browser, frontend/web-components]
 aliases: [Web Components, Shadow DOM, Custom Elements, Declarative Shadow DOM]
 updated: 2026-09-27
 ---
 # Web Components & Shadow DOM
 
-> [!tldr] TL;DR
-> **Web Components** are the browser's native component model: **Custom Elements** (your own HTML tags with a lifecycle), **Shadow DOM** (encapsulated DOM and styles), and **`<template>` / `<slot>`** (inert markup and content projection). They work in any framework or none, which makes them a good fit for design systems shared across React, Angular and plain pages, and for micro-frontends. The trade-offs are SSR (solved by Declarative Shadow DOM), form participation (solved by `ElementInternals`) and ergonomics (use Lit or similar).
+<Note>
+**TL;DR**
+
+**Web Components** are the browser's native component model: **Custom Elements** (your own HTML tags with a lifecycle), **Shadow DOM** (encapsulated DOM and styles), and **`<template>` / `<slot>`** (inert markup and content projection). They work in any framework or none, which makes them a good fit for design systems shared across React, Angular and plain pages, and for micro-frontends. The trade-offs are SSR (solved by Declarative Shadow DOM), form participation (solved by `ElementInternals`) and ergonomics (use Lit or similar).
+</Note>
 
 ## 1. The building blocks
 
@@ -113,7 +117,7 @@ Modes: `open` (reachable via `el.shadowRoot`, the usual choice) vs `closed` (`sh
 - Events from inside are **retargeted**: listeners outside see `event.target` as the host element.
 - UI events (`click`, `input`) are `composed: true` and cross the boundary. Custom events need `composed: true` to escape (and `bubbles: true` to bubble).
 - `event.composedPath()` returns the full path including shadow internals (for open roots).
-- See [[DOM, Events & Event Delegation]].
+- See [DOM, Events & Event Delegation](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/DOM%2C%20Events%20%26%20Event%20Delegation).
 
 ### Constructable stylesheets (shared styles)
 
@@ -198,7 +202,7 @@ customElements.define('rating-input', RatingInput);
 
 Also: `internals.states.add('checked')` → style with `:state(checked)` (custom states).
 
-Accessibility gotchas: ARIA ID references (`aria-labelledby`, `aria-describedby`) don't work across shadow boundaries yet; use `delegatesFocus: true` for focus management and label inside the same root. See [[Accessibility Essentials]].
+Accessibility gotchas: ARIA ID references (`aria-labelledby`, `aria-describedby`) don't work across shadow boundaries yet; use `delegatesFocus: true` for focus management and label inside the same root. See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
 
 ## 7. Using Web Components in frameworks
 
@@ -213,58 +217,71 @@ Accessibility gotchas: ARIA ID references (`aria-labelledby`, `aria-describedby`
 <flight-card price={812} data-id="EK1" onflight-select={(e) => select(e.detail.id)} />
 ```
 
-Libraries: **Lit** (reactive properties, templates, SSR, ~5 KB), **Stencil**, **FAST**. Real-world systems: Shoelace/Web Awesome, Salesforce Lightning, Adobe Spectrum Web Components, GitHub's Catalyst. Web Components are a common base for cross-framework [[Design Systems]] and [[Micro-frontends & Module Federation]].
+Libraries: **Lit** (reactive properties, templates, SSR, ~5 KB), **Stencil**, **FAST**. Real-world systems: Shoelace/Web Awesome, Salesforce Lightning, Adobe Spectrum Web Components, GitHub's Catalyst. Web Components are a common base for cross-framework [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems) and [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation).
 
-> [!warning] Common pitfalls
-> - Rendering with `innerHTML` + user data = XSS. Escape values, use `textContent`, or a template library (Lit escapes by default).
-> - Global registry collisions: two micro-frontends defining `<ds-button>` with different versions → `NotSupportedError`. (Scoped registries fix this, below.)
-> - Forgetting cleanup in `disconnectedCallback` leaks listeners/observers.
-> - Attributes are strings; pass rich data via **properties**.
-> - Global CSS (Tailwind utility classes, resets) doesn't reach inside the shadow root; plan theming with custom properties and `::part`.
+<Warning>
+**Common pitfalls**
 
-> [!info]+ 🆕 2025–2026
-> - **Scoped custom element registries** are an **Interop 2026** focus area (announced 2026-02-12). They let a shadow root use its own `CustomElementRegistry`, so two versions of `<ds-button>` can coexist (a big deal for micro-frontends and design-system versioning). Feature-detect before relying on them; the shape is roughly:
->   ```js
->   const registry = new CustomElementRegistry();
->   registry.define('ds-button', DsButtonV2);
->   host.attachShadow({ mode: 'open', customElementRegistry: registry });
->   ```
->   Check MDN for the final API and support before using it.
-> - **`Document.parseHTMLUnsafe()`** Baseline (2025-09): parse HTML (including Declarative Shadow DOM) into a document. For untrusted HTML use the Sanitizer API `setHTML()` (Limited: Firefox 148, Chrome 146) or Trusted Types (Baseline Newly 2026-02-24), see [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
-> - **Angular v22** ships experimental WebMCP helpers, and **React 19.3** adds Trusted Types support in React DOM.
+- Rendering with `innerHTML` + user data = XSS. Escape values, use `textContent`, or a template library (Lit escapes by default).
+- Global registry collisions: two micro-frontends defining `<ds-button>` with different versions → `NotSupportedError`. (Scoped registries fix this, below.)
+- Forgetting cleanup in `disconnectedCallback` leaks listeners/observers.
+- Attributes are strings; pass rich data via **properties**.
+- Global CSS (Tailwind utility classes, resets) doesn't reach inside the shadow root; plan theming with custom properties and `::part`.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **Scoped custom element registries** are an **Interop 2026** focus area (announced 2026-02-12). They let a shadow root use its own `CustomElementRegistry`, so two versions of `<ds-button>` can coexist (a big deal for micro-frontends and design-system versioning). Feature-detect before relying on them; the shape is roughly:
+  ```js
+  const registry = new CustomElementRegistry();
+  registry.define('ds-button', DsButtonV2);
+  host.attachShadow({ mode: 'open', customElementRegistry: registry });
+  ```
+  Check MDN for the final API and support before using it.
+- **`Document.parseHTMLUnsafe()`** Baseline (2025-09): parse HTML (including Declarative Shadow DOM) into a document. For untrusted HTML use the Sanitizer API `setHTML()` (Limited: Firefox 148, Chrome 146) or Trusted Types (Baseline Newly 2026-02-24), see [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
+- **Angular v22** ships experimental WebMCP helpers, and **React 19.3** adds Trusted Types support in React DOM.
+</Info>
 
 ## Interview questions
 
-> [!question]- What are the parts of Web Components?
-> Custom Elements (define tags + lifecycle), Shadow DOM (encapsulated DOM/CSS), and HTML templates/slots (inert, cloneable markup and content projection).
+<Accordion title="What are the parts of Web Components?">
+Custom Elements (define tags + lifecycle), Shadow DOM (encapsulated DOM/CSS), and HTML templates/slots (inert, cloneable markup and content projection).
+</Accordion>
 
-> [!question]- How do you style a component from outside its shadow root?
-> CSS custom properties (inherit through), `::part()` for exposed parts, inherited properties like `color`/`font`, and host-level styles on the element itself. Regular selectors can't reach inside.
+<Accordion title="How do you style a component from outside its shadow root?">
+CSS custom properties (inherit through), `::part()` for exposed parts, inherited properties like `color`/`font`, and host-level styles on the element itself. Regular selectors can't reach inside.
+</Accordion>
 
-> [!question]- How do events work across the shadow boundary?
-> They're retargeted to the host. Built-in UI events are composed; custom events need `composed: true` (and `bubbles: true`) to escape. `composedPath()` shows the real path.
+<Accordion title="How do events work across the shadow boundary?">
+They're retargeted to the host. Built-in UI events are composed; custom events need `composed: true` (and `bubbles: true`) to escape. `composedPath()` shows the real path.
+</Accordion>
 
-> [!question]- How do you server-render Web Components?
-> Declarative Shadow DOM: `<template shadowrootmode="open">` inside the element; the parser creates the shadow root without JS. Lit SSR generates it.
+<Accordion title="How do you server-render Web Components?">
+Declarative Shadow DOM: `<template shadowrootmode="open">` inside the element; the parser creates the shadow root without JS. Lit SSR generates it.
+</Accordion>
 
-> [!question]- How can a custom element participate in a form?
-> `static formAssociated = true` + `attachInternals()`: `setFormValue`, `setValidity`, form callbacks, and default ARIA via `ElementInternals`.
+<Accordion title="How can a custom element participate in a form?">
+`static formAssociated = true` + `attachInternals()`: `setFormValue`, `setValidity`, form callbacks, and default ARIA via `ElementInternals`.
+</Accordion>
 
-> [!question]- Web Components vs React components: when would you choose WC?
-> When the component must work across frameworks or in non-framework pages (multi-framework design system, micro-frontends, third-party embeddable widgets). For app-internal UI in one framework, framework components are simpler (state, SSR, tooling).
+<Accordion title="Web Components vs React components: when would you choose WC?">
+When the component must work across frameworks or in non-framework pages (multi-framework design system, micro-frontends, third-party embeddable widgets). For app-internal UI in one framework, framework components are simpler (state, SSR, tooling).
+</Accordion>
 
-> [!question]- What problem do scoped custom element registries solve?
-> The single global `customElements` registry means a tag name can only be defined once per page, so different versions of the same component (e.g. across micro-frontends) collide. Scoped registries give each shadow root its own definitions.
+<Accordion title="What problem do scoped custom element registries solve?">
+The single global `customElements` registry means a tag name can only be defined once per page, so different versions of the same component (e.g. across micro-frontends) collide. Scoped registries give each shadow root its own definitions.
+</Accordion>
 
 ## Related
-- [[DOM, Events & Event Delegation]]
-- [[Design Systems]]
-- [[Micro-frontends & Module Federation]]
-- [[Building Micro-frontends with React]]
-- [[Styling Approaches]]
-- [[Accessibility Essentials]]
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Other Frameworks - Vue, Svelte, Solid, Astro]]
+- [DOM, Events & Event Delegation](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/DOM%2C%20Events%20%26%20Event%20Delegation)
+- [Design Systems](/Software%20Engineering/Frontend/09%20Architecture/Design%20Systems)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Building Micro-frontends with React](/Software%20Engineering/Frontend/Courses%20%26%20Books/Building%20Micro-frontends%20with%20React/Building%20Micro-frontends%20with%20React)
+- [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Other Frameworks - Vue, Svelte, Solid, Astro](/Software%20Engineering/Frontend/09%20Architecture/Other%20Frameworks%20-%20Vue%2C%20Svelte%2C%20Solid%2C%20Astro)
 
 ## Sources
 - MDN: [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), [Using custom elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements), [Using shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM), [Templates and slots](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_templates_and_slots), [ElementInternals](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals), [CustomElementRegistry](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry)

@@ -1,3 +1,6 @@
+---
+title: "jOOQ (java Object Oriented Querying) (original)"
+---
 —> Article
     jOOQ is a java library that builds type-safe queries, it has generators for DAO’s and POJOs to effectively complete CRUD.
 

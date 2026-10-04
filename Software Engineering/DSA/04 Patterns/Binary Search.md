@@ -1,16 +1,20 @@
 ---
+title: "Binary Search"
 tags: [dsa, dsa/patterns]
 aliases: [Binary search, Bisection, lower_bound, upper_bound, Binary Search on the Answer, bisect]
 updated: 2026-09-27
 ---
 # Binary Search
 
-> [!tldr] TL;DR
-> **Binary search** finds a target (or a boundary) in a **sorted** or otherwise **monotonic** space by halving the search range each step: O(log n) instead of O(n). The robust way to think about it is "find the first index where a condition becomes true" (`lower_bound`). The same template also searches **on the answer** (smallest speed, capacity, or size that works) and handles **rotated** sorted arrays.
+<Note>
+**TL;DR**
+
+**Binary search** finds a target (or a boundary) in a **sorted** or otherwise **monotonic** space by halving the search range each step: O(log n) instead of O(n). The robust way to think about it is "find the first index where a condition becomes true" (`lower_bound`). The same template also searches **on the answer** (smallest speed, capacity, or size that works) and handles **rotated** sorted arrays.
+</Note>
 
 ## The idea
 
-Guess the middle. If the target is bigger, throw away the left half; otherwise throw away the right half. Grokking Algorithms opens with exactly this (chapter 1, [[Grokking Algorithms]]): guessing a number from 1 to 100 takes at most 7 guesses, and a sorted list of 4 billion items needs at most 32 steps, because log₂(4·10⁹) ≈ 32.
+Guess the middle. If the target is bigger, throw away the left half; otherwise throw away the right half. Grokking Algorithms opens with exactly this (chapter 1, [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms)): guessing a number from 1 to 100 takes at most 7 guesses, and a sorted list of 4 billion items needs at most 32 steps, because log₂(4·10⁹) ≈ 32.
 
 ```mermaid
 flowchart LR
@@ -259,7 +263,7 @@ def min_eating_speed(piles: list[int], h: int) -> int:
 
 ## Senior perspective
 
-- **Databases**: B-tree/B+-tree nodes are searched with binary search over sorted keys inside each page; LSM-tree SSTables keep a sparse sorted index that is binary searched. See [[Trees & Binary Search Trees]].
+- **Databases**: B-tree/B+-tree nodes are searched with binary search over sorted keys inside each page; LSM-tree SSTables keep a sparse sorted index that is binary searched. See [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees).
 - **`git bisect`** is binary search over commit history to find the commit that introduced a bug; the same trick works for bisecting deploys, feature flags, or config changes.
 - **Standard libraries**: C++ `std::lower_bound`/`upper_bound`, Java `Arrays.binarySearch` / `Collections.binarySearch`, Python `bisect`, Rust `partition_point`. JavaScript has **no** built-in binary search, so you write your own.
 - **Cache behaviour**: binary search on a big array jumps around memory (poor locality). For hot lookups, cache-friendly layouts (Eytzinger/B-tree-like layouts) or a hash map may be faster despite the same big-O.
@@ -279,29 +283,35 @@ def min_eating_speed(piles: list[int], h: int) -> int:
 
 ## Interview questions
 
-> [!question]- Why write `lo + (hi - lo) / 2` instead of `(lo + hi) / 2`?
-> With fixed-width integers, `lo + hi` can exceed the max int and wrap to a negative number, giving a negative index. `hi - lo` never overflows when both are valid indices. The bug was in the JDK's binary search for years (Bloch, 2006). Python has unbounded ints and JS uses doubles, but the safe form is a good habit.
+<Accordion title="Why write `lo + (hi - lo) / 2` instead of `(lo + hi) / 2`?">
+With fixed-width integers, `lo + hi` can exceed the max int and wrap to a negative number, giving a negative index. `hi - lo` never overflows when both are valid indices. The bug was in the JDK's binary search for years (Bloch, 2006). Python has unbounded ints and JS uses doubles, but the safe form is a good habit.
+</Accordion>
 
-> [!question]- What's the difference between lower_bound and upper_bound?
-> `lower_bound(x)` is the first index with value `>= x`; `upper_bound(x)` is the first with value `> x`. Their difference is the count of `x`. In Python they are `bisect_left` and `bisect_right`.
+<Accordion title="What's the difference between lower_bound and upper_bound?">
+`lower_bound(x)` is the first index with value `>= x`; `upper_bound(x)` is the first with value `> x`. Their difference is the count of `x`. In Python they are `bisect_left` and `bisect_right`.
+</Accordion>
 
-> [!question]- How do you recognise "binary search on the answer"?
-> The question asks for a minimum or maximum value, you can write a check "is value x feasible?" in O(n) or so, and feasibility is monotonic (if x works, x+1 works too). Search x over its possible range.
+<Accordion title="How do you recognise &quot;binary search on the answer&quot;?">
+The question asks for a minimum or maximum value, you can write a check "is value x feasible?" in O(n) or so, and feasibility is monotonic (if x works, x+1 works too). Search x over its possible range.
+</Accordion>
 
-> [!question]- How do you search in a rotated sorted array in O(log n)?
-> At each `mid`, one half is sorted. If `a[lo] <= a[mid]` the left half is sorted: go left if `a[lo] <= target < a[mid]`, else right. Otherwise the right half is sorted: go right if `a[mid] < target <= a[hi]`, else left.
+<Accordion title="How do you search in a rotated sorted array in O(log n)?">
+At each `mid`, one half is sorted. If `a[lo] <= a[mid]` the left half is sorted: go left if `a[lo] <= target < a[mid]`, else right. Otherwise the right half is sorted: go right if `a[mid] < target <= a[hi]`, else left.
+</Accordion>
 
-> [!question]- Your binary search loops forever. What do you check?
-> Whether the range always shrinks. With `lo = mid` you need `mid` to round up; with `hi = mid` it must round down. Also check the loop condition matches the interval convention (closed `<=` vs half-open `<`).
+<Accordion title="Your binary search loops forever. What do you check?">
+Whether the range always shrinks. With `lo = mid` you need `mid` to round up; with `hi = mid` it must round down. Also check the loop condition matches the interval convention (closed `<=` vs half-open `<`).
+</Accordion>
 
-> [!question]- Is binary search always better than a linear scan?
-> No. It needs sorted data (sorting costs O(n log n)), random access (not linked lists), and for small arrays (dozens of elements) a linear scan can be faster due to branch prediction and cache locality. For many repeated lookups on static data, sort once and binary search, or use a hash set if you only need membership.
+<Accordion title="Is binary search always better than a linear scan?">
+No. It needs sorted data (sorting costs O(n log n)), random access (not linked lists), and for small arrays (dozens of elements) a linear scan can be faster due to branch prediction and cache locality. For many repeated lookups on static data, sort once and binary search, or use a hash set if you only need membership.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Arrays & Strings]] · [[Sorting Algorithms]] · [[Trees & Binary Search Trees]] · [[Two Pointers]] · [[Recursion & Backtracking]]
-- [[Big-O & Complexity Analysis]]
-- Books & courses: [[Grokking Algorithms]] (chapter 1, binary search) · [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Books & courses: [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms) (chapter 1, binary search) · [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Aditya Bhargava, *Grokking Algorithms*, Manning (chapter 1: binary search, Big-O)

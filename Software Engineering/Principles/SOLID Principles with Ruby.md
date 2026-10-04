@@ -1,12 +1,16 @@
 ---
+title: "SOLID Principles with Ruby"
 tags: [principles, principles/solid, ruby]
 aliases: [SOLID in Ruby, Ruby SOLID]
 updated: 2026-09-27
 ---
 # SOLID Principles with Ruby
 
-> [!tldr] TL;DR
-> Companion to [[SOLID]]: the same five principles shown in **Ruby** with a running *painter/printer* example. Ruby is dynamically typed and has no `interface` keyword, so the principles are expressed through **duck typing**, small classes, modules and **constructor injection**. The theory, trade-offs and interview questions live in [[SOLID]]; this note is the Ruby lens.
+<Note>
+**TL;DR**
+
+Companion to [SOLID](/Software%20Engineering/Principles/SOLID): the same five principles shown in **Ruby** with a running *painter/printer* example. Ruby is dynamically typed and has no `interface` keyword, so the principles are expressed through **duck typing**, small classes, modules and **constructor injection**. The theory, trade-offs and interview questions live in [SOLID](/Software%20Engineering/Principles/SOLID); this note is the Ruby lens.
+</Note>
 
 **SOLID** = **S**ingle Responsibility, **O**pen–Closed, **L**iskov Substitution, **I**nterface Segregation, **D**ependency Inversion (Robert C. Martin). What changes in Ruby:
 
@@ -140,19 +144,22 @@ end
 
 Any subclass must implement `paint`, or calling it raises. The caller can rely on `paint` existing and returning a painting.
 
-> [!warning] Ruby can't enforce LSP for you
-> `raise NotImplementedError` only fails at runtime, and nothing checks return types. Protect substitutability with a **shared example group** that every implementation runs:
-> ```ruby
-> RSpec.shared_examples "an artist" do
->   it "returns a Painting from #paint" do
->     expect(subject.paint).to be_a(Painting)
->   end
-> end
->
-> RSpec.describe ComicPainter    do it_behaves_like "an artist" end
-> RSpec.describe LandscapePainter do it_behaves_like "an artist" end
-> ```
-> A subclass that violates LSP, e.g. `def paint = nil` or one that requires an extra argument, fails this contract test.
+<Warning>
+**Ruby can't enforce LSP for you**
+
+`raise NotImplementedError` only fails at runtime, and nothing checks return types. Protect substitutability with a **shared example group** that every implementation runs:
+```ruby
+RSpec.shared_examples "an artist" do
+  it "returns a Painting from #paint" do
+    expect(subject.paint).to be_a(Painting)
+  end
+end
+
+RSpec.describe ComicPainter    do it_behaves_like "an artist" end
+RSpec.describe LandscapePainter do it_behaves_like "an artist" end
+```
+A subclass that violates LSP, e.g. `def paint = nil` or one that requires an extra argument, fails this contract test.
+</Warning>
 
 ## Interface Segregation Principle (ISP)
 
@@ -258,24 +265,30 @@ Thanks to duck typing, the `DataSource` base class is optional: any object that 
 
 SOLID helps decouple code and make modification cheaper. The five principles support each other: small responsibilities (SRP) produce small roles (ISP); callers depend on those roles (DIP); new variants plug in (OCP) as long as they honour the contract (LSP). A well-designed Ruby codebase is adaptable, easy to modify and pleasant to join.
 
-> [!tip] Rails context
-> In Rails apps these principles usually show up as service objects, form objects, query objects and policies extracted from fat models and controllers. See [[Design Patterns#Application-level patterns (Rails and friends)]] and [[Rails Clean Architecture]].
+<Tip>
+**Rails context**
+
+In Rails apps these principles usually show up as service objects, form objects, query objects and policies extracted from fat models and controllers. See [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns#application-level-patterns-rails-and-friends) and [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture).
+</Tip>
 
 ## Interview questions
 
-> [!question]- How do you apply ISP in a language without interfaces?
-> Think in roles (the messages a collaborator must understand). Keep them small, express them as modules or documented duck types, avoid inheriting unrelated behaviour, and verify roles with shared contract tests (or RBS/Sorbet interfaces).
+<Accordion title="How do you apply ISP in a language without interfaces?">
+Think in roles (the messages a collaborator must understand). Keep them small, express them as modules or documented duck types, avoid inheriting unrelated behaviour, and verify roles with shared contract tests (or RBS/Sorbet interfaces).
+</Accordion>
 
-> [!question]- How do you enforce LSP in Ruby?
-> Only through tests and conventions: base classes that raise `NotImplementedError`, RSpec shared examples that every implementation runs, and optionally static checking with Sorbet/RBS.
+<Accordion title="How do you enforce LSP in Ruby?">
+Only through tests and conventions: base classes that raise `NotImplementedError`, RSpec shared examples that every implementation runs, and optionally static checking with Sorbet/RBS.
+</Accordion>
 
-> [!question]- What does dependency injection look like in Ruby?
-> Pass collaborators into `initialize` (often with defaults: `def initialize(source: MySQLSource.new)`), so tests or callers can substitute any object with the same interface. No container is needed.
+<Accordion title="What does dependency injection look like in Ruby?">
+Pass collaborators into `initialize` (often with defaults: `def initialize(source: MySQLSource.new)`), so tests or callers can substitute any object with the same interface. No container is needed.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[SOLID]] (main note: theory, Java/TypeScript examples, trade-offs)
-- [[Abstract Class and Interface]] · [[Dependency Injection & Inversion of Control]] · [[Design Patterns]] · [[Rails Clean Architecture]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [SOLID](/Software%20Engineering/Principles/SOLID) (main note: theory, Java/TypeScript examples, trade-offs)
+- [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) · [Dependency Injection & Inversion of Control](/Software%20Engineering/Principles/Dependency%20Injection%20%26%20Inversion%20of%20Control) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)
 
 ## Sources
 - Robert C. Martin, [The Principles of OOD](http://butunclebob.com/ArticleS.UncleBob.PrinciplesOfOod)

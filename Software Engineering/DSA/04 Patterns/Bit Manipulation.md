@@ -1,12 +1,16 @@
 ---
+title: "Bit Manipulation"
 tags: [dsa, dsa/patterns]
 aliases: [Bitwise operations, Bit tricks, Bitmask, XOR trick, Bit manipulation pattern]
 updated: 2026-09-27
 ---
 # Bit Manipulation
 
-> [!tldr] TL;DR
-> Integers are arrays of bits, and bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) work on all of them at once in O(1). A handful of tricks cover most interview problems: **`x & (x - 1)` clears the lowest set bit**, **`x & -x` isolates it**, **XOR cancels pairs** (`a ^ a = 0`), and an integer **mask can represent a subset**. Language details matter: JavaScript bitwise ops work on **32-bit signed** integers (use `>>>` for unsigned, `BigInt` for more bits), while Python ints have **arbitrary precision**, so you mask with `0xFFFFFFFF` to simulate 32-bit behavior.
+<Note>
+**TL;DR**
+
+Integers are arrays of bits, and bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) work on all of them at once in O(1). A handful of tricks cover most interview problems: **`x & (x - 1)` clears the lowest set bit**, **`x & -x` isolates it**, **XOR cancels pairs** (`a ^ a = 0`), and an integer **mask can represent a subset**. Language details matter: JavaScript bitwise ops work on **32-bit signed** integers (use `>>>` for unsigned, `BigInt` for more bits), while Python ints have **arbitrary precision**, so you mask with `0xFFFFFFFF` to simulate 32-bit behavior.
+</Note>
 
 ## The idea
 
@@ -269,7 +273,7 @@ def get_sum(a: int, b: int) -> int:
 ```
 
 ### Bitmask DP (mention)
-When n is small (about 20 or less) and the state is "which items have been used", encode that set as a mask: `dp[mask][i]` = best cost having visited exactly `mask` and ending at `i`. Classic uses: traveling salesman in O(2^n · n²), assignment problems, and BFS over `(node, mask)` states as in [847. Shortest Path Visiting All Nodes](https://leetcode.com/problems/shortest-path-visiting-all-nodes/) (Hard). See [[Dynamic Programming]].
+When n is small (about 20 or less) and the state is "which items have been used", encode that set as a mask: `dp[mask][i]` = best cost having visited exactly `mask` and ending at `i`. Classic uses: traveling salesman in O(2^n · n²), assignment problems, and BFS over `(node, mask)` states as in [847. Shortest Path Visiting All Nodes](https://leetcode.com/problems/shortest-path-visiting-all-nodes/) (Hard). See [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
 
 ## When to use it (recognition signals)
 
@@ -293,7 +297,7 @@ When n is small (about 20 or less) and the state is "which items have been used"
 ## Senior perspective
 
 - **Bits are how real systems save memory and time**: permission flags (Unix `rwx` modes like `0o755`), feature flags packed in an integer, React's internal lane priorities are bitmasks, TCP flags, IPv4 subnet masks (`ip & mask` to test CIDR membership), and file format headers.
-- **Bitsets and bitmaps** power databases (bitmap indexes, Roaring bitmaps in Lucene, Druid and ClickHouse), Bloom filters, Redis `SETBIT` / `BITCOUNT`, and garbage collector mark bits (see [[Memory Management & Garbage Collection]]).
+- **Bitsets and bitmaps** power databases (bitmap indexes, Roaring bitmaps in Lucene, Druid and ClickHouse), Bloom filters, Redis `SETBIT` / `BITCOUNT`, and garbage collector mark bits (see [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)).
 - **Hardware support**: modern CPUs have `POPCNT`, `LZCNT`, `TZCNT` instructions; compilers and runtimes map `bit_count`, `Math.clz32`, `Integer.bitCount` to them. Fenwick trees rely on `x & -x`.
 - **Hashing and randomness**: hash functions (FNV, MurmurHash, xorshift PRNGs) are shifts and XORs; in JS they use `Math.imul` and `>>> 0` to stay in 32 bits.
 - **Portability**: bit-level code is where language semantics diverge most (JS 32-bit, Python arbitrary precision, Java's fixed widths, C's undefined behavior on signed overflow). In review, ask about width, signedness and endianness.
@@ -314,32 +318,39 @@ Next steps: [137. Single Number II](https://leetcode.com/problems/single-number-
 
 ## Interview questions
 
-> [!question]- What does `x & (x - 1)` do, and what can you use it for?
-> Subtracting 1 flips the lowest set bit and all zeros below it, so ANDing clears the lowest set bit. Uses: count set bits in O(number of ones) (Kernighan), check power of two (`x > 0 && (x & (x - 1)) == 0`).
+<Accordion title="What does `x & (x - 1)` do, and what can you use it for?">
+Subtracting 1 flips the lowest set bit and all zeros below it, so ANDing clears the lowest set bit. Uses: count set bits in O(number of ones) (Kernighan), check power of two (`x > 0 && (x & (x - 1)) == 0`).
+</Accordion>
 
-> [!question]- Why does XOR solve Single Number?
-> XOR is associative and commutative, `a ^ a = 0` and `a ^ 0 = a`. XORing all values cancels every pair regardless of order, leaving the single one. O(n) time, O(1) space.
+<Accordion title="Why does XOR solve Single Number?">
+XOR is associative and commutative, `a ^ a = 0` and `a ^ 0 = a`. XORing all values cancels every pair regardless of order, leaving the single one. O(n) time, O(1) space.
+</Accordion>
 
-> [!question]- What is special about bitwise operations in JavaScript?
-> Operands are converted to 32-bit signed integers (except `>>>`, which yields unsigned 32-bit). Larger numbers are truncated, results with bit 31 set are negative, and shift counts are taken modulo 32. Use `>>> 0` for unsigned results and BigInt for wider integers (BigInt has no `>>>`).
+<Accordion title="What is special about bitwise operations in JavaScript?">
+Operands are converted to 32-bit signed integers (except `>>>`, which yields unsigned 32-bit). Larger numbers are truncated, results with bit 31 set are negative, and shift counts are taken modulo 32. Use `>>> 0` for unsigned results and BigInt for wider integers (BigInt has no `>>>`).
+</Accordion>
 
-> [!question]- How do you handle 32-bit overflow semantics in Python?
-> Python ints are unbounded, so mask with `0xFFFFFFFF` after each operation to keep 32 bits, and convert back to signed with `x if x <= 0x7FFFFFFF else ~(x ^ 0xFFFFFFFF)`. Without masking, loops relying on overflow (like adding via XOR and carry) never terminate for negatives.
+<Accordion title="How do you handle 32-bit overflow semantics in Python?">
+Python ints are unbounded, so mask with `0xFFFFFFFF` after each operation to keep 32 bits, and convert back to signed with `x if x <= 0x7FFFFFFF else ~(x ^ 0xFFFFFFFF)`. Without masking, loops relying on overflow (like adding via XOR and carry) never terminate for negatives.
+</Accordion>
 
-> [!question]- What does `x & -x` return?
-> The lowest set bit of x as a power of two (for example 44 = `0b101100` gives 4). In two's complement, `-x = ~x + 1`, which keeps the lowest 1 and flips everything above it. Fenwick (binary indexed) trees use it to jump between ranges.
+<Accordion title="What does `x & -x` return?">
+The lowest set bit of x as a power of two (for example 44 = `0b101100` gives 4). In two's complement, `-x = ~x + 1`, which keeps the lowest 1 and flips everything above it. Fenwick (binary indexed) trees use it to jump between ranges.
+</Accordion>
 
-> [!question]- How can a bitmask represent a subset, and when is that practical?
-> Bit i set means item i is included. All subsets of n items are the integers `0 .. 2^n - 1`. It is practical for n up to about 20 (a million masks), and it enables bitmask DP where the state is "which items are used".
+<Accordion title="How can a bitmask represent a subset, and when is that practical?">
+Bit i set means item i is included. All subsets of n items are the integers `0 .. 2^n - 1`. It is practical for n up to about 20 (a million masks), and it enables bitmask DP where the state is "which items are used".
+</Accordion>
 
-> [!question]- How do you count set bits in Python and JS?
-> Python 3.10+: `x.bit_count()` (earlier: `bin(x).count("1")`). JS has no built-in popcount: use Kernighan's loop, or a SWAR trick with `Math.imul`, on the 32-bit value.
+<Accordion title="How do you count set bits in Python and JS?">
+Python 3.10+: `x.bit_count()` (earlier: `bin(x).count("1")`). JS has no built-in popcount: use Kernighan's loop, or a SWAR trick with `Math.imul`, on the 32-bit value.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Backtracking]] (subsets without recursion) · [[Dynamic Programming]] (bitmask DP) · [[Hash Tables]] (the O(n) space alternative)
-- [[Arrays & Strings]] · [[Graph BFS-DFS patterns]] (BFS over `(node, mask)` states)
-- [[Big-O & Complexity Analysis]] · [[Memory Management & Garbage Collection]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) (subsets without recursion) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (bitmask DP) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) (the O(n) space alternative)
+- [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns) (BFS over `(node, mask)` states)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
 
 ## Sources
 - [MDN: Bitwise operators and unsigned right shift (>>>)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Unsigned_right_shift)

@@ -1,14 +1,18 @@
 ---
+title: "Reactor - Mono & Flux"
 tags: [backend, backend/java, course]
 aliases: [Mono, Flux, Project Reactor, Reactor operators, Reactor schedulers, publishOn, subscribeOn, Reactor backpressure]
 updated: 2026-09-27
 ---
 # Reactor - Mono & Flux
 
-> [!tldr] TL;DR
-> In Project Reactor a **Publisher** is either a **`Mono<T>`** (0 or 1 item, then complete/error) or a **`Flux<T>`** (0..N items, then complete/error). Pipelines are **lazy**: nothing happens until you **subscribe**. You transform with operators (`map`, `flatMap`, `filter`, `zip`...), choose threads with **schedulers** (`subscribeOn`, `publishOn`), handle errors with `onErrorResume`/`retryWhen`, and the subscriber controls the rate with **backpressure** (`request(n)`). Never block inside a reactive pipeline.
+<Note>
+**TL;DR**
 
-*Part of [[Java Reactive Course]] (course notes). Renamed from "Mono"; expanded with Flux, operators, schedulers and backpressure.*
+In Project Reactor a **Publisher** is either a **`Mono<T>`** (0 or 1 item, then complete/error) or a **`Flux<T>`** (0..N items, then complete/error). Pipelines are **lazy**: nothing happens until you **subscribe**. You transform with operators (`map`, `flatMap`, `filter`, `zip`...), choose threads with **schedulers** (`subscribeOn`, `publishOn`), handle errors with `onErrorResume`/`retryWhen`, and the subscriber controls the rate with **backpressure** (`request(n)`). Never block inside a reactive pipeline.
+</Note>
+
+*Part of [Java Reactive Course](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Java%20Reactive%20Course) (course notes). Renamed from "Mono"; expanded with Flux, operators, schedulers and backpressure.*
 
 ## Course notes
 
@@ -128,7 +132,7 @@ In WebFlux, requests run on **Netty event-loop threads**; blocking one of them s
 
 ## Backpressure
 
-The subscriber decides how much it can handle by calling `request(n)`; the publisher must not send more. See [[Reactive Spring - Ch 5 Reactor & Backpressure]].
+The subscriber decides how much it can handle by calling `request(n)`; the publisher must not send more. See [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure).
 
 ```java
 Flux.range(1, 1_000)
@@ -175,38 +179,45 @@ StepVerifier.withVirtualTime(() -> Mono.delay(Duration.ofHours(1)).thenReturn("x
 - Unbounded `flatMap` concurrency hammering downstream services.
 
 ## Senior perspective
-- Reactive is a trade: high concurrency and built-in backpressure versus harder debugging, stack traces and onboarding. With Java 21+ virtual threads, choose reactive deliberately (streaming, SSE, many long-lived connections, event pipelines), not by default. See [[Java Concurrency & Virtual Threads]].
+- Reactive is a trade: high concurrency and built-in backpressure versus harder debugging, stack traces and onboarding. With Java 21+ virtual threads, choose reactive deliberately (streaming, SSE, many long-lived connections, event pipelines), not by default. See [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads).
 - Every blocking call is a production incident waiting to happen in WebFlux: enforce BlockHound in CI, wrap legacy blocking calls with `boundedElastic`.
 - Tune concurrency explicitly (`flatMap` concurrency, `limitRate`), add timeouts and retries with backoff+jitter at every remote boundary.
 - Debugging: `checkpoint("desc")`, `Hooks.onOperatorDebug()` in dev only, and the Reactor debug agent (`ReactorDebugAgent.init()`) for readable assembly traces in production.
 
 ## Interview questions
 
-> [!question]- Mono vs Flux?
-> Both implement `Publisher<T>`. Mono emits at most one item then completes or errors (like an async `Optional`); Flux emits zero to many items then completes or errors (like an async stream).
+<Accordion title="Mono vs Flux?">
+Both implement `Publisher<T>`. Mono emits at most one item then completes or errors (like an async `Optional`); Flux emits zero to many items then completes or errors (like an async stream).
+</Accordion>
 
-> [!question]- What does "nothing happens until you subscribe" mean?
-> Building a pipeline only assembles operators. Work starts when a subscriber subscribes (in WebFlux, the framework subscribes to the publisher you return). Each subscription to a cold publisher re-executes it.
+<Accordion title="What does &quot;nothing happens until you subscribe&quot; mean?">
+Building a pipeline only assembles operators. Work starts when a subscriber subscribes (in WebFlux, the framework subscribes to the publisher you return). Each subscription to a cold publisher re-executes it.
+</Accordion>
 
-> [!question]- `Mono.just` vs `Mono.fromSupplier` vs `Mono.defer`?
-> `just` captures a value already computed (eager). `fromSupplier`/`fromCallable` compute the value lazily per subscription. `defer` lazily creates a whole new publisher per subscription.
+<Accordion title="`Mono.just` vs `Mono.fromSupplier` vs `Mono.defer`?">
+`just` captures a value already computed (eager). `fromSupplier`/`fromCallable` compute the value lazily per subscription. `defer` lazily creates a whole new publisher per subscription.
+</Accordion>
 
-> [!question]- `map` vs `flatMap` vs `concatMap`?
-> `map` is a synchronous 1:1 transformation. `flatMap` maps each item to a publisher and merges them concurrently (order not preserved). `concatMap` does the same sequentially, preserving order.
+<Accordion title="`map` vs `flatMap` vs `concatMap`?">
+`map` is a synchronous 1:1 transformation. `flatMap` maps each item to a publisher and merges them concurrently (order not preserved). `concatMap` does the same sequentially, preserving order.
+</Accordion>
 
-> [!question]- `subscribeOn` vs `publishOn`?
-> `subscribeOn` chooses the scheduler on which the subscription (and the source) runs, affecting the chain from the source. `publishOn` switches execution to a scheduler for operators after it.
+<Accordion title="`subscribeOn` vs `publishOn`?">
+`subscribeOn` chooses the scheduler on which the subscription (and the source) runs, affecting the chain from the source. `publishOn` switches execution to a scheduler for operators after it.
+</Accordion>
 
-> [!question]- What is backpressure and how does Reactor support it?
-> A consumer signalling how many items it can handle via `request(n)` so a fast producer doesn't overwhelm it. Reactor propagates demand through operators and offers strategies (`limitRate`, `onBackpressureBuffer/Drop/Latest`, bounded `flatMap` concurrency).
+<Accordion title="What is backpressure and how does Reactor support it?">
+A consumer signalling how many items it can handle via `request(n)` so a fast producer doesn't overwhelm it. Reactor propagates demand through operators and offers strategies (`limitRate`, `onBackpressureBuffer/Drop/Latest`, bounded `flatMap` concurrency).
+</Accordion>
 
-> [!question]- How do you call a blocking API from a reactive pipeline?
-> Wrap it with `Mono.fromCallable(...)` and `subscribeOn(Schedulers.boundedElastic())` so it doesn't block event-loop threads; better, use a non-blocking client.
+<Accordion title="How do you call a blocking API from a reactive pipeline?">
+Wrap it with `Mono.fromCallable(...)` and `subscribeOn(Schedulers.boundedElastic())` so it doesn't block event-loop threads; better, use a non-blocking client.
+</Accordion>
 
 ## Related
-- [[Java Reactive Course]] · [[Java & Spring Index]]
-- [[Reactive Spring - Ch 4 IO & Reactive Streams]] · [[Reactive Spring - Ch 5 Reactor & Backpressure]] · [[Reactive Spring Book]]
-- [[Java Concurrency & Virtual Threads]] · [[Java Language Essentials]] (Java Streams laziness)
+- [Java Reactive Course](/Software%20Engineering/Backend/Java/Java%20Reactive%20Course/Java%20Reactive%20Course) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) · [Reactive Spring - Ch 5 Reactor & Backpressure](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%205%20Reactor%20%26%20Backpressure) · [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book)
+- [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [Java Language Essentials](/Software%20Engineering/Backend/Java/Java%20Language%20Essentials) (Java Streams laziness)
 
 ## Sources
 - [Project Reactor reference guide](https://projectreactor.io/docs/core/release/reference/)

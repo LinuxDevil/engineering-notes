@@ -1,3 +1,6 @@
+---
+title: "Application State & Network Connectivity"
+---
 Application State
 
 - Search / Access optimization

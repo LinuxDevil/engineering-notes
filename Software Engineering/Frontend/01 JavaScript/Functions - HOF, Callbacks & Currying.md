@@ -1,12 +1,16 @@
 ---
+title: "Functions - HOF, Callbacks & Currying"
 tags: [frontend, frontend/javascript]
 aliases: [Functions, Higher Order Functions, HOF, Callbacks, Currying, First-class functions, Anonymous functions, Pure functions, Function composition]
 updated: 2026-09-27
 ---
 # Functions - HOF, Callbacks & Currying
 
-> [!tldr] TL;DR
-> In JavaScript, functions are **first-class**: they are objects, so you can store them in variables, pass them as arguments (**callbacks**) and return them from other functions. A function that takes or returns a function is a **higher-order function (HOF)**. HOFs let you write generic code and pass in the part that varies, which keeps code DRY. **Currying** and **partial application** are HOF techniques built on [[Closures & Memory Model|closures]].
+<Note>
+**TL;DR**
+
+In JavaScript, functions are **first-class**: they are objects, so you can store them in variables, pass them as arguments (**callbacks**) and return them from other functions. A function that takes or returns a function is a **higher-order function (HOF)**. HOFs let you write generic code and pass in the part that varies, which keeps code DRY. **Currying** and **partial application** are HOF techniques built on [closures](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model).
+</Note>
 
 ## Ways to define a function
 
@@ -17,7 +21,7 @@ updated: 2026-09-27
 | Arrow | `const add = (a, b) => a + b` | No | No (lexical) | Concise; ideal for callbacks; can't be `new`-ed |
 | Method shorthand | `{ add(a, b) {} }` | n/a | Yes | Can use `super`; not constructible |
 | IIFE | `(function () { ... })()` / `(() => {})()` | n/a | | Runs once, private scope |
-| Generator / async | `function* g() {}`, `async function f() {}` | as declarations | Yes | See [[Iterators, Generators & Iterator Helpers]], [[Promises, Async-Await & Cancellation]] |
+| Generator / async | `function* g() {}`, `async function f() {}` | as declarations | Yes | See [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers), [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) |
 
 **Anonymous functions** are functions with no name, usually intended to be used once, which is why you see them mostly as callbacks: `arr.map(function (x) { return x * 2; })`, `button.onclick = () => {}`. Tip: give non-trivial callbacks a name (or assign them to a `const`) to get readable stack traces and to be able to `removeEventListener` them.
 
@@ -32,11 +36,11 @@ greet('Ali', 1, 2);       // Ali [1, 2] 3
 greet.length;             // 0 (params before the first default/rest)
 ```
 
-- Primitives are passed **by value**; objects are passed **by sharing** (a copy of the reference). Reassigning a parameter doesn't affect the caller, mutating an object parameter does. See [[Types, Coercion & Equality]].
+- Primitives are passed **by value**; objects are passed **by sharing** (a copy of the reference). Reassigning a parameter doesn't affect the caller, mutating an object parameter does. See [Types, Coercion & Equality](/Software%20Engineering/Frontend/01%20JavaScript/Types%2C%20Coercion%20%26%20Equality).
 
 ## Functions are first-class objects
 
-![[Screenshot_2023-08-27_at_11.04.24_PM.png]]
+![Screenshot_2023-08-27_at_11.04.24_PM](/Attachments/Screenshot_2023-08-27_at_11.04.24_PM.png)
 
 - **First class** means a function can do everything an object can: be assigned to a variable, stored in an array/object, passed as an argument, returned from a function, and have properties.
 - Behind the scenes, functions **are** objects (callable objects with an internal `[[Call]]` method): `typeof fn === 'function'`, `fn instanceof Object === true`, `fn.name`, `fn.length`, and you can add properties to them.
@@ -49,7 +53,7 @@ When we write functions we should think about **reusability** and not break the 
 
 ### Bad: one function per operation
 
-![[Screenshot_2023-08-26_at_7.10.39_PM.png]]
+![Screenshot_2023-08-26_at_7.10.39_PM](/Attachments/Screenshot_2023-08-26_at_7.10.39_PM.png)
 
 ```js
 function copyArrayAndMultiplyBy2(array) {
@@ -83,7 +87,7 @@ result: [2, 4, 6]
 
 Leave part of the functionality **undetermined** and pass it in as a parameter:
 
-![[Screenshot_2023-08-27_at_10.52.01_PM.png]]
+![Screenshot_2023-08-27_at_10.52.01_PM](/Attachments/Screenshot_2023-08-27_at_10.52.01_PM.png)
 
 ```js
 function copyArrayAndManipulate(array, instructions) {
@@ -137,25 +141,31 @@ const evens  = numbers.filter((x) => x % 2 === 0); // [2, 4]
 const sum    = numbers.reduce((acc, x) => acc + x, 0); // 10
 ```
 
-> [!example] `map` vs `forEach`
-> ```js
-> const out = [1, 2, 3].map(x => x * 2);      // returns a NEW array [2, 4, 6]
-> const r = [1, 2, 3].forEach(x => x * 2);    // returns undefined; only for side effects
-> ```
-> Use `map` to transform, `forEach` for side effects. Neither can be stopped early (use `for...of` with `break`, or `some`/`find`). Neither waits for `async` callbacks.
+<Info>
+**`map` vs `forEach`**
 
-> [!example] `debounce`: a HOF that takes and returns a function
-> ```js
-> function debounce(fn, delay = 300) {
->   let timer;                               // closure state
->   return function (...args) {
->     clearTimeout(timer);
->     timer = setTimeout(() => fn.apply(this, args), delay);
->   };
-> }
-> input.addEventListener('input', debounce(e => search(e.target.value), 250));
-> ```
-> Used in [[Case Study - Autocomplete]]. `throttle` is the sibling: run at most once per interval.
+```js
+const out = [1, 2, 3].map(x => x * 2);      // returns a NEW array [2, 4, 6]
+const r = [1, 2, 3].forEach(x => x * 2);    // returns undefined; only for side effects
+```
+Use `map` to transform, `forEach` for side effects. Neither can be stopped early (use `for...of` with `break`, or `some`/`find`). Neither waits for `async` callbacks.
+</Info>
+
+<Info>
+**`debounce`: a HOF that takes and returns a function**
+
+```js
+function debounce(fn, delay = 300) {
+  let timer;                               // closure state
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+input.addEventListener('input', debounce(e => search(e.target.value), 250));
+```
+Used in [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete). `throttle` is the sibling: run at most once per interval.
+</Info>
 
 ## Callbacks
 
@@ -175,7 +185,7 @@ getUser(id, (err, user) => {
 });
 ```
 
-Fixes: named functions, then [[Promises, Async-Await & Cancellation|Promises and async/await]]:
+Fixes: named functions, then [Promises and async/await](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation):
 
 ```js
 const user = await getUser(id);
@@ -199,7 +209,7 @@ const addItem = (cart, item) => [...cart, item];          // pure (new array)
 const addItemBad = (cart, item) => { cart.push(item); return cart; }; // impure (mutates)
 ```
 
-Pure functions are easy to test, memoize and reason about; React components and reducers must be pure ([[State, Props & Data Flow]], [[Redux & Redux Toolkit]]).
+Pure functions are easy to test, memoize and reason about; React components and reducers must be pure ([State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow), [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit)).
 
 ## Currying
 
@@ -223,28 +233,34 @@ const multiplyArrow = a => b => c => a * b * c;
 multiplyArrow(2)(5)(10);       // 100
 ```
 
-> [!example] A generic `curry` helper (interview favourite)
-> ```js
-> function curry(fn) {
->   return function curried(...args) {
->     if (args.length >= fn.length) return fn.apply(this, args);
->     return (...next) => curried.apply(this, [...args, ...next]);
->   };
-> }
->
-> const sum3 = (a, b, c) => a + b + c;
-> const cSum = curry(sum3);
-> cSum(1)(2)(3);   // 6
-> cSum(1, 2)(3);   // 6
-> cSum(1)(2, 3);   // 6
-> ```
-> Relies on `fn.length`, so it doesn't work with default/rest parameters.
+<Info>
+**A generic `curry` helper (interview favourite)**
 
-> [!example] Infinite currying: `sum(1)(2)(3)()`
-> ```js
-> const sum = a => b => (b === undefined ? a : sum(a + b));
-> sum(1)(2)(3)(); // 6
-> ```
+```js
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) return fn.apply(this, args);
+    return (...next) => curried.apply(this, [...args, ...next]);
+  };
+}
+
+const sum3 = (a, b, c) => a + b + c;
+const cSum = curry(sum3);
+cSum(1)(2)(3);   // 6
+cSum(1, 2)(3);   // 6
+cSum(1)(2, 3);   // 6
+```
+Relies on `fn.length`, so it doesn't work with default/rest parameters.
+</Info>
+
+<Info>
+**Infinite currying: `sum(1)(2)(3)()`**
+
+```js
+const sum = a => b => (b === undefined ? a : sum(a + b));
+sum(1)(2)(3)(); // 6
+```
+</Info>
 
 ### Partial application vs currying
 
@@ -274,46 +290,57 @@ flowchart LR
   I["'  Hello World '"] --> T["trim"] --> L["toLowerCase"] --> R["replace spaces"] --> O["'hello-world'"]
 ```
 
-Other functional-programming ideas from the JS Concepts checklist ([[Frontend Roadmap & Checklist]]): first-class functions, pure functions, currying, composing, recursion, referential transparency (an expression can be replaced by its value). Functors/monads: `Array` (`map`) and `Promise` (`then`) behave much like them; that's enough for FE interviews.
+Other functional-programming ideas from the JS Concepts checklist ([Frontend Roadmap & Checklist](/Software%20Engineering/Frontend/Frontend%20Roadmap%20%26%20Checklist)): first-class functions, pure functions, currying, composing, recursion, referential transparency (an expression can be replaced by its value). Functors/monads: `Array` (`map`) and `Promise` (`then`) behave much like them; that's enough for FE interviews.
 
-> [!warning] Common pitfalls
-> - `['1', '2', '3'].map(parseInt)` → `[1, NaN, NaN]`: `map` passes `(value, index, array)` and `parseInt` takes `(string, radix)`. Use `.map(Number)` or `s => parseInt(s, 10)`.
-> - `forEach` with `async` callbacks doesn't wait; use `for...of` + `await` or `Promise.all(arr.map(...))`.
-> - Passing a method as a callback loses `this` ([[this, call, apply & bind]]).
-> - Creating new inline callbacks every render in React defeats `memo` (the React Compiler or `useCallback` helps; see [[React Performance]]).
+<Warning>
+**Common pitfalls**
+
+- `['1', '2', '3'].map(parseInt)` → `[1, NaN, NaN]`: `map` passes `(value, index, array)` and `parseInt` takes `(string, radix)`. Use `.map(Number)` or `s => parseInt(s, 10)`.
+- `forEach` with `async` callbacks doesn't wait; use `for...of` + `await` or `Promise.all(arr.map(...))`.
+- Passing a method as a callback loses `this` ([this, call, apply & bind](/Software%20Engineering/Frontend/01%20JavaScript/this%2C%20call%2C%20apply%20%26%20bind)).
+- Creating new inline callbacks every render in React defeats `memo` (the React Compiler or `useCallback` helps; see [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)).
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is a higher-order function?
-> A function that takes a function as an argument and/or returns a function. Examples: `map`, `filter`, `reduce`, `addEventListener`, `setTimeout`, `bind`, `debounce`, React HOCs.
+<Accordion title="What is a higher-order function?">
+A function that takes a function as an argument and/or returns a function. Examples: `map`, `filter`, `reduce`, `addEventListener`, `setTimeout`, `bind`, `debounce`, React HOCs.
+</Accordion>
 
-> [!question]- What does "functions are first-class citizens" mean?
-> Functions are values (objects): they can be assigned, stored, passed as arguments, returned, and given properties. That's what makes callbacks, HOFs and closures possible.
+<Accordion title="What does &quot;functions are first-class citizens&quot; mean?">
+Functions are values (objects): they can be assigned, stored, passed as arguments, returned, and given properties. That's what makes callbacks, HOFs and closures possible.
+</Accordion>
 
-> [!question]- What is currying? How is it different from partial application?
-> Currying turns `f(a, b, c)` into `f(a)(b)(c)`, one argument per call. Partial application fixes some arguments and returns a function for the rest (any number at once). Both use closures.
+<Accordion title="What is currying? How is it different from partial application?">
+Currying turns `f(a, b, c)` into `f(a)(b)(c)`, one argument per call. Partial application fixes some arguments and returns a function for the rest (any number at once). Both use closures.
+</Accordion>
 
-> [!question]- What is a pure function and why does it matter?
-> Same input → same output, no side effects. They're predictable, testable, cacheable (memoization) and safe for React rendering and reducers.
+<Accordion title="What is a pure function and why does it matter?">
+Same input → same output, no side effects. They're predictable, testable, cacheable (memoization) and safe for React rendering and reducers.
+</Accordion>
 
-> [!question]- What is callback hell and how do you avoid it?
-> Deeply nested async callbacks with repeated error handling. Avoid by naming/splitting functions, and by using Promises and async/await (which also fix inversion of control).
+<Accordion title="What is callback hell and how do you avoid it?">
+Deeply nested async callbacks with repeated error handling. Avoid by naming/splitting functions, and by using Promises and async/await (which also fix inversion of control).
+</Accordion>
 
-> [!question]- Arrow vs regular functions?
-> Arrows have lexical `this`, no `arguments`, no `prototype`, can't be used with `new`, and are always anonymous expressions (name inferred from the variable). Regular functions have dynamic `this` and their own `arguments`.
+<Accordion title="Arrow vs regular functions?">
+Arrows have lexical `this`, no `arguments`, no `prototype`, can't be used with `new`, and are always anonymous expressions (name inferred from the variable). Regular functions have dynamic `this` and their own `arguments`.
+</Accordion>
 
-> [!question]- `map` vs `forEach`?
-> `map` returns a new array of transformed values (use for transformations, chainable). `forEach` returns `undefined` and is for side effects. Neither can `break`, neither awaits async callbacks.
+<Accordion title="`map` vs `forEach`?">
+`map` returns a new array of transformed values (use for transformations, chainable). `forEach` returns `undefined` and is for side effects. Neither can `break`, neither awaits async callbacks.
+</Accordion>
 
-> [!question]- Implement `curry(fn)` / `compose` / `debounce`.
-> See the examples above: `curry` collects args until `args.length >= fn.length`; `compose` is `reduceRight` over functions; `debounce` clears and resets a timer held in a closure.
+<Accordion title="Implement `curry(fn)` / `compose` / `debounce`.">
+See the examples above: `curry` collects args until `args.length >= fn.length`; `compose` is `reduceRight` over functions; `debounce` clears and resets a timer held in a closure.
+</Accordion>
 
 ## Related
-- [[JavaScript Index]]
-- [[Closures & Memory Model]] · [[this, call, apply & bind]] · [[Execution Context & Call Stack]] · [[Promises, Async-Await & Cancellation]] · [[Objects, Arrays & Immutability]]
-- Patterns: [[Component Patterns]] (HOCs, render props) · [[Frontend Design Patterns]] · [[Design Patterns]]
-- Course notes: [[Functions & Callbacks]] · [[JavaScript the hard parts v2]] · [[JS the hard parts v3]]
-- [[JavaScript Interview Questions]]
+- [JavaScript Index](/Software%20Engineering/Frontend/01%20JavaScript/JavaScript%20Index)
+- [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) · [this, call, apply & bind](/Software%20Engineering/Frontend/01%20JavaScript/this%2C%20call%2C%20apply%20%26%20bind) · [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) · [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability)
+- Patterns: [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns) (HOCs, render props) · [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns)
+- Course notes: [Functions & Callbacks](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Functions%20%26%20Callbacks) · [JavaScript the hard parts v2](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/JavaScript%20the%20hard%20parts%20v2) · [JS the hard parts v3](/Software%20Engineering/Frontend/Courses%20%26%20Books/JS%20the%20hard%20parts%20v3)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions)
 
 ## Sources
 - [MDN: Functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions)

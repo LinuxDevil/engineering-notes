@@ -1,12 +1,16 @@
 ---
+title: "Case Study - News Feed"
 tags: [frontend, frontend/system-design, interview, case-study]
 aliases: [News Feed, Interview Social Media News Feed, Design a news feed]
 updated: 2026-09-27
 ---
 # Case Study - News Feed
 
-> [!tldr] TL;DR
-> Design a Facebook/Twitter-style feed: an infinitely scrolling list of posts with text and media, likes and comments, and new posts arriving in near real time. The interesting parts are **cursor pagination + infinite scroll**, **virtualization**, a **normalized store**, **optimistic likes**, **real-time "new posts" without jumping the scroll**, safe **rich text**, and **performance/a11y** for a very long list.
+<Note>
+**TL;DR**
+
+Design a Facebook/Twitter-style feed: an infinitely scrolling list of posts with text and media, likes and comments, and new posts arriving in near real time. The interesting parts are **cursor pagination + infinite scroll**, **virtualization**, a **normalized store**, **optimistic likes**, **real-time "new posts" without jumping the scroll**, safe **rich text**, and **performance/a11y** for a very long list.
+</Note>
 
 ## R: Requirements
 **Functional (agree on these)**
@@ -125,36 +129,39 @@ GET  /api/feed/stream  (SSE)  event: new-post  data: { "id": "p_999" }
 ### 1. Infinite scroll with IntersectionObserver
 Do not listen to `scroll` and compute positions (runs on the main thread constantly). Observe a sentinel near the bottom.
 
-> [!example] Infinite scroll hook
-> ```tsx
-> function useLoadMore(onLoadMore: () => void, enabled: boolean) {
->   const ref = useRef<HTMLDivElement>(null);
->   useEffect(() => {
->     if (!enabled || !ref.current) return;
->     const io = new IntersectionObserver(
->       ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
->       { rootMargin: '800px 0px' }        // start loading ~1 screen early
->     );
->     io.observe(ref.current);
->     return () => io.disconnect();
->   }, [onLoadMore, enabled]);
->   return ref;
-> }
->
-> // with TanStack Query
-> const q = useInfiniteQuery({
->   queryKey: ['feed'],
->   queryFn: ({ pageParam, signal }) => fetchFeed(pageParam, { signal }),
->   initialPageParam: null as string | null,
->   getNextPageParam: (last) => last.nextCursor,
-> });
-> const sentinel = useLoadMore(() => q.fetchNextPage(), q.hasNextPage && !q.isFetchingNextPage);
-> ```
+<Info>
+**Infinite scroll hook**
+
+```tsx
+function useLoadMore(onLoadMore: () => void, enabled: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!enabled || !ref.current) return;
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
+      { rootMargin: '800px 0px' }        // start loading ~1 screen early
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [onLoadMore, enabled]);
+  return ref;
+}
+
+// with TanStack Query
+const q = useInfiniteQuery({
+  queryKey: ['feed'],
+  queryFn: ({ pageParam, signal }) => fetchFeed(pageParam, { signal }),
+  initialPageParam: null as string | null,
+  getNextPageParam: (last) => last.nextCursor,
+});
+const sentinel = useLoadMore(() => q.fetchNextPage(), q.hasNextPage && !q.isFetchingNextPage);
+```
+</Info>
 
 Also: guard against double-fetch (`isFetchingNextPage`), show a skeleton row while loading, show an inline "Couldn't load more, Retry" on error, and a clear end-of-feed message.
 
 ### 2. Virtualization
-After a few hundred posts the DOM has thousands of nodes: memory grows and scrolling/INP degrade. Render only visible posts plus an overscan. See [[Virtualization & Large Lists]].
+After a few hundred posts the DOM has thousands of nodes: memory grows and scrolling/INP degrade. Render only visible posts plus an overscan. See [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists).
 - Posts have **variable heights** → use a virtualizer that measures rows (`@tanstack/react-virtual` with `measureElement`) and estimate heights from text length + media aspect ratios.
 - Keep keyboard/screen reader usability: `role="feed"` with `aria-setsize`/`aria-posinset` on each `article`, and keep the focused item mounted.
 - Cheaper alternative for moderate lists: `content-visibility: auto; contain-intrinsic-size: auto 500px;` on each post lets the browser skip rendering off-screen posts without JS virtualization.
@@ -179,30 +186,33 @@ sequenceDiagram
   end
 ```
 
-> [!example] React 19 `useOptimistic`
-> ```tsx
-> function LikeButton({ post }: { post: Post }) {
->   const [optimistic, setOptimistic] = useOptimistic(
->     { liked: post.viewerHasLiked, count: post.likeCount },
->     (state, liked: boolean) => ({ liked, count: state.count + (liked ? 1 : -1) })
->   );
->   const [, startTransition] = useTransition();
->   const toggle = () => startTransition(async () => {
->     const next = !optimistic.liked;
->     setOptimistic(next);
->     await (next ? likePost(post.id) : unlikePost(post.id));
->     // When the transition ends, the optimistic value is dropped and `post` props win again.
->     // So on success likePost must also update the store/query cache; on failure nothing
->     // is updated and the UI naturally falls back to the old values (show a toast).
->   });
->   return (
->     <button aria-pressed={optimistic.liked} onClick={toggle}>
->       {optimistic.liked ? 'Unlike' : 'Like'} · {optimistic.count}
->     </button>
->   );
-> }
-> ```
-> With TanStack Query the same idea uses `onMutate` (snapshot + update cache), `onError` (rollback), `onSettled` (invalidate).
+<Info>
+**React 19 `useOptimistic`**
+
+```tsx
+function LikeButton({ post }: { post: Post }) {
+  const [optimistic, setOptimistic] = useOptimistic(
+    { liked: post.viewerHasLiked, count: post.likeCount },
+    (state, liked: boolean) => ({ liked, count: state.count + (liked ? 1 : -1) })
+  );
+  const [, startTransition] = useTransition();
+  const toggle = () => startTransition(async () => {
+    const next = !optimistic.liked;
+    setOptimistic(next);
+    await (next ? likePost(post.id) : unlikePost(post.id));
+    // When the transition ends, the optimistic value is dropped and `post` props win again.
+    // So on success likePost must also update the store/query cache; on failure nothing
+    // is updated and the UI naturally falls back to the old values (show a toast).
+  });
+  return (
+    <button aria-pressed={optimistic.liked} onClick={toggle}>
+      {optimistic.liked ? 'Unlike' : 'Like'} · {optimistic.count}
+    </button>
+  );
+}
+```
+With TanStack Query the same idea uses `onMutate` (snapshot + update cache), `onError` (rollback), `onSettled` (invalidate).
+</Info>
 
 Rapid double clicks: debounce the network call or send the final state only (`PUT /like {liked: true}` is idempotent and safer than toggle).
 
@@ -213,7 +223,7 @@ Rapid double clicks: debounce the network call or send the final state only (`PU
 - Pause/close the SSE connection when the tab is hidden (`visibilitychange`) and catch up on return.
 
 ### 5. Rich text and media
-- Render text by splitting on entity ranges into `<a>` / `<Link>` elements. Never inject server HTML. If HTML is unavoidable, sanitize (DOMPurify / Sanitizer API) and enforce Trusted Types. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
+- Render text by splitting on entity ranges into `<a>` / `<Link>` elements. Never inject server HTML. If HTML is unavoidable, sanitize (DOMPurify / Sanitizer API) and enforce Trusted Types. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
 - Links: `rel="noopener noreferrer"` for external ones; show link previews from server-side unfurling (never fetch arbitrary URLs from the client).
 - Images: `loading="lazy"` below the fold, `fetchpriority="high"` for the first post's image, `srcset`/`sizes` with AVIF/WebP from an image CDN, explicit `width`/`height`, a blurhash/LQIP placeholder.
 - Video: `preload="none"` + poster; autoplay muted only when ≥50% visible (IntersectionObserver), pause when out of view.
@@ -250,36 +260,45 @@ Rapid double clicks: debounce the network call or send the final state only (`PU
 ### 10. Observability
 Track LCP/INP/CLS with `web-vitals`, feed load errors, time-to-first-post, scroll depth, like success rate. Roll out changes (e.g., new ranking UI) behind feature flags with A/B experiments.
 
-> [!warning] Common pitfalls
-> - Offset pagination on a live feed (duplicates/missing posts).
-> - Using the array index as `key` when prepending new posts (React reuses the wrong DOM and state).
-> - Inserting new posts above the reader.
-> - Rendering server HTML without sanitizing.
-> - Forgetting image dimensions (CLS) and forgetting the error state for "load more".
+<Warning>
+**Common pitfalls**
+
+- Offset pagination on a live feed (duplicates/missing posts).
+- Using the array index as `key` when prepending new posts (React reuses the wrong DOM and state).
+- Inserting new posts above the reader.
+- Rendering server HTML without sanitizing.
+- Forgetting image dimensions (CLS) and forgetting the error state for "load more".
+</Warning>
 
 ## Interview questions
-> [!question]- Why cursor-based pagination for a feed?
-> Items are inserted at the head constantly. Offset pagination shifts results, causing duplicates or skipped posts, and deep offsets are slow on the database. A cursor encodes "after this item", so each page is stable and cheap.
+<Accordion title="Why cursor-based pagination for a feed?">
+Items are inserted at the head constantly. Offset pagination shifts results, causing duplicates or skipped posts, and deep offsets are slow on the database. A cursor encodes "after this item", so each page is stable and cheap.
+</Accordion>
 
-> [!question]- How do you keep a 5,000-post feed smooth?
-> Virtualize (render only visible rows + overscan, measure variable heights), or at least use `content-visibility: auto`. Memoize post rows, avoid layout thrash, lazy-load media, and evict far-off pages from memory.
+<Accordion title="How do you keep a 5,000-post feed smooth?">
+Virtualize (render only visible rows + overscan, measure variable heights), or at least use `content-visibility: auto`. Memoize post rows, avoid layout thrash, lazy-load media, and evict far-off pages from memory.
+</Accordion>
 
-> [!question]- How do you handle a like that fails?
-> Optimistic update first, then call the API; on failure roll back to the snapshot and show a non-blocking error. Make the endpoint idempotent (set-state rather than toggle) so retries are safe.
+<Accordion title="How do you handle a like that fails?">
+Optimistic update first, then call the API; on failure roll back to the snapshot and show a non-blocking error. Make the endpoint idempotent (set-state rather than toggle) so retries are safe.
+</Accordion>
 
-> [!question]- Polling, SSE or WebSocket for new posts?
-> SSE: one-way server → client, plain HTTP, automatic reconnect. Polling is a simpler fallback; WebSocket is justified if the same page needs bidirectional features like chat or typing indicators.
+<Accordion title="Polling, SSE or WebSocket for new posts?">
+SSE: one-way server → client, plain HTTP, automatic reconnect. Polling is a simpler fallback; WebSocket is justified if the same page needs bidirectional features like chat or typing indicators.
+</Accordion>
 
-> [!question]- How do you render user-generated rich text safely?
-> Store plain text plus entity ranges and render them as elements. If you must accept HTML, sanitize with an allowlist (DOMPurify or `setHTML`), enforce CSP and Trusted Types, and never trust client-side sanitizing alone.
+<Accordion title="How do you render user-generated rich text safely?">
+Store plain text plus entity ranges and render them as elements. If you must accept HTML, sanitize with an allowlist (DOMPurify or `setHTML`), enforce CSP and Trusted Types, and never trust client-side sanitizing alone.
+</Accordion>
 
-> [!question]- What makes the feed accessible?
-> `role="feed"` with `article` items, `aria-busy` while loading, real buttons with `aria-pressed`, alt text on media, focus management when new posts load, keyboard navigation, and reduced-motion support.
+<Accordion title="What makes the feed accessible?">
+`role="feed"` with `article` items, `aria-busy` while loading, real buttons with `aria-pressed`, alt text on media, focus management when new posts load, keyboard navigation, and reduced-motion support.
+</Accordion>
 
 ## Related
-- [[RADIO Framework]] · [[Frontend System Design Index]]
-- [[Virtualization & Large Lists]] · [[Observer APIs]] · [[Server State - TanStack Query & RTK Query]]
-- [[Networking - HTTP, Caching & Real-time]] · [[Forms & Actions in React]] · [[Accessibility Essentials]]
+- [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework) · [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index)
+- [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists) · [Observer APIs](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Observer%20APIs) · [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
 
 ## Sources
 - WAI-ARIA feed pattern: https://www.w3.org/WAI/ARIA/apg/patterns/feed/

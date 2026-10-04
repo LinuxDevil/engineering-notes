@@ -1,3 +1,6 @@
+---
+title: "ACID Overview (original)"
+---
 "Database System Concepts" by Silberschatz, Korth, and Sudarshan is a comprehensive book and a recognized textbook for understanding database systems. Below is a high-level overview of Chapter 15, which focuses on Transactions.
 
 **Transactions**

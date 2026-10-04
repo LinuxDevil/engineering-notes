@@ -1,12 +1,16 @@
 ---
+title: "Other Frameworks - Vue, Svelte, Solid, Astro"
 tags: [frontend, frontend/architecture, frontend/frameworks]
 aliases: [Vue, Svelte, Solid, Astro, Framework comparison, Reactivity models]
 updated: 2026-09-27
 ---
 # Other Frameworks - Vue, Svelte, Solid, Astro
 
-> [!tldr] TL;DR
-> Frameworks differ mostly in their **reactivity model**: React re-runs components and diffs a virtual DOM; Vue tracks dependencies with proxies (and is adding a no-VDOM "Vapor" mode); Svelte compiles components and uses signal-based **runes**; Solid uses fine-grained **signals** where components run once; Angular has moved to signals too. **Astro** is a content-first meta-framework built on **islands**. As of Sept 2026 several big releases are at release-candidate stage: Vue 3.6, SvelteKit 3, Solid 2.0 and Remix 3.
+<Note>
+**TL;DR**
+
+Frameworks differ mostly in their **reactivity model**: React re-runs components and diffs a virtual DOM; Vue tracks dependencies with proxies (and is adding a no-VDOM "Vapor" mode); Svelte compiles components and uses signal-based **runes**; Solid uses fine-grained **signals** where components run once; Angular has moved to signals too. **Astro** is a content-first meta-framework built on **islands**. As of Sept 2026 several big releases are at release-candidate stage: Vue 3.6, SvelteKit 3, Solid 2.0 and Remix 3.
+</Note>
 
 ## 1. Reactivity models
 
@@ -76,8 +80,11 @@ function Counter() {
 }
 ```
 
-> [!warning] Solid gotcha for React developers
-> Because Solid components run once, destructuring props (`function C({ name })`) or reading a signal outside JSX/effects **loses reactivity**. Read `props.name` and call signals inside the tracked scope.
+<Warning>
+**Solid gotcha for React developers**
+
+Because Solid components run once, destructuring props (`function C({ name })`) or reading a signal outside JSX/effects **loses reactivity**. Read `props.name` and call signals inside the tracked scope.
+</Warning>
 
 ## 2. Framework notes
 
@@ -97,7 +104,7 @@ function Counter() {
 - **SolidStart** is the meta-framework.
 
 ### Astro
-- Content-first: pages render to static HTML by default with **zero JS**, and you opt into interactivity per component with `client:*` directives (**islands**). See [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]].
+- Content-first: pages render to static HTML by default with **zero JS**, and you opt into interactivity per component with `client:*` directives (**islands**). See [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands).
 - UI-framework agnostic: islands can be React, Vue, Svelte, Solid, Preact.
 - Content collections (typed Markdown/MDX), SSR with adapters, server islands.
 - Best for docs, blogs, marketing and e-commerce content pages; less suited to app-like dashboards.
@@ -107,20 +114,23 @@ function Counter() {
 - **TanStack Start**: full-stack React framework on TanStack Router (type-safe routing, server functions).
 - **React Router** (the Remix successor for React) and **Remix 3** (now a separate, non-React framework).
 - **Preact**: 3 kB React-compatible alternative with signals.
-- **Lit**: Web Components library. See [[Web Components & Shadow DOM]].
+- **Lit**: Web Components library. See [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM).
 
 ## 3. Status, 2025–2026
 
-> [!info]+ 🆕 2025–2026
-> - **Vue:** latest stable is **3.5.x**. **3.6 is still a release candidate** (rc.1 on 2026-07-18, rc.9 on 2026-09-18) bringing **Vapor Mode** (no VDOM, opt-in per component) and the **alien-signals** reactivity rewrite. No 3.6 stable yet.
-> - **Svelte:** Svelte 5 with runes stable since Oct 2024 (now 5.57). **SvelteKit 3 RC** on 2026-08-13: requires Vite 8, moves config into `vite.config.ts`, replaces `$lib` with `#lib`. Remote functions and async Svelte are still experimental.
-> - **Solid:** 1.9 stable. **Solid 2.0 RC** from 2026-08-12, with first-class async and a rebuilt reactive core.
-> - **Astro 6** (2026-03-10): dev server on Vite's Environment API, Fonts API, live content collections, stable CSP, Node 22+.
-> - **Astro 7** (2026-06-22): Rust `.astro` compiler, Vite 8, `src/fetch.ts`, stable route caching, `astro dev --background`.
-> - **TanStack Start:** v1 RC announced 2025-09-23, now at `1.168.x` (the exact "1.0 stable" date is unverified). TanStack.com stopped using RSC on 2026-07-24.
-> - **React Router v8** (2026-06-17): ESM-only; requires React 19.2.7+, Node 22.22+ and Vite 7+; middleware and the Vite Environment API are defaults; `react-router-dom` removed; RSC still unstable; yearly majors from now on.
-> - **Remix 3:** a separate **non-React** full-stack framework. RC on 2026-08-31, GA planned for 2026-10-02.
-> - **Angular:** signals everywhere, zoneless default (v21), OnPush default (v22). See [[Modern Angular v17 to v22]].
+<Info>
+**🆕 2025–2026**
+
+- **Vue:** latest stable is **3.5.x**. **3.6 is still a release candidate** (rc.1 on 2026-07-18, rc.9 on 2026-09-18) bringing **Vapor Mode** (no VDOM, opt-in per component) and the **alien-signals** reactivity rewrite. No 3.6 stable yet.
+- **Svelte:** Svelte 5 with runes stable since Oct 2024 (now 5.57). **SvelteKit 3 RC** on 2026-08-13: requires Vite 8, moves config into `vite.config.ts`, replaces `$lib` with `#lib`. Remote functions and async Svelte are still experimental.
+- **Solid:** 1.9 stable. **Solid 2.0 RC** from 2026-08-12, with first-class async and a rebuilt reactive core.
+- **Astro 6** (2026-03-10): dev server on Vite's Environment API, Fonts API, live content collections, stable CSP, Node 22+.
+- **Astro 7** (2026-06-22): Rust `.astro` compiler, Vite 8, `src/fetch.ts`, stable route caching, `astro dev --background`.
+- **TanStack Start:** v1 RC announced 2025-09-23, now at `1.168.x` (the exact "1.0 stable" date is unverified). TanStack.com stopped using RSC on 2026-07-24.
+- **React Router v8** (2026-06-17): ESM-only; requires React 19.2.7+, Node 22.22+ and Vite 7+; middleware and the Vite Environment API are defaults; `react-router-dom` removed; RSC still unstable; yearly majors from now on.
+- **Remix 3:** a separate **non-React** full-stack framework. RC on 2026-08-31, GA planned for 2026-10-02.
+- **Angular:** signals everywhere, zoneless default (v21), OnPush default (v22). See [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22).
+</Info>
 
 ## 4. How to choose
 
@@ -138,28 +148,33 @@ Team skills, ecosystem (component libraries, auth, i18n), hiring and long-term m
 
 ## Interview questions
 
-> [!question]- How does React's rendering model differ from fine-grained reactivity (Solid, Svelte 5, Angular signals)?
-> React re-runs component functions on state change and diffs a virtual DOM, so you memoize to limit work (or use React Compiler). Fine-grained systems track which DOM nodes/effects read which signals and update only those; components run once (Solid) or templates are compiled to targeted updates (Svelte).
+<Accordion title="How does React's rendering model differ from fine-grained reactivity (Solid, Svelte 5, Angular signals)?">
+React re-runs component functions on state change and diffs a virtual DOM, so you memoize to limit work (or use React Compiler). Fine-grained systems track which DOM nodes/effects read which signals and update only those; components run once (Solid) or templates are compiled to targeted updates (Svelte).
+</Accordion>
 
-> [!question]- What is Vue's Vapor Mode?
-> A compilation mode that turns Vue templates into direct DOM operations without a virtual DOM, opt-in per component, arriving with Vue 3.6 (still a release candidate as of Sept 2026).
+<Accordion title="What is Vue's Vapor Mode?">
+A compilation mode that turns Vue templates into direct DOM operations without a virtual DOM, opt-in per component, arriving with Vue 3.6 (still a release candidate as of Sept 2026).
+</Accordion>
 
-> [!question]- What are Svelte 5 runes?
-> Explicit reactive primitives (`$state`, `$derived`, `$effect`, `$props`) implemented with signals, replacing Svelte 4's implicit `let`/`$:` reactivity and working outside components too.
+<Accordion title="What are Svelte 5 runes?">
+Explicit reactive primitives (`$state`, `$derived`, `$effect`, `$props`) implemented with signals, replacing Svelte 4's implicit `let`/`$:` reactivity and working outside components too.
+</Accordion>
 
-> [!question]- Why would you choose Astro over Next.js?
-> For content-first sites where most of the page is static: Astro ships zero JS by default and hydrates only islands, and can mix UI frameworks. Next.js suits app-like, highly interactive, React-only products with RSC and dynamic data.
+<Accordion title="Why would you choose Astro over Next.js?">
+For content-first sites where most of the page is static: Astro ships zero JS by default and hydrates only islands, and can mix UI frameworks. Next.js suits app-like, highly interactive, React-only products with RSC and dynamic data.
+</Accordion>
 
-> [!question]- What's the difference between signals in Angular and in Solid?
-> Same idea (tracked reads, notified writes, computed values). Solid binds signals directly to DOM nodes and components run once; Angular uses signals to mark component views for refresh within its change detection system, so the granularity is the view rather than the individual node.
+<Accordion title="What's the difference between signals in Angular and in Solid?">
+Same idea (tracked reads, notified writes, computed values). Solid binds signals directly to DOM nodes and components run once; Angular uses signals to mark component views for refresh within its change detection system, so the granularity is the view rather than the individual node.
+</Accordion>
 
 ## Related
-- [[How React Renders - Reconciliation & Fiber]]
-- [[Angular Change Detection, Zones & Signals]]
-- [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[React Router]]
-- [[What's New in Frontend 2025-2026]]
-- [[Web Components & Shadow DOM]]
+- [How React Renders - Reconciliation & Fiber](/Software%20Engineering/Frontend/05%20React/How%20React%20Renders%20-%20Reconciliation%20%26%20Fiber)
+- [Angular Change Detection, Zones & Signals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Change%20Detection%2C%20Zones%20%26%20Signals)
+- [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [React Router](/Software%20Engineering/Frontend/05%20React/React%20Router)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
+- [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM)
 
 ## Sources
 - https://vuejs.org/guide/extras/reactivity-in-depth.html

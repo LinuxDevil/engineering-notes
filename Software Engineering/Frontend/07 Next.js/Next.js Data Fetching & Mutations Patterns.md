@@ -1,14 +1,18 @@
 ---
+title: "Next.js Data Fetching & Mutations Patterns"
 tags: [frontend, frontend/nextjs, frontend/data-fetching]
 aliases: [Next.js Data Fetching, Next.js Mutations, Server Actions patterns, useActionState, useOptimistic, Next.js waterfalls, Next.js CRUD]
 updated: 2026-09-27
 ---
 # Next.js Data Fetching & Mutations Patterns
 
-> [!tldr] TL;DR
-> **Read** in Server Components: call `fetch` or your DAL directly, start independent requests together (`Promise.all` or `preload()`), dedupe per request with `React.cache` (automatic for `fetch`), and stream slow parts with `<Suspense>`. **Write** with Server Actions: validate with zod, authorize inside the action, return expected errors as values for `useActionState`, show instant feedback with `useOptimistic`, and refresh with `updateTag` (read-your-writes), `revalidateTag(tag, profile)` (background), `revalidatePath`, or `refresh()`. Server Actions are **public POST endpoints**: auth in every action; closed-over variables are encrypted but not secret-proof. Use TanStack Query on the client only for client-driven data (infinite scroll, polling, live filters).
+<Note>
+**TL;DR**
 
-This note goes deeper than the basics in [[Next.js App Router Fundamentals]]. Caching semantics (`'use cache'`, `cacheLife`, the old four-layer model) live in [[Next.js Rendering & Caching]].
+**Read** in Server Components: call `fetch` or your DAL directly, start independent requests together (`Promise.all` or `preload()`), dedupe per request with `React.cache` (automatic for `fetch`), and stream slow parts with `<Suspense>`. **Write** with Server Actions: validate with zod, authorize inside the action, return expected errors as values for `useActionState`, show instant feedback with `useOptimistic`, and refresh with `updateTag` (read-your-writes), `revalidateTag(tag, profile)` (background), `revalidatePath`, or `refresh()`. Server Actions are **public POST endpoints**: auth in every action; closed-over variables are encrypted but not secret-proof. Use TanStack Query on the client only for client-driven data (infinite scroll, polling, live filters).
+</Note>
+
+This note goes deeper than the basics in [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals). Caching semantics (`'use cache'`, `cacheLife`, the old four-layer model) live in [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 
 ## 1. Reading data in Server Components
 
@@ -27,7 +31,7 @@ export default async function ProjectsPage() {
 Facts to remember (Next 16):
 - `fetch` is **not cached by default** (since 15). Uncached data blocks rendering unless it is inside `<Suspense>`. With `cacheComponents: true`, uncached data outside Suspense is a build/dev error.
 - Identical `fetch` calls in one render are **memoized** (same URL + options). Non-fetch functions need `React.cache` for the same effect.
-- `React.cache` is **per request**. It never shares results between users or requests. Cross-request caching is `'use cache'` ([[Next.js Rendering & Caching]]).
+- `React.cache` is **per request**. It never shares results between users or requests. Cross-request caching is `'use cache'` ([Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching)).
 
 ### Sequential vs parallel (waterfalls)
 
@@ -152,7 +156,7 @@ How it behaves in Next 16:
 
 ### Validation with zod, expected errors as return values
 
-The official pattern: **expected** errors (validation, "name taken", upstream 4xx) are **returned**, not thrown, and rendered via `useActionState`. **Unexpected** errors are thrown and hit the nearest `error.tsx` ([[Next.js Error Handling, Loading & Not-Found]]).
+The official pattern: **expected** errors (validation, "name taken", upstream 4xx) are **returned**, not thrown, and rendered via `useActionState`. **Unexpected** errors are thrown and hit the nearest `error.tsx` ([Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found)).
 
 ```ts
 // features/projects/schema.ts  (shared by client and server)
@@ -259,8 +263,11 @@ Order matters: revalidate **before** `redirect`. None of the revalidation functi
 
 ## 3. Server Actions are public HTTP endpoints
 
-> [!danger] Treat every exported action like `POST /api/whatever`
-> Anyone who can reach your site can call any action that's reachable from a client bundle, with any arguments, bypassing your UI. A page-level auth check does **not** protect the actions rendered on that page. Proxy (middleware) matchers can silently skip actions if the route moves.
+<Warning>
+**Treat every exported action like `POST /api/whatever`**
+
+Anyone who can reach your site can call any action that's reachable from a client bundle, with any arguments, bypassing your UI. A page-level auth check does **not** protect the actions rendered on that page. Proxy (middleware) matchers can silently skip actions if the route moves.
+</Warning>
 
 What Next does for you:
 - **Encrypted, non-deterministic action IDs**, regenerated between builds (cached at most 14 days).
@@ -291,7 +298,7 @@ export default async function Page() {
 
 Multi-instance or self-hosted deployments must share the key: set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (base64, 16/24/32 bytes, e.g. `openssl rand -base64 32`) on all instances. A client on an old build calling a rotated action ID gets "Failed to find Server Action"; handle it as a retry/refresh path.
 
-Also stay patched: the Dec 2025 RSC deserialization RCE (CVE-2025-55182) was reachable through Server Function payloads ([[Next.js 15 to 16.3]]).
+Also stay patched: the Dec 2025 RSC deserialization RCE (CVE-2025-55182) was reachable through Server Function payloads ([Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)).
 
 ## 4. Client-side fetching (TanStack Query) where it fits
 
@@ -357,7 +364,7 @@ export function InfiniteTasks({ firstPage }: { firstPage: Page }) {
 }
 ```
 
-Alternatives: prefetch on the server with a `QueryClient`, `dehydrate()` it and wrap the client tree in `<HydrationBoundary>`; or plain URL-driven pagination with `searchParams` and `<Link>` (no client library at all, works without JS; see [[URL as State]]). After a Server Action mutates tasks, call `queryClient.invalidateQueries({ queryKey: ['tasks'] })` on the client in addition to `updateTag` on the server, because the two caches are independent. Long lists: [[Virtualization & Large Lists]]. Library comparison: [[Server State - TanStack Query & RTK Query]].
+Alternatives: prefetch on the server with a `QueryClient`, `dehydrate()` it and wrap the client tree in `<HydrationBoundary>`; or plain URL-driven pagination with `searchParams` and `<Link>` (no client library at all, works without JS; see [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State)). After a Server Action mutates tasks, call `queryClient.invalidateQueries({ queryKey: ['tasks'] })` on the client in addition to `updateTag` on the server, because the two caches are independent. Long lists: [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists). Library comparison: [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query).
 
 ### Pagination choices
 
@@ -369,7 +376,7 @@ Alternatives: prefetch on the server with a `QueryClient`, `dehydrate()` it and 
 
 ## 5. Full worked CRUD example: Tasks
 
-Stack: Next 16 with `cacheComponents: true`, zod 4, a Prisma-style `db`, the session helpers from [[Next.js Authentication & Authorization]].
+Stack: Next 16 with `cacheComponents: true`, zod 4, a Prisma-style `db`, the session helpers from [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization).
 
 ```mermaid
 sequenceDiagram
@@ -613,70 +620,84 @@ What this example demonstrates: DAL owns authz and tenant scoping; actions valid
 
 ## Common pitfalls
 
-> [!warning] Pitfalls
-> - `await` chains creating waterfalls; not starting independent requests together.
-> - `React.cache` defined inside a component (new cache each render) instead of at module scope.
-> - Assuming `React.cache` caches across requests (it doesn't) or that `'use cache'` is per user (it isn't unless user identity is in the arguments).
-> - Authorizing only on the page, not inside the action.
-> - Trusting hidden inputs or `.bind()` arguments (e.g. `ownerId`) from the client.
-> - Throwing for validation errors (lands in `error.tsx`, loses form state) instead of returning them.
-> - `redirect()` inside `try` (it throws `NEXT_REDIRECT`, your `catch` swallows it). Call it after the `try/catch`.
-> - Revalidating after `redirect()` (never runs).
-> - Using Server Actions to fetch data for infinite scroll.
-> - Returning full DB rows from actions.
-> - Forgetting `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` with multiple instances (random decryption failures).
+<Warning>
+**Pitfalls**
+
+- `await` chains creating waterfalls; not starting independent requests together.
+- `React.cache` defined inside a component (new cache each render) instead of at module scope.
+- Assuming `React.cache` caches across requests (it doesn't) or that `'use cache'` is per user (it isn't unless user identity is in the arguments).
+- Authorizing only on the page, not inside the action.
+- Trusting hidden inputs or `.bind()` arguments (e.g. `ownerId`) from the client.
+- Throwing for validation errors (lands in `error.tsx`, loses form state) instead of returning them.
+- `redirect()` inside `try` (it throws `NEXT_REDIRECT`, your `catch` swallows it). Call it after the `try/catch`.
+- Revalidating after `redirect()` (never runs).
+- Using Server Actions to fetch data for infinite scroll.
+- Returning full DB rows from actions.
+- Forgetting `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` with multiple instances (random decryption failures).
+</Warning>
 
 ## Senior perspective
 
 - **Design data dependencies, not components.** Sketch which data each route needs, which is per-user, which is shareable and how fresh it must be. That decides cache keys/tags, Suspense boundaries and whether something belongs in the static shell.
 - **Tag taxonomy.** Tags like `tasks:{orgId}` and `task:{id}` scale; ad-hoc strings don't. Centralize tag builders next to the DAL so writers and readers agree.
-- **Idempotency and double submit.** Actions can be retried (network, impatient users). For payments or "run now" style operations, accept an idempotency key and dedupe on the server ([[API Versioning, Idempotency & Backward Compatibility]]).
+- **Idempotency and double submit.** Actions can be retried (network, impatient users). For payments or "run now" style operations, accept an idempotency key and dedupe on the server ([API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)).
 - **Version skew.** Rolling deploys mean clients from build N call actions on build N+1. Keep the encryption key stable, keep actions backward compatible for a release, and show a "reload" path on "Failed to find Server Action".
 - **Observability.** Actions show up in `onRequestError` with `routeType: 'action'`. Log validation failure rates; spikes often mean a client/server schema mismatch after a deploy.
 - **Security review of actions** is the same as an API review: authn, authz per resource, input validation, rate limits, response shaping, audit logging for sensitive operations.
 - In review ask: "Is this read on the critical path or can it stream?", "What's the cache key and who invalidates it?", "What happens if this action runs twice?", "Can a user call this with someone else's ID?"
 
-> [!info]+ 🆕 2025–2026
-> - **15.0 (Oct 2024)**: `fetch` and GET Route Handlers uncached by default; more secure, non-deterministic action IDs with dead-code elimination.
-> - **16.0 (Oct 21, 2025)**: `updateTag()` (Server Actions, read-your-writes) and `refresh()` added; `revalidateTag(tag, profile)` requires a `cacheLife` profile; Cache Components make caching opt-in with `'use cache'`.
-> - **Dec 3, 2025**: critical RSC/Server Function deserialization RCE (CVE-2025-55182); follow-up DoS and source exposure fixes Dec 11, 2025. Patch React/Next.
-> - **16.x docs (2026)**: official guidance that Server Actions are dispatched sequentially per client and should not be used for data fetching; single-roundtrip action + re-render model; `'use cache: private'` for preloading per-request data under Cache Components.
-> - **React 19.2+**: `useActionState`, `useOptimistic`, `use()` are the standard building blocks ([[React 19 to 19.3 & React Compiler]]).
-> - **Zod 4** (2025) is the current major: `z.email()`, `z.uuid()`, `z.flattenError()`.
+<Info>
+**🆕 2025–2026**
+
+- **15.0 (Oct 2024)**: `fetch` and GET Route Handlers uncached by default; more secure, non-deterministic action IDs with dead-code elimination.
+- **16.0 (Oct 21, 2025)**: `updateTag()` (Server Actions, read-your-writes) and `refresh()` added; `revalidateTag(tag, profile)` requires a `cacheLife` profile; Cache Components make caching opt-in with `'use cache'`.
+- **Dec 3, 2025**: critical RSC/Server Function deserialization RCE (CVE-2025-55182); follow-up DoS and source exposure fixes Dec 11, 2025. Patch React/Next.
+- **16.x docs (2026)**: official guidance that Server Actions are dispatched sequentially per client and should not be used for data fetching; single-roundtrip action + re-render model; `'use cache: private'` for preloading per-request data under Cache Components.
+- **React 19.2+**: `useActionState`, `useOptimistic`, `use()` are the standard building blocks ([React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler)).
+- **Zod 4** (2025) is the current major: `z.email()`, `z.uuid()`, `z.flattenError()`.
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you avoid data-fetching waterfalls in Server Components?
-> Start independent requests before awaiting (`Promise.all`/`allSettled`), use the `preload()` pattern when a blocking check comes first, rely on parallel rendering of layouts/pages, and wrap genuinely dependent requests in `<Suspense>` so they stream instead of blocking the page.
+<Accordion title="How do you avoid data-fetching waterfalls in Server Components?">
+Start independent requests before awaiting (`Promise.all`/`allSettled`), use the `preload()` pattern when a blocking check comes first, rely on parallel rendering of layouts/pages, and wrap genuinely dependent requests in `<Suspense>` so they stream instead of blocking the page.
+</Accordion>
 
-> [!question]- What's the difference between `React.cache`, `fetch` memoization and `'use cache'`?
-> `fetch` memoization and `React.cache` both dedupe calls within a single request/render (per request, no sharing between users). `'use cache'` (Cache Components) stores results across requests with a key derived from the arguments, with lifetimes (`cacheLife`) and tags (`cacheTag`) for invalidation.
+<Accordion title="What's the difference between `React.cache`, `fetch` memoization and `'use cache'`?">
+`fetch` memoization and `React.cache` both dedupe calls within a single request/render (per request, no sharing between users). `'use cache'` (Cache Components) stores results across requests with a key derived from the arguments, with lifetimes (`cacheLife`) and tags (`cacheTag`) for invalidation.
+</Accordion>
 
-> [!question]- Why are Server Actions a security concern and how do you secure them?
-> Each reachable action is a public POST endpoint callable with arbitrary arguments, independent of the UI or page-level checks. Secure them like APIs: authenticate and authorize (per resource, to avoid IDOR) inside every action, validate input with a schema, shape return values, rate-limit, and keep Next/React patched. Next adds encrypted action IDs, dead-code elimination, an Origin/Host CSRF check and closure encryption, but those aren't authorization.
+<Accordion title="Why are Server Actions a security concern and how do you secure them?">
+Each reachable action is a public POST endpoint callable with arbitrary arguments, independent of the UI or page-level checks. Secure them like APIs: authenticate and authorize (per resource, to avoid IDOR) inside every action, validate input with a schema, shape return values, rate-limit, and keep Next/React patched. Next adds encrypted action IDs, dead-code elimination, an Origin/Host CSRF check and closure encryption, but those aren't authorization.
+</Accordion>
 
-> [!question]- What is closure encryption in Server Actions?
-> Variables captured by an inline `'use server'` function are sent to the client and back when the action is invoked. Next encrypts them with a per-build key so they're not readable or tamperable. For multiple instances you set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. It's defense in depth; don't put secrets in closures and still re-check authorization.
+<Accordion title="What is closure encryption in Server Actions?">
+Variables captured by an inline `'use server'` function are sent to the client and back when the action is invoked. Next encrypts them with a per-build key so they're not readable or tamperable. For multiple instances you set `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. It's defense in depth; don't put secrets in closures and still re-check authorization.
+</Accordion>
 
-> [!question]- `updateTag` vs `revalidateTag` vs `refresh`?
-> `updateTag` (actions only) expires a tag immediately and the action's response includes fresh UI: read-your-own-writes. `revalidateTag(tag, profile)` marks it stale for background refresh (stale-while-revalidate), no immediate re-render; good for webhooks. `refresh()` (actions only) re-renders the current route with fresh uncached data without invalidating cache entries.
+<Accordion title="`updateTag` vs `revalidateTag` vs `refresh`?">
+`updateTag` (actions only) expires a tag immediately and the action's response includes fresh UI: read-your-own-writes. `revalidateTag(tag, profile)` marks it stale for background refresh (stale-while-revalidate), no immediate re-render; good for webhooks. `refresh()` (actions only) re-renders the current route with fresh uncached data without invalidating cache entries.
+</Accordion>
 
-> [!question]- How should expected errors from a form submission be handled?
-> Return them as values from the action (field errors, message) and render them with `useActionState`; don't throw. Throwing is for unexpected failures, which go to the nearest error boundary.
+<Accordion title="How should expected errors from a form submission be handled?">
+Return them as values from the action (field errors, message) and render them with `useActionState`; don't throw. Throwing is for unexpected failures, which go to the nearest error boundary.
+</Accordion>
 
-> [!question]- When would you still use TanStack Query in an App Router app?
-> For client-driven data: infinite scroll, polling, optimistic client caches shared across widgets, data depending on browser APIs. Seed it with server-rendered data (initialData or HydrationBoundary) and fetch from Route Handlers, not Server Actions.
+<Accordion title="When would you still use TanStack Query in an App Router app?">
+For client-driven data: infinite scroll, polling, optimistic client caches shared across widgets, data depending on browser APIs. Seed it with server-rendered data (initialData or HydrationBoundary) and fetch from Route Handlers, not Server Actions.
+</Accordion>
 
-> [!question]- Why shouldn't you fetch data with Server Actions?
-> They're POST, not cacheable, and dispatched one at a time per client, so parallel reads queue behind each other and behind mutations. Use Server Components or GET Route Handlers.
+<Accordion title="Why shouldn't you fetch data with Server Actions?">
+They're POST, not cacheable, and dispatched one at a time per client, so parallel reads queue behind each other and behind mutations. Use Server Components or GET Route Handlers.
+</Accordion>
 
 ## Related
-- [[Next.js Index]]
-- [[Next.js App Router Fundamentals]] · [[Next.js Rendering & Caching]] · [[Next.js Project Structure & Architecture]]
-- [[Next.js Authentication & Authorization]] · [[Next.js Error Handling, Loading & Not-Found]] · [[Next.js Route Handlers & Backend-for-Frontend]]
-- [[Next.js Performance Optimization]] · [[Next.js Testing - Unit, Integration & E2E]]
-- [[Forms & Actions in React]] · [[React Server Components & Server Functions]] · [[Server State - TanStack Query & RTK Query]] · [[URL as State]]
-- [[Promises, Async-Await & Cancellation]] · [[API Versioning, Idempotency & Backward Compatibility]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals) · [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching) · [Next.js Project Structure & Architecture](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Project%20Structure%20%26%20Architecture)
+- [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization) · [Next.js Error Handling, Loading & Not-Found](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Error%20Handling%2C%20Loading%20%26%20Not-Found) · [Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)
+- [Next.js Performance Optimization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Performance%20Optimization) · [Next.js Testing - Unit, Integration & E2E](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Testing%20-%20Unit%2C%20Integration%20%26%20E2E)
+- [Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React) · [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions) · [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query) · [URL as State](/Software%20Engineering/Frontend/06%20State%20Management/URL%20as%20State)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)
 
 ## Sources
 - [Next.js docs: Fetching data](https://nextjs.org/docs/app/getting-started/fetching-data) (v16.3.6: parallel/sequential, `React.cache`, preloading)

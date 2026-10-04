@@ -1,12 +1,16 @@
 ---
+title: "JVM Internals - Memory & Garbage Collection"
 tags: [backend, backend/java]
 aliases: [JVM, JVM Memory, Java GC, G1, ZGC, Shenandoah, JIT, Class loading, Heap tuning, JVM memory model]
 updated: 2026-09-27
 ---
 # JVM Internals - Memory & Garbage Collection
 
-> [!tldr] TL;DR
-> The JVM loads classes, interprets bytecode and **JIT-compiles** hot methods (C1 then C2). Objects live on the **heap**, method calls on per-thread **stacks**, class metadata in **Metaspace**. Memory is reclaimed by a **garbage collector**: **G1** is the default balanced collector (and from JDK 27 the default everywhere), **ZGC** and **Shenandoah** give sub-millisecond pauses on large heaps, **Parallel** maximises throughput, **Serial** suits tiny heaps. Tune by first measuring (GC logs, JFR), setting heap size relative to container memory, and picking the collector for your latency goal.
+<Note>
+**TL;DR**
+
+The JVM loads classes, interprets bytecode and **JIT-compiles** hot methods (C1 then C2). Objects live on the **heap**, method calls on per-thread **stacks**, class metadata in **Metaspace**. Memory is reclaimed by a **garbage collector**: **G1** is the default balanced collector (and from JDK 27 the default everywhere), **ZGC** and **Shenandoah** give sub-millisecond pauses on large heaps, **Parallel** maximises throughput, **Serial** suits tiny heaps. Tune by first measuring (GC logs, JFR), setting heap size relative to container memory, and picking the collector for your latency goal.
+</Note>
 
 ## JVM architecture
 
@@ -35,7 +39,7 @@ flowchart TB
 2. **C1** compiles warm methods quickly with light optimisation.
 3. **C2** recompiles hot methods aggressively (inlining, escape analysis, loop unrolling), speculating on profiles; **deoptimises** if assumptions break.
 
-Same ideas as V8's tiers: see [[V8 Engine - Ignition, TurboFan & Garbage Collection]]. Warm-up is why JVM services are slow for their first requests; AOT caches (Java 24/25, Project Leyden) and CRaC/GraalVM native image address startup.
+Same ideas as V8's tiers: see [V8 Engine - Ignition, TurboFan & Garbage Collection](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/V8%20Engine%20-%20Ignition%2C%20TurboFan%20%26%20Garbage%20Collection). Warm-up is why JVM services are slow for their first requests; AOT caches (Java 24/25, Project Leyden) and CRaC/GraalVM native image address startup.
 
 ## Memory areas
 
@@ -85,11 +89,14 @@ flowchart LR
 
 G1 splits the heap into equal **regions**, collects the regions with the most garbage first ("garbage first"), and does concurrent marking of the old generation followed by **mixed** collections.
 
-> [!info]+ 🆕 2025–2026
-> - **JDK 24 (2025-03-18)**: ZGC's non-generational mode removed (JEP 490); generational Shenandoah experimental (JEP 404); late barrier expansion for G1 (JEP 475).
-> - **JDK 25 LTS (2025-09-16)**: **Generational Shenandoah** product feature (JEP 521); **Compact Object Headers** product, opt-in with `-XX:+UseCompactObjectHeaders` (JEP 519); AOT method profiling (JEP 515) and command-line ergonomics (JEP 514) for faster warm-up; JFR CPU-time profiling (JEP 509, experimental).
-> - **JDK 26 (2026-03-17)**: G1 throughput improved by reducing synchronization (JEP 522); AOT object caching works with any GC including ZGC (JEP 516).
-> - **JDK 27 (2026-09-15)**: **G1 becomes the default GC in all environments** (JEP 523; previously the JVM picked Serial on machines/containers with <2 CPUs or <1792 MB); **compact object headers on by default** (JEP 534).
+<Info>
+**🆕 2025–2026**
+
+- **JDK 24 (2025-03-18)**: ZGC's non-generational mode removed (JEP 490); generational Shenandoah experimental (JEP 404); late barrier expansion for G1 (JEP 475).
+- **JDK 25 LTS (2025-09-16)**: **Generational Shenandoah** product feature (JEP 521); **Compact Object Headers** product, opt-in with `-XX:+UseCompactObjectHeaders` (JEP 519); AOT method profiling (JEP 515) and command-line ergonomics (JEP 514) for faster warm-up; JFR CPU-time profiling (JEP 509, experimental).
+- **JDK 26 (2026-03-17)**: G1 throughput improved by reducing synchronization (JEP 522); AOT object caching works with any GC including ZGC (JEP 516).
+- **JDK 27 (2026-09-15)**: **G1 becomes the default GC in all environments** (JEP 523; previously the JVM picked Serial on machines/containers with &lt;2 CPUs or &lt;1792 MB); **compact object headers on by default** (JEP 534).
+</Info>
 
 ## Sizing and containers
 
@@ -132,28 +139,34 @@ Common leaks: static maps used as caches, `ThreadLocal`s in pooled threads, list
 
 ## Interview questions
 
-> [!question]- Describe the JVM memory areas.
-> Heap (objects, shared, GC-managed, split into young/old generations), per-thread stacks (frames with locals), Metaspace (class metadata, native), code cache (JIT output), and native/direct memory for buffers and thread stacks.
+<Accordion title="Describe the JVM memory areas.">
+Heap (objects, shared, GC-managed, split into young/old generations), per-thread stacks (frames with locals), Metaspace (class metadata, native), code cache (JIT output), and native/direct memory for buffers and thread stacks.
+</Accordion>
 
-> [!question]- How does generational GC work?
-> New objects go to Eden. Minor GCs copy live objects to a survivor space and eventually promote long-lived ones to the old generation. The old generation is collected less often by marking reachable objects and compacting or evacuating regions.
+<Accordion title="How does generational GC work?">
+New objects go to Eden. Minor GCs copy live objects to a survivor space and eventually promote long-lived ones to the old generation. The old generation is collected less often by marking reachable objects and compacting or evacuating regions.
+</Accordion>
 
-> [!question]- G1 vs ZGC?
-> G1 is region-based and balances throughput and pause times (target ~200 ms, usually far less); it's the default. ZGC does almost all work concurrently, keeping pauses under a millisecond regardless of heap size, at some throughput and memory cost. ZGC suits large heaps with strict latency SLOs.
+<Accordion title="G1 vs ZGC?">
+G1 is region-based and balances throughput and pause times (target ~200 ms, usually far less); it's the default. ZGC does almost all work concurrently, keeping pauses under a millisecond regardless of heap size, at some throughput and memory cost. ZGC suits large heaps with strict latency SLOs.
+</Accordion>
 
-> [!question]- How would you investigate an `OutOfMemoryError`?
-> Read which space (heap, metaspace, direct). For heap: get the heap dump (`HeapDumpOnOutOfMemoryError`), open it in MAT, look at the dominator tree and retained sizes, and follow GC roots to the leaking reference. Check GC logs to see if old gen grows steadily. Also check the container limit vs `-Xmx`.
+<Accordion title="How would you investigate an `OutOfMemoryError`?">
+Read which space (heap, metaspace, direct). For heap: get the heap dump (`HeapDumpOnOutOfMemoryError`), open it in MAT, look at the dominator tree and retained sizes, and follow GC roots to the leaking reference. Check GC logs to see if old gen grows steadily. Also check the container limit vs `-Xmx`.
+</Accordion>
 
-> [!question]- What is JIT compilation and why do JVM apps need warm-up?
-> The JVM starts by interpreting bytecode and compiles hot methods to optimised native code (C1, then C2) using runtime profiles. Until that happens, code runs slower, so the first requests are slower. AOT caches, CDS and native images reduce warm-up.
+<Accordion title="What is JIT compilation and why do JVM apps need warm-up?">
+The JVM starts by interpreting bytecode and compiles hot methods to optimised native code (C1, then C2) using runtime profiles. Until that happens, code runs slower, so the first requests are slower. AOT caches, CDS and native images reduce warm-up.
+</Accordion>
 
-> [!question]- What changed with GC defaults recently?
-> JDK 23 made ZGC generational by default and JDK 24 removed the old mode; JDK 25 made generational Shenandoah and compact object headers product features; JDK 27 makes G1 the default in every environment and turns compact object headers on by default.
+<Accordion title="What changed with GC defaults recently?">
+JDK 23 made ZGC generational by default and JDK 24 removed the old mode; JDK 25 made generational Shenandoah and compact object headers product features; JDK 27 makes G1 the default in every environment and turns compact object headers on by default.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Java Concurrency & Virtual Threads]] · [[Modern Java 17 to 25]] · [[Java Language Essentials]]
-- Node/V8 comparison: [[V8 Engine - Ignition, TurboFan & Garbage Collection]] · [[Node.js Performance & Debugging]] · [[Memory Management & Garbage Collection]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025) · [Java Language Essentials](/Software%20Engineering/Backend/Java/Java%20Language%20Essentials)
+- Node/V8 comparison: [V8 Engine - Ignition, TurboFan & Garbage Collection](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/V8%20Engine%20-%20Ignition%2C%20TurboFan%20%26%20Garbage%20Collection) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging) · [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
 
 ## Sources
 - [Oracle: HotSpot Virtual Machine Garbage Collection Tuning Guide (JDK 25)](https://docs.oracle.com/en/java/javase/25/gctuning/)

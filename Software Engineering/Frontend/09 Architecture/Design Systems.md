@@ -1,12 +1,16 @@
 ---
+title: "Design Systems"
 tags: [frontend, frontend/architecture, frontend/design-systems]
 aliases: [Design System, Component Library, Storybook, Design Tokens]
 updated: 2026-09-27
 ---
 # Design Systems
 
-> [!tldr] TL;DR
-> A design system is the **shared source of truth for how a product looks and behaves**: design tokens, accessible components, patterns, guidelines and the tooling that ships them (Storybook, docs, tests, releases). The original note just said "Story book and shit"; this note fills that in. The senior-level concerns are **layering** (tokens → primitives → components → patterns), **accessibility built in**, **theming**, **versioning and adoption**, and **testing**. In 2025–2026 headless libraries (Radix, React Aria, Angular Aria) are the default starting point for behaviour.
+<Note>
+**TL;DR**
+
+A design system is the **shared source of truth for how a product looks and behaves**: design tokens, accessible components, patterns, guidelines and the tooling that ships them (Storybook, docs, tests, releases). The original note just said "Story book and shit"; this note fills that in. The senior-level concerns are **layering** (tokens → primitives → components → patterns), **accessibility built in**, **theming**, **versioning and adoption**, and **testing**. In 2025–2026 headless libraries (Radix, React Aria, Angular Aria) are the default starting point for behaviour.
+</Note>
 
 ## 1. What's in a design system
 
@@ -69,14 +73,17 @@ Use **tiers** so themes only swap one layer:
 }
 ```
 
-> [!info]+ 🆕 2025–2026 CSS that helps design systems
-> - `light-dark()`: Baseline Newly (2024-05-13); image values Newly 2026-09-14.
-> - `contrast-color()`: Baseline **Newly, 2026-04-10**.
-> - `@scope`: Baseline **Newly, 2026-03-24**, for component style scoping without naming conventions.
-> - Container **style** queries: Baseline **Newly, 2026-05-19**, e.g. `@container style(--variant: compact)` for variant styling.
-> - CSS nesting (**Widely, 2026-06-11**) and `:has()` (**Widely, 2026-06-19**).
-> - Customizable `<select>` (`appearance: base-select`) is still **Limited** (Chrome 135, Safari 27; no Firefox): progressive enhancement only.
-> See [[Modern CSS 2025-2026]].
+<Info>
+**🆕 2025–2026 CSS that helps design systems**
+
+- `light-dark()`: Baseline Newly (2024-05-13); image values Newly 2026-09-14.
+- `contrast-color()`: Baseline **Newly, 2026-04-10**.
+- `@scope`: Baseline **Newly, 2026-03-24**, for component style scoping without naming conventions.
+- Container **style** queries: Baseline **Newly, 2026-05-19**, e.g. `@container style(--variant: compact)` for variant styling.
+- CSS nesting (**Widely, 2026-06-11**) and `:has()` (**Widely, 2026-06-19**).
+- Customizable `<select>` (`appearance: base-select`) is still **Limited** (Chrome 135, Safari 27; no Firefox): progressive enhancement only.
+See [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026).
+</Info>
 
 ## 3. Primitives vs components, and headless libraries
 
@@ -109,10 +116,13 @@ export function Dialog({ title, trigger, children }: DialogProps) {
 }
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Angular Aria** (`@angular/aria`): headless, accessible patterns; developer preview in v21 (Nov 2025), **stable in v22 (June 2026) with 12 patterns**.
-> - Native platform primitives now cover more ground: **Popover API** (Baseline Newly), **invoker commands** (`command`/`commandfor`, Baseline **Newly 2025-12-12**), `dialog.requestClose()` (Newly 2025-05-27). Anchor positioning has shipped in Chrome, Safari 26 and Firefox 147 but webstatus still lists it as Limited. These reduce the JS a DS needs for popovers, menus and tooltips.
-> - `document.ariaNotify()` (Baseline Newly 2026-09-14) for screen reader announcements, replacing hand-made live regions in some cases.
+<Info>
+**🆕 2025–2026**
+
+- **Angular Aria** (`@angular/aria`): headless, accessible patterns; developer preview in v21 (Nov 2025), **stable in v22 (June 2026) with 12 patterns**.
+- Native platform primitives now cover more ground: **Popover API** (Baseline Newly), **invoker commands** (`command`/`commandfor`, Baseline **Newly 2025-12-12**), `dialog.requestClose()` (Newly 2025-05-27). Anchor positioning has shipped in Chrome, Safari 26 and Firefox 147 but webstatus still lists it as Limited. These reduce the JS a DS needs for popovers, menus and tooltips.
+- `document.ariaNotify()` (Baseline Newly 2026-09-14) for screen reader announcements, replacing hand-made live regions in some cases.
+</Info>
 
 ### Component API design
 - **Composition over configuration**: `<Card><Card.Header/>...</Card>` or slots, instead of 30 boolean props.
@@ -153,15 +163,15 @@ Docs should answer: when to use it (and when not), anatomy, props, accessibility
 - **Semantic tokens as CSS custom properties** switched by an attribute (`[data-theme]`, `[data-brand]`) or `prefers-color-scheme` + `light-dark()`. Runtime switching costs nothing (no re-render).
 - **Multi-brand**: same components, different semantic token sets per brand (white-label products, partner sites).
 - **Density and locale**: spacing scales for compact/comfortable, logical properties (`margin-inline-start`) for RTL (Arabic).
-- Avoid runtime CSS-in-JS for theming in RSC/SSR-heavy apps (it needs client runtime and hurts streaming); prefer CSS variables, CSS Modules, Tailwind or zero-runtime CSS-in-JS. See [[Styling Approaches]].
+- Avoid runtime CSS-in-JS for theming in RSC/SSR-heavy apps (it needs client runtime and hurts streaming); prefer CSS variables, CSS Modules, Tailwind or zero-runtime CSS-in-JS. See [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches).
 
 ## 6. Versioning, distribution and adoption
 
 - **Semantic versioning**: breaking changes (removed props, renamed tokens, changed DOM that affects consumers' tests) are majors.
 - **Changesets** (or conventional commits) to generate changelogs and version bumps in a monorepo.
 - **Deprecate before removing**: console warnings in dev, lint rules, and **codemods** for mechanical migrations.
-- **Distribution**: versioned npm packages (recommended default), or built from source inside a monorepo. Runtime federation of a design system (Module Federation) gives instant updates but also instant breakage everywhere; see [[Micro-frontends & Module Federation]].
-- Ship ESM, tree-shakable per component, with `sideEffects` set correctly, CSS alongside. See [[Build Tools & Bundlers]].
+- **Distribution**: versioned npm packages (recommended default), or built from source inside a monorepo. Runtime federation of a design system (Module Federation) gives instant updates but also instant breakage everywhere; see [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation).
+- Ship ESM, tree-shakable per component, with `sideEffects` set correctly, CSS alongside. See [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers).
 - **Measure adoption**: count DS component usage vs local one-offs (codebase scanning), track "detached" Figma instances.
 - **Governance**: a core team plus a contribution model (proposal, review, a11y and design sign-off), office hours, a public roadmap.
 
@@ -175,8 +185,11 @@ A design system is the highest-leverage place to get accessibility right: fix it
 - Respect `prefers-reduced-motion` in motion tokens.
 - Target size (WCAG 2.2 "Target Size (Minimum)").
 
-> [!info]+ 🆕 2025–2026 compliance context
-> The **European Accessibility Act** has applied since **June 28, 2025**, using EN 301 549 (WCAG 2.1 AA). WCAG 3.0 is still a Working Draft (latest Sept 10, 2026). See [[Accessibility Essentials]].
+<Info>
+**🆕 2025–2026 compliance context**
+
+The **European Accessibility Act** has applied since **June 28, 2025**, using EN 301 549 (WCAG 2.1 AA). WCAG 3.0 is still a Working Draft (latest Sept 10, 2026). See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
+</Info>
 
 ## 8. Testing a design system
 
@@ -188,44 +201,53 @@ A design system is the highest-leverage place to get accessibility right: fix it
 | Types / API | `tsc`, API extractor reports | Accidental breaking API changes |
 | Consumer smoke tests | Build a sample app against the new version | Packaging, CSS order, SSR issues |
 
-See [[Frontend Testing]].
+See [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
 
-> [!warning] Common pitfalls
-> - Building the system before having two or more products or teams to serve: extract from real usage.
-> - Too many props and variants instead of composition.
-> - Tokens named by value (`--blue`) used directly in components: rebranding becomes a find-and-replace.
-> - No migration path: consumers get stuck on old majors and fork.
-> - Treating accessibility as a later phase.
+<Warning>
+**Common pitfalls**
+
+- Building the system before having two or more products or teams to serve: extract from real usage.
+- Too many props and variants instead of composition.
+- Tokens named by value (`--blue`) used directly in components: rebranding becomes a find-and-replace.
+- No migration path: consumers get stuck on old majors and fork.
+- Treating accessibility as a later phase.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What are design tokens and why tier them?
-> Named, platform-agnostic design decisions (color, spacing, type). Primitive tokens hold raw values, semantic tokens express intent and are what components use, so themes and brands swap only the semantic layer without touching components.
+<Accordion title="What are design tokens and why tier them?">
+Named, platform-agnostic design decisions (color, spacing, type). Primitive tokens hold raw values, semantic tokens express intent and are what components use, so themes and brands swap only the semantic layer without touching components.
+</Accordion>
 
-> [!question]- Why build on a headless library instead of from scratch?
-> Accessible behaviour (focus traps, roving tabindex, typeahead, ARIA, screen reader quirks) is expensive and easy to get wrong. Headless libraries (Radix, React Aria, Angular Aria, Angular CDK) provide tested behaviour and leave styling to you.
+<Accordion title="Why build on a headless library instead of from scratch?">
+Accessible behaviour (focus traps, roving tabindex, typeahead, ARIA, screen reader quirks) is expensive and easy to get wrong. Headless libraries (Radix, React Aria, Angular Aria, Angular CDK) provide tested behaviour and leave styling to you.
+</Accordion>
 
-> [!question]- How would you version and roll out a breaking change?
-> Deprecate first with dev warnings and lint rules, ship the replacement alongside, provide a codemod, document it in the changelog, release a major with semver, and track adoption. Support the previous major for a defined window.
+<Accordion title="How would you version and roll out a breaking change?">
+Deprecate first with dev warnings and lint rules, ship the replacement alongside, provide a codemod, document it in the changelog, release a major with semver, and track adoption. Support the previous major for a defined window.
+</Accordion>
 
-> [!question]- How do you support multiple brands and dark mode?
-> Semantic tokens as CSS custom properties, overridden per `[data-brand]` and per color scheme (`light-dark()`), with components only referencing semantic tokens. Runtime switching is just an attribute change.
+<Accordion title="How do you support multiple brands and dark mode?">
+Semantic tokens as CSS custom properties, overridden per `[data-brand]` and per color scheme (`light-dark()`), with components only referencing semantic tokens. Runtime switching is just an attribute change.
+</Accordion>
 
-> [!question]- What role does Storybook play?
-> Isolated development, living documentation (autodocs, MDX), a catalogue for designers and PMs, and a test harness: stories become interaction, a11y and visual regression tests.
+<Accordion title="What role does Storybook play?">
+Isolated development, living documentation (autodocs, MDX), a catalogue for designers and PMs, and a test harness: stories become interaction, a11y and visual regression tests.
+</Accordion>
 
-> [!question]- How do you test a component library?
-> Interaction tests with Testing Library/Vitest or play functions, automated axe checks, visual regression per theme, type/API reports for breaking changes, and a consumer smoke build.
+<Accordion title="How do you test a component library?">
+Interaction tests with Testing Library/Vitest or play functions, automated axe checks, visual regression per theme, type/API reports for breaking changes, and a consumer smoke build.
+</Accordion>
 
 ## Related
-- [[Accessibility Essentials]]
-- [[Modern CSS 2025-2026]]
-- [[Styling Approaches]]
-- [[Component Patterns]]
-- [[Frontend Testing]]
-- [[Monorepos]]
-- [[Micro-frontends & Module Federation]]
-- [[Modern Angular v17 to v22]]
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches)
+- [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
+- [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
+- [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- [Modern Angular v17 to v22](/Software%20Engineering/Frontend/08%20Angular/Modern%20Angular%20v17%20to%20v22)
 
 ## Sources
 - https://www.designtokens.org/

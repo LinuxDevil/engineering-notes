@@ -1,3 +1,6 @@
+---
+title: "Building Micro frontends with React 18"
+---
 > This book will teach you the team building for Micro-Frontends and the code part using Nx workspace & React.
 > [Book Link](https://subscription.packtpub.com/book/web-development/9781804610961/2/ch02lvl1sec05/understanding-microfrontend-patterns)
 > 
@@ -19,7 +22,7 @@ The benefits of the Micro-Frontend pattern doesn’t show until the size and the
 
 > The whole process of decoupling the various parts of components, routing, and templates and delegating them to different systems can become an unnecessary overhead for small or medium-scale apps. **The benefits of microfrontends kick in only when your project starts reaching the size and complexity thresholds. and ideally by teams over 15 people. **
 
-![[Untitled 51.png]]
+![Untitled 51](/Attachments/Untitled%2051.png)
 
 Microfrontends benefits: 
 
@@ -39,17 +42,17 @@ Let’s look In the case of an e-commerce application.
 The Multi-SPA Pattern
     As the name suggest, it is built up of multiple SPAs. The apps will be broken into 2-3 distinct SPAs and each app will be rendered at its own URL. when the user navigates to another they are redirected via a browser reload.
     In the case of an E-Commerce app, we can distinct the building blocks of it as follows: ([Search product listing, product details] into another app, [cart, checkout] into an app, [login, registration, profile] into another app.) <u>***3***</u>*** in total***.
-![[Building_Microfrontends.drawio_Mutli_SPAs.png]]
+![Building_Microfrontends.drawio_Mutli_SPAs](/Attachments/Building_Microfrontends.drawio_Mutli_SPAs.png)
     As you can see from the figure, our app consists of 3 main parts (3 SPAs) [Catalog, Checkout, Accounts]. Each app behaves as an independent SPA that sits within its own unique global URL. each app will be deployed at is own unique global URL.
     When the users moves from one “Macro” app to another, there will be a reload of the page in the browser, this is because we usually use the HTML href tag to navigate between apps. Don’t go and complicate your architecture to achieve a Single page experience, the truth is the user don’t really care if your app is SPA or Multi-Page App (**MPA**) as long as the experience is fast and non-janky.
     At sometimes this reload will work in our favor to reduce the risk of memory bloat due to either memory leaks or too much data being put into the “data store”.
     However, if you really want to achieve this SPA feeling, you can always create a thin app that shell that hosts the global routes and data store (You can combine each macro app store into this big one, or create a SDK layer that hosts the business logic and stores), in this pattern the routing is generally split into two parts: The global part which is in the app shell that routes the macro apps and the macro app routes. 
-![[Building_Microfrontends_Mutli-SPA_SPA_feelingpattern.drawio.png]]
+![Building_Microfrontends_Mutli-SPA_SPA_feelingpattern.drawio](/Attachments/Building_Microfrontends_Mutli-SPA_SPA_feelingpattern.drawio.png)
     Here you’ll notice that we introduced the notion of an app shell which will include the app header and different SPAs load within the content slot. This pattern gives a true SPA experience as the header component doesn’t refresh when transitioning from one SPA to another.
 
 The Micro-Apps Pattern
     In this pattern the web page itself is composed of different components where each component is an independent micro app that can exists in isolation and work in tandem with other micro apps as part of the same app.
-![[Building_Microfrontends_Micro_Apps_Pattern.drawio.png]]
+![Building_Microfrontends_Micro_Apps_Pattern.drawio](/Attachments/Building_Microfrontends_Micro_Apps_Pattern.drawio.png)
     Here you can notice we are further breaking down the central content slot into smaller micro-apps. Notice how the central content area now consists of two macro apps, namely product details and recommended products micro apps.
     This pattern is more complex that the multi-SPA pattern and its recommended mainly for very very large web apps where there will be teams that will own different elements on a single page.
     This pattern will assume that there is a dedicated team that manages the product description component and another manage the recommended component on the same page (Where each team will own and manage X components ideally 1). And we would also assume that these component updates with feature enhancements, as they will be constantly undergo with A/B tests and need to be deployed more frequently.
@@ -100,7 +103,7 @@ Principles of the Microfrontends
 > Is Microfrontends solving a technology problem or an organizational problem ?
 
         DDD (Domain driven design) Is a well-established concept in the microservices world. Backend teams are commonly organized around these domain models. In the Frontend we extend this thinking and by re-organizing the team with these domain models, we are now able to create vertically sliced teams, where a domain driven team can own the responsibility of a business functionality from end to end and can work independently.
-![[Untitled 52.png]]
+![Untitled 52](/Attachments/Untitled%2052.png)
 
     Isolating Failure
         Microfrontends are inherently designed to be “decentralized”, this is to reduce the error blast radius (That is one common problem in the monolith SPAs). When designing a Microfrontend architecture, you ensure a graceful service degradation if one more microfrontend fails.
@@ -111,12 +114,12 @@ Principles of the Microfrontends
         A very interesting observation with different teams working on microfrontends is that we need the DevOps pipeline to be configured to deploy that app independently without impacting the other apps, the best way to tackle this, is with having a “<u>**Full life cycle teams**</u>” who are responsible for building the app and also responsible fro deploying it to production. These teams work closely with the DevOps team to build the CI/CD pipelines and then take over the control of managing and running them.
 
     Preferring Runtime Integrations
-![[Screenshot_2023-11-26_at_11.13.58_AM.png]]
+![Screenshot_2023-11-26_at_11.13.58_AM](/Attachments/Screenshot_2023-11-26_at_11.13.58_AM.png)
         Runtime Integration: 
 > Always preferred, Your microfront-ends should be immediately available for use the moment they are deployed.
 
             The team responsible for the script will build and push it, and other teams will embed that script inside, like for example bootstrap 
-![[Screenshot_2023-11-26_at_11.15.44_AM.png]]
+![Screenshot_2023-11-26_at_11.15.44_AM](/Attachments/Screenshot_2023-11-26_at_11.15.44_AM.png)
         Build-time Integration:
             The different teams build and publish their micro apps either to a version control system or an artifact repository such as NPM or Nexus.
             During this build-time, all these micro apps are brought together to build a single app bundle, which is then deployed to production. 
@@ -162,11 +165,11 @@ There are many strategy/patterns to manage the repos, like Git submodules, Git s
 
 Monorepos
     As the name suggests, mono is single and the code is managed in a single Git repository. This means all the team members work on a common single repository that contains multiple applications.
-![[Untitled 53.png]]
+![Untitled 53](/Attachments/Untitled%2053.png)
 
 Polyrepos
     This is where each app has its own repository, Team generally work on multiple repos switching repos as they work on different apps (But ideally, each time work on 1 repo).
-![[Untitled 54.png]]
+![Untitled 54](/Attachments/Untitled%2054.png)
 
 
 Differences between Monorepo and Polyrepos
@@ -251,7 +254,7 @@ We can also use the Module federation to dynamically load common libraries or mo
 
 > **Any kind of JS module can be dynamically imported into Module Federation**
 
-![[Untitled 55.png]]
+![Untitled 55](/Attachments/Untitled%2055.png)
 
 To setup the microfrontend with a Host (App shell) and a remote app to make the users get that “true” single-page experience while still ensuring that the app is independently built and deployed you’ll need to:
 
@@ -261,7 +264,7 @@ To setup the microfrontend with a Host (App shell) and a remote app to make the 
 
 > In Module-Federation the host app will take care of the routing, so we really don’t need any proxy configurations.
 
-![[Untitled 56.png]]
+![Untitled 56](/Attachments/Untitled%2056.png)
 
 
 For the remote micro-apps 
@@ -328,12 +331,12 @@ module.exports = withModuleFederation(defaultConfig);
 
 If we want to use something like context api in the regular manner, we will think to put the context in the app-shell and export the context api as a remote app. This will make a cyclic dependency issue where we also need to reimport the context for the components that acts as a shell too.
 
-![[Untitled 57.png]]
+![Untitled 57](/Attachments/Untitled%2057.png)
 
 When you work with module federation, you ideally need a unidirectional flow of how the remote and host apps are loaded. So ideally you will want the store to be defined as a micro app to make all other apps consume it.
 
 > This is like the SDK in our Verticals 
 
-![[Untitled 58.png]]
+![Untitled 58](/Attachments/Untitled%2058.png)
 
 This will make sure that our host app will never be bloated and our dependencies is will defined.

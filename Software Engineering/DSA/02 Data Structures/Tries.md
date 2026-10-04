@@ -1,12 +1,16 @@
 ---
+title: "Tries"
 tags: [dsa, dsa/data-structures]
 aliases: [Trie, Prefix Tree, Digital Tree, Radix Tree, Radix Trie, Patricia Trie, Compressed Trie]
 updated: 2026-09-27
 ---
 # Tries
 
-> [!tldr] TL;DR
-> A **trie** (prefix tree) stores strings character by character along paths from the root, so all words sharing a prefix share the same nodes. Insert, search and `startsWith` cost **O(L)** where L is the word length, **independent of how many words are stored**. It shines for **autocomplete, prefix queries and searching many words at once** (Word Search II). The price is memory: one node per character; **compressed (radix) tries** merge single-child chains to cut it down.
+<Note>
+**TL;DR**
+
+A **trie** (prefix tree) stores strings character by character along paths from the root, so all words sharing a prefix share the same nodes. Insert, search and `startsWith` cost **O(L)** where L is the word length, **independent of how many words are stored**. It shines for **autocomplete, prefix queries and searching many words at once** (Word Search II). The price is memory: one node per character; **compressed (radix) tries** merge single-child chains to cut it down.
+</Note>
 
 ## The idea
 
@@ -280,7 +284,7 @@ Key optimizations:
 - Store the full word at its end node (`word` field) so you don't rebuild strings.
 - After finding a word, clear it (`word = null`) to avoid duplicates.
 - **Prune** leaf nodes after use so later searches skip exhausted branches.
-- Mark visited cells in place (`'#'`) and restore on backtrack ([[Backtracking]]).
+- Mark visited cells in place (`'#'`) and restore on backtrack ([Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking)).
 
 ```ts
 function findWords(board: string[][], words: string[]): string[] {
@@ -380,7 +384,7 @@ The Python version uses nested dicts as nodes, a common compact trie idiom. `'#'
   - **Full-text search engines** (Lucene) store their term dictionary in **FSTs** (finite state transducers), which share both prefixes and suffixes, far more compact than a trie.
 - **Related structures**: **suffix tries / suffix trees / suffix arrays** answer substring queries; **Aho-Corasick** adds failure links to a trie to find many patterns in a text in one pass (used in grep-like tools and malware signature scanning); a **bitwise trie** over integers solves maximum XOR queries.
 - **Memory and locality**: pointer-heavy tries have poor cache behaviour. Production versions use arrays of nodes with integer indexes, double-array tries, or succinct/FST encodings.
-- **In review, ask**: how many keys and how long? Is the alphabet bounded? Is it read-mostly (then build once, compress, maybe serialize) or updated live (then plain or radix trie)? Is a sorted array with [[Binary Search]] on prefixes enough (`bisect` to the first key >= prefix, scan while it matches)? That's often simpler and smaller.
+- **In review, ask**: how many keys and how long? Is the alphabet bounded? Is it read-mostly (then build once, compress, maybe serialize) or updated live (then plain or radix trie)? Is a sorted array with [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search) on prefixes enough (`bisect` to the first key >= prefix, scan while it matches)? That's often simpler and smaller.
 - **In interviews**: the signal for a trie is "many words, prefix queries" or "search a set of words simultaneously". State the O(L) bounds and the memory trade-off, and mention the radix trie as the space optimization.
 
 ## Classic LeetCode problems
@@ -397,32 +401,39 @@ The Python version uses nested dicts as nodes, a common compact trie idiom. `'#'
 
 ## Interview questions
 
-> [!question]- What's the time complexity of trie operations and why is it independent of the number of words?
-> Insert, search and startsWith are O(L) for a string of length L: each step follows one edge. The number of stored words affects memory, not the path length.
+<Accordion title="What's the time complexity of trie operations and why is it independent of the number of words?">
+Insert, search and startsWith are O(L) for a string of length L: each step follows one edge. The number of stored words affects memory, not the path length.
+</Accordion>
 
-> [!question]- Trie vs hash set: when would you choose each?
-> Hash set for exact membership: simpler, less memory, O(L) average to hash. Trie when you need prefix queries, autocomplete, lexicographic enumeration, or searching many words at once (grid, streaming text).
+<Accordion title="Trie vs hash set: when would you choose each?">
+Hash set for exact membership: simpler, less memory, O(L) average to hash. Trie when you need prefix queries, autocomplete, lexicographic enumeration, or searching many words at once (grid, streaming text).
+</Accordion>
 
-> [!question]- Why do you need an end-of-word marker?
-> Because a node exists for every prefix. Without the flag, inserting `apple` would make `app` look like a stored word.
+<Accordion title="Why do you need an end-of-word marker?">
+Because a node exists for every prefix. Without the flag, inserting `apple` would make `app` look like a stored word.
+</Accordion>
 
-> [!question]- How do you reduce a trie's memory use?
-> Use hash-map children instead of fixed arrays, compress single-child chains into a radix (Patricia) trie, store nodes in flat arrays with integer indexes, or use a DAWG/FST that also shares suffixes.
+<Accordion title="How do you reduce a trie's memory use?">
+Use hash-map children instead of fixed arrays, compress single-child chains into a radix (Patricia) trie, store nodes in flat arrays with integer indexes, or use a DAWG/FST that also shares suffixes.
+</Accordion>
 
-> [!question]- Explain the trie approach to Word Search II.
-> Build a trie of all words. DFS from every cell, following the trie in lockstep with the grid path; stop as soon as the current path is not a prefix. Record words at end nodes, clear them to avoid duplicates, and prune empty branches. One DFS serves every word.
+<Accordion title="Explain the trie approach to Word Search II.">
+Build a trie of all words. DFS from every cell, following the trie in lockstep with the grid path; stop as soon as the current path is not a prefix. Record words at end nodes, clear them to avoid duplicates, and prune empty branches. One DFS serves every word.
+</Accordion>
 
-> [!question]- How would you design autocomplete for a search box?
-> Trie keyed by normalized query prefixes, each node caching the top-k completions by frequency so a lookup is O(L + k). Rebuild offline from logs, shard by prefix, cache hot prefixes, debounce requests on the client. See [[Frontend System Design Index]] for the UI side.
+<Accordion title="How would you design autocomplete for a search box?">
+Trie keyed by normalized query prefixes, each node caching the top-k completions by frequency so a lookup is O(L + k). Rebuild offline from logs, shard by prefix, cache hot prefixes, debounce requests on the client. See [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) for the UI side.
+</Accordion>
 
-> [!question]- How do you delete a word from a trie?
-> Walk to its end node and unset `isEnd`. Then, unwinding the recursion, remove each child node that has no children and is not the end of another word. Stop at the first node still in use.
+<Accordion title="How do you delete a word from a trie?">
+Walk to its end node and unset `isEnd`. Then, unwinding the recursion, remove each child node that has no children and is not the end of another word. Stop at the first node still in use.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Trees & Binary Search Trees]] · [[Hash Tables]] · [[Arrays & Strings]] · [[Graphs]]
-- Algorithms and patterns: [[Recursion & Backtracking]] · [[Backtracking]] · [[Tree Traversal - DFS & BFS]] · [[Bit Manipulation]] · [[Binary Search]]
-- [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs)
+- Algorithms and patterns: [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Backtracking](/Software%20Engineering/DSA/04%20Patterns/Backtracking) · [Tree Traversal - DFS & BFS](/Software%20Engineering/DSA/03%20Algorithms/Tree%20Traversal%20-%20DFS%20%26%20BFS) · [Bit Manipulation](/Software%20Engineering/DSA/04%20Patterns/Bit%20Manipulation) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (radix trees, problem 12-2)

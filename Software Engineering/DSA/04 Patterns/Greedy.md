@@ -1,12 +1,16 @@
 ---
+title: "Greedy"
 tags: [dsa, dsa/patterns]
 aliases: [Greedy algorithms, Greedy pattern, Greedy choice property, Exchange argument, Interval scheduling]
 updated: 2026-09-27
 ---
 # Greedy
 
-> [!tldr] TL;DR
-> A greedy algorithm makes the **locally best choice at each step and never reconsiders it**. It is correct only when the problem has the **greedy choice property** (some optimal solution starts with the greedy choice) and **optimal substructure**; you usually justify it with an **exchange argument**. Greedy solutions are short and fast (often O(n) or O(n log n) with a sort), but they fail silently on problems that need [[Dynamic Programming]], such as coin change with arbitrary coins.
+<Note>
+**TL;DR**
+
+A greedy algorithm makes the **locally best choice at each step and never reconsiders it**. It is correct only when the problem has the **greedy choice property** (some optimal solution starts with the greedy choice) and **optimal substructure**; you usually justify it with an **exchange argument**. Greedy solutions are short and fast (often O(n) or O(n log n) with a sort), but they fail silently on problems that need [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming), such as coin change with arbitrary coins.
+</Note>
 
 ## The idea
 
@@ -254,7 +258,7 @@ def least_interval(tasks: list[str], n: int) -> int:
     return max(len(tasks), (max_f - 1) * (n + 1) + count_max)
 ```
 
-A max-heap simulation also works and generalizes to "print the actual schedule" (see [[Top-K & Heaps pattern]]).
+A max-heap simulation also works and generalizes to "print the actual schedule" (see [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern)).
 
 ### Partition Labels ([763](https://leetcode.com/problems/partition-labels/))
 
@@ -287,10 +291,10 @@ def partition_labels(s: str) -> list[int]:
 ## When to use it (recognition signals)
 
 - **"Minimum number of ..." / "maximum number of ..."** where a simple sort order or running quantity seems to decide everything.
-- **Intervals / scheduling** with "maximum non-overlapping", "minimum arrows", "minimum removals" (sort by end). See [[Intervals]].
+- **Intervals / scheduling** with "maximum non-overlapping", "minimum arrows", "minimum removals" (sort by end). See [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals).
 - **Reachability** in one dimension (jumps), **circular balance** (gas station), **frequency-driven scheduling** (task scheduler, reorganize string).
 - Constraints hint at **O(n) or O(n log n)** with n up to 10^5 and no obvious subproblem table.
-- **Red flag for greedy**: you can find a small counterexample where the locally best choice blocks a better global answer. Then use [[Dynamic Programming]] (coin change, 0/1 knapsack, longest increasing subsequence length via DP or patience sorting).
+- **Red flag for greedy**: you can find a small counterexample where the locally best choice blocks a better global answer. Then use [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (coin change, 0/1 knapsack, longest increasing subsequence length via DP or patience sorting).
 
 ## Trade-offs & pitfalls
 
@@ -325,29 +329,35 @@ Contrast: [322. Coin Change](https://leetcode.com/problems/coin-change/) (Medium
 
 ## Interview questions
 
-> [!question]- What two properties make a greedy algorithm correct?
-> The greedy choice property (some optimal solution includes the greedy choice) and optimal substructure (after that choice, the remaining problem is a smaller instance whose optimal solution completes an optimal overall solution).
+<Accordion title="What two properties make a greedy algorithm correct?">
+The greedy choice property (some optimal solution includes the greedy choice) and optimal substructure (after that choice, the remaining problem is a smaller instance whose optimal solution completes an optimal overall solution).
+</Accordion>
 
-> [!question]- Sketch an exchange argument for interval scheduling by earliest end time.
-> Take an optimal solution; replace its first interval with the interval that ends earliest overall. That interval ends no later, so it does not conflict with the rest, and the count is unchanged. Repeat on the remaining intervals. The greedy solution therefore has the same size as an optimal one.
+<Accordion title="Sketch an exchange argument for interval scheduling by earliest end time.">
+Take an optimal solution; replace its first interval with the interval that ends earliest overall. That interval ends no later, so it does not conflict with the rest, and the count is unchanged. Repeat on the remaining intervals. The greedy solution therefore has the same size as an optimal one.
+</Accordion>
 
-> [!question]- Why does greedy fail for coin change? When does it work?
-> Coins `[1, 3, 4]` and amount 6: greedy gives 4+1+1 (3 coins), optimal is 3+3 (2 coins). Committing to the largest coin can block a better combination. Greedy works for canonical systems such as US coins; in general use DP, O(amount · number of coins).
+<Accordion title="Why does greedy fail for coin change? When does it work?">
+Coins `[1, 3, 4]` and amount 6: greedy gives 4+1+1 (3 coins), optimal is 3+3 (2 coins). Committing to the largest coin can block a better combination. Greedy works for canonical systems such as US coins; in general use DP, O(amount · number of coins).
+</Accordion>
 
-> [!question]- Gas Station: why can you skip all starts between the old start and i when the tank goes negative?
-> Any start s in that range arrives at s with a non-negative tank from the earlier stations (or starts at 0), so starting later only removes non-negative contributions. If starting at `start` fails at `i`, starting at any s in `(start, i]` also fails at or before `i`. So the next candidate is `i + 1`.
+<Accordion title="Gas Station: why can you skip all starts between the old start and i when the tank goes negative?">
+Any start s in that range arrives at s with a non-negative tank from the earlier stations (or starts at 0), so starting later only removes non-negative contributions. If starting at `start` fails at `i`, starting at any s in `(start, i]` also fails at or before `i`. So the next candidate is `i + 1`.
+</Accordion>
 
-> [!question]- How do you convince yourself a greedy idea is right under interview time pressure?
-> Try small adversarial examples (ties, a long item vs many short ones, zeros), state an invariant, and give a short exchange argument. If a counterexample appears, switch to DP. In practice you can also write a brute force and compare on random tiny inputs.
+<Accordion title="How do you convince yourself a greedy idea is right under interview time pressure?">
+Try small adversarial examples (ties, a long item vs many short ones, zeros), state an invariant, and give a short exchange argument. If a counterexample appears, switch to DP. In practice you can also write a brute force and compare on random tiny inputs.
+</Accordion>
 
-> [!question]- Task Scheduler: explain the formula.
-> The most frequent task appears `maxF` times and needs at least `n` slots between occurrences, forming `maxF - 1` frames of length `n + 1` plus a final partial frame containing every task tied at `maxF`. If other tasks overflow the idle slots, no idling is needed and the answer is `len(tasks)`. So `max(len(tasks), (maxF - 1)(n + 1) + countMax)`.
+<Accordion title="Task Scheduler: explain the formula.">
+The most frequent task appears `maxF` times and needs at least `n` slots between occurrences, forming `maxF - 1` frames of length `n + 1` plus a final partial frame containing every task tied at `maxF`. If other tasks overflow the idle slots, no idling is needed and the answer is `len(tasks)`. So `max(len(tasks), (maxF - 1)(n + 1) + countMax)`.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Dynamic Programming]] (when greedy fails) · [[Intervals]] · [[Top-K & Heaps pattern]]
-- [[Graphs]] (Dijkstra, Prim, Kruskal) · [[Union-Find]] (Kruskal) · [[Sorting Algorithms]]
-- [[Problem Solving]] · [[Big-O & Complexity Analysis]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (when greedy fails) · [Intervals](/Software%20Engineering/DSA/04%20Patterns/Intervals) · [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern)
+- [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) (Dijkstra, Prim, Kruskal) · [Union-Find](/Software%20Engineering/DSA/02%20Data%20Structures/Union-Find) (Kruskal) · [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms)
+- [Problem Solving](/Software%20Engineering/DSA/01%20Foundations/Problem%20Solving) · [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
 
 ## Sources
 - Cormen et al., *Introduction to Algorithms*, 4th ed., MIT Press 2022 (Greedy Algorithms chapter: activity selection, Huffman codes, matroids)

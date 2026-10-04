@@ -1,12 +1,16 @@
 ---
+title: "Consistent Hashing"
 tags: [system-design, system-design/partitioning]
 aliases: [Hash Ring, Virtual Nodes, Rendezvous Hashing, Jump Hash, Hash Slots]
 updated: 2026-09-27
 ---
 # Consistent Hashing
 
-> [!tldr] TL;DR
-> Naive sharding with `hash(key) % N` remaps almost every key when N changes. **Consistent hashing** places nodes and keys on a ring and assigns each key to the next node clockwise, so adding or removing a node only moves about **1/N** of the keys. **Virtual nodes** smooth out imbalance. Alternatives: **rendezvous (HRW) hashing**, **jump hash**, and fixed **hash slots** (Redis Cluster's 16,384). It's used by caches, Dynamo-style databases, load balancers and CDNs.
+<Note>
+**TL;DR**
+
+Naive sharding with `hash(key) % N` remaps almost every key when N changes. **Consistent hashing** places nodes and keys on a ring and assigns each key to the next node clockwise, so adding or removing a node only moves about **1/N** of the keys. **Virtual nodes** smooth out imbalance. Alternatives: **rendezvous (HRW) hashing**, **jump hash**, and fixed **hash slots** (Redis Cluster's 16,384). It's used by caches, Dynamo-style databases, load balancers and CDNs.
+</Note>
 
 ## The problem with modulo
 ```text
@@ -60,7 +64,7 @@ r.get("user:42")   # e.g. 'cache-b'
 Lookup is O(log V) with binary search over V virtual positions.
 
 ### Replication on the ring
-Dynamo/Cassandra store a key on the first **N distinct physical nodes** clockwise (the "preference list"). Combined with quorums ([[Consistency Models & Consensus]]).
+Dynamo/Cassandra store a key on the first **N distinct physical nodes** clockwise (the "preference list"). Combined with quorums ([Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus)).
 
 ## Alternatives
 | Scheme | How | Pros | Cons |
@@ -75,46 +79,57 @@ Dynamo/Cassandra store a key on the first **N distinct physical nodes** clockwis
 Redis/Valkey **hash tags**: `{user:42}:cart` and `{user:42}:profile` hash only the part in braces → same slot → multi-key ops allowed.
 
 ## Where it's used
-- Distributed caches: Memcached client libraries (ketama), Redis Cluster slots ([[Case Study - Distributed Cache]]).
-- Databases: Cassandra, DynamoDB, Riak, ScyllaDB ([[Sharding & Partitioning]]).
-- Load balancers: Envoy ring-hash and Maglev; sticky routing for cache affinity ([[Scalability Fundamentals]]).
-- CDNs: mapping objects to cache servers within a PoP ([[CDN & Edge Computing]]).
-- Chat/presence: pinning a user's connection state to a server ([[Case Study - Chat System]]).
+- Distributed caches: Memcached client libraries (ketama), Redis Cluster slots ([Case Study - Distributed Cache](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Distributed%20Cache)).
+- Databases: Cassandra, DynamoDB, Riak, ScyllaDB ([Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning)).
+- Load balancers: Envoy ring-hash and Maglev; sticky routing for cache affinity ([Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals)).
+- CDNs: mapping objects to cache servers within a PoP ([CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing)).
+- Chat/presence: pinning a user's connection state to a server ([Case Study - Chat System](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Chat%20System)).
 
 ## Pitfalls
-> [!warning] Pitfalls
-> - **Hot keys** are not solved by consistent hashing; one celebrity key still lands on one node. Replicate or split the key.
-> - Too few vnodes → imbalance. Too many → memory and slower rebalancing.
-> - Cluster membership must be agreed on (gossip or a coordinator); two clients with different views route the same key differently.
-> - Rebalancing moves data: throttle it, and serve reads from the old owner until handoff completes.
+<Warning>
+**Pitfalls**
+
+- **Hot keys** are not solved by consistent hashing; one celebrity key still lands on one node. Replicate or split the key.
+- Too few vnodes → imbalance. Too many → memory and slower rebalancing.
+- Cluster membership must be agreed on (gossip or a coordinator); two clients with different views route the same key differently.
+- Rebalancing moves data: throttle it, and serve reads from the old owner until handoff completes.
+</Warning>
 
 ## Senior perspective
 - Consistent hashing minimizes movement, but you still need a **migration protocol** (dual reads, streaming handoff, atomic ownership change). Valkey 9 moves whole slots atomically for this reason.
 - Prefer a **level of indirection** (key → slot/partition → node) so you can rebalance without rehashing keys.
 - "Bounded-load" consistent hashing (Google, 2017) caps each node at (1+ε)× average load, pushing overflow to the next node; used in HAProxy and Vimeo's video caching.
 
-> [!info]+ 🆕 2025–2026
-> **Valkey 9.0 (GA 2025-10-21)** introduced **atomic slot migration**: instead of moving keys one by one (with ASK redirects and edge cases during resharding), a whole hash slot is replicated to the target and ownership switches atomically at the end. ([Valkey blog: Atomic Slot Migration](https://valkey.io/blog/atomic-slot-migration/))
+<Info>
+**🆕 2025–2026**
+
+**Valkey 9.0 (GA 2025-10-21)** introduced **atomic slot migration**: instead of moving keys one by one (with ASK redirects and edge cases during resharding), a whole hash slot is replicated to the target and ownership switches atomically at the end. ([Valkey blog: Atomic Slot Migration](https://valkey.io/blog/atomic-slot-migration/))
+</Info>
 
 ## Interview questions
-> [!question]- Why not use hash(key) % N?
-> Changing N remaps almost all keys (only ~1/(N+1) stay), causing a cache miss storm or massive data movement. Consistent hashing moves only ~1/N of keys.
+<Accordion title="Why not use hash(key) % N?">
+Changing N remaps almost all keys (only ~1/(N+1) stay), causing a cache miss storm or massive data movement. Consistent hashing moves only ~1/N of keys.
+</Accordion>
 
-> [!question]- What are virtual nodes for?
-> Each physical node gets many ring positions, which evens out the key distribution, lets you weight nodes by capacity, and spreads a failed node's load across all remaining nodes.
+<Accordion title="What are virtual nodes for?">
+Each physical node gets many ring positions, which evens out the key distribution, lets you weight nodes by capacity, and spreads a failed node's load across all remaining nodes.
+</Accordion>
 
-> [!question]- How does Redis Cluster partition keys?
-> CRC16(key) mod 16384 gives a hash slot; each master owns a range of slots. Clients cache the slot map and follow MOVED/ASK redirects. Hash tags `{...}` force related keys into one slot.
+<Accordion title="How does Redis Cluster partition keys?">
+CRC16(key) mod 16384 gives a hash slot; each master owns a range of slots. Clients cache the slot map and follow MOVED/ASK redirects. Hash tags `{...}` force related keys into one slot.
+</Accordion>
 
-> [!question]- Rendezvous hashing vs ring?
-> Rendezvous computes a score for every node per key and picks the highest: no ring state, minimal disruption, but O(N) per lookup. The ring is O(log N) with binary search and supports replication by walking the ring.
+<Accordion title="Rendezvous hashing vs ring?">
+Rendezvous computes a score for every node per key and picks the highest: no ring state, minimal disruption, but O(N) per lookup. The ring is O(log N) with binary search and supports replication by walking the ring.
+</Accordion>
 
-> [!question]- Does consistent hashing solve hot spots?
-> No. It balances the key space, not the traffic. Hot keys need replication, key splitting, or local caching.
+<Accordion title="Does consistent hashing solve hot spots?">
+No. It balances the key space, not the traffic. Hot keys need replication, key splitting, or local caching.
+</Accordion>
 
 ## Related
-- [[System Design Index]]
-- [[Sharding & Partitioning]] · [[Case Study - Distributed Cache]] · [[Caching Strategies]] · [[Scalability Fundamentals]] · [[Consistency Models & Consensus]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
+- [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [Case Study - Distributed Cache](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Distributed%20Cache) · [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies) · [Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals) · [Consistency Models & Consensus](/Software%20Engineering/System%20Design/Consistency%20Models%20%26%20Consensus)
 
 ## Sources
 - [Karger et al.: Consistent Hashing and Random Trees (STOC 1997)](https://www.cs.princeton.edu/courses/archive/fall09/cos518/papers/chash.pdf)

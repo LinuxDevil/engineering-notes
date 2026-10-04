@@ -1,12 +1,16 @@
 ---
+title: "Iterators, Generators & Iterator Helpers"
 tags: [frontend, frontend/javascript]
 aliases: [Iterators, Generators, Iterator Helpers, Async Iterators, for await]
 updated: 2026-09-27
 ---
 # Iterators, Generators & Iterator Helpers
 
-> [!tldr] TL;DR
-> The **iteration protocols** let any object define how it is looped over: an *iterable* has a `[Symbol.iterator]()` method that returns an *iterator* with `next()`. `for...of`, spread, destructuring, `Array.from`, `Promise.all`, `Map`/`Set` constructors all consume iterables. **Generators** (`function*`) are the easy way to write iterators, and they can pause/resume. **Iterator helpers** (ES2025) add lazy `map/filter/take/drop/flatMap/reduce/toArray...` directly on iterators, and ES2026 adds `Iterator.concat`.
+<Note>
+**TL;DR**
+
+The **iteration protocols** let any object define how it is looped over: an *iterable* has a `[Symbol.iterator]()` method that returns an *iterator* with `next()`. `for...of`, spread, destructuring, `Array.from`, `Promise.all`, `Map`/`Set` constructors all consume iterables. **Generators** (`function*`) are the easy way to write iterators, and they can pause/resume. **Iterator helpers** (ES2025) add lazy `map/filter/take/drop/flatMap/reduce/toArray...` directly on iterators, and ES2026 adds `Iterator.concat`.
+</Note>
 
 ## The protocols
 
@@ -22,24 +26,27 @@ flowchart LR
 - **Iterator**: an object with `next()` returning `{ value, done }`. Optional `return()` (called on early exit like `break`) and `throw()`.
 - Plain objects are **not** iterable (use `Object.entries(obj)`).
 
-> [!example] A hand-written iterable range
-> ```js
-> const range = {
->   from: 1, to: 4,
->   [Symbol.iterator]() {
->     let current = this.from, last = this.to;
->     return {
->       next: () => current <= last
->         ? { value: current++, done: false }
->         : { value: undefined, done: true },
->       [Symbol.iterator]() { return this; },   // iterators are usually iterable too
->     };
->   },
-> };
-> [...range];                  // [1, 2, 3, 4]
-> for (const n of range) {}    // works
-> const [first, second] = range;
-> ```
+<Info>
+**A hand-written iterable range**
+
+```js
+const range = {
+  from: 1, to: 4,
+  [Symbol.iterator]() {
+    let current = this.from, last = this.to;
+    return {
+      next: () => current <= last
+        ? { value: current++, done: false }
+        : { value: undefined, done: true },
+      [Symbol.iterator]() { return this; },   // iterators are usually iterable too
+    };
+  },
+};
+[...range];                  // [1, 2, 3, 4]
+for (const n of range) {}    // works
+const [first, second] = range;
+```
+</Info>
 
 ## `for...of` vs `for...in`
 
@@ -93,14 +100,17 @@ g.next('Tokyo');         // { value: 'Booking Lou to Tokyo', done: true }
 - `g.return(v)` finishes it (runs `finally`).
 - `yield* other` delegates to another iterable/generator.
 
-> [!example] Tree traversal with `yield*`
-> ```js
-> function* walk(node) {
->   yield node;
->   for (const child of node.children ?? []) yield* walk(child);
-> }
-> for (const n of walk(menuTree)) console.log(n.label);
-> ```
+<Info>
+**Tree traversal with `yield*`**
+
+```js
+function* walk(node) {
+  yield node;
+  for (const child of node.children ?? []) yield* walk(child);
+}
+for (const n of walk(menuTree)) console.log(n.label);
+```
+</Info>
 
 Generators historically powered async flow libraries (`co`, **redux-saga**), where `yield promise` paused until the promise settled. `async/await` is essentially that pattern built into the language.
 
@@ -108,25 +118,28 @@ Generators historically powered async flow libraries (`co`, **redux-saga**), whe
 
 An **async iterable** has `[Symbol.asyncIterator]()` whose `next()` returns a **promise** of `{ value, done }`. Async generators (`async function*`) combine `await` and `yield`.
 
-> [!example] Paginated API as an async generator
-> ```js
-> async function* fetchAllPages(url) {
->   while (url) {
->     const res = await fetch(url);
->     const { items, next } = await res.json();
->     yield* items;          // one item at a time
->     url = next;
->   }
-> }
->
-> for await (const flight of fetchAllPages('/api/flights?page=1')) {
->   render(flight);
->   if (enough()) break;     // stops fetching further pages
-> }
->
-> // Collect into an array (ES2026)
-> const all = await Array.fromAsync(fetchAllPages('/api/flights?page=1'));
-> ```
+<Info>
+**Paginated API as an async generator**
+
+```js
+async function* fetchAllPages(url) {
+  while (url) {
+    const res = await fetch(url);
+    const { items, next } = await res.json();
+    yield* items;          // one item at a time
+    url = next;
+  }
+}
+
+for await (const flight of fetchAllPages('/api/flights?page=1')) {
+  render(flight);
+  if (enough()) break;     // stops fetching further pages
+}
+
+// Collect into an array (ES2026)
+const all = await Array.fromAsync(fetchAllPages('/api/flights?page=1'));
+```
+</Info>
 
 Readable streams are async iterable in modern runtimes (`for await (const chunk of response.body)` works in Node and Firefox; check support before relying on it in all browsers).
 
@@ -156,8 +169,11 @@ const expensive = priceMap.entries()
   .toArray();
 ```
 
-> [!warning] Arrays vs iterators
-> `[1,2,3].map` is `Array.prototype.map` (eager, returns an array). To use the lazy helpers on an array, call `arr.values()` first. Iterator helpers are **single-use**: once consumed, the iterator is exhausted.
+<Warning>
+**Arrays vs iterators**
+
+`[1,2,3].map` is `Array.prototype.map` (eager, returns an array). To use the lazy helpers on an array, call `arr.values()` first. Iterator helpers are **single-use**: once consumed, the iterator is exhausted.
+</Warning>
 
 ### `Iterator.concat` (ES2026)
 
@@ -166,12 +182,15 @@ const all = Iterator.concat(domesticFlights.values(), intlFlights.values(), char
 for (const f of all) render(f);
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Sync iterator helpers**: ES2025, Baseline Newly available **2025-03-31** (Safari 18.4).
-> - **`Iterator.concat`** (iterator sequencing): ES2026, Baseline Newly available **2026-03-24**; in Node 26 (V8 14.6).
-> - **`Array.fromAsync`**: ES2026, Baseline Widely available (2026-07-25).
-> - **Joint Iteration** is finished and targeting **ES2027**. Iterator Chunking, Iterator Includes and Iterator Join are at Stage 3.
-> - Async iterator helpers are **not** part of ES2025/ES2026.
+<Info>
+**🆕 2025–2026**
+
+- **Sync iterator helpers**: ES2025, Baseline Newly available **2025-03-31** (Safari 18.4).
+- **`Iterator.concat`** (iterator sequencing): ES2026, Baseline Newly available **2026-03-24**; in Node 26 (V8 14.6).
+- **`Array.fromAsync`**: ES2026, Baseline Widely available (2026-07-25).
+- **Joint Iteration** is finished and targeting **ES2027**. Iterator Chunking, Iterator Includes and Iterator Join are at Stage 3.
+- Async iterator helpers are **not** part of ES2025/ES2026.
+</Info>
 
 ## Real-world uses in front end
 
@@ -182,30 +201,36 @@ for (const f of all) render(f);
 
 ## Interview questions
 
-> [!question]- What is the difference between an iterable and an iterator?
-> An iterable has a `[Symbol.iterator]()` method that returns an iterator. An iterator has a `next()` method returning `{value, done}`. `for...of` asks the iterable for an iterator and calls `next()` until `done` is true.
+<Accordion title="What is the difference between an iterable and an iterator?">
+An iterable has a `[Symbol.iterator]()` method that returns an iterator. An iterator has a `next()` method returning `{value, done}`. `for...of` asks the iterable for an iterator and calls `next()` until `done` is true.
+</Accordion>
 
-> [!question]- What is a generator and how does it differ from a normal function?
-> A `function*` that returns a generator object instead of running to completion. Execution pauses at each `yield` and resumes on `next()`, preserving local state. It can receive values via `next(v)`, and be stopped with `return()` or `throw()`.
+<Accordion title="What is a generator and how does it differ from a normal function?">
+A `function*` that returns a generator object instead of running to completion. Execution pauses at each `yield` and resumes on `next()`, preserving local state. It can receive values via `next(v)`, and be stopped with `return()` or `throw()`.
+</Accordion>
 
-> [!question]- How would you make a custom class iterable?
-> Implement `[Symbol.iterator]()`, most simply as a generator method: `*[Symbol.iterator]() { for (const x of this.#items) yield x; }`.
+<Accordion title="How would you make a custom class iterable?">
+Implement `[Symbol.iterator]()`, most simply as a generator method: `*[Symbol.iterator]() { for (const x of this.#items) yield x; }`.
+</Accordion>
 
-> [!question]- What are iterator helpers and how are they different from array methods?
-> ES2025 methods like `map`, `filter`, `take`, `drop`, `flatMap`, `toArray` on iterators. They're lazy and work on infinite or streaming sequences without creating intermediate arrays; array methods are eager and allocate a new array at each step.
+<Accordion title="What are iterator helpers and how are they different from array methods?">
+ES2025 methods like `map`, `filter`, `take`, `drop`, `flatMap`, `toArray` on iterators. They're lazy and work on infinite or streaming sequences without creating intermediate arrays; array methods are eager and allocate a new array at each step.
+</Accordion>
 
-> [!question]- What is `for await...of` used for?
-> Consuming async iterables (async generators, paginated APIs, streams): each iteration awaits the promise returned by `next()`.
+<Accordion title="What is `for await...of` used for?">
+Consuming async iterables (async generators, paginated APIs, streams): each iteration awaits the promise returned by `next()`.
+</Accordion>
 
-> [!question]- `for...of` vs `for...in`?
-> `for...of` iterates values of iterables; `for...in` iterates enumerable string keys (including inherited ones) of any object and shouldn't be used for arrays.
+<Accordion title="`for...of` vs `for...in`?">
+`for...of` iterates values of iterables; `for...in` iterates enumerable string keys (including inherited ones) of any object and shouldn't be used for arrays.
+</Accordion>
 
 ## Related
-- [[Collections - Map, Set, WeakMap & WeakRef]]
-- [[Promises, Async-Await & Cancellation]]
-- [[Closures & Memory Model]]
-- [[Modern JavaScript ES2022-ES2027]]
-- [[Redux & Redux Toolkit]]
+- [Collections - Map, Set, WeakMap & WeakRef](/Software%20Engineering/Frontend/01%20JavaScript/Collections%20-%20Map%2C%20Set%2C%20WeakMap%20%26%20WeakRef)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
+- [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
+- [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit)
 
 ## Sources
 - MDN: [Iteration protocols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols), [Generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator), [Iterator helpers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator), [for await...of](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of), [Array.fromAsync](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fromAsync)

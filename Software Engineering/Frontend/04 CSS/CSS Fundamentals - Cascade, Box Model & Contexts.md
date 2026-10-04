@@ -1,12 +1,16 @@
 ---
+title: "CSS Fundamentals - Cascade, Box Model & Contexts"
 tags: [frontend, frontend/css]
 aliases: [CSS Fundamentals, Cascade, Specificity, Box Model, Stacking Context, BFC, Margin Collapsing]
 updated: 2026-09-27
 ---
 # CSS Fundamentals - Cascade, Box Model & Contexts
 
-> [!tldr] TL;DR
-> Every CSS bug is one of three things: the **cascade** picked a different declaration than you expected (origin, `@layer`, specificity, order), the **box** is sized or positioned against something you didn't expect (box model, containing block, formatting context, margin collapsing), or the **paint order** is not what you think (stacking contexts). Learn the rules behind those three and CSS stops being "magic".
+<Note>
+**TL;DR**
+
+Every CSS bug is one of three things: the **cascade** picked a different declaration than you expected (origin, `@layer`, specificity, order), the **box** is sized or positioned against something you didn't expect (box model, containing block, formatting context, margin collapsing), or the **paint order** is not what you think (stacking contexts). Learn the rules behind those three and CSS stops being "magic".
+</Note>
 
 ```mermaid
 flowchart LR
@@ -18,7 +22,7 @@ flowchart LR
   F --> G["Composite: GPU layers"]
 ```
 
-See [[How Browsers Render - Critical Rendering Path]] for how the CSSOM is built and where layout, paint and composite happen in the pipeline.
+See [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path) for how the CSSOM is built and where layout, paint and composite happen in the pipeline.
 
 ---
 
@@ -33,46 +37,55 @@ See [[How Browsers Render - Critical Rendering Path]] for how the CSSOM is built
 | Functional pseudo-classes | `:is()`, `:not()`, `:has()` | the **most specific argument** |
 | Zero-specificity wrapper | `:where()` | always 0 |
 
-Combinators: `A B` (descendant), `A > B` (child), `A + B` (next sibling), `A ~ B` (any following sibling). `:has()` finally gives a "parent/previous sibling" selector: `label:has(+ input:invalid)`. See [[Modern CSS 2025-2026]].
+Combinators: `A B` (descendant), `A > B` (child), `A + B` (next sibling), `A ~ B` (any following sibling). `:has()` finally gives a "parent/previous sibling" selector: `label:has(+ input:invalid)`. See [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026).
 
 ## 2. Specificity (with worked examples)
 
 Specificity is a 3-part tuple **(A, B, C)** = (IDs, classes/attributes/pseudo-classes, types/pseudo-elements). Compare left to right; the first bigger column wins. It is **not** base-10: 11 classes never beat 1 ID.
 
-> [!example] Worked examples
-> | Selector | Specificity | Why |
-> |---|---|---|
-> | `*` | (0,0,0) | universal has none |
-> | `li` | (0,0,1) | one type |
-> | `ul li a` | (0,0,3) | three types |
-> | `a:hover` | (0,1,1) | pseudo-class + type |
-> | `.btn.primary` | (0,2,0) | two classes |
-> | `input[type="text"]` | (0,1,1) | attribute counts like a class |
-> | `p::first-line` | (0,0,2) | pseudo-element counts like a type |
-> | `#nav .item > a` | (1,1,1) | 1 id, 1 class, 1 type |
-> | `:is(#a, .b) p` | (1,0,1) | `:is()` takes its most specific argument (`#a`) even if `.b` matched |
-> | `:where(#a, .b) p` | (0,0,1) | `:where()` is always zero, great for library defaults |
-> | `a:not(.x, #y)` | (1,0,1) | `:not()` also takes its most specific argument |
-> | `li:nth-child(2 of .hot)` | (0,2,1) | the pseudo-class (1) plus its selector argument (1) |
-> | `.card:has(> img)` | (0,1,1) | `.card` + the argument `img` |
-> | `style="color:red"` | beats any selector | element-attached style, a separate cascade step |
-> | `color: red !important` | beats all normal declarations | importance is decided before specificity |
+<Info>
+**Worked examples**
 
-> [!example] Which colour wins?
-> ```html
-> <nav id="nav"><a class="link active" href="#">Home</a></nav>
-> ```
-> ```css
-> #nav a            { color: blue; }   /* (1,0,1) */
-> .link.active      { color: green; }  /* (0,2,0) */
-> nav .link:hover   { color: orange; } /* (0,2,1) */
-> ```
-> **Blue.** (1,0,1) beats (0,2,x) because the ID column is compared first. On hover it is still blue. Fixes, from best to worst: lower the ID rule (`:where(#nav) a`), put the rules in ordered `@layer`s, or stop styling by ID. Using `!important` only starts an arms race.
+| Selector | Specificity | Why |
+|---|---|---|
+| `*` | (0,0,0) | universal has none |
+| `li` | (0,0,1) | one type |
+| `ul li a` | (0,0,3) | three types |
+| `a:hover` | (0,1,1) | pseudo-class + type |
+| `.btn.primary` | (0,2,0) | two classes |
+| `input[type="text"]` | (0,1,1) | attribute counts like a class |
+| `p::first-line` | (0,0,2) | pseudo-element counts like a type |
+| `#nav .item > a` | (1,1,1) | 1 id, 1 class, 1 type |
+| `:is(#a, .b) p` | (1,0,1) | `:is()` takes its most specific argument (`#a`) even if `.b` matched |
+| `:where(#a, .b) p` | (0,0,1) | `:where()` is always zero, great for library defaults |
+| `a:not(.x, #y)` | (1,0,1) | `:not()` also takes its most specific argument |
+| `li:nth-child(2 of .hot)` | (0,2,1) | the pseudo-class (1) plus its selector argument (1) |
+| `.card:has(> img)` | (0,1,1) | `.card` + the argument `img` |
+| `style="color:red"` | beats any selector | element-attached style, a separate cascade step |
+| `color: red !important` | beats all normal declarations | importance is decided before specificity |
+</Info>
 
-> [!tip] Keeping specificity flat
-> - Style with single classes (BEM, CSS Modules, utilities). See [[Styling Approaches]].
-> - Wrap resets and library defaults in `:where()` or a low `@layer` so they are easy to override.
-> - Avoid IDs and deep descendant chains in stylesheets.
+<Info>
+**Which colour wins?**
+
+```html
+<nav id="nav"><a class="link active" href="#">Home</a></nav>
+```
+```css
+#nav a            { color: blue; }   /* (1,0,1) */
+.link.active      { color: green; }  /* (0,2,0) */
+nav .link:hover   { color: orange; } /* (0,2,1) */
+```
+**Blue.** (1,0,1) beats (0,2,x) because the ID column is compared first. On hover it is still blue. Fixes, from best to worst: lower the ID rule (`:where(#nav) a`), put the rules in ordered `@layer`s, or stop styling by ID. Using `!important` only starts an arms race.
+</Info>
+
+<Tip>
+**Keeping specificity flat**
+
+- Style with single classes (BEM, CSS Modules, utilities). See [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches).
+- Wrap resets and library defaults in `:where()` or a low `@layer` so they are easy to override.
+- Avoid IDs and deep descendant chains in stylesheets.
+</Tip>
 
 ## 3. The cascade: full sorting order
 
@@ -149,12 +162,15 @@ Global keywords work on every property:
 5. **Used**: after layout (`width: 50%` becomes `412px`).
 6. **Actual**: after device rounding.
 
-> [!example] Why `line-height: 1.5` beats `line-height: 1.5em`
-> ```css
-> .parent { font-size: 16px; line-height: 1.5em; } /* computed: 24px, children inherit 24px */
-> .child  { font-size: 32px; }                     /* line-height is still 24px: lines overlap */
-> .parent { line-height: 1.5; }                    /* unitless: children inherit the factor, so 48px */
-> ```
+<Info>
+**Why `line-height: 1.5` beats `line-height: 1.5em`**
+
+```css
+.parent { font-size: 16px; line-height: 1.5em; } /* computed: 24px, children inherit 24px */
+.child  { font-size: 32px; }                     /* line-height is still 24px: lines overlap */
+.parent { line-height: 1.5; }                    /* unitless: children inherit the factor, so 48px */
+```
+</Info>
 
 ## 5. Box model and `box-sizing`
 
@@ -188,7 +204,7 @@ Other box facts:
 
 ### Replaced elements
 **Replaced elements** have content that comes from outside CSS: `<img>`, `<video>`, `<iframe>`, `<embed>`, `<object>`, and in practice form controls such as `<input>`. They:
-- have an **intrinsic size and aspect ratio**, so set `width` and `height` attributes to avoid CLS (see [[Core Web Vitals]]);
+- have an **intrinsic size and aspect ratio**, so set `width` and `height` attributes to avoid CLS (see [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals));
 - are controlled with `object-fit` (`cover`, `contain`) and `object-position`;
 - cannot have `::before`/`::after` (there is no content box for CSS to insert into);
 - are inline by default. The gap under an image is the text baseline gap: fix it with `display: block` or `vertical-align: middle`.
@@ -209,7 +225,7 @@ The **visual formatting model** is how the browser turns the element tree into b
 | `block` | `block flow` | full width, starts on a new line |
 | `inline` | `inline flow` | `width`/`height` ignored; vertical margins don't push lines |
 | `inline-block` | `inline flow-root` | sits in a line but has a box you can size; creates a BFC |
-| `flex` / `inline-flex` | `block flex` / `inline flex` | see [[Layout - Flexbox, Grid & Container Queries]] |
+| `flex` / `inline-flex` | `block flex` / `inline flex` | see [Layout - Flexbox, Grid & Container Queries](/Software%20Engineering/Frontend/04%20CSS/Layout%20-%20Flexbox%2C%20Grid%20%26%20Container%20Queries) |
 | `grid` / `inline-grid` | `block grid` / `inline grid` | |
 | `flow-root` | `block flow-root` | a block that creates a new BFC (the modern clearfix) |
 | `contents` | none | the box disappears and its children are promoted. Older browsers dropped the element's role from the accessibility tree, so test buttons and lists |
@@ -235,11 +251,14 @@ The **visual formatting model** is how the browser turns the element tree into b
 | `fixed` | no | the viewport (unless an ancestor traps it, see below) | **always** |
 | `sticky` | yes, until the threshold | its nearest **scrolling ancestor** | **always** |
 
-> [!warning] Why `position: sticky` "doesn't work"
-> - There is no threshold: you need `top: 0` (or another inset).
-> - An ancestor has `overflow: hidden`/`auto`/`scroll`, so it becomes the scroll container and the element sticks inside it, not the page. `overflow: clip` doesn't create a scroll container.
-> - The parent is only as tall as the sticky element, so it has no room to stick.
-> - In a flex or grid row, the item is stretched to full height. Add `align-self: start`.
+<Warning>
+**Why `position: sticky` "doesn't work"**
+
+- There is no threshold: you need `top: 0` (or another inset).
+- An ancestor has `overflow: hidden`/`auto`/`scroll`, so it becomes the scroll container and the element sticks inside it, not the page. `overflow: clip` doesn't create a scroll container.
+- The parent is only as tall as the sticky element, so it has no room to stick.
+- In a flex or grid row, the item is stretched to full height. Add `align-self: start`.
+</Warning>
 
 ## 8. Containing block
 
@@ -252,14 +271,17 @@ Percentages, `inset` values and absolute positioning all resolve against the **c
 | `fixed` | the **viewport**… |
 | …**unless** | an ancestor has `transform`, `perspective`, `filter`, `backdrop-filter`, `contain: layout/paint`, `container-type` (size queries), or a `will-change` naming one of these. That ancestor then becomes the containing block for **both** absolute and fixed descendants |
 
-> [!example] The "position: fixed is stuck inside a card" bug
-> ```css
-> .card  { transform: translateY(0); }        /* harmless-looking animation leftover */
-> .modal { position: fixed; inset: 0; }        /* now covers only .card, not the viewport */
-> ```
-> **Fixes:**
-> - Render the modal outside the card with a portal (`createPortal` in React).
-> - Or use `<dialog>.showModal()` or `popover`, which render in the **top layer** and ignore ancestors entirely. See [[Accessibility Essentials]].
+<Info>
+**The "position: fixed is stuck inside a card" bug**
+
+```css
+.card  { transform: translateY(0); }        /* harmless-looking animation leftover */
+.modal { position: fixed; inset: 0; }        /* now covers only .card, not the viewport */
+```
+**Fixes:**
+- Render the modal outside the card with a portal (`createPortal` in React).
+- Or use `<dialog>.showModal()` or `popover`, which render in the **top layer** and ignore ancestors entirely. See [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials).
+</Info>
 
 ## 9. Block formatting context (BFC)
 
@@ -279,13 +301,16 @@ A **BFC** is an isolated layout region in which block boxes stack vertically. Th
 - multi-column containers
 - `column-span: all`
 
-> [!example] Collapsed parent with floated children
-> ```css
-> .gallery        { border: 1px solid; }
-> .gallery img    { float: left; width: 33%; }   /* the parent collapses to 0 height */
-> .gallery        { display: flow-root; }         /* modern fix: new BFC contains floats */
-> /* old clearfix: .gallery::after { content: ""; display: table; clear: both; } */
-> ```
+<Info>
+**Collapsed parent with floated children**
+
+```css
+.gallery        { border: 1px solid; }
+.gallery img    { float: left; width: 33%; }   /* the parent collapses to 0 height */
+.gallery        { display: flow-root; }         /* modern fix: new BFC contains floats */
+/* old clearfix: .gallery::after { content: ""; display: table; clear: both; } */
+```
+</Info>
 
 Related contexts: an **inline formatting context** (line boxes, `vertical-align`, `line-height`), and flex and grid formatting contexts. Flex and grid items **never** margin-collapse and **ignore `float`**.
 
@@ -298,17 +323,20 @@ It happens in three cases:
 2. **Parent and first/last child**: if nothing separates them (no border, no padding, no inline content, no BFC, no `height` for the bottom case), the child's `margin-top` "leaks" out of the parent.
 3. **Empty blocks**: an empty block's own top and bottom margins collapse together.
 
-> [!example] The "margin leaks out of my card" bug
-> ```css
-> .card    { background: #eef; }
-> .card h2 { margin-top: 24px; }  /* the gap appears ABOVE the card, not inside it */
-> ```
-> **Fixes (any one):**
-> - `.card { padding-top: 1px }`, or a border.
-> - `.card { display: flow-root }` (creates a new BFC).
-> - Make `.card` a flex or grid container.
->
-> A common modern habit: use `gap` in flex/grid and only single-direction margins (`margin-block-end`) so collapsing never surprises you.
+<Info>
+**The "margin leaks out of my card" bug**
+
+```css
+.card    { background: #eef; }
+.card h2 { margin-top: 24px; }  /* the gap appears ABOVE the card, not inside it */
+```
+**Fixes (any one):**
+- `.card { padding-top: 1px }`, or a border.
+- `.card { display: flow-root }` (creates a new BFC).
+- Make `.card` a flex or grid container.
+
+A common modern habit: use `gap` in flex/grid and only single-direction margins (`margin-block-end`) so collapsing never surprises you.
+</Info>
 
 It does **not** collapse for floats, absolutely positioned elements, flex/grid items, inline-block elements, or across a BFC boundary.
 
@@ -348,12 +376,15 @@ flowchart TD
   D -.->|"9999 only competes inside main"| X["still painted BELOW the header"]
 ```
 
-> [!example] z-index debugging checklist
-> 1. Is the element **positioned** (or a flex/grid item)? Otherwise `z-index` does nothing.
-> 2. Walk **up** the tree. Which ancestor creates a stacking context (`transform`, `opacity`, `filter`, `will-change`, sticky…)? Compare z-index **at the level of the sibling contexts**, not the leaves.
-> 3. Chrome DevTools: the **Layers** panel and the Elements > Computed pane show what forms contexts and layers. Edge's 3D View helps too.
-> 4. Fix it structurally: raise the ancestor's context, add `isolation: isolate` to contain a component, portal the overlay to `body`, or use the top layer (`popover`, `<dialog>`).
-> 5. Use a **z-index scale** as tokens (`--z-dropdown: 100; --z-sticky: 200; --z-modal: 300; --z-toast: 400`) instead of magic numbers.
+<Info>
+**z-index debugging checklist**
+
+1. Is the element **positioned** (or a flex/grid item)? Otherwise `z-index` does nothing.
+2. Walk **up** the tree. Which ancestor creates a stacking context (`transform`, `opacity`, `filter`, `will-change`, sticky…)? Compare z-index **at the level of the sibling contexts**, not the leaves.
+3. Chrome DevTools: the **Layers** panel and the Elements > Computed pane show what forms contexts and layers. Edge's 3D View helps too.
+4. Fix it structurally: raise the ancestor's context, add `isolation: isolate` to contain a component, portal the overlay to `body`, or use the top layer (`popover`, `<dialog>`).
+5. Use a **z-index scale** as tokens (`--z-dropdown: 100; --z-sticky: 200; --z-modal: 300; --z-toast: 400`) instead of magic numbers.
+</Info>
 
 ## 12. Units
 
@@ -391,7 +422,7 @@ h1 { font-size: clamp(1.75rem, 1.2rem + 2.5vw, 3rem); }   /* min, preferred, max
 ```
 Always mix `rem` into fluid font sizes (as above). Pure `vw` ignores the user's zoom and font size, which fails WCAG 1.4.4 Resize Text.
 
-**Vertical rhythm** means keeping vertical spacing on a consistent baseline grid (multiples of the line height). The modern tools for it are `lh`/`rlh` units, a spacing-token scale, and `text-box: trim-both cap alphabetic` (see [[Modern CSS 2025-2026]]), which removes the extra leading above and below text so spacing matches the design.
+**Vertical rhythm** means keeping vertical spacing on a consistent baseline grid (multiples of the line height). The modern tools for it are `lh`/`rlh` units, a spacing-token scale, and `text-box: trim-both cap alphabetic` (see [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)), which removes the extra leading above and below text so spacing matches the design.
 
 ## 13. Logical properties (RTL-ready CSS)
 
@@ -410,14 +441,17 @@ Physical properties (`left`, `margin-right`) are tied to the screen. **Logical p
 | `text-align: left` | `text-align: start` |
 | `float: left` | `float: inline-start` |
 
-> [!example] One stylesheet for English and Arabic
-> ```css
-> .flight-card__icon { margin-inline-end: 0.75rem; }      /* right gap in LTR, left gap in RTL */
-> .badge             { inset-inline-end: 0; inset-block-start: 0; }
-> .arrow             { transform: scaleX(1); }
-> [dir="rtl"] .arrow { transform: scaleX(-1); }           /* mirror directional icons only */
-> ```
-> Set `<html lang="ar" dir="rtl">` and the logical properties flip on their own. Flexbox and grid are already logical: `justify-content: flex-start` follows `dir`.
+<Info>
+**One stylesheet for English and Arabic**
+
+```css
+.flight-card__icon { margin-inline-end: 0.75rem; }      /* right gap in LTR, left gap in RTL */
+.badge             { inset-inline-end: 0; inset-block-start: 0; }
+.arrow             { transform: scaleX(1); }
+[dir="rtl"] .arrow { transform: scaleX(-1); }           /* mirror directional icons only */
+```
+Set `<html lang="ar" dir="rtl">` and the logical properties flip on their own. Flexbox and grid are already logical: `justify-content: flex-start` follows `dir`.
+</Info>
 
 ## 14. Transforms, transitions, animations, filters and GPU compositing
 
@@ -433,54 +467,69 @@ The owner's interview note says "use `transform` for GPU acceleration". That is 
 - Changing only **`transform` and `opacity`** (and usually `filter`) can skip layout and paint. The element sits on its own **compositor layer**, and the GPU compositor just moves or blends that texture, even while the main thread is busy.
 - `will-change: transform` (or an existing transform animation) asks the browser to **promote** the element to its own layer ahead of time.
 
-> [!warning] Layer promotion is not free
-> Every layer costs GPU memory, and too many layers cause "layer explosion". Add `will-change` shortly before an animation and remove it afterwards. Never put `* { will-change: transform }` or `translateZ(0)` everywhere. Profile in DevTools (Performance, Layers, and the rendering option "Paint flashing").
+<Warning>
+**Layer promotion is not free**
 
-> [!example] Animate a drawer the cheap way
-> ```css
-> .drawer { transform: translateX(100%); transition: transform 250ms ease; }
-> .drawer.open { transform: translateX(0); }          /* compositor-only */
-> /* avoid: .drawer { right: -300px; transition: right 250ms } which re-runs layout every frame */
-> @media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
-> ```
+Every layer costs GPU memory, and too many layers cause "layer explosion". Add `will-change` shortly before an animation and remove it afterwards. Never put `* { will-change: transform }` or `translateZ(0)` everywhere. Profile in DevTools (Performance, Layers, and the rendering option "Paint flashing").
+</Warning>
+
+<Info>
+**Animate a drawer the cheap way**
+
+```css
+.drawer { transform: translateX(100%); transition: transform 250ms ease; }
+.drawer.open { transform: translateX(0); }          /* compositor-only */
+/* avoid: .drawer { right: -300px; transition: right 250ms } which re-runs layout every frame */
+@media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
+```
+</Info>
 
 ## Interview questions
 
-> [!question]- What is CSS specificity and how is it calculated?
-> It is a weight (A, B, C) = (ID selectors, class/attribute/pseudo-class selectors, type/pseudo-element selectors), compared column by column. `:is()`, `:not()` and `:has()` take their most specific argument; `:where()` is 0; `*` and combinators are 0. Inline `style` beats any selector, and `!important` beats normal declarations. Specificity only decides between declarations with the same origin, importance and layer. Order of appearance breaks exact ties.
+<Accordion title="What is CSS specificity and how is it calculated?">
+It is a weight (A, B, C) = (ID selectors, class/attribute/pseudo-class selectors, type/pseudo-element selectors), compared column by column. `:is()`, `:not()` and `:has()` take their most specific argument; `:where()` is 0; `*` and combinators are 0. Inline `style` beats any selector, and `!important` beats normal declarations. Specificity only decides between declarations with the same origin, importance and layer. Order of appearance breaks exact ties.
+</Accordion>
 
-> [!question]- Walk me through the cascade. Where do @layer and !important fit?
-> Origin and importance come first (user-agent, user, author, animations, then the important origins in reverse, then transitions). Then shadow context, then inline style, then **cascade layers** (later layers win for normal declarations, unlayered beats layered, and the order flips for `!important`), then specificity, then source order. Layers let a design system give utilities priority over components without escalating specificity.
+<Accordion title="Walk me through the cascade. Where do @layer and !important fit?">
+Origin and importance come first (user-agent, user, author, animations, then the important origins in reverse, then transitions). Then shadow context, then inline style, then **cascade layers** (later layers win for normal declarations, unlayered beats layered, and the order flips for `!important`), then specificity, then source order. Layers let a design system give utilities priority over components without escalating specificity.
+</Accordion>
 
-> [!question]- What is a stacking context, and why doesn't my z-index: 9999 work?
-> A stacking context is a group painted atomically. Its children's z-index only competes inside it. If an ancestor creates a context (transform, opacity < 1, filter, sticky/fixed, a positioned element with z-index, `isolation`, `will-change`…) and that ancestor sits below a sibling, nothing inside can rise above that sibling. Also check that `z-index` is on a positioned element or a flex/grid item. Fix it at the ancestor level, portal the element, or use the top layer.
+<Accordion title="What is a stacking context, and why doesn't my z-index: 9999 work?">
+A stacking context is a group painted atomically. Its children's z-index only competes inside it. If an ancestor creates a context (transform, opacity < 1, filter, sticky/fixed, a positioned element with z-index, `isolation`, `will-change`…) and that ancestor sits below a sibling, nothing inside can rise above that sibling. Also check that `z-index` is on a positioned element or a flex/grid item. Fix it at the ancestor level, portal the element, or use the top layer.
+</Accordion>
 
-> [!question]- What is a block formatting context? Name ways to create one.
-> An independent layout region where blocks stack vertically. It contains floats, avoids overlapping outside floats, and prevents margin collapsing with its children. It is created by `display: flow-root`, `overflow` other than visible/clip, floats, absolute/fixed positioning, inline-block, table cells, flex/grid items, `contain: layout/paint`, and multicol.
+<Accordion title="What is a block formatting context? Name ways to create one.">
+An independent layout region where blocks stack vertically. It contains floats, avoids overlapping outside floats, and prevents margin collapsing with its children. It is created by `display: flow-root`, `overflow` other than visible/clip, floats, absolute/fixed positioning, inline-block, table cells, flex/grid items, `contain: layout/paint`, and multicol.
+</Accordion>
 
-> [!question]- Explain margin collapsing and how to prevent it.
-> Adjacent vertical margins of block boxes in normal flow merge into the larger one. It happens between siblings, between a parent and its first/last child when nothing separates them, and within empty blocks. Prevent it with padding or a border on the parent, a new BFC (`flow-root`), using flex/grid (items don't collapse), or by spacing with `gap` and single-direction margins.
+<Accordion title="Explain margin collapsing and how to prevent it.">
+Adjacent vertical margins of block boxes in normal flow merge into the larger one. It happens between siblings, between a parent and its first/last child when nothing separates them, and within empty blocks. Prevent it with padding or a border on the parent, a new BFC (`flow-root`), using flex/grid (items don't collapse), or by spacing with `gap` and single-direction margins.
+</Accordion>
 
-> [!question]- content-box vs border-box?
-> With `content-box`, `width` sets the content only, and padding and border are added on top. With `border-box`, `width` includes padding and border. Most codebases set `border-box` globally because it makes sizing predictable, especially with percentage widths.
+<Accordion title="content-box vs border-box?">
+With `content-box`, `width` sets the content only, and padding and border are added on top. With `border-box`, `width` includes padding and border. Most codebases set `border-box` globally because it makes sizing predictable, especially with percentage widths.
+</Accordion>
 
-> [!question]- What is the containing block of an absolutely positioned element? And of a fixed one?
-> Absolute: the padding box of the nearest ancestor whose `position` isn't `static`. Fixed: the viewport. For **both**, an ancestor with `transform`, `filter`, `perspective`, `contain: paint/layout`, `container-type`, or a matching `will-change` becomes the containing block instead. That is the classic "fixed modal trapped in a card" bug.
+<Accordion title="What is the containing block of an absolutely positioned element? And of a fixed one?">
+Absolute: the padding box of the nearest ancestor whose `position` isn't `static`. Fixed: the viewport. For **both**, an ancestor with `transform`, `filter`, `perspective`, `contain: paint/layout`, `container-type`, or a matching `will-change` becomes the containing block instead. That is the classic "fixed modal trapped in a card" bug.
+</Accordion>
 
-> [!question]- 100vh vs 100dvh vs 100svh?
-> On mobile, `vh` is the large viewport (toolbars hidden), so content can end up under the URL bar. `svh` is the small viewport (always fully visible), `lvh` is the large one, and `dvh` tracks the current size and updates as the toolbars move. Default to `svh` for sections, and use `dvh` for full-screen app shells or modals when you accept the resize cost.
+<Accordion title="100vh vs 100dvh vs 100svh?">
+On mobile, `vh` is the large viewport (toolbars hidden), so content can end up under the URL bar. `svh` is the small viewport (always fully visible), `lvh` is the large one, and `dvh` tracks the current size and updates as the toolbars move. Default to `svh` for sections, and use `dvh` for full-screen app shells or modals when you accept the resize cost.
+</Accordion>
 
-> [!question]- Which properties are cheap to animate, and why?
-> `transform` and `opacity` (and often `filter`). They can be handled by the compositor on the GPU without layout or paint. Animating `width`, `top` or `margin` forces layout on every frame. Use `will-change` sparingly to pre-promote layers.
+<Accordion title="Which properties are cheap to animate, and why?">
+`transform` and `opacity` (and often `filter`). They can be handled by the compositor on the GPU without layout or paint. Animating `width`, `top` or `margin` forces layout on every frame. Use `will-change` sparingly to pre-promote layers.
+</Accordion>
 
 ## Related
-- [[How Browsers Render - Critical Rendering Path]]
-- [[Layout - Flexbox, Grid & Container Queries]]
-- [[Modern CSS 2025-2026]]
-- [[Styling Approaches]]
-- [[Accessibility Essentials]]
-- [[Core Web Vitals]]
-- [[Performance Optimization Playbook]]
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [Layout - Flexbox, Grid & Container Queries](/Software%20Engineering/Frontend/04%20CSS/Layout%20-%20Flexbox%2C%20Grid%20%26%20Container%20Queries)
+- [Modern CSS 2025-2026](/Software%20Engineering/Frontend/04%20CSS/Modern%20CSS%202025-2026)
+- [Styling Approaches](/Software%20Engineering/Frontend/04%20CSS/Styling%20Approaches)
+- [Accessibility Essentials](/Software%20Engineering/Frontend/12%20Accessibility/Accessibility%20Essentials)
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
+- [Performance Optimization Playbook](/Software%20Engineering/Frontend/10%20Performance/Performance%20Optimization%20Playbook)
 
 ## Sources
 - MDN: [Specificity](https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity), [Cascade](https://developer.mozilla.org/en-US/docs/Web/CSS/Cascade), [@layer](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer), [Inheritance](https://developer.mozilla.org/en-US/docs/Web/CSS/Inheritance), [Box model](https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/The_box_model), [Containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block), [Block formatting context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_display/Block_formatting_context), [Margin collapsing](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_box_model/Mastering_margin_collapsing), [Stacking context](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context), [Visual formatting model](https://developer.mozilla.org/en-US/docs/Web/CSS/Visual_formatting_model), [Replaced elements](https://developer.mozilla.org/en-US/docs/Web/CSS/Replaced_element), [Logical properties](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values), [Length units](https://developer.mozilla.org/en-US/docs/Web/CSS/length)

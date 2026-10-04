@@ -1,21 +1,28 @@
 ---
+title: "Secure SDLC & Threat Modeling"
 tags: [security, security/sdlc]
 aliases: [Secure SDLC, SSDLC, Threat Modeling, STRIDE, DevSecOps, SAST DAST SCA, SBOM, SLSA, Cyber Resilience Act, CRA]
 updated: 2026-09-27
 ---
 # Secure SDLC & Threat Modeling
 
-> [!tldr] TL;DR
-> A secure SDLC builds security into every phase instead of testing it in at the end: requirements, **threat modeling** during design (STRIDE is the classic method), secure coding standards and **security-focused code review**, automated **SAST, SCA, secret scanning and DAST** in CI, **SBOMs and signed provenance (SLSA)** for what you ship, and vulnerability response after release. Regulation now requires parts of this: the EU **Cyber Resilience Act** makes vulnerability and incident reporting mandatory from **11 September 2026** and full product requirements from **11 December 2027**.
+<Note>
+**TL;DR**
 
-> [!info]+ 🆕 2025–2026
-> - **2024-12-10**: EU Cyber Resilience Act (Regulation (EU) 2024/2847) entered into force.
-> - **2025-04**: SLSA v1.1 approved; **2025-11-12**: **SLSA v1.2** approved, adding the **Source Track** (source-code integrity levels) next to the Build Track.
-> - **2025-05**: OWASP ASVS 5.0 released.
-> - **2025-08**: CISA published a draft **2025 Minimum Elements for an SBOM** (adds component hash, license, tool name, generation context; comments closed 2025-10-03).
-> - **2025-11 / 2026-01**: OWASP Top 10:2025 puts **Software Supply Chain Failures** at #3 ([[OWASP Top 10]]).
-> - **2026-07-27**: European Commission published CRA implementation guidance. **2026-09-11**: CRA reporting obligations apply (24 h early warning, 72 h notification, final report) for actively exploited vulnerabilities and severe incidents, **including products already on the market**.
-> - **2027-12-11**: CRA main obligations apply (secure-by-design requirements, vulnerability handling, SBOM, CE marking).
+A secure SDLC builds security into every phase instead of testing it in at the end: requirements, **threat modeling** during design (STRIDE is the classic method), secure coding standards and **security-focused code review**, automated **SAST, SCA, secret scanning and DAST** in CI, **SBOMs and signed provenance (SLSA)** for what you ship, and vulnerability response after release. Regulation now requires parts of this: the EU **Cyber Resilience Act** makes vulnerability and incident reporting mandatory from **11 September 2026** and full product requirements from **11 December 2027**.
+</Note>
+
+<Info>
+**🆕 2025–2026**
+
+- **2024-12-10**: EU Cyber Resilience Act (Regulation (EU) 2024/2847) entered into force.
+- **2025-04**: SLSA v1.1 approved; **2025-11-12**: **SLSA v1.2** approved, adding the **Source Track** (source-code integrity levels) next to the Build Track.
+- **2025-05**: OWASP ASVS 5.0 released.
+- **2025-08**: CISA published a draft **2025 Minimum Elements for an SBOM** (adds component hash, license, tool name, generation context; comments closed 2025-10-03).
+- **2025-11 / 2026-01**: OWASP Top 10:2025 puts **Software Supply Chain Failures** at #3 ([OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010)).
+- **2026-07-27**: European Commission published CRA implementation guidance. **2026-09-11**: CRA reporting obligations apply (24 h early warning, 72 h notification, final report) for actively exploited vulnerabilities and severe incidents, **including products already on the market**.
+- **2027-12-11**: CRA main obligations apply (secure-by-design requirements, vulnerability handling, SBOM, CE marking).
+</Info>
 
 ## The secure SDLC at a glance
 
@@ -74,11 +81,11 @@ Trust boundaries: browser → API, API → storage, queue → worker (worker par
 | E | Malicious image exploits the image library (e.g. ImageTragick-style RCE) | Sandboxed worker, patched library, no shell calls, least-privilege IAM role |
 | I/E | SVG with script served from main domain → XSS | Disallow SVG or serve from a separate sandbox domain with `Content-Disposition` and CSP |
 
-Keep it light: a 45-minute session with the team, a diagram and a table like this, stored next to the design doc ([[Technical Design Docs & RFCs]]). Other methods: PASTA (risk-centric), LINDDUN (privacy), attack trees; tools: OWASP Threat Dragon, Microsoft Threat Modeling Tool.
+Keep it light: a 45-minute session with the team, a diagram and a table like this, stored next to the design doc ([Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs)). Other methods: PASTA (risk-centric), LINDDUN (privacy), attack trees; tools: OWASP Threat Dragon, Microsoft Threat Modeling Tool.
 
 ## Security reviews
 - **Design review**: triggered by new data types (PII, payments), new external integrations, auth changes, new public endpoints. Uses the threat model.
-- **Code review with a security lens**: where does input enter, what interprets it, where is authz checked, what's logged, which dependencies were added? See [[Code Review Best Practices]].
+- **Code review with a security lens**: where does input enter, what interprets it, where is authz checked, what's logged, which dependencies were added? See [Code Review Best Practices](/Software%20Engineering/Career/Code%20Review%20Best%20Practices).
 - **Penetration tests**: before big launches and periodically; by people independent of the team.
 - **Bug bounty / vulnerability disclosure policy**: a `security.txt` (RFC 9116) and a clear reporting channel. Under the CRA manufacturers must have a coordinated vulnerability disclosure policy.
 
@@ -94,14 +101,17 @@ Keep it light: a 45-minute session with the team, a diagram and a table like thi
 | **IAST / RASP** | Instrumented runtime analysis/protection | Test / prod | Contrast, Datadog ASM | Agent overhead, vendor lock-in |
 | **Fuzzing** | Random/structured inputs to find crashes | Parsers, native code | OSS-Fuzz, Jazzer, AFL++ | Setup effort |
 
-> [!tip] Make findings actionable
-> Block merges only on high-confidence, high-severity rules; route the rest to a backlog with SLAs (e.g. critical in 7 days, high in 30). Prioritise vulnerabilities that are **reachable** and **exploited** (CISA KEV catalogue, EPSS score), not only by CVSS.
+<Tip>
+**Make findings actionable**
+
+Block merges only on high-confidence, high-severity rules; route the rest to a backlog with SLAs (e.g. critical in 7 days, high in 30). Prioritise vulnerabilities that are **reachable** and **exploited** (CISA KEV catalogue, EPSS score), not only by CVSS.
+</Tip>
 
 ## Dependency scanning and updates
 - Lockfiles committed; CI installs with `npm ci` / `pip install --require-hashes` / Gradle dependency locking.
 - Automated update PRs (Renovate/Dependabot) grouped and auto-merged for patch versions when tests pass; a **cooldown** (e.g. wait a few days after publish) reduces exposure to freshly published malicious versions.
 - Remove unused dependencies; fewer dependencies = smaller attack surface.
-- Frontend specifics (npm worms, install scripts, provenance): [[Supply Chain Security]].
+- Frontend specifics (npm worms, install scripts, provenance): [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
 
 ## SBOM
 A **Software Bill of Materials** lists every component in what you ship (name, version, supplier, hashes, licenses, dependency relationships).
@@ -137,12 +147,15 @@ SLSA v1.2 (Nov 2025) adds a **Source Track** with levels for source integrity (v
 Scope: "products with digital elements" placed on the EU market (software and hardware). Pure SaaS is mostly covered by NIS2 instead. Non-commercial open source is excluded; "open-source stewards" (foundations supporting OSS used commercially) have lighter obligations. Check the official guidance for your case; this is not legal advice.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Buying tools and turning on every rule: alert fatigue, ignored results.
-> - Threat modeling once, as a big document, never updated.
-> - Security team as a gate at the end instead of a partner in design.
-> - SBOM generated from the manifest rather than the built artifact (misses vendored or transitive code).
-> - Treating SCA findings as all equal instead of checking reachability and exploitation.
+<Warning>
+**Common mistakes**
+
+- Buying tools and turning on every rule: alert fatigue, ignored results.
+- Threat modeling once, as a big document, never updated.
+- Security team as a gate at the end instead of a partner in design.
+- SBOM generated from the manifest rather than the built artifact (misses vendored or transitive code).
+- Treating SCA findings as all equal instead of checking reachability and exploitation.
+</Warning>
 
 ## Senior perspective
 - Integrate security into existing rituals: design doc template has a "Security & privacy" section; the PR template has a security checklist; incidents have blameless postmortems.
@@ -151,29 +164,35 @@ Scope: "products with digital elements" placed on the EU market (software and ha
 - Know your regulatory exposure (CRA, NIS2, PCI DSS 4.0, SOC 2) early; they drive requirements like SBOMs, logging and disclosure timelines.
 
 ## Interview questions
-> [!question]- What is STRIDE?
-> A threat-classification mnemonic from Microsoft: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege. You apply it to each element and data flow of a diagram to find threats, then choose mitigations.
+<Accordion title="What is STRIDE?">
+A threat-classification mnemonic from Microsoft: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege. You apply it to each element and data flow of a diagram to find threats, then choose mitigations.
+</Accordion>
 
-> [!question]- SAST vs DAST vs SCA?
-> SAST analyses source code without running it (finds injection patterns early, false positives). DAST attacks the running app from outside (finds runtime/config issues, needs a deployed environment). SCA checks third-party dependencies for known vulnerabilities and licenses. You need all three; none finds business-logic authorization bugs well.
+<Accordion title="SAST vs DAST vs SCA?">
+SAST analyses source code without running it (finds injection patterns early, false positives). DAST attacks the running app from outside (finds runtime/config issues, needs a deployed environment). SCA checks third-party dependencies for known vulnerabilities and licenses. You need all three; none finds business-logic authorization bugs well.
+</Accordion>
 
-> [!question]- What is an SBOM and why does it matter?
-> A machine-readable inventory of components in a software artifact (CycloneDX or SPDX). It lets you answer quickly whether you're affected by a new vulnerability, supports license compliance, and is increasingly required by customers and regulation (US federal, EU CRA).
+<Accordion title="What is an SBOM and why does it matter?">
+A machine-readable inventory of components in a software artifact (CycloneDX or SPDX). It lets you answer quickly whether you're affected by a new vulnerability, supports license compliance, and is increasingly required by customers and regulation (US federal, EU CRA).
+</Accordion>
 
-> [!question]- What is SLSA?
-> A framework of levels for supply-chain integrity. Build levels require signed, non-forgeable provenance from a hardened build platform so consumers can verify how and from what source an artifact was built. v1.2 (2025) added a Source Track.
+<Accordion title="What is SLSA?">
+A framework of levels for supply-chain integrity. Build levels require signed, non-forgeable provenance from a hardened build platform so consumers can verify how and from what source an artifact was built. v1.2 (2025) added a Source Track.
+</Accordion>
 
-> [!question]- When should a team do threat modeling?
-> During design of new features that change trust boundaries, data sensitivity, authentication or external integrations, and again when the architecture changes significantly. Keep it lightweight and repeatable.
+<Accordion title="When should a team do threat modeling?">
+During design of new features that change trust boundaries, data sensitivity, authentication or external integrations, and again when the architecture changes significantly. Keep it lightweight and repeatable.
+</Accordion>
 
-> [!question]- What does the EU Cyber Resilience Act require of software makers?
-> From 11 September 2026, reporting actively exploited vulnerabilities and severe incidents (24 h / 72 h / final report). From 11 December 2027, secure-by-design requirements, vulnerability handling during the support period, an SBOM, security updates and conformity assessment/CE marking for products with digital elements sold in the EU.
+<Accordion title="What does the EU Cyber Resilience Act require of software makers?">
+From 11 September 2026, reporting actively exploited vulnerabilities and severe incidents (24 h / 72 h / final report). From 11 December 2027, secure-by-design requirements, vulnerability handling during the support period, an SBOM, security updates and conformity assessment/CE marking for products with digital elements sold in the EU.
+</Accordion>
 
 ## Related
-- [[Security Index]]
-- [[OWASP Top 10]] · [[Backend Security Essentials]] · [[API Security]] · [[Secrets Management]]
-- [[Supply Chain Security]] · [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Technical Design Docs & RFCs]] · [[Code Review Best Practices]]
+- [Security Index](/Software%20Engineering/Security/Security%20Index)
+- [OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010) · [Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials) · [API Security](/Software%20Engineering/Security/API%20Security) · [Secrets Management](/Software%20Engineering/Security/Secrets%20Management)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs) · [Code Review Best Practices](/Software%20Engineering/Career/Code%20Review%20Best%20Practices)
 
 ## Sources
 - [European Commission: Cyber Resilience Act](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act) and [CRA reporting obligations](https://digital-strategy.ec.europa.eu/en/policies/cra-reporting)

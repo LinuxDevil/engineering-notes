@@ -1,12 +1,16 @@
 ---
+title: "Estimation & Planning"
 tags: [career, career/estimation]
 aliases: [Estimation, Estimating, Software Estimation, Project Planning, Planning]
 updated: 2026-09-27
 ---
 # Estimation & Planning
 
-> [!tldr] TL;DR
-> Estimates are **forecasts with uncertainty**, not promises. Give **ranges** with a confidence level, break work down until pieces are small, base numbers on **past data** where you can, and re-estimate as you learn (the cone of uncertainty narrows over time). Planning is about **sequencing risk first**, cutting scope to hit dates, and communicating early when things change. Separate the *estimate* (what we think it takes) from the *target* (what the business wants) and the *commitment* (what we agree to deliver).
+<Note>
+**TL;DR**
+
+Estimates are **forecasts with uncertainty**, not promises. Give **ranges** with a confidence level, break work down until pieces are small, base numbers on **past data** where you can, and re-estimate as you learn (the cone of uncertainty narrows over time). Planning is about **sequencing risk first**, cutting scope to hit dates, and communicating early when things change. Separate the *estimate* (what we think it takes) from the *target* (what the business wants) and the *commitment* (what we agree to deliver).
+</Note>
 
 ## The idea
 - Steve McConnell's distinction: an **estimate** is an analysis; a **target** is a business wish; a **commitment** is a promise. Mixing them causes most estimation fights.
@@ -74,39 +78,46 @@ gantt
 - When pressured for a smaller number, change **scope**, not the estimate.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Single-number estimates treated as commitments.
-> - Estimating only coding time.
-> - Ignoring past data ("this time it'll be different"): the **planning fallacy**.
-> - Hofstadter's law: it always takes longer than you expect, even when you take into account Hofstadter's law.
-> - Adding people to a late project (Brooks's law: it makes it later, at least at first).
-> - Padding in secret, which destroys trust when discovered.
-> - Story points converted to hours and used to compare teams.
+<Warning>
+**Common mistakes**
+
+- Single-number estimates treated as commitments.
+- Estimating only coding time.
+- Ignoring past data ("this time it'll be different"): the **planning fallacy**.
+- Hofstadter's law: it always takes longer than you expect, even when you take into account Hofstadter's law.
+- Adding people to a late project (Brooks's law: it makes it later, at least at first).
+- Padding in secret, which destroys trust when discovered.
+- Story points converted to hours and used to compare teams.
+</Warning>
 
 ## Senior perspective
 - Your job is to make **uncertainty visible** and reduce it quickly (spikes, prototypes, early integration).
 - Plan in milestones that each deliver value, so a cut project still ships something.
 - Track estimate accuracy over time; calibrate yourself and the team.
-- With AI tools, coding tasks may be faster but review, integration and verification don't shrink as much. Don't cut estimates proportionally to "AI speed-up" claims; the METR 2025 study found experienced developers were slower with AI on familiar codebases while believing they were faster ([[Senior Engineer in the AI Era]]).
+- With AI tools, coding tasks may be faster but review, integration and verification don't shrink as much. Don't cut estimates proportionally to "AI speed-up" claims; the METR 2025 study found experienced developers were slower with AI on familiar codebases while believing they were faster ([Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era)).
 - For big initiatives, plan with **options and decision points**, not a fixed Gantt chart.
 
 ## Interview questions
-> [!question]- How do you estimate a project you've never done before?
-> Break it into smaller known pieces, use analogies to similar past work, run a timeboxed spike on the biggest unknown, give a range with assumptions, and commit to re-estimating after the spike.
+<Accordion title="How do you estimate a project you've never done before?">
+Break it into smaller known pieces, use analogies to similar past work, run a timeboxed spike on the biggest unknown, give a range with assumptions, and commit to re-estimating after the spike.
+</Accordion>
 
-> [!question]- Your project is going to miss its deadline. What do you do?
-> Tell stakeholders as soon as you know, with the reason, a new forecast and options: cut or phase scope, add time, or (rarely) add people with specific tasks. Never hide it until the last week.
+<Accordion title="Your project is going to miss its deadline. What do you do?">
+Tell stakeholders as soon as you know, with the reason, a new forecast and options: cut or phase scope, add time, or (rarely) add people with specific tasks. Never hide it until the last week.
+</Accordion>
 
-> [!question]- Story points vs time estimates?
-> Points measure relative size/complexity and, with velocity, forecast team throughput without arguing about hours. Time estimates are easier for stakeholders to understand. Both are only as good as their calibration; throughput-based forecasting is a data-driven alternative.
+<Accordion title="Story points vs time estimates?">
+Points measure relative size/complexity and, with velocity, forecast team throughput without arguing about hours. Time estimates are easier for stakeholders to understand. Both are only as good as their calibration; throughput-based forecasting is a data-driven alternative.
+</Accordion>
 
-> [!question]- What is the cone of uncertainty?
-> The idea that early estimates have a wide error range (up to ~4× either way) that narrows as requirements, design and implementation progress. So estimate in ranges and refine.
+<Accordion title="What is the cone of uncertainty?">
+The idea that early estimates have a wide error range (up to ~4× either way) that narrows as requirements, design and implementation progress. So estimate in ranges and refine.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Technical Design Docs & RFCs]] · [[Communication & Influence for Engineers]] · [[Productivity & Deep Work]]
-- [[Engineering Levels - Junior to Staff]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs) · [Communication & Influence for Engineers](/Software%20Engineering/Career/Communication%20%26%20Influence%20for%20Engineers) · [Productivity & Deep Work](/Software%20Engineering/Career/Productivity%20%26%20Deep%20Work)
+- [Engineering Levels - Junior to Staff](/Software%20Engineering/Career/Engineering%20Levels%20-%20Junior%20to%20Staff)
 
 ## Sources
 - Steve McConnell, *Software Estimation: Demystifying the Black Art* (Microsoft Press, 2006)

@@ -1,14 +1,18 @@
 ---
+title: "Unit 03 MongoDB and the Document Model"
 tags: [databases, databases/mongodb]
 aliases: [MongoDB Document Model, BSON, ObjectId, Flexible Schema, MongoDB Unit 3]
 updated: 2026-09-27
 ---
 # Unit 03 MongoDB and the Document Model
 
-> [!tldr] TL;DR
-> A **document** is MongoDB's basic unit of data: an ordered set of field/value pairs, displayed as JSON and stored as **BSON** (binary JSON with extra types such as `Date`, `ObjectId`, `Decimal128`, `Int32/Int64`). Documents live in **collections**, collections live in **databases**. Every document needs a unique `_id`, auto-generated as an `ObjectId` if you omit it. The schema is **flexible** (documents in one collection can differ), and you can add **schema validation** when you need guarantees.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 3 · Prev: [[Unit 02 Getting Started with MongoDB Atlas]] · Next: [[Unit 04 MongoDB Data Modeling Intro]]
+A **document** is MongoDB's basic unit of data: an ordered set of field/value pairs, displayed as JSON and stored as **BSON** (binary JSON with extra types such as `Date`, `ObjectId`, `Decimal128`, `Int32/Int64`). Documents live in **collections**, collections live in **databases**. Every document needs a unique `_id`, auto-generated as an `ObjectId` if you omit it. The schema is **flexible** (documents in one collection can differ), and you can add **schema validation** when you need guarantees.
+</Note>
+
+> Course: MongoDB University, Unit 3 · Prev: [Unit 02 Getting Started with MongoDB Atlas](/Software%20Engineering/Databases/MongoDB/Unit%2002%20Getting%20Started%20with%20MongoDB%20Atlas) · Next: [Unit 04 MongoDB Data Modeling Intro](/Software%20Engineering/Databases/MongoDB/Unit%2004%20MongoDB%20Data%20Modeling%20Intro)
 
 ## What this unit covers
 How MongoDB stores data and fits into Atlas, common use cases, supported value types, how unique identifiers are created, what a flexible schema means, and managing databases, collections and documents in the Atlas **Data Explorer**.
@@ -100,26 +104,30 @@ In the Atlas UI, **Data Explorer** (Browse Collections) lets you create database
 
 ## Senior perspective
 - "Flexible schema" moves schema enforcement to the application. In teams, add `$jsonSchema` validation (start with `validationAction: "warn"`), and version documents with a `schemaVersion` field (the **schema versioning pattern**) so code can migrate lazily.
-- The **16 MB** limit is a design smell detector: if a document can approach it, your model probably has an unbounded array ([[Unit 04 MongoDB Data Modeling Intro]]).
+- The **16 MB** limit is a design smell detector: if a document can approach it, your model probably has an unbounded array ([Unit 04 MongoDB Data Modeling Intro](/Software%20Engineering/Databases/MongoDB/Unit%2004%20MongoDB%20Data%20Modeling%20Intro)).
 - Field names are stored in every document; very long names cost storage and cache on huge collections (compression helps, but be deliberate).
-- ObjectIds are monotonically increasing per process, which makes them a poor **shard key** on their own (all inserts hit one chunk). See [[Sharding & Partitioning]].
+- ObjectIds are monotonically increasing per process, which makes them a poor **shard key** on their own (all inserts hit one chunk). See [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
 
 ## Interview questions
-> [!question]- What is BSON and why does MongoDB use it instead of JSON?
-> Binary JSON: a binary, length-prefixed encoding that is fast to traverse and supports extra types (dates, 64-bit ints, Decimal128, ObjectId, binary). It is MongoDB's storage and wire format. Tools show it as JSON/Extended JSON.
+<Accordion title="What is BSON and why does MongoDB use it instead of JSON?">
+Binary JSON: a binary, length-prefixed encoding that is fast to traverse and supports extra types (dates, 64-bit ints, Decimal128, ObjectId, binary). It is MongoDB's storage and wire format. Tools show it as JSON/Extended JSON.
+</Accordion>
 
-> [!question]- What is an ObjectId made of?
-> 12 bytes: a 4-byte Unix timestamp (seconds), a 5-byte random value unique to the machine/process, and a 3-byte incrementing counter. So it is unique without coordination and roughly time-ordered.
+<Accordion title="What is an ObjectId made of?">
+12 bytes: a 4-byte Unix timestamp (seconds), a 5-byte random value unique to the machine/process, and a 3-byte incrementing counter. So it is unique without coordination and roughly time-ordered.
+</Accordion>
 
-> [!question]- Is MongoDB schemaless? How do you enforce a schema?
-> It has a flexible schema, not no schema. Use `$jsonSchema` validators on the collection (with `validationLevel` and `validationAction`), plus application-level models (e.g. Mongoose, Zod).
+<Accordion title="Is MongoDB schemaless? How do you enforce a schema?">
+It has a flexible schema, not no schema. Use `$jsonSchema` validators on the collection (with `validationLevel` and `validationAction`), plus application-level models (e.g. Mongoose, Zod).
+</Accordion>
 
-> [!question]- What is the maximum document size and what do you do if you need more?
-> 16 MB. Redesign (split into referenced documents, bucket pattern) or, for files, use GridFS or object storage.
+<Accordion title="What is the maximum document size and what do you do if you need more?">
+16 MB. Redesign (split into referenced documents, bucket pattern) or, for files, use GridFS or object storage.
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[NoSQL Database Types]] · [[Data Modeling & Normalization]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types) · [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization)
 
 ## Sources
 - [MongoDB Manual: Documents](https://www.mongodb.com/docs/manual/core/document/)

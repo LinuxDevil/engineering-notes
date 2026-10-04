@@ -1,12 +1,16 @@
 ---
+title: "Database Pages"
 tags: [databases, databases/internals, databases/postgres]
 aliases: [Pages, Database Page, Page Layout, Postgres Page Layout, Buffer Pool]
 updated: 2026-09-27
 ---
 # Database Pages
 
-> [!tldr] TL;DR
-> Databases store and move data in fixed-size **pages** (Postgres 8 KB, InnoDB 16 KB). Every read pulls whole pages from disk into the **buffer pool**; every write modifies a page in memory, logs the change to the WAL, and flushes the page later. A Postgres heap page has a 24-byte header, an array of 4-byte **item pointers**, free space, and the tuples themselves growing from the end. The item-pointer indirection is what makes **HOT** updates possible. Smaller rows mean more rows per page, which means fewer IOs.
+<Note>
+**TL;DR**
+
+Databases store and move data in fixed-size **pages** (Postgres 8 KB, InnoDB 16 KB). Every read pulls whole pages from disk into the **buffer pool**; every write modifies a page in memory, logs the change to the WAL, and flushes the page later. A Postgres heap page has a 24-byte header, an array of 4-byte **item pointers**, free space, and the tuples themselves growing from the end. The item-pointer indirection is what makes **HOT** updates possible. Smaller rows mean more rows per page, which means fewer IOs.
+</Note>
 
 ## The idea
 
@@ -14,7 +18,7 @@ Databases use fixed-size pages to store data: the data ends up as bytes in the p
 
 ## Reading and writing through pages
 
-![[Pages_in_DB.drawio.png]]
+![Pages_in_DB.drawio](/Attachments/Pages_in_DB.drawio.png)
 
 **Reading a row**
 
@@ -42,13 +46,13 @@ flowchart LR
 
 ### SQL Server page layout
 
-![[Screenshot_2023-07-23_at_5.42.00_PM.png]]
+![Screenshot_2023-07-23_at_5.42.00_PM](/Attachments/Screenshot_2023-07-23_at_5.42.00_PM.png)
 
 ### PostgreSQL page layout
 
-![[Screenshot_2023-07-23_at_6.01.01_PM.png]]
+![Screenshot_2023-07-23_at_6.01.01_PM](/Attachments/Screenshot_2023-07-23_at_6.01.01_PM.png)
 
-![[Screenshot_2023-07-23_at_6.01.28_PM.png]]
+![Screenshot_2023-07-23_at_6.01.28_PM](/Attachments/Screenshot_2023-07-23_at_6.01.28_PM.png)
 
 | Part | Size | Content |
 |---|---|---|
@@ -64,7 +68,7 @@ To clarify the vocabulary:
 
 - **Row**: what the user sees.
 - **Tuple**: the physical instance of a row in a page. The "item" is the tuple.
-- The same row can have many tuples at once, e.g. 10 tuples: 7 old versions still visible to older transactions (MVCC), 2 dead ones nobody needs (waiting for VACUUM), 1 current. See [[MVCC & Vacuum]].
+- The same row can have many tuples at once, e.g. 10 tuples: 7 old versions still visible to older transactions (MVCC), 2 dead ones nobody needs (waiting for VACUUM), 1 current. See [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum).
 
 ## Page content depends on the storage model
 
@@ -77,7 +81,7 @@ What you store in the page is a design choice; the goal is that each page read g
 | **Document store** | Compressed documents, like a row store | Fetching whole documents |
 | **Graph store** | Nodes with their connectivity (adjacency) | Traversals: neighbours on the same page |
 
-See [[Row Vs Column Oriented Databases]].
+See [Row Vs Column Oriented Databases](/Software%20Engineering/Databases/Database%20Round/Row%20Vs%20Column%20Oriented%20Databases).
 
 ## Small vs large pages
 
@@ -109,10 +113,13 @@ FROM heap_page_items(get_raw_page('orders', 0));
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Wide rows**: a few big columns on a hot table mean few rows per page and more IO. Move rarely used large columns to a side table; Postgres **TOAST**s values over ~2 KB out of line automatically.
-> - **Random primary keys** (UUIDv4) scatter inserts across all pages of a B-tree: poor cache locality and page splits, especially painful in clustered InnoDB tables. Prefer sequential or time-ordered keys (bigint identity, UUIDv7).
-> - **Torn pages**: a crash mid-write can leave half a page on disk. Postgres writes a **full-page image** to WAL the first time a page is modified after a checkpoint (`full_page_writes`) to repair this; data checksums detect corruption.
+<Warning>
+**Common pitfalls**
+
+- **Wide rows**: a few big columns on a hot table mean few rows per page and more IO. Move rarely used large columns to a side table; Postgres **TOAST**s values over ~2 KB out of line automatically.
+- **Random primary keys** (UUIDv4) scatter inserts across all pages of a B-tree: poor cache locality and page splits, especially painful in clustered InnoDB tables. Prefer sequential or time-ordered keys (bigint identity, UUIDv7).
+- **Torn pages**: a crash mid-write can leave half a page on disk. Postgres writes a **full-page image** to WAL the first time a page is modified after a checkpoint (`full_page_writes`) to repair this; data checksums detect corruption.
+</Warning>
 
 ## Senior perspective
 
@@ -120,31 +127,39 @@ FROM heap_page_items(get_raw_page('orders', 0));
 - Cache hit ratio (`blks_hit / (blks_hit + blks_read)` in `pg_stat_database`) above ~99% is typical for OLTP; if it drops, the working set no longer fits in memory.
 - Page-level features to know: `fillfactor` (leave room for HOT updates), checksums (default **on** for new clusters since PG 18), full-page writes and WAL compression (`wal_compression`).
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 18 (2025-09-25)**: `initdb` now enables **data checksums by default** (use `--no-data-checksums` to opt out; this matters for `pg_upgrade`, since old and new clusters must match). Asynchronous I/O (`io_method`) changes how pages are read ahead from disk.
-> - **PostgreSQL 19 (beta)** planned online enabling/disabling of checksums, but the feature was **reverted** before Beta 4 (2026-09-24), so don't expect it in 19.0.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 18 (2025-09-25)**: `initdb` now enables **data checksums by default** (use `--no-data-checksums` to opt out; this matters for `pg_upgrade`, since old and new clusters must match). Asynchronous I/O (`io_method`) changes how pages are read ahead from disk.
+- **PostgreSQL 19 (beta)** planned online enabling/disabling of checksums, but the feature was **reverted** before Beta 4 (2026-09-24), so don't expect it in 19.0.
+</Info>
 
 ## Interview questions
 
-> [!question]- Why do databases use fixed-size pages?
-> Uniform addressing (file + page number × size), simple caching and eviction in the buffer pool, alignment with OS/device blocks, and a clean boundary between storage engine and the rest of the system.
+<Accordion title="Why do databases use fixed-size pages?">
+Uniform addressing (file + page number × size), simple caching and eviction in the buffer pool, alignment with OS/device blocks, and a clean boundary between storage engine and the rest of the system.
+</Accordion>
 
-> [!question]- Describe the layout of a PostgreSQL heap page.
-> 24-byte header, then an array of 4-byte line pointers growing forward, free space in the middle, tuples growing backward from the end, and an optional special area (used by index pages). Line pointers give indirection so tuples can move within the page.
+<Accordion title="Describe the layout of a PostgreSQL heap page.">
+24-byte header, then an array of 4-byte line pointers growing forward, free space in the middle, tuples growing backward from the end, and an optional special area (used by index pages). Line pointers give indirection so tuples can move within the page.
+</Accordion>
 
-> [!question]- What is a HOT update and why does it matter?
-> A heap-only tuple update: when no indexed column changes and the new version fits in the same page, Postgres links the old line pointer to the new tuple and skips inserting new index entries. It cuts write amplification and index bloat for update-heavy tables.
+<Accordion title="What is a HOT update and why does it matter?">
+A heap-only tuple update: when no indexed column changes and the new version fits in the same page, Postgres links the old line pointer to the new tuple and skips inserting new index entries. It cuts write amplification and index bloat for update-heavy tables.
+</Accordion>
 
-> [!question]- Row size went from 100 to 1000 bytes. What happens to query performance?
-> Rows per page drop about tenfold, so scans read ~10x more pages, the cache holds fewer rows, and index-to-heap lookups touch more pages. Large values may be TOASTed, adding lookups when those columns are selected.
+<Accordion title="Row size went from 100 to 1000 bytes. What happens to query performance?">
+Rows per page drop about tenfold, so scans read ~10x more pages, the cache holds fewer rows, and index-to-heap lookups touch more pages. Large values may be TOASTed, adding lookups when those columns are selected.
+</Accordion>
 
-> [!question]- What is the buffer pool and how does it relate to the OS cache?
-> The database's own cache of pages in shared memory, managed with its own eviction policy and dirty-page tracking. Postgres also goes through the OS page cache, so a page can be cached twice; that's why `shared_buffers` is kept moderate and `effective_cache_size` tells the planner about OS caching.
+<Accordion title="What is the buffer pool and how does it relate to the OS cache?">
+The database's own cache of pages in shared memory, managed with its own eviction policy and dirty-page tracking. Postgres also goes through the OS page cache, so a page can be cached twice; that's why `shared_buffers` is kept moderate and `effective_cache_size` tells the planner about OS caching.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Database Internals]] · [[MVCC & Vacuum]] · [[Database Indexes]] · [[Row Vs Column Oriented Databases]]
-- [[Transactions & ACID]] (WAL and durability)
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals) · [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Row Vs Column Oriented Databases](/Software%20Engineering/Databases/Database%20Round/Row%20Vs%20Column%20Oriented%20Databases)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) (WAL and durability)
 
 ## Sources
 - PostgreSQL docs, Database Page Layout: https://www.postgresql.org/docs/current/storage-page-layout.html

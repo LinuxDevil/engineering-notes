@@ -1,12 +1,16 @@
 ---
+title: "Immutability Across Languages"
 tags: [principles, principles/immutability]
 aliases: [Const vs Final, const vs final, Immutability, final vs const, Object.freeze, val vs var, Immutable Objects]
 updated: 2026-09-27
 ---
 # Immutability Across Languages
 
-> [!tldr] TL;DR
-> Almost every language separates two ideas: an **immutable binding** (the name can't be reassigned: JS `const`, Java `final`, Kotlin `val`, Dart `final`) and an **immutable value** (the object itself can't change: Dart `const`, Java records with immutable fields, `Object.freeze`, persistent collections). Most keywords only give you the first. A further axis is **when** the value is fixed: compile time (Dart `const`, Kotlin `const val`, Java compile-time constants) or run time (`final`). Immutable data is easier to reason about, safe to share across threads and cheap to compare.
+<Note>
+**TL;DR**
+
+Almost every language separates two ideas: an **immutable binding** (the name can't be reassigned: JS `const`, Java `final`, Kotlin `val`, Dart `final`) and an **immutable value** (the object itself can't change: Dart `const`, Java records with immutable fields, `Object.freeze`, persistent collections). Most keywords only give you the first. A further axis is **when** the value is fixed: compile time (Dart `const`, Kotlin `const val`, Java compile-time constants) or run time (`final`). Immutable data is easier to reason about, safe to share across threads and cheap to compare.
+</Note>
 
 ## Two (really three) questions
 
@@ -79,10 +83,13 @@ List<String> xs = List.of("a", "b");                 // unmodifiable (Java 9+); 
 List<String> view = Collections.unmodifiableList(src); // read-only VIEW: src can still change!
 ```
 
-> [!info]+ 🆕 2025–2026 in Java
-> - **JEP 500 "Prepare to Make Final Mean Final"** (Java 26, GA 2026-03-17): mutating `final` fields through deep reflection (`Field.setAccessible(true)` + `set`) now prints warnings by default (`--illegal-final-field-mutation=warn`), preparing for a future release where it's denied unless explicitly enabled. Serialization and DI libraries that write into final fields need updating. Goal: "integrity by default" and letting the JVM trust `final` for optimisation.
-> - **Stable Values → Lazy Constants**: an API for values that are set **at most once, lazily**, yet treated as constants by the JIT. Preview as *Stable Values* in Java 25 (JEP 502), renamed **Lazy Constants** in Java 26 (JEP 526, second preview) and still preview in Java 27 (JEP 531, GA 2026-09-15). Useful for expensive, deferred initialisation that previously forced a non-final field or double-checked locking.
-> - Value classes (Project Valhalla, JEP 401) are still not in a GA release as of Java 27.
+<Info>
+**🆕 2025–2026 in Java**
+
+- **JEP 500 "Prepare to Make Final Mean Final"** (Java 26, GA 2026-03-17): mutating `final` fields through deep reflection (`Field.setAccessible(true)` + `set`) now prints warnings by default (`--illegal-final-field-mutation=warn`), preparing for a future release where it's denied unless explicitly enabled. Serialization and DI libraries that write into final fields need updating. Goal: "integrity by default" and letting the JVM trust `final` for optimisation.
+- **Stable Values → Lazy Constants**: an API for values that are set **at most once, lazily**, yet treated as constants by the JIT. Preview as *Stable Values* in Java 25 (JEP 502), renamed **Lazy Constants** in Java 26 (JEP 526, second preview) and still preview in Java 27 (JEP 531, GA 2026-09-15). Useful for expensive, deferred initialisation that previously forced a non-final field or double-checked locking.
+- Value classes (Project Valhalla, JEP 401) are still not in a GA release as of Java 27.
+</Info>
 
 ## JavaScript / TypeScript: `const`, `Object.freeze`, `readonly`
 
@@ -111,8 +118,11 @@ const ROLES = ["admin", "editor"] as const;    // readonly ["admin", "editor"]
 type Role = typeof ROLES[number];              // "admin" | "editor"
 ```
 
-> [!info]+ 🆕 2025: Records & Tuples withdrawn
-> The TC39 **Record & Tuple** proposal (deeply immutable `#{}` / `#[]` primitives with value equality) was **withdrawn at the April 2025 TC39 plenary** after years at Stage 2, mainly over performance expectations of value-based equality. Follow-up work continues in a smaller **Composites** proposal (immutable objects with value-like equality for use as Map/Set keys, not new primitives). For now, use `Object.freeze`, `readonly` types and libraries. See [[Objects, Arrays & Immutability]] and [[Modern JavaScript ES2022-ES2027]].
+<Info>
+**🆕 2025: Records & Tuples withdrawn**
+
+The TC39 **Record & Tuple** proposal (deeply immutable `#{}` / `#[]` primitives with value equality) was **withdrawn at the April 2025 TC39 plenary** after years at Stage 2, mainly over performance expectations of value-based equality. Follow-up work continues in a smaller **Composites** proposal (immutable objects with value-like equality for use as Map/Set keys, not new primitives). For now, use `Object.freeze`, `readonly` types and libraries. See [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability) and [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027).
+</Info>
 
 ## Kotlin: `val`, `const val`, data classes, read-only collections
 
@@ -143,53 +153,62 @@ Kotlin's `List` is a read-only *view*, not a guarantee of immutability: another 
 ## Why immutability matters
 
 - **Reasoning**: a value can't change behind your back; no "who modified this?" debugging.
-- **Concurrency**: immutable objects are thread-safe without locks. See [[Concurrency And Parallelism]].
+- **Concurrency**: immutable objects are thread-safe without locks. See [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism).
 - **Cheap change detection**: compare by reference (`prev !== next`), which React, Redux, Angular signals/OnPush and memoisation rely on.
 - **Safe sharing and caching**: can be used as map keys, cached, and passed across boundaries without defensive copies.
-- **Undo/time travel, event sourcing**: history is a list of values. See [[Software Architecture Styles#CQRS and event sourcing]].
+- **Undo/time travel, event sourcing**: history is a list of values. See [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles#cqrs-and-event-sourcing).
 
 Costs: allocation of new objects on every change (usually negligible; persistent data structures share structure), awkward updates of deeply nested data (use lenses, Immer, `copy`/`with`), and interop with mutable APIs.
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - Believing `const`/`final`/`val` makes the **object** immutable. It only fixes the reference.
-> - **Shallow** immutability: `Object.freeze`, records and `Readonly<T>` don't protect nested objects.
-> - Returning internal mutable collections from getters (callers mutate your state). Return copies or unmodifiable views, and remember that a view still reflects changes to the source.
-> - Java `static final` constants inlined into other compiled classes: changing the value without recompiling dependants leaves stale values.
-> - Mutating React state/props in place so change detection misses the update.
+<Warning>
+**Common mistakes**
+
+- Believing `const`/`final`/`val` makes the **object** immutable. It only fixes the reference.
+- **Shallow** immutability: `Object.freeze`, records and `Readonly<T>` don't protect nested objects.
+- Returning internal mutable collections from getters (callers mutate your state). Return copies or unmodifiable views, and remember that a view still reflects changes to the source.
+- Java `static final` constants inlined into other compiled classes: changing the value without recompiling dependants leaves stale values.
+- Mutating React state/props in place so change detection misses the update.
+</Warning>
 
 ## Senior perspective
 
-- Make **immutable the default** (records, data classes, `val`, `readonly`) and mutation the exception, local and visible. It pairs naturally with [[Functional Programming Principles]] and value objects in [[Domain-Driven Design (DDD)]].
+- Make **immutable the default** (records, data classes, `val`, `readonly`) and mutation the exception, local and visible. It pairs naturally with [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) and value objects in [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD)).
 - At boundaries, copy in and copy out (`List.copyOf`) so callers can't hold references into your state.
 - Immutability is a strong tool for concurrency but not a silver bullet: you still need coordination for shared *references* (atomic swap, actors, STM).
 - For hot paths, measure before worrying about allocation; modern GCs handle short-lived objects well.
 
 ## Interview questions
 
-> [!question]- What's the difference between `final` and `const` in Dart?
-> `final` is assigned once at run time; the object may still be mutable. `const` is a compile-time constant and deeply immutable; identical const values are canonicalised to one instance. A `const` constructor requires all fields to be final.
+<Accordion title="What's the difference between `final` and `const` in Dart?">
+`final` is assigned once at run time; the object may still be mutable. `const` is a compile-time constant and deeply immutable; identical const values are canonicalised to one instance. A `const` constructor requires all fields to be final.
+</Accordion>
 
-> [!question]- Does `const` in JavaScript make an object immutable?
-> No. It prevents reassigning the binding only. Use `Object.freeze` (shallow) or a deep-freeze helper, or immutable update patterns; in TypeScript `readonly`/`as const` are compile-time only.
+<Accordion title="Does `const` in JavaScript make an object immutable?">
+No. It prevents reassigning the binding only. Use `Object.freeze` (shallow) or a deep-freeze helper, or immutable update patterns; in TypeScript `readonly`/`as const` are compile-time only.
+</Accordion>
 
-> [!question]- Is a Java record immutable?
-> Shallowly. Its fields are private final and there are no setters, but if a component is a mutable object (e.g. `ArrayList`) its contents can change. Make defensive unmodifiable copies in the compact constructor.
+<Accordion title="Is a Java record immutable?">
+Shallowly. Its fields are private final and there are no setters, but if a component is a mutable object (e.g. `ArrayList`) its contents can change. Make defensive unmodifiable copies in the compact constructor.
+</Accordion>
 
-> [!question]- Why are immutable objects thread-safe?
-> Their state can't change after construction, so there are no write–write or read–write races; any thread can read them without locks. In Java, final fields also get safe-publication guarantees from the memory model.
+<Accordion title="Why are immutable objects thread-safe?">
+Their state can't change after construction, so there are no write–write or read–write races; any thread can read them without locks. In Java, final fields also get safe-publication guarantees from the memory model.
+</Accordion>
 
-> [!question]- What's the difference between `List.of` and `Collections.unmodifiableList`?
-> `List.of` creates a new unmodifiable list. `unmodifiableList` wraps an existing list in a read-only view: you can't modify through the view, but changes to the underlying list are visible.
+<Accordion title="What's the difference between `List.of` and `Collections.unmodifiableList`?">
+`List.of` creates a new unmodifiable list. `unmodifiableList` wraps an existing list in a read-only view: you can't modify through the view, but changes to the underlying list are visible.
+</Accordion>
 
-> [!question]- What happened to JavaScript Records & Tuples?
-> The proposal was withdrawn by TC39 in April 2025. A narrower Composites proposal explores immutable objects with value-like equality without introducing new primitives.
+<Accordion title="What happened to JavaScript Records & Tuples?">
+The proposal was withdrawn by TC39 in April 2025. A narrower Composites proposal explores immutable objects with value-like equality without introducing new primitives.
+</Accordion>
 
 ## Related
-- [[Principles Index]]
-- [[Functional Programming Principles]] · [[Concurrency And Parallelism]] · [[OOP]] · [[Domain-Driven Design (DDD)]]
-- Frontend: [[Objects, Arrays & Immutability]] · [[Hoisting, TDZ & var-let-const]] · [[Modern JavaScript ES2022-ES2027]]
+- [Principles Index](/Software%20Engineering/Principles/Principles%20Index)
+- [Functional Programming Principles](/Software%20Engineering/Principles/Functional%20Programming%20Principles) · [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency%20And%20Parallelism) · [OOP](/Software%20Engineering/Principles/OOP) · [Domain-Driven Design (DDD)](/Software%20Engineering/Principles/Domain-Driven%20Design%20(DDD))
+- Frontend: [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability) · [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const) · [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
 
 ## Sources
 - [Dart language tour: final and const](https://dart.dev/language/variables#final-and-const)

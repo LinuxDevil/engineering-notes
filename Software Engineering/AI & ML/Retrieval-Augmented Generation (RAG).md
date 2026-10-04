@@ -1,19 +1,23 @@
 ---
+title: "Retrieval-Augmented Generation (RAG)"
 tags: [ai-ml, ai-ml/llm, ai-ml/retrieval]
 aliases: [RAG, Retrieval Augmented Generation, Agentic RAG, Hybrid Search, Reranking, Chunking]
 updated: 2026-09-27
 ---
 # Retrieval-Augmented Generation (RAG)
 
-> [!tldr] TL;DR
-> **RAG** answers questions using **your** data: retrieve the most relevant passages from a knowledge base, put them in the prompt, and have the LLM answer **grounded** in them, with citations. Quality is decided mostly by **retrieval**: good **chunking**, **hybrid search** (keywords + embeddings), **reranking**, and metadata/permission filters. **Agentic RAG** lets the model decide what to search and when, over several steps. Evaluate retrieval and generation **separately**.
+<Note>
+**TL;DR**
+
+**RAG** answers questions using **your** data: retrieve the most relevant passages from a knowledge base, put them in the prompt, and have the LLM answer **grounded** in them, with citations. Quality is decided mostly by **retrieval**: good **chunking**, **hybrid search** (keywords + embeddings), **reranking**, and metadata/permission filters. **Agentic RAG** lets the model decide what to search and when, over several steps. Evaluate retrieval and generation **separately**.
+</Note>
 
 ## Why RAG?
 LLMs don't know your private documents, have a knowledge cutoff, and hallucinate when unsure. RAG fixes that without retraining:
 - **Fresh and private knowledge**: update the index, not the model.
 - **Grounding and citations**: answers point to sources users can check.
 - **Access control**: retrieve only what this user may see.
-- **Cheaper than fine-tuning** for knowledge; see [[Fine-tuning vs RAG vs Prompting]].
+- **Cheaper than fine-tuning** for knowledge; see [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting).
 
 ## The basic pipeline
 
@@ -64,7 +68,7 @@ Tips:
 
 ## 2. Retrieval
 
-- **Dense (semantic)**: embeddings + ANN search. Good at meaning and paraphrase. See [[Embeddings & Semantic Search]] and [[Vector Databases & pgvector]].
+- **Dense (semantic)**: embeddings + ANN search. Good at meaning and paraphrase. See [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search) and [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector).
 - **Sparse (lexical)**: BM25 / full-text search. Good at exact terms, codes and names.
 - **Hybrid**: run both and merge with **Reciprocal Rank Fusion**. A strong default.
 - **Metadata filters**: tenant, permissions, date ranges, product. Apply them **in** the search, not after.
@@ -107,7 +111,7 @@ flowchart TD
 | Cost / latency | low, predictable | higher, variable |
 | Failure modes | missed chunk = wrong answer | loops, over-searching, injection via retrieved content |
 
-Coding agents are a form of agentic RAG: they `grep`, list files and read code just in time rather than embedding the whole repository. See [[AI Agents & Agentic Patterns]] and [[Prompt & Context Engineering]].
+Coding agents are a form of agentic RAG: they `grep`, list files and read code just in time rather than embedding the whole repository. See [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) and [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering).
 
 ## 6. Evaluation
 
@@ -123,7 +127,7 @@ Evaluate the two halves separately, or you can't tell which one broke.
 | Generation | citation accuracy | do citations point to passages that support the claim? |
 | End to end | task success, user feedback | did the user get what they needed? |
 
-Build a **golden dataset** of real questions with the expected source documents and reference answers; score with code where possible and **LLM-as-judge** for faithfulness and relevance. Frameworks such as Ragas, TruLens and DeepEval implement these metrics. See [[LLM Evaluation & Observability]].
+Build a **golden dataset** of real questions with the expected source documents and reference answers; score with code where possible and **LLM-as-judge** for faithfulness and relevance. Frameworks such as Ragas, TruLens and DeepEval implement these metrics. See [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability).
 
 ## Common failure modes
 
@@ -146,29 +150,35 @@ Build a **golden dataset** of real questions with the expected source documents 
 
 ## Interview questions
 
-> [!question]- Walk me through a RAG system.
-> Ingest: parse sources, chunk with metadata, embed and index (vector + keyword). Query: rewrite the question if needed, retrieve with hybrid search and permission filters, rerank to the top few, build a prompt instructing the model to answer only from the context with citations, generate, validate citations, log everything, and evaluate retrieval and generation separately.
+<Accordion title="Walk me through a RAG system.">
+Ingest: parse sources, chunk with metadata, embed and index (vector + keyword). Query: rewrite the question if needed, retrieve with hybrid search and permission filters, rerank to the top few, build a prompt instructing the model to answer only from the context with citations, generate, validate citations, log everything, and evaluate retrieval and generation separately.
+</Accordion>
 
-> [!question]- How do you choose a chunk size?
-> Start with structure-aware chunks of a few hundred tokens with small overlap, then tune with a retrieval eval (recall@k). Smaller chunks are more precise but lose context; larger ones keep context but dilute relevance. Parent–child retrieval gets both.
+<Accordion title="How do you choose a chunk size?">
+Start with structure-aware chunks of a few hundred tokens with small overlap, then tune with a retrieval eval (recall@k). Smaller chunks are more precise but lose context; larger ones keep context but dilute relevance. Parent–child retrieval gets both.
+</Accordion>
 
-> [!question]- Why hybrid search and reranking?
-> Dense retrieval handles meaning, BM25 handles exact terms; fusing them improves recall. A cross-encoder reranker then reads query and candidate together to push the truly relevant chunks to the top, improving precision before the LLM sees them.
+<Accordion title="Why hybrid search and reranking?">
+Dense retrieval handles meaning, BM25 handles exact terms; fusing them improves recall. A cross-encoder reranker then reads query and candidate together to push the truly relevant chunks to the top, improving precision before the LLM sees them.
+</Accordion>
 
-> [!question]- What is agentic RAG and when is it worth it?
-> The model gets retrieval as tools and decides iteratively what to search, across sources, until it has enough evidence. Worth it for multi-hop or research-style questions; overkill (slower, costlier, less predictable) for simple FAQ lookups.
+<Accordion title="What is agentic RAG and when is it worth it?">
+The model gets retrieval as tools and decides iteratively what to search, across sources, until it has enough evidence. Worth it for multi-hop or research-style questions; overkill (slower, costlier, less predictable) for simple FAQ lookups.
+</Accordion>
 
-> [!question]- How do you evaluate a RAG system?
-> Golden set of questions with expected sources and answers. Retrieval: recall@k, MRR/nDCG. Generation: faithfulness to context, answer correctness/relevance, citation accuracy, often with LLM-as-judge calibrated against human labels. Plus production signals: feedback, escalations, "don't know" rate.
+<Accordion title="How do you evaluate a RAG system?">
+Golden set of questions with expected sources and answers. Retrieval: recall@k, MRR/nDCG. Generation: faithfulness to context, answer correctness/relevance, citation accuracy, often with LLM-as-judge calibrated against human labels. Plus production signals: feedback, escalations, "don't know" rate.
+</Accordion>
 
-> [!question]- The bot answered with another customer's data. What went wrong?
-> Access control wasn't enforced at retrieval: missing or post-hoc tenant/ACL filters, a shared index without partitioning, or cached answers shared across tenants. Fix by filtering in the query, partitioning by tenant where needed, and testing for cross-tenant leakage.
+<Accordion title="The bot answered with another customer's data. What went wrong?">
+Access control wasn't enforced at retrieval: missing or post-hoc tenant/ACL filters, a shared index without partitioning, or cached answers shared across tenants. Fix by filtering in the query, partitioning by tenant where needed, and testing for cross-tenant leakage.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[Embeddings & Semantic Search]] · [[Vector Databases & pgvector]]
-- [[Prompt & Context Engineering]] · [[Fine-tuning vs RAG vs Prompting]]
-- [[LLM Evaluation & Observability]] · [[AI Safety, Security & Guardrails for Apps]] · [[AI Agents & Agentic Patterns]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search) · [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector)
+- [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering) · [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting)
+- [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability) · [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns)
 
 ## Sources
 - Lewis et al. (2020), [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)

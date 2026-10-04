@@ -1,12 +1,16 @@
 ---
+title: "Collections - Map, Set, WeakMap & WeakRef"
 tags: [frontend, frontend/javascript]
 aliases: [Map, Set, WeakMap, WeakSet, WeakRef, FinalizationRegistry, Set vs Map]
 updated: 2026-09-27
 ---
 # Collections - Map, Set, WeakMap & WeakRef
 
-> [!tldr] TL;DR
-> **`Map`** is a key→value collection where keys can be *any* value (objects included) and insertion order is kept. **`Set`** is a collection of *unique* values. Their **weak** twins (`WeakMap`, `WeakSet`) hold object keys *weakly*, so they don't prevent garbage collection, which is perfect for caches and private metadata. **`WeakRef`** and **`FinalizationRegistry`** give low-level, non-deterministic access to GC. ES2025 added set algebra (`union`, `intersection`, ...) and ES2026 added `getOrInsert` / `getOrInsertComputed` ("upsert").
+<Note>
+**TL;DR**
+
+**`Map`** is a key→value collection where keys can be *any* value (objects included) and insertion order is kept. **`Set`** is a collection of *unique* values. Their **weak** twins (`WeakMap`, `WeakSet`) hold object keys *weakly*, so they don't prevent garbage collection, which is perfect for caches and private metadata. **`WeakRef`** and **`FinalizationRegistry`** give low-level, non-deterministic access to GC. ES2025 added set algebra (`union`, `intersection`, ...) and ES2026 added `getOrInsert` / `getOrInsertComputed` ("upsert").
+</Note>
 
 ## Map vs plain object
 
@@ -33,8 +37,11 @@ Object.fromEntries(m);                       // { a: 1, b: 2 }
 new Map(Object.entries({ a: 1 }));           // object -> Map
 ```
 
-> [!tip] When to use a Map
-> Dynamic keys (lookup tables, caches, counters), non-string keys, frequent insertion/deletion, or when you need reliable order and `.size`. Use plain objects for fixed-shape records and JSON data.
+<Tip>
+**When to use a Map**
+
+Dynamic keys (lookup tables, caches, counters), non-string keys, frequent insertion/deletion, or when you need reliable order and `.size`. Use plain objects for fixed-shape records and JSON data.
+</Tip>
 
 ## Set
 
@@ -72,16 +79,19 @@ selected.difference(available);     // Set { 'EK' }
 
 The argument must be "set-like" (has `size`, `has`, `keys`), so a `Map` works too (its keys are used).
 
-> [!example] Combining Set and Map (union), from the owner's interview notes
-> ```js
-> // Before ES2025: spread
-> const union = new Set([...setA, ...setB]);
-> const mergedMap = new Map([...mapA, ...mapB]);  // later keys win
->
-> // Now
-> const union2 = setA.union(setB);
-> const commonKeys = new Set(mapA.keys()).intersection(mapB);  // Map is set-like (keys)
-> ```
+<Info>
+**Combining Set and Map (union), from the owner's interview notes**
+
+```js
+// Before ES2025: spread
+const union = new Set([...setA, ...setB]);
+const mergedMap = new Map([...mapA, ...mapB]);  // later keys win
+
+// Now
+const union2 = setA.union(setB);
+const commonKeys = new Set(mapA.keys()).intersection(mapB);  // Map is set-like (keys)
+```
+</Info>
 
 ## Upsert: `getOrInsert` / `getOrInsertComputed` (ES2026)
 
@@ -117,20 +127,26 @@ Also available on `WeakMap`.
 | Metadata on DOM nodes | Removed nodes don't stay alive because of your map |
 | `WeakSet` to mark "already visited/processed" objects | E.g. cycle detection in deep clone |
 
-> [!example] Per-object memoization without leaks
-> ```js
-> const cache = new WeakMap();
-> function layoutFor(node) {
->   if (cache.has(node)) return cache.get(node);
->   const result = computeExpensiveLayout(node);
->   cache.set(node, result);
->   return result;
-> }
-> // When `node` is removed from the DOM and dropped, its cache entry can be collected.
-> ```
+<Info>
+**Per-object memoization without leaks**
 
-> [!warning] Map-as-cache leak
-> A regular `Map` keyed by DOM nodes or component instances keeps them alive forever (a classic SPA memory leak). Use `WeakMap`, or delete entries explicitly. See [[Memory Management & Garbage Collection]].
+```js
+const cache = new WeakMap();
+function layoutFor(node) {
+  if (cache.has(node)) return cache.get(node);
+  const result = computeExpensiveLayout(node);
+  cache.set(node, result);
+  return result;
+}
+// When `node` is removed from the DOM and dropped, its cache entry can be collected.
+```
+</Info>
+
+<Warning>
+**Map-as-cache leak**
+
+A regular `Map` keyed by DOM nodes or component instances keeps them alive forever (a classic SPA memory leak). Use `WeakMap`, or delete entries explicitly. See [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection).
+</Warning>
 
 ## WeakRef and FinalizationRegistry (ES2021)
 
@@ -153,8 +169,11 @@ function getImage(url) {
 }
 ```
 
-> [!warning] Use sparingly
-> GC is non-deterministic: an object may be collected late or never, and finalizers may never run (e.g. when the page closes). Never use them for essential logic (saving data, releasing locks). For deterministic cleanup use `try/finally` or `using` (see [[Memory Management & Garbage Collection]]).
+<Warning>
+**Use sparingly**
+
+GC is non-deterministic: an object may be collected late or never, and finalizers may never run (e.g. when the page closes). Never use them for essential logic (saving data, releasing locks). For deterministic cleanup use `try/finally` or `using` (see [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)).
+</Warning>
 
 ## Quick decision table
 
@@ -167,37 +186,46 @@ function getImage(url) {
 | Cache that may be dropped under memory pressure | `WeakRef` (+ `FinalizationRegistry`) |
 | Fixed-shape record / JSON | plain object |
 
-> [!info]+ 🆕 2025–2026
-> - **Set methods**: part of **ES2025** (Baseline Newly available 2024-06-11).
-> - **Upsert (`getOrInsert`, `getOrInsertComputed`)** on `Map`/`WeakMap`: **ES2026**, Baseline Newly available 2026-02-14; types in TypeScript 6.0.
-> - Grouping into a Map: `Map.groupBy` (ES2024), see [[Objects, Arrays & Immutability]].
+<Info>
+**🆕 2025–2026**
+
+- **Set methods**: part of **ES2025** (Baseline Newly available 2024-06-11).
+- **Upsert (`getOrInsert`, `getOrInsertComputed`)** on `Map`/`WeakMap`: **ES2026**, Baseline Newly available 2026-02-14; types in TypeScript 6.0.
+- Grouping into a Map: `Map.groupBy` (ES2024), see [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is the difference between a Set and a Map?
-> A Set stores unique values; a Map stores key→value pairs. Both keep insertion order, accept any value type, have `size` and are iterable.
+<Accordion title="What is the difference between a Set and a Map?">
+A Set stores unique values; a Map stores key→value pairs. Both keep insertion order, accept any value type, have `size` and are iterable.
+</Accordion>
 
-> [!question]- When would you use a Map instead of an object?
-> When keys are dynamic or non-strings (e.g. objects), when you add/remove often, or need reliable order and size. Objects suit fixed-shape records and JSON.
+<Accordion title="When would you use a Map instead of an object?">
+When keys are dynamic or non-strings (e.g. objects), when you add/remove often, or need reliable order and size. Objects suit fixed-shape records and JSON.
+</Accordion>
 
-> [!question]- What is a WeakMap and why isn't it iterable?
-> A map with object keys held weakly, so entries vanish when the key is garbage-collected. Because GC timing is unobservable by design, it has no iteration, `size` or `clear`.
+<Accordion title="What is a WeakMap and why isn't it iterable?">
+A map with object keys held weakly, so entries vanish when the key is garbage-collected. Because GC timing is unobservable by design, it has no iteration, `size` or `clear`.
+</Accordion>
 
-> [!question]- Give a real use case for WeakMap.
-> Caching computed data per DOM node or object instance, or storing private per-instance data, without preventing garbage collection.
+<Accordion title="Give a real use case for WeakMap.">
+Caching computed data per DOM node or object instance, or storing private per-instance data, without preventing garbage collection.
+</Accordion>
 
-> [!question]- How do you get the union or intersection of two sets?
-> ES2025: `a.union(b)`, `a.intersection(b)` (also `difference`, `symmetricDifference`, `isSubsetOf`...). Before: `new Set([...a, ...b])` and `new Set([...a].filter(x => b.has(x)))`.
+<Accordion title="How do you get the union or intersection of two sets?">
+ES2025: `a.union(b)`, `a.intersection(b)` (also `difference`, `symmetricDifference`, `isSubsetOf`...). Before: `new Set([...a, ...b])` and `new Set([...a].filter(x => b.has(x)))`.
+</Accordion>
 
-> [!question]- What are WeakRef and FinalizationRegistry? Should you use them?
-> `WeakRef` holds an object without keeping it alive; `deref()` may return undefined. `FinalizationRegistry` runs a callback maybe-after collection. Only for caches/optimisations; never for program correctness, because GC timing is non-deterministic.
+<Accordion title="What are WeakRef and FinalizationRegistry? Should you use them?">
+`WeakRef` holds an object without keeping it alive; `deref()` may return undefined. `FinalizationRegistry` runs a callback maybe-after collection. Only for caches/optimisations; never for program correctness, because GC timing is non-deterministic.
+</Accordion>
 
 ## Related
-- [[Memory Management & Garbage Collection]]
-- [[Objects, Arrays & Immutability]]
-- [[Iterators, Generators & Iterator Helpers]]
-- [[Modern JavaScript ES2022-ES2027]]
-- [[JavaScript Interview Questions]]
+- [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection)
+- [Objects, Arrays & Immutability](/Software%20Engineering/Frontend/01%20JavaScript/Objects%2C%20Arrays%20%26%20Immutability)
+- [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers)
+- [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions)
 
 ## Sources
 - MDN: [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), [WeakMap](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap), [WeakRef](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef), [FinalizationRegistry](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry)

@@ -1,14 +1,18 @@
 ---
+title: "Major steps in ML"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [ML Process, ML Lifecycle, Five Steps of ML, Covariance]
 updated: 2026-09-27
 ---
 # Major steps in ML
 
-> [!tldr] TL;DR
-> Every ML project follows the same five steps: **define the problem → build the dataset → train the model → evaluate the model → use the model (inference)**. The steps are **iterative**: at each step you check whether things behave as expected and go back when they don't. This note also keeps the course's side notes on **covariance**, correlation and the **Minimum Covariance Determinant** (used for outlier detection while building datasets).
+<Note>
+**TL;DR**
 
-![[Untitled 2.png]]
+Every ML project follows the same five steps: **define the problem → build the dataset → train the model → evaluate the model → use the model (inference)**. The steps are **iterative**: at each step you check whether things behave as expected and go back when they don't. This note also keeps the course's side notes on **covariance**, correlation and the **Minimum Covariance Determinant** (used for outlier detection while building datasets).
+</Note>
+
+![Untitled 2](/Attachments/Untitled%202.png)
 
 ```mermaid
 flowchart LR
@@ -20,11 +24,11 @@ flowchart LR
 
 | Step | Key question | Note |
 |---|---|---|
-| 1 | What exactly are we predicting, and is it supervised or unsupervised? | [[Step 1 Define The problem]] |
-| 2 | Does our data match the problem, and is it clean? | [[Step 2 Building Dataset]] |
-| 3 | Which model, which loss, which hyperparameters? | [[Step 3 Train the model]] |
-| 4 | Is it good enough on data it has never seen, by the right metric? | [[Step 4 Evaluate the model]] |
-| 5 | Does it keep working in production? | [[Step 5 Use the model]] |
+| 1 | What exactly are we predicting, and is it supervised or unsupervised? | [Step 1 Define The problem](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%201%20Define%20The%20problem) |
+| 2 | Does our data match the problem, and is it clean? | [Step 2 Building Dataset](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%202%20Building%20Dataset) |
+| 3 | Which model, which loss, which hyperparameters? | [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model) |
+| 4 | Is it good enough on data it has never seen, by the right metric? | [Step 4 Evaluate the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%204%20Evaluate%20the%20model) |
+| 5 | Does it keep working in production? | [Step 5 Use the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%205%20Use%20the%20model) |
 
 These steps are iterative. In practice, at each step you review how things are going. Are they operating as you expected? If not, go back and revisit the current or a previous step to find the breakdown.
 
@@ -65,14 +69,17 @@ Covariance's size depends on the units (cm vs m), so it isn't bounded. Dividing 
 corr(x, y) = Cov(x, y) / (σx · σy)
 ```
 
-> [!example] Worked example
-> ```python
-> import numpy as np
-> height = [160, 170, 180, 190]
-> weight = [55, 65, 72, 85]
-> np.cov(height, weight)[0, 1]      # ≈ 161.7 (positive: they rise together; units are cm·kg)
-> np.corrcoef(height, weight)[0, 1] # ≈ 0.99, a strong positive linear relationship
-> ```
+<Info>
+**Worked example**
+
+```python
+import numpy as np
+height = [160, 170, 180, 190]
+weight = [55, 65, 72, 85]
+np.cov(height, weight)[0, 1]      # ≈ 161.7 (positive: they rise together; units are cm·kg)
+np.corrcoef(height, weight)[0, 1] # ≈ 0.99, a strong positive linear relationship
+```
+</Info>
 
 ### Minimum Covariance Determinant (MCD)
 MCD is a **robust** way to estimate the mean and covariance of multivariate data when some points are **outliers**.
@@ -89,23 +96,26 @@ detector = EllipticEnvelope(contamination=0.05).fit(X)
 detector.predict(X)   # 1 = inlier, -1 = outlier
 ```
 
-See the scikit-learn wine example linked in [[Step 2 Building Dataset]].
+See the scikit-learn wine example linked in [Step 2 Building Dataset](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%202%20Building%20Dataset).
 
 ## Interview questions
 
-> [!question]- Walk me through the steps of an ML project.
-> Define a specific problem and the ML task (supervised/unsupervised, regression/classification); collect, inspect, clean and split data; pick a baseline model and train it by minimising a loss; evaluate on held-out data with a metric that matches the business goal; deploy for inference and monitor for drift, retraining when needed. Iterate throughout.
+<Accordion title="Walk me through the steps of an ML project.">
+Define a specific problem and the ML task (supervised/unsupervised, regression/classification); collect, inspect, clean and split data; pick a baseline model and train it by minimising a loss; evaluate on held-out data with a metric that matches the business goal; deploy for inference and monitor for drift, retraining when needed. Iterate throughout.
+</Accordion>
 
-> [!question]- Covariance vs correlation?
-> Both measure how two variables move together. Covariance is in the variables' units and unbounded; correlation is covariance normalised by both standard deviations, so it's unitless and bounded to [−1, 1]. Both only capture linear relationships.
+<Accordion title="Covariance vs correlation?">
+Both measure how two variables move together. Covariance is in the variables' units and unbounded; correlation is covariance normalised by both standard deviations, so it's unitless and bounded to [−1, 1]. Both only capture linear relationships.
+</Accordion>
 
-> [!question]- Why use a robust estimator like MCD?
-> A few extreme outliers can badly distort the ordinary mean and covariance. MCD estimates them from the tightest core subset of the data, so it's resistant to outliers and can then be used to flag them.
+<Accordion title="Why use a robust estimator like MCD?">
+A few extreme outliers can badly distort the ordinary mean and covariance. MCD estimates them from the tightest core subset of the data, so it's resistant to outliers and can then be used to flag them.
+</Accordion>
 
 ## Related
-- [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Components of ML]] · Next: [[Step 1 Define The problem]]
-- [[Case Studies that use ML]] shows the five steps applied three times
+- [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Components of ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Components%20of%20ML) · Next: [Step 1 Define The problem](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%201%20Define%20The%20problem)
+- [Case Studies that use ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Case%20Studies%20that%20use%20ML) shows the five steps applied three times
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

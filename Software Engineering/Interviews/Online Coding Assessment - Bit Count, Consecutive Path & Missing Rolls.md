@@ -1,15 +1,22 @@
 ---
+title: "Online Coding Assessment - Bit Count, Consecutive Path & Missing Rolls"
 tags: [interviews, interviews/coding]
 aliases: [Interview 1, Codility Assessment, Online Assessment Java]
 updated: 2026-09-27
 ---
 # Online Coding Assessment - Bit Count, Consecutive Path & Missing Rolls
 
-> [!tldr] TL;DR
-> A real timed online assessment (Codility style) with three algorithm tasks solved in Java, plus Git and shell multiple-choice questions. The pattern to learn: read the constraints first (they tell you about overflow and the target complexity), reduce the problem to something simple, and test the given examples plus edge cases. JavaScript versions of the same solutions are in [[JavaScript Interview Questions]].
+<Note>
+**TL;DR**
 
-> [!info] How these tests are scored
-> Codility-style platforms score **correctness** (hidden edge-case tests) and **performance** (large inputs with a time limit). A brute force that passes the examples can still score 30%. Always check: empty inputs, minimum/maximum values, overflow, duplicates.
+A real timed online assessment (Codility style) with three algorithm tasks solved in Java, plus Git and shell multiple-choice questions. The pattern to learn: read the constraints first (they tell you about overflow and the target complexity), reduce the problem to something simple, and test the given examples plus edge cases. JavaScript versions of the same solutions are in [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions).
+</Note>
+
+<Info>
+**How these tests are scored**
+
+Codility-style platforms score **correctness** (hidden edge-case tests) and **performance** (large inputs with a time limit). A brute force that passes the examples can still score 30%. Always check: empty inputs, minimum/maximum values, overflow, duplicates.
+</Info>
 
 ## Task 1: Count the set bits of A × B
 
@@ -67,39 +74,42 @@ public static boolean hasPath(int N, int[] A, int[] B) {
 
 The original solution (kept below) does the same with an `int[]` storing the neighbour and a `HashMap` variant. The array version is better: O(N + M) time, no boxing, no hashing.
 
-> [!example]- Original solutions (array and HashMap)
-> ```java
-> public static boolean hasPath(int N, int[] A, int[] B) {
->     int[] edges = fillEdges(N, A, B);
->     return checkPath(N, edges);
-> }
-> private static int[] fillEdges(int N, int[] A, int[] B) {
->     int[] edges = new int[N + 1];
->     for (int i = 0; i < A.length; i++) {
->         if (A[i] + 1 == B[i]) edges[A[i]] = B[i];
->         else if (B[i] + 1 == A[i]) edges[B[i]] = A[i];
->     }
->     return edges;
-> }
-> private static boolean checkPath(int N, int[] edges) {
->     for (int i = 1; i < N; i++) if (edges[i] != i + 1) return false;
->     return true;
-> }
->
-> // HashMap version: same logic, slower constant factor
-> private static HashMap<Integer, Integer> fillEdgesMap(int N, int[] A, int[] B) {
->     HashMap<Integer, Integer> edges = new HashMap<>();
->     for (int i = 0; i < A.length; i++) {
->         if (A[i] + 1 == B[i]) edges.put(A[i], B[i]);
->         else if (B[i] + 1 == A[i]) edges.put(B[i], A[i]);
->     }
->     return edges;
-> }
-> private static boolean checkPathMap(int N, HashMap<Integer, Integer> edges) {
->     for (int i = 1; i < N; i++) if (!edges.getOrDefault(i, -1).equals(i + 1)) return false;
->     return true;
-> }
-> ```
+<Info>
+**Original solutions (array and HashMap)**
+
+```java
+public static boolean hasPath(int N, int[] A, int[] B) {
+    int[] edges = fillEdges(N, A, B);
+    return checkPath(N, edges);
+}
+private static int[] fillEdges(int N, int[] A, int[] B) {
+    int[] edges = new int[N + 1];
+    for (int i = 0; i < A.length; i++) {
+        if (A[i] + 1 == B[i]) edges[A[i]] = B[i];
+        else if (B[i] + 1 == A[i]) edges[B[i]] = A[i];
+    }
+    return edges;
+}
+private static boolean checkPath(int N, int[] edges) {
+    for (int i = 1; i < N; i++) if (edges[i] != i + 1) return false;
+    return true;
+}
+
+// HashMap version: same logic, slower constant factor
+private static HashMap<Integer, Integer> fillEdgesMap(int N, int[] A, int[] B) {
+    HashMap<Integer, Integer> edges = new HashMap<>();
+    for (int i = 0; i < A.length; i++) {
+        if (A[i] + 1 == B[i]) edges.put(A[i], B[i]);
+        else if (B[i] + 1 == A[i]) edges.put(B[i], A[i]);
+    }
+    return edges;
+}
+private static boolean checkPathMap(int N, HashMap<Integer, Integer> edges) {
+    for (int i = 1; i < N; i++) if (!edges.getOrDefault(i, -1).equals(i + 1)) return false;
+    return true;
+}
+```
+</Info>
 
 ## Task 3: Missing dice rolls
 
@@ -143,25 +153,30 @@ find . -name '*.py' -print0 | while IFS= read -r -d '' f; do python "$f"; done
 ```
 
 ## Interview questions
-> [!question]- Why cast to `long` before multiplying, not after?
-> `(long)(A * B)` multiplies two `int`s first; the overflow already happened and the wrong value is widened. `(long) A * B` promotes A, so the multiplication is done in 64 bits.
+<Accordion title="Why cast to `long` before multiplying, not after?">
+`(long)(A * B)` multiplies two `int`s first; the overflow already happened and the wrong value is widened. `(long) A * B` promotes A, so the multiplication is done in 64 bits.
+</Accordion>
 
-> [!question]- How do you count set bits without a library call?
-> Kernighan: `while (x != 0) { x &= x - 1; count++; }`. Each step clears the lowest set bit, so it runs once per 1-bit. Hardware `POPCNT` is what `Long.bitCount` compiles to on modern JVMs.
+<Accordion title="How do you count set bits without a library call?">
+Kernighan: `while (x != 0) { x &= x - 1; count++; }`. Each step clears the lowest set bit, so it runs once per 1-bit. Hardware `POPCNT` is what `Long.bitCount` compiles to on modern JVMs.
+</Accordion>
 
-> [!question]- Why is no BFS/DFS needed for the path task?
-> The path must visit 1, 2, …, N in order with direct edges, so the only possible path is fixed. It exists exactly when each consecutive edge exists, which is a set-membership check.
+<Accordion title="Why is no BFS/DFS needed for the path task?">
+The path must visit 1, 2, …, N in order with direct edges, so the only possible path is fixed. It exists exactly when each consecutive edge exists, which is a set-membership check.
+</Accordion>
 
-> [!question]- What is the feasibility condition in the dice task?
-> Each missing roll is between 1 and 6, so their sum is between F and 6F. If the required sum lies in that range, some combination works (greedy or even spread proves it).
+<Accordion title="What is the feasibility condition in the dice task?">
+Each missing roll is between 1 and 6, so their sum is between F and 6F. If the required sum lies in that range, some combination works (greedy or even spread proves it).
+</Accordion>
 
-> [!question]- How do you approach a timed online assessment?
-> Read constraints first to find the target complexity and overflow risks; write the simplest correct solution; test the examples and edge cases (0, 1, max values, empty arrays); only then optimise. Leave time to re-read the problem statement.
+<Accordion title="How do you approach a timed online assessment?">
+Read constraints first to find the target complexity and overflow risks; write the simplest correct solution; test the examples and edge cases (0, 1, max values, empty arrays); only then optimise. Leave time to re-read the problem statement.
+</Accordion>
 
 ## Related
-- [[Interviews Index]]
-- [[DSA Index]] · [[JavaScript Interview Questions]] (JS versions of these tasks)
-- [[Interview Process & Preparation Plan]]
+- [Interviews Index](/Software%20Engineering/Interviews/Interviews%20Index)
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index) · [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions) (JS versions of these tasks)
+- [Interview Process & Preparation Plan](/Software%20Engineering/Interviews/Interview%20Process%20%26%20Preparation%20Plan)
 
 ## Sources
 - [Codility: How are tests scored](https://support.codility.com/hc/en-us)

@@ -1,12 +1,16 @@
 ---
+title: "AI-Assisted Software Development"
 tags: [ai-ml, ai-ml/ai-assisted-dev]
 aliases: [AI Coding Agents, Coding Agents, Spec-driven Development, AGENTS.md, Claude Code, Copilot Agent, Codex, Cursor, Vibe Coding]
 updated: 2026-09-27
 ---
 # AI-Assisted Software Development
 
-> [!tldr] TL;DR
-> In 2025 AI coding moved from autocomplete to **agents** that read the codebase, run commands and tests, and open pull requests: Claude Code, GitHub Copilot's agent mode and coding agent, OpenAI Codex, Cursor's agents, Gemini CLI and others. They work best with **clear specs**, **fast feedback loops** (tests, types, linters) and **project instructions** in files like **`AGENTS.md`**. The engineer's job shifts toward **specifying, reviewing, verifying and designing systems**; the evidence on productivity is mixed, and AI-written code still needs the same review bar as human code, arguably higher.
+<Note>
+**TL;DR**
+
+In 2025 AI coding moved from autocomplete to **agents** that read the codebase, run commands and tests, and open pull requests: Claude Code, GitHub Copilot's agent mode and coding agent, OpenAI Codex, Cursor's agents, Gemini CLI and others. They work best with **clear specs**, **fast feedback loops** (tests, types, linters) and **project instructions** in files like **`AGENTS.md`**. The engineer's job shifts toward **specifying, reviewing, verifying and designing systems**; the evidence on productivity is mixed, and AI-written code still needs the same review bar as human code, arguably higher.
+</Note>
 
 ## The spectrum of AI assistance
 
@@ -19,7 +23,7 @@ updated: 2026-09-27
 | 5. **Multi-agent orchestration** | several agents in parallel on separate branches/worktrees | plan, split work, integrate | Cursor 3 agents view, GitHub Agent HQ, Claude Code subagents |
 
 ## How a coding agent works
-It's the agent loop from [[AI Agents & Agentic Patterns]] with developer tools:
+It's the agent loop from [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) with developer tools:
 
 ```mermaid
 flowchart LR
@@ -37,39 +41,42 @@ What makes it work well: tests and type checks give the agent **ground truth**, 
 
 ## The tools (2025–2026)
 
-> [!info]+ 🆕 2025–2026 timeline (verified dates)
-> **Anthropic Claude Code**
-> - 2025-02-24: research preview, launched with Claude 3.7 Sonnet.
-> - 2025-05-22: generally available alongside Claude 4; IDE integrations, GitHub Actions, Claude Code SDK.
-> - Mid-2025: **hooks** (v1.0.38, June) and custom **subagents** (July).
-> - 2025-09-29: Claude Code 2.0; the SDK was renamed **Claude Agent SDK**.
-> - October 2025: **plugins** (public beta), **Agent Skills** (2025-10-16), **Claude Code on the web** (2025-10-20, cloud sandboxes).
-> - 2025-12-03: Anthropic reported a $1B run-rate for Claude Code about six months after GA, and acquired Bun.
-> - 2026-02-20: **Claude Code Security** (limited research preview).
->
-> **GitHub Copilot**
-> - 2025-04-07: **agent mode** (with MCP) rolling out to all VS Code users (preview since February 2025).
-> - 2025-05-19: **Copilot coding agent** public preview at Build: assign an issue, it works in GitHub Actions and opens a draft PR. **GA 2025-09-25**.
-> - 2025-09-25: Copilot CLI public preview; **GA 2026-02-25**.
-> - 2025-10-28 (GitHub Universe): **Agent HQ**, running agents from multiple vendors inside GitHub and VS Code.
-> - 2026-06-17: Copilot desktop app GA. 2026-07-29: Copilot code review supports agent skills and MCP (GA).
->
-> **OpenAI Codex**
-> - April 2025: open-source **Codex CLI**.
-> - 2025-05-16: **Codex** cloud agent research preview (codex-1, parallel sandboxes).
-> - September 2025: GPT-5-Codex with IDE extension and code review. **2025-10-06: Codex GA**, with Slack integration and Codex SDK.
->
-> **Cursor**
-> - June 2025: Cursor 1.0 (BugBot PR review, Background Agents for all users, one-click MCP).
-> - 2025-10-29: **Cursor 2.0** with its own model **Composer** and an agent-centric UI with up to 8 parallel agents.
-> - 2026-04-02: **Cursor 3**, rebuilt around local, worktree, cloud and SSH agents.
->
-> **Others**
-> - 2025-06-25: **Gemini CLI**, open source (Apache 2.0).
-> - 2025-07-14: **AWS Kiro** preview, a spec-driven IDE; **GA 2025-11-17**.
-> - 2025-08-06: **Google Jules** out of beta.
-> - 2025-09-02: **GitHub Spec Kit**, open-source toolkit for spec-driven development.
-> - August 2025: **AGENTS.md** convention launched; 2025-12-09 it became a founding project of the Linux Foundation's Agentic AI Foundation.
+<Info>
+**🆕 2025–2026 timeline (verified dates)**
+
+**Anthropic Claude Code**
+- 2025-02-24: research preview, launched with Claude 3.7 Sonnet.
+- 2025-05-22: generally available alongside Claude 4; IDE integrations, GitHub Actions, Claude Code SDK.
+- Mid-2025: **hooks** (v1.0.38, June) and custom **subagents** (July).
+- 2025-09-29: Claude Code 2.0; the SDK was renamed **Claude Agent SDK**.
+- October 2025: **plugins** (public beta), **Agent Skills** (2025-10-16), **Claude Code on the web** (2025-10-20, cloud sandboxes).
+- 2025-12-03: Anthropic reported a $1B run-rate for Claude Code about six months after GA, and acquired Bun.
+- 2026-02-20: **Claude Code Security** (limited research preview).
+
+**GitHub Copilot**
+- 2025-04-07: **agent mode** (with MCP) rolling out to all VS Code users (preview since February 2025).
+- 2025-05-19: **Copilot coding agent** public preview at Build: assign an issue, it works in GitHub Actions and opens a draft PR. **GA 2025-09-25**.
+- 2025-09-25: Copilot CLI public preview; **GA 2026-02-25**.
+- 2025-10-28 (GitHub Universe): **Agent HQ**, running agents from multiple vendors inside GitHub and VS Code.
+- 2026-06-17: Copilot desktop app GA. 2026-07-29: Copilot code review supports agent skills and MCP (GA).
+
+**OpenAI Codex**
+- April 2025: open-source **Codex CLI**.
+- 2025-05-16: **Codex** cloud agent research preview (codex-1, parallel sandboxes).
+- September 2025: GPT-5-Codex with IDE extension and code review. **2025-10-06: Codex GA**, with Slack integration and Codex SDK.
+
+**Cursor**
+- June 2025: Cursor 1.0 (BugBot PR review, Background Agents for all users, one-click MCP).
+- 2025-10-29: **Cursor 2.0** with its own model **Composer** and an agent-centric UI with up to 8 parallel agents.
+- 2026-04-02: **Cursor 3**, rebuilt around local, worktree, cloud and SSH agents.
+
+**Others**
+- 2025-06-25: **Gemini CLI**, open source (Apache 2.0).
+- 2025-07-14: **AWS Kiro** preview, a spec-driven IDE; **GA 2025-11-17**.
+- 2025-08-06: **Google Jules** out of beta.
+- 2025-09-02: **GitHub Spec Kit**, open-source toolkit for spec-driven development.
+- August 2025: **AGENTS.md** convention launched; 2025-12-09 it became a founding project of the Linux Foundation's Agentic AI Foundation.
+</Info>
 
 Product names and features change monthly; check the vendor changelog before relying on a detail.
 
@@ -98,7 +105,7 @@ Some tools have their own file too (e.g. `CLAUDE.md` for Claude Code, Copilot's 
 - Don't edit generated files in `src/gen/`. Don't add dependencies without asking.
 ```
 
-Keep it short, specific and **current**: stale instructions actively mislead agents. See [[Prompt & Context Engineering]].
+Keep it short, specific and **current**: stale instructions actively mislead agents. See [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering).
 
 ## Spec-driven development
 Instead of prompting ad hoc ("vibe coding"), you write down **what** and **why** first, then let the agent derive **how**.
@@ -109,7 +116,7 @@ GitHub **Spec Kit** (2025-09-02) formalises four phases:
 3. **Tasks**: the agent breaks spec + plan into small, reviewable tasks.
 4. **Implement**: the agent works through tasks one by one while you verify each.
 
-AWS **Kiro** follows a similar flow: requirements → design → tasks, plus event-driven hooks. The author's own version of this flow is [[AI Workflow]].
+AWS **Kiro** follows a similar flow: requirements → design → tasks, plus event-driven hooks. The author's own version of this flow is [AI Workflow](/Software%20Engineering/AI%20%26%20ML/AI%20Workflow).
 
 Why it works: specs give the agent stable context across sessions, make review easier (compare against acceptance criteria), and force the human to make the decisions that matter.
 
@@ -154,7 +161,7 @@ Takeaway: gains are real for some tasks and teams but not automatic. Strong engi
 - **From writing to specifying**: clear problem statements, acceptance criteria and architecture decisions become the leverage point.
 - **From typing to reviewing and verifying**: reading diffs critically, designing tests that catch wrong behaviour, and insisting on evidence (tests, screenshots, traces) over the agent's "done".
 - **Context curation**: maintaining `AGENTS.md`, docs, examples and tooling so agents (and new humans) do the right thing by default.
-- **Guardrails and platform**: sandboxes, permissions, CI gates, secret scanning, dependency policies for agent-written code ([[AI Safety, Security & Guardrails for Apps]]).
+- **Guardrails and platform**: sandboxes, permissions, CI gates, secret scanning, dependency policies for agent-written code ([AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps)).
 - **Judgement stays human**: trade-offs, system design, security, what *not* to build, and accountability for what ships.
 - **Mentoring changes**: juniors can produce more code sooner but need help building the understanding to review it; pair on reading and debugging, not just generating.
 - **Cost awareness**: agent runs cost tokens; parallel agents multiply review load.
@@ -169,29 +176,35 @@ Takeaway: gains are real for some tasks and teams but not automatic. Strong engi
 
 ## Interview questions
 
-> [!question]- How do you use AI coding agents effectively on a team?
-> Give them well-scoped, verifiable tasks with context; keep instructions in AGENTS.md; require tests and CI to pass; keep PRs small; review AI code with the same or higher bar; sandbox agents and limit credentials; measure outcomes (lead time, change failure rate), not lines of code.
+<Accordion title="How do you use AI coding agents effectively on a team?">
+Give them well-scoped, verifiable tasks with context; keep instructions in AGENTS.md; require tests and CI to pass; keep PRs small; review AI code with the same or higher bar; sandbox agents and limit credentials; measure outcomes (lead time, change failure rate), not lines of code.
+</Accordion>
 
-> [!question]- What is spec-driven development?
-> Writing the what and why (spec, acceptance criteria) and a technical plan before generating code, then breaking the work into small tasks the agent implements and a human verifies. It gives agents stable context and makes review objective. GitHub Spec Kit and AWS Kiro are examples.
+<Accordion title="What is spec-driven development?">
+Writing the what and why (spec, acceptance criteria) and a technical plan before generating code, then breaking the work into small tasks the agent implements and a human verifies. It gives agents stable context and makes review objective. GitHub Spec Kit and AWS Kiro are examples.
+</Accordion>
 
-> [!question]- What is AGENTS.md?
-> A Markdown file in the repo that tells coding agents how to set up, build, test and follow the project's conventions, a README for agents. It's an open convention (launched August 2025, now under the Linux Foundation's Agentic AI Foundation) supported by many agents.
+<Accordion title="What is AGENTS.md?">
+A Markdown file in the repo that tells coding agents how to set up, build, test and follow the project's conventions, a README for agents. It's an open convention (launched August 2025, now under the Linux Foundation's Agentic AI Foundation) supported by many agents.
+</Accordion>
 
-> [!question]- What do you look for when reviewing AI-generated code?
-> Correctness against the requirements, meaningful tests (not weakened ones), hallucinated APIs or packages, security issues, unrelated changes, duplication of existing helpers, edge cases and error handling, performance, and whether the team can maintain it.
+<Accordion title="What do you look for when reviewing AI-generated code?">
+Correctness against the requirements, meaningful tests (not weakened ones), hallucinated APIs or packages, security issues, unrelated changes, duplication of existing helpers, edge cases and error handling, performance, and whether the team can maintain it.
+</Accordion>
 
-> [!question]- Does AI make developers faster?
-> It depends. Surveys show near-universal adoption and perceived gains, but METR's 2025 randomised trial found experienced developers 19% slower on their own mature codebases, and DORA 2025 finds AI amplifies existing team strengths and weaknesses. Well-scoped, verifiable tasks and strong engineering practices see the most benefit.
+<Accordion title="Does AI make developers faster?">
+It depends. Surveys show near-universal adoption and perceived gains, but METR's 2025 randomised trial found experienced developers 19% slower on their own mature codebases, and DORA 2025 finds AI amplifies existing team strengths and weaknesses. Well-scoped, verifiable tasks and strong engineering practices see the most benefit.
+</Accordion>
 
-> [!question]- How does the senior engineer's role change with coding agents?
-> More time on problem definition, architecture, specs, review, verification and guardrails; curating context for agents; mentoring juniors on understanding code rather than producing it; and owning accountability for what ships.
+<Accordion title="How does the senior engineer's role change with coding agents?">
+More time on problem definition, architecture, specs, review, verification and guardrails; curating context for agents; mentoring juniors on understanding code rather than producing it; and owning accountability for what ships.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[AI Workflow]] · [[AI Agents & Agentic Patterns]] · [[Prompt & Context Engineering]] · [[MCP]]
-- [[AI Safety, Security & Guardrails for Apps]] · [[LLM Evaluation & Observability]] · [[LLM Landscape 2025-2026]]
-- Frontend: [[AI in Frontend - MCP, WebMCP & Built-in AI]] · [[Frontend Testing]] · [[Supply Chain Security]] · [[Monorepos]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [AI Workflow](/Software%20Engineering/AI%20%26%20ML/AI%20Workflow) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) · [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering) · [MCP](/Software%20Engineering/AI%20%26%20ML/MCP)
+- [AI Safety, Security & Guardrails for Apps](/Software%20Engineering/AI%20%26%20ML/AI%20Safety%2C%20Security%20%26%20Guardrails%20for%20Apps) · [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability) · [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026)
+- Frontend: [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI) · [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security) · [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
 
 ## Sources
 - Anthropic: [Claude 3.7 Sonnet and Claude Code](https://www.anthropic.com/news/claude-3-7-sonnet) · [Claude 4](https://www.anthropic.com/news/claude-4) · [Claude Code changelog](https://code.claude.com/docs/en/changelog) · [Agent SDK migration guide](https://platform.claude.com/docs/en/agent-sdk/migration-guide) · [Agent Skills](https://claude.com/blog/skills) · [Claude Code on the web](https://www.anthropic.com/news/claude-code-on-the-web) · [Bun acquisition / $1B milestone](https://www.anthropic.com/news/anthropic-acquires-bun-as-claude-code-reaches-usd1b-milestone) · [Claude Code Security](https://www.anthropic.com/news/claude-code-security)

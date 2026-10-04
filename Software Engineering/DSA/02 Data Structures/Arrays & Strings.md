@@ -1,12 +1,16 @@
 ---
+title: "Arrays & Strings"
 tags: [dsa, dsa/data-structures]
 aliases: [Arrays, Strings, Array, String, Dynamic Array, ArrayList, Vector, StringBuilder]
 updated: 2026-09-27
 ---
 # Arrays & Strings
 
-> [!tldr] TL;DR
-> An **array** is a block of contiguous memory: reading or writing index `i` is **O(1)**, but inserting or deleting in the middle shifts everything after it, which is **O(n)**. A **dynamic array** (JS `Array`, Python `list`, Java `ArrayList`) grows by reallocating to a bigger block, which makes `push`/`append` **amortized O(1)**. **Strings** are arrays of characters that are **immutable** in JS and Python, so building one with `+=` in a loop can cost O(n²); collect pieces in a list and `join` instead.
+<Note>
+**TL;DR**
+
+An **array** is a block of contiguous memory: reading or writing index `i` is **O(1)**, but inserting or deleting in the middle shifts everything after it, which is **O(n)**. A **dynamic array** (JS `Array`, Python `list`, Java `ArrayList`) grows by reallocating to a bigger block, which makes `push`/`append` **amortized O(1)**. **Strings** are arrays of characters that are **immutable** in JS and Python, so building one with `+=` in a loop can cost O(n²); collect pieces in a list and `join` instead.
+</Note>
 
 ## The idea
 
@@ -78,7 +82,7 @@ Many string problems reduce to "count characters". Two options:
 
 ### In-place operations
 
-"In-place" means O(1) extra space: you modify the input array directly, usually with [[Two Pointers]] (a read pointer and a write pointer, or left and right pointers moving inward).
+"In-place" means O(1) extra space: you modify the input array directly, usually with [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) (a read pointer and a write pointer, or left and right pointers moving inward).
 
 ## Complexity
 
@@ -90,11 +94,11 @@ Many string problems reduce to "count characters". Two options:
 | Insert / delete at index `i` | O(n - i) | O(1) | shift elements |
 | Insert / delete at front (`unshift`, `shift`, `insert(0, x)`, `pop(0)`) | O(n) | O(1) | use a deque instead |
 | Search (unsorted) | O(n) | O(1) | |
-| Search (sorted, [[Binary Search]]) | O(log n) | O(1) | |
+| Search (sorted, [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search)) | O(log n) | O(1) | |
 | Slice / copy of length k | O(k) | O(k) | `slice` copies in JS and Python |
 | String concat `a + b` | O(len a + len b) | new string | immutable |
 | `join` of k pieces, total length n | O(n) | O(n) | the right way to build strings |
-| Sort | O(n log n) | O(n) (TimSort) | [[Sorting Algorithms]] |
+| Sort | O(n log n) | O(n) (TimSort) | [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) |
 
 ## Implementation
 
@@ -318,7 +322,7 @@ def rotate(nums: list[int], k: int) -> None:
 ## Trade-offs & pitfalls
 
 - **Off-by-one**: `range(n)` is `0..n-1`; `slice(a, b)` excludes `b`. Decide on inclusive or exclusive bounds and stick to it.
-- **Shifting from the front** (`shift`, `unshift`, `pop(0)`, `insert(0, x)`) is O(n). Inside a loop it becomes O(n²). Use an index pointer or a deque ([[Stacks & Queues]]).
+- **Shifting from the front** (`shift`, `unshift`, `pop(0)`, `insert(0, x)`) is O(n). Inside a loop it becomes O(n²). Use an index pointer or a deque ([Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues)).
 - **Slices copy** in both JS and Python. Passing `nums[1:]` into recursion makes it O(n²); pass indexes instead.
 - **Mutation while iterating**: removing from a list while looping over it skips elements. Iterate backwards or build a new list.
 - **Aliasing**: `[[0] * 3] * 3` in Python creates three references to the same inner list. Use `[[0] * 3 for _ in range(3)]`. In JS, `new Array(3).fill([])` has the same bug; use `Array.from({ length: 3 }, () => [])`.
@@ -345,7 +349,7 @@ def rotate(nums: list[int], k: int) -> None:
 | 242 | [Valid Anagram](https://leetcode.com/problems/valid-anagram/) | Easy | 26-slot count array |
 | 283 | [Move Zeroes](https://leetcode.com/problems/move-zeroes/) | Easy | read/write pointers |
 | 189 | [Rotate Array](https://leetcode.com/problems/rotate-array/) | Medium | triple reverse, O(1) space |
-| 238 | [Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) | Medium | prefix and suffix products ([[Prefix Sum]] idea) |
+| 238 | [Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) | Medium | prefix and suffix products ([Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) idea) |
 | 49 | [Group Anagrams](https://leetcode.com/problems/group-anagrams/) | Medium | sorted string or count tuple as hash key |
 | 151 | [Reverse Words in a String](https://leetcode.com/problems/reverse-words-in-a-string/) | Medium | split, reverse, join; or in-place double reverse |
 | 443 | [String Compression](https://leetcode.com/problems/string-compression/) | Medium | read/write pointers, write counts in place |
@@ -353,34 +357,41 @@ def rotate(nums: list[int], k: int) -> None:
 
 ## Interview questions
 
-> [!question]- Why is appending to a dynamic array O(1) if it sometimes copies everything?
-> Because capacity grows geometrically (x1.5 or x2). The copies over `n` appends sum to less than `c * n`, so the **amortized** cost per append is O(1). A single append can still be O(n), which matters for latency-sensitive code.
+<Accordion title="Why is appending to a dynamic array O(1) if it sometimes copies everything?">
+Because capacity grows geometrically (x1.5 or x2). The copies over `n` appends sum to less than `c * n`, so the **amortized** cost per append is O(1). A single append can still be O(n), which matters for latency-sensitive code.
+</Accordion>
 
-> [!question]- Why is building a string with `+=` in a loop slow, and what do you do instead?
-> Strings are immutable, so each `+=` may allocate a new string and copy the old content: 1 + 2 + ... + n = O(n²). Collect pieces in an array/list and call `join` once (O(n)), or use a `StringBuilder` in Java/C#.
+<Accordion title="Why is building a string with `+=` in a loop slow, and what do you do instead?">
+Strings are immutable, so each `+=` may allocate a new string and copy the old content: 1 + 2 + ... + n = O(n²). Collect pieces in an array/list and call `join` once (O(n)), or use a `StringBuilder` in Java/C#.
+</Accordion>
 
-> [!question]- What's the difference between `arr.shift()` and `arr.pop()` in JS?
-> `pop` removes the last element in O(1). `shift` removes the first and must re-index every remaining element, O(n). Using `shift` as a queue in BFS turns O(V + E) into O(V² + E). Use a head index or a real deque.
+<Accordion title="What's the difference between `arr.shift()` and `arr.pop()` in JS?">
+`pop` removes the last element in O(1). `shift` removes the first and must re-index every remaining element, O(n). Using `shift` as a queue in BFS turns O(V + E) into O(V² + E). Use a head index or a real deque.
+</Accordion>
 
-> [!question]- When would you pick a 26-length array over a hash map for counting?
-> When the alphabet is small and known (lowercase English). It's faster (no hashing), uses fixed memory, and is O(1) space. Use a map when the character set is large or unknown (Unicode).
+<Accordion title="When would you pick a 26-length array over a hash map for counting?">
+When the alphabet is small and known (lowercase English). It's faster (no hashing), uses fixed memory, and is O(1) space. Use a map when the character set is large or unknown (Unicode).
+</Accordion>
 
-> [!question]- How do you rotate an array by k in O(1) extra space?
-> Reverse the whole array, then reverse the first `k % n` elements, then the rest. Each element moves exactly to its target.
+<Accordion title="How do you rotate an array by k in O(1) extra space?">
+Reverse the whole array, then reverse the first `k % n` elements, then the rest. Each element moves exactly to its target.
+</Accordion>
 
-> [!question]- Why are arrays often faster than linked lists even for workloads with inserts?
-> Contiguous memory gives cache locality and prefetching; linked lists chase pointers to random heap addresses, causing cache misses and allocation overhead. For small to medium `n`, shifting a contiguous block with `memmove` is often cheaper than allocating and linking a node.
+<Accordion title="Why are arrays often faster than linked lists even for workloads with inserts?">
+Contiguous memory gives cache locality and prefetching; linked lists chase pointers to random heap addresses, causing cache misses and allocation overhead. For small to medium `n`, shifting a contiguous block with `memmove` is often cheaper than allocating and linking a node.
+</Accordion>
 
-> [!question]- What does "in-place" mean, and does it make the algorithm O(1) space?
-> It means you modify the input rather than allocate a copy. Extra space is O(1) only if you also avoid recursion stacks and auxiliary structures. Also clarify with the interviewer whether mutating the input is allowed.
+<Accordion title="What does &quot;in-place&quot; mean, and does it make the algorithm O(1) space?">
+It means you modify the input rather than allocate a copy. Extra space is O(1) only if you also avoid recursion stacks and auxiliary structures. Also clarify with the interviewer whether mutating the input is allowed.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Big-O & Complexity Analysis]] · [[Linked Lists]] · [[Stacks & Queues]] · [[Hash Tables]]
-- Patterns: [[Two Pointers]] · [[Sliding Window]] · [[Prefix Sum]] · [[Binary Search]]
-- [[Sorting Algorithms]]
-- Frontend: [[Iterators, Generators & Iterator Helpers]] · [[Memory Management & Garbage Collection]] · [[Virtualization & Large Lists]]
-- [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Linked Lists](/Software%20Engineering/DSA/02%20Data%20Structures/Linked%20Lists) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables)
+- Patterns: [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) · [Binary Search](/Software%20Engineering/DSA/04%20Patterns/Binary%20Search)
+- [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms)
+- Frontend: [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers) · [Memory Management & Garbage Collection](/Software%20Engineering/Frontend/01%20JavaScript/Memory%20Management%20%26%20Garbage%20Collection) · [Virtualization & Large Lists](/Software%20Engineering/Frontend/10%20Performance/Virtualization%20%26%20Large%20Lists)
+- [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - Cormen, Leiserson, Rivest, Stein, *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 16, amortized analysis; dynamic tables)

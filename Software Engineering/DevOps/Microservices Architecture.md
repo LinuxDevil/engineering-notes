@@ -1,14 +1,18 @@
 ---
+title: "Microservices Architecture"
 tags: [devops, devops/architecture]
 aliases: [Microservices, Microservice Architecture, Saga Pattern, Service Mesh, Service Discovery, Database per Service]
 updated: 2026-09-27
 ---
 # Microservices Architecture
 
-> [!tldr] TL;DR
-> Microservices split a system into small, **independently deployable** services, each owning **its own data** and aligned to a **business capability** (bounded context). You gain team autonomy, independent scaling and fault isolation; you pay with distributed-systems complexity: network failures, eventual consistency, **sagas** instead of transactions, and heavy needs for automation and observability. Start with a well-modularised monolith and extract services when team or scaling pressure justifies it.
+<Note>
+**TL;DR**
 
-This note covers the operational and design side. For the comparison with monoliths, modular monoliths, SOA, event-driven and serverless styles see [[Software Architecture Styles]].
+Microservices split a system into small, **independently deployable** services, each owning **its own data** and aligned to a **business capability** (bounded context). You gain team autonomy, independent scaling and fault isolation; you pay with distributed-systems complexity: network failures, eventual consistency, **sagas** instead of transactions, and heavy needs for automation and observability. Start with a well-modularised monolith and extract services when team or scaling pressure justifies it.
+</Note>
+
+This note covers the operational and design side. For the comparison with monoliths, modular monoliths, SOA, event-driven and serverless styles see [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles).
 
 ## 1. What makes something a microservice
 
@@ -52,14 +56,14 @@ Guidelines:
 - Version APIs and events; evolve schemas compatibly (add fields, never repurpose). Consumer-driven **contract tests** (Pact) catch breaking changes in CI.
 - **API gateway / BFF** at the edge: auth, rate limiting, routing, aggregation per client type.
 
-See [[gRPC vs REST]] and [[GraphQL vs REST]] for protocol trade-offs.
+See [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST) and [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST) for protocol trade-offs.
 
 ## 4. Data ownership and consistency
 
 **Database per service**: each service has a private schema or database. Benefits: independent schema changes and technology choice. Consequences: no cross-service joins and no ACID transactions across services.
 
 Patterns:
-- **API composition** or a **CQRS read model** (a query service that subscribes to events and builds a denormalised view). The course app in [[Kubernetes Basics]] does exactly this with its `query` service.
+- **API composition** or a **CQRS read model** (a query service that subscribes to events and builds a denormalised view). The course app in [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics) does exactly this with its `query` service.
 - **Transactional outbox**: write the business change and an "event to publish" row in the **same local transaction**; a relay (or CDC like Debezium) publishes it. This avoids the dual-write problem (DB committed but message lost, or vice versa).
 - **Sagas** for multi-step business transactions.
 
@@ -90,12 +94,12 @@ sequenceDiagram
 | Cons | Flow is implicit and hard to follow; cyclic dependencies | Orchestrator can become a god service |
 | Tools | Kafka/SNS + events | Temporal, AWS Step Functions, Camunda, custom state machines |
 
-Sagas give ACD without I: intermediate states are visible, so design for it (e.g. `PENDING` statuses, semantic locks). Related: [[Transactions & ACID]], [[CAP Theorem]], [[Replication & 2PC 3PC]].
+Sagas give ACD without I: intermediate states are visible, so design for it (e.g. `PENDING` statuses, semantic locks). Related: [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID), [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem), [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC).
 
 ## 5. Service discovery
 
 Instances come and go, so callers need to find healthy endpoints.
-- **Server-side discovery**: call a stable name; a load balancer or the platform routes. In Kubernetes, a **Service** + DNS (`orders.shop.svc.cluster.local`) does this for you (see [[Kubernetes Networking - Services, Ingress & Gateway API]]).
+- **Server-side discovery**: call a stable name; a load balancer or the platform routes. In Kubernetes, a **Service** + DNS (`orders.shop.svc.cluster.local`) does this for you (see [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)).
 - **Client-side discovery**: the client queries a registry (Consul, Eureka) and load-balances itself.
 - Health checks (readiness) remove bad instances from rotation.
 
@@ -117,7 +121,7 @@ A single user request crosses many services, so per-service logs are not enough:
 - **RED metrics** per service and per dependency, SLOs per user journey.
 - Service dependency maps generated from traces.
 
-Details: [[Observability - Logs, Metrics & Traces]].
+Details: [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces).
 
 ## 8. When NOT to use microservices
 
@@ -130,56 +134,69 @@ Details: [[Observability - Logs, Metrics & Traces]].
 
 Better default: a **modular monolith** with strict module boundaries (separate packages, no cross-module table access, internal APIs). Extract a module into a service when it needs independent scaling, a different release cadence, isolation for reliability or security, or a separate team.
 
-> [!example] Real-world signal
-> In 2023 Amazon Prime Video's video quality monitoring team published how moving one component from distributed serverless microservices back to a single process cut its infrastructure cost by over 90%. The lesson is not "microservices are bad" but "choose granularity by workload and team, and revisit it".
+<Info>
+**Real-world signal**
+
+In 2023 Amazon Prime Video's video quality monitoring team published how moving one component from distributed serverless microservices back to a single process cut its infrastructure cost by over 90%. The lesson is not "microservices are bad" but "choose granularity by workload and team, and revisit it".
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - **Distributed monolith**: services must deploy together, share a database, or call each other synchronously in long chains.
-> - **Nanoservices**: too fine-grained, a network call for every function.
-> - Missing timeouts → cascading failures and thread-pool exhaustion.
-> - Retrying non-idempotent operations → double charges.
-> - Dual writes without an outbox → lost or phantom events.
-> - Shared "common" libraries with business logic → lockstep upgrades.
-> - No ownership: services nobody on-call understands.
+<Warning>
+**Common pitfalls**
+
+- **Distributed monolith**: services must deploy together, share a database, or call each other synchronously in long chains.
+- **Nanoservices**: too fine-grained, a network call for every function.
+- Missing timeouts → cascading failures and thread-pool exhaustion.
+- Retrying non-idempotent operations → double charges.
+- Dual writes without an outbox → lost or phantom events.
+- Shared "common" libraries with business logic → lockstep upgrades.
+- No ownership: services nobody on-call understands.
+</Warning>
 
 ## Senior perspective
 
 - Microservices are an **organisational scaling** tool first. Ask "which teams are blocked by each other today?" before "which services should exist?".
-- Invest in the platform before the tenth service: templates, CI/CD, observability, service catalog ([[Platform Engineering & Internal Developer Platforms]]).
+- Invest in the platform before the tenth service: templates, CI/CD, observability, service catalog ([Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms)).
 - Design for failure: every dependency will be slow or down sometime. Define fallbacks and degrade gracefully.
 - Keep an eye on cost: per-service overhead (replicas, sidecars, databases, cross-AZ traffic) adds up.
 - Review questions: What data does this service own? What happens when its dependency is down for 10 minutes? How is a cross-service business transaction rolled back? Can it be deployed alone?
 
 ## Interview questions
 
-> [!question]- What is the database-per-service pattern and what problems does it create?
-> Each service owns its data store, accessed only via its API. It enables independent evolution and scaling, but removes cross-service joins and ACID transactions, requiring API composition/CQRS for queries and sagas plus the outbox pattern for consistency.
+<Accordion title="What is the database-per-service pattern and what problems does it create?">
+Each service owns its data store, accessed only via its API. It enables independent evolution and scaling, but removes cross-service joins and ACID transactions, requiring API composition/CQRS for queries and sagas plus the outbox pattern for consistency.
+</Accordion>
 
-> [!question]- Explain the saga pattern. Choreography vs orchestration?
-> A saga is a sequence of local transactions with compensating actions to undo completed steps on failure. Choreography: services react to events, decentralised but implicit. Orchestration: a coordinator drives the steps, explicit and easier to monitor but centralised.
+<Accordion title="Explain the saga pattern. Choreography vs orchestration?">
+A saga is a sequence of local transactions with compensating actions to undo completed steps on failure. Choreography: services react to events, decentralised but implicit. Orchestration: a coordinator drives the steps, explicit and easier to monitor but centralised.
+</Accordion>
 
-> [!question]- What is the transactional outbox pattern?
-> Write the state change and the outgoing event into the same database in one local transaction; a separate relay or CDC publishes events from the outbox table. It guarantees an event is published if and only if the change was committed (at least once).
+<Accordion title="What is the transactional outbox pattern?">
+Write the state change and the outgoing event into the same database in one local transaction; a separate relay or CDC publishes events from the outbox table. It guarantees an event is published if and only if the change was committed (at least once).
+</Accordion>
 
-> [!question]- What does a service mesh give you?
-> Uniform mTLS and service identity, traffic management (retries, timeouts, canary splits), resilience features and consistent telemetry, implemented by proxies (sidecar or ambient/eBPF) instead of per-language libraries.
+<Accordion title="What does a service mesh give you?">
+Uniform mTLS and service identity, traffic management (retries, timeouts, canary splits), resilience features and consistent telemetry, implemented by proxies (sidecar or ambient/eBPF) instead of per-language libraries.
+</Accordion>
 
-> [!question]- How do you prevent cascading failures?
-> Timeouts on every call, retries with backoff and jitter within a budget, circuit breakers, bulkheads (isolated pools), load shedding, fallbacks/caches, async communication where possible, and capacity headroom.
+<Accordion title="How do you prevent cascading failures?">
+Timeouts on every call, retries with backoff and jitter within a budget, circuit breakers, bulkheads (isolated pools), load shedding, fallbacks/caches, async communication where possible, and capacity headroom.
+</Accordion>
 
-> [!question]- When would you advise against microservices?
-> Small teams, unclear domain, low automation maturity, heavy need for strong consistency, or early-stage products. A modular monolith delivers most of the design benefits with far less operational cost.
+<Accordion title="When would you advise against microservices?">
+Small teams, unclear domain, low automation maturity, heavy need for strong consistency, or early-stage products. A modular monolith delivers most of the design benefits with far less operational cost.
+</Accordion>
 
-> [!question]- Monolith to microservices: how do you migrate?
-> Strangler fig: put a routing layer in front, identify a bounded context with clear seams, build it as a service with its own data (sync data during transition), route traffic gradually, then delete the old code. Repeat; do not rewrite everything at once.
+<Accordion title="Monolith to microservices: how do you migrate?">
+Strangler fig: put a routing layer in front, identify a bounded context with clear seams, build it as a service with its own data (sync data during transition), route traffic gradually, then delete the old code. Repeat; do not rewrite everything at once.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Software Architecture Styles]] · [[Kubernetes Basics]] · [[Kubernetes Networking - Services, Ingress & Gateway API]]
-- [[Observability - Logs, Metrics & Traces]] · [[CI-CD Pipelines]] · [[Containers vs VMs vs Serverless]]
-- [[gRPC vs REST]] · [[GraphQL vs REST]] · [[CAP Theorem]] · [[Transactions & ACID]] · [[Micro-frontends & Module Federation]]
-- Original course study plan: [[Microservices Study Plan (original)]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles) · [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)
+- [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [Containers vs VMs vs Serverless](/Software%20Engineering/DevOps/Containers%20vs%20VMs%20vs%20Serverless)
+- [gRPC vs REST](/Software%20Engineering/APIs%20%26%20Auth/gRPC%20vs%20REST) · [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Micro-frontends & Module Federation](/Software%20Engineering/Frontend/09%20Architecture/Micro-frontends%20%26%20Module%20Federation)
+- Original course study plan: [Microservices Study Plan (original)](/Software%20Engineering/DevOps/_Archive/Microservices%20Study%20Plan%20(original))
 
 ## Sources
 - [Martin Fowler & James Lewis: Microservices (2014)](https://martinfowler.com/articles/microservices.html)
@@ -188,4 +205,4 @@ Better default: a **modular monolith** with strict module boundaries (separate p
 - Sam Newman, *Building Microservices* (2nd ed., O'Reilly 2021) and *Monolith to Microservices* (2019)
 - [Istio docs: Ambient mode](https://istio.io/latest/docs/ambient/overview/) · [Gateway API GAMMA](https://gateway-api.sigs.k8s.io/concepts/gamma/)
 - [Prime Video Tech: Scaling up the Prime Video audio/video monitoring service and reducing costs by 90% (2023)](https://www.primevideotech.com/video-streaming/scaling-up-the-prime-video-audio-video-monitoring-service-and-reducing-costs-by-90)
-- Stephen Grider, *Microservices with Node JS and React* (Udemy): the course behind [[Kubernetes Basics]]
+- Stephen Grider, *Microservices with Node JS and React* (Udemy): the course behind [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics)

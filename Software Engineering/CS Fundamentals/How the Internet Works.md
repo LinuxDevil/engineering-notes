@@ -1,12 +1,16 @@
 ---
+title: "How the Internet Works"
 tags: [cs-fundamentals, cs-fundamentals/networking]
 aliases: [Internet Basics, What happens when you type a URL, DNS Resolution, TCP vs UDP, IP Addressing]
 updated: 2026-09-27
 ---
 # How the Internet Works
 
-> [!tldr] TL;DR
-> The internet is a network of networks that move **packets** using **IP** addresses; routers forward each packet hop by hop, and autonomous systems exchange routes with **BGP**. On top of IP, **TCP** gives a reliable ordered byte stream (handshake, retransmits, flow and congestion control) and **UDP** gives fast fire-and-forget datagrams (used by DNS, video calls, and QUIC/HTTP/3). **DNS** translates names into IP addresses through a hierarchy of resolvers and nameservers. Typing a URL triggers DNS → TCP/QUIC connection → TLS → HTTP request → server work → response → browser rendering.
+<Note>
+**TL;DR**
+
+The internet is a network of networks that move **packets** using **IP** addresses; routers forward each packet hop by hop, and autonomous systems exchange routes with **BGP**. On top of IP, **TCP** gives a reliable ordered byte stream (handshake, retransmits, flow and congestion control) and **UDP** gives fast fire-and-forget datagrams (used by DNS, video calls, and QUIC/HTTP/3). **DNS** translates names into IP addresses through a hierarchy of resolvers and nameservers. Typing a URL triggers DNS → TCP/QUIC connection → TLS → HTTP request → server work → response → browser rendering.
+</Note>
 
 ## Packets, IP and routing
 - Data is split into **packets** with headers (source/destination IP, TTL, protocol).
@@ -27,7 +31,7 @@ updated: 2026-09-27
 | Head-of-line blocking | Yes: one lost segment stalls the stream | No |
 | Used by | HTTP/1.1, HTTP/2, SSH, databases, SMTP | DNS, VoIP, games, video calls (WebRTC), **QUIC → HTTP/3** |
 
-Ports identify applications on a host (443 HTTPS, 53 DNS, 5432 Postgres). A connection is a 4-tuple: (src IP, src port, dst IP, dst port). Details of the handshake and congestion control: [[Networking - OSI, TCP-IP & Protocols]].
+Ports identify applications on a host (443 HTTPS, 53 DNS, 5432 Postgres). A connection is a 4-tuple: (src IP, src port, dst IP, dst port). Details of the handshake and congestion control: [Networking - OSI, TCP-IP & Protocols](/Software%20Engineering/CS%20Fundamentals/Networking%20-%20OSI%2C%20TCP-IP%20%26%20Protocols).
 
 ## DNS resolution
 ```mermaid
@@ -81,43 +85,54 @@ flowchart TD
 1. The browser parses the URL; checks HSTS preload list to upgrade to HTTPS.
 2. **DNS**: browser cache → OS cache → recursive resolver → root/TLD/authoritative.
 3. **Transport**: TCP handshake (1 RTT), or QUIC which combines transport + TLS (1 RTT, 0-RTT on resumption).
-4. **TLS**: server proves identity with a certificate chain; keys are agreed ([[Cryptography Basics for Engineers]]).
-5. **HTTP request** goes to the nearest CDN PoP ([[CDN & Edge Computing]]), maybe served from cache; otherwise to the origin load balancer, app servers, caches, databases ([[Scalability Fundamentals]]).
-6. **Response** streams back; the browser renders it: [[How Browsers Render - Critical Rendering Path]]. Keep-alive connections are reused for subsequent requests.
+4. **TLS**: server proves identity with a certificate chain; keys are agreed ([Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers)).
+5. **HTTP request** goes to the nearest CDN PoP ([CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing)), maybe served from cache; otherwise to the origin load balancer, app servers, caches, databases ([Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals)).
+6. **Response** streams back; the browser renders it: [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path). Keep-alive connections are reused for subsequent requests.
 
-> [!example] Latency budget for a cold visit (user in Europe, origin in US East, RTT 100 ms)
-> DNS (~20–100 ms) + TCP (100) + TLS 1.3 (100) + request/response (100) + server time (50) ≈ **400 ms** before the first byte of HTML. A CDN PoP 10 ms away turns the network part into ~40 ms. This is why CDNs, connection reuse, and HTTP/3 matter.
+<Info>
+**Latency budget for a cold visit (user in Europe, origin in US East, RTT 100 ms)**
+
+DNS (~20–100 ms) + TCP (100) + TLS 1.3 (100) + request/response (100) + server time (50) ≈ **400 ms** before the first byte of HTML. A CDN PoP 10 ms away turns the network part into ~40 ms. This is why CDNs, connection reuse, and HTTP/3 matter.
+</Info>
 
 ## Senior perspective
 - **DNS is a dependency of everything**; bad records or resolver failures take down services even when servers are healthy. Keep sane TTLs, monitor resolution, and understand client-side caching during failovers.
 - MTU and fragmentation issues (VPNs, tunnels) cause mysterious hangs on large packets.
-- NAT and connection tracking tables fill up under many short-lived connections; use pooling ([[Connection Pooling]]).
+- NAT and connection tracking tables fill up under many short-lived connections; use pooling ([Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling)).
 - Know your tools: `dig`, `traceroute`/`mtr`, `curl -v`, `ss`/`netstat`, `tcpdump`/Wireshark.
 
-> [!info]+ 🆕 2025–2026
-> - DNS failures remain a top outage cause: on **2025-10-20** DynamoDB's regional endpoint in AWS us-east-1 resolved to an **empty DNS record** because of a race in AWS's DNS automation, cascading across AWS and customer apps for hours. ([AWS summary](https://aws.amazon.com/message/101925/))
-> - Cloudflare Radar's 2025 review: ~21% of requests to Cloudflare used **HTTP/3 (QUIC over UDP)**, and **52%** of human web traffic used post-quantum key exchange by year end. ([Cloudflare](https://blog.cloudflare.com/radar-2025-year-in-review/))
+<Info>
+**🆕 2025–2026**
+
+- DNS failures remain a top outage cause: on **2025-10-20** DynamoDB's regional endpoint in AWS us-east-1 resolved to an **empty DNS record** because of a race in AWS's DNS automation, cascading across AWS and customer apps for hours. ([AWS summary](https://aws.amazon.com/message/101925/))
+- Cloudflare Radar's 2025 review: ~21% of requests to Cloudflare used **HTTP/3 (QUIC over UDP)**, and **52%** of human web traffic used post-quantum key exchange by year end. ([Cloudflare](https://blog.cloudflare.com/radar-2025-year-in-review/))
+</Info>
 
 ## Interview questions
-> [!question]- What happens when you type a URL and press Enter?
-> URL parsing and HSTS check, DNS resolution through caches and the resolver hierarchy, TCP (or QUIC) connection, TLS handshake with certificate validation, HTTP request (often to a CDN), server-side processing through LB/app/DB, the response, and the browser's parse/layout/paint plus subresource requests.
+<Accordion title="What happens when you type a URL and press Enter?">
+URL parsing and HSTS check, DNS resolution through caches and the resolver hierarchy, TCP (or QUIC) connection, TLS handshake with certificate validation, HTTP request (often to a CDN), server-side processing through LB/app/DB, the response, and the browser's parse/layout/paint plus subresource requests.
+</Accordion>
 
-> [!question]- TCP vs UDP: when would you use UDP?
-> When low latency matters more than reliability or when the application implements its own reliability: DNS queries, real-time voice/video, games, and QUIC (which builds reliable, multiplexed streams on UDP to avoid TCP's head-of-line blocking and ossification).
+<Accordion title="TCP vs UDP: when would you use UDP?">
+When low latency matters more than reliability or when the application implements its own reliability: DNS queries, real-time voice/video, games, and QUIC (which builds reliable, multiplexed streams on UDP to avoid TCP's head-of-line blocking and ossification).
+</Accordion>
 
-> [!question]- How does DNS resolution work?
-> The stub resolver asks a recursive resolver, which (on cache miss) asks a root server, gets referred to the TLD servers, then to the domain's authoritative nameservers, which return the record. Results are cached at each level for the TTL.
+<Accordion title="How does DNS resolution work?">
+The stub resolver asks a recursive resolver, which (on cache miss) asks a root server, gets referred to the TLD servers, then to the domain's authoritative nameservers, which return the record. Results are cached at each level for the TTL.
+</Accordion>
 
-> [!question]- What is NAT and why does it exist?
-> Network Address Translation rewrites private source addresses/ports to a shared public IP, letting many devices share one IPv4 address. It exists because of IPv4 exhaustion; it complicates peer-to-peer connectivity (hence STUN/TURN in WebRTC).
+<Accordion title="What is NAT and why does it exist?">
+Network Address Translation rewrites private source addresses/ports to a shared public IP, letting many devices share one IPv4 address. It exists because of IPv4 exhaustion; it complicates peer-to-peer connectivity (hence STUN/TURN in WebRTC).
+</Accordion>
 
-> [!question]- What is anycast?
-> Announcing the same IP prefix from many locations so BGP routes each client to the topologically nearest one. Used by CDNs and DNS for latency and DDoS resilience.
+<Accordion title="What is anycast?">
+Announcing the same IP prefix from many locations so BGP routes each client to the topologically nearest one. Used by CDNs and DNS for latency and DDoS resilience.
+</Accordion>
 
 ## Related
-- [[CS Fundamentals Index]]
-- [[Networking - OSI, TCP-IP & Protocols]] · [[Cryptography Basics for Engineers]] · [[Networking - HTTP, Caching & Real-time]] · [[How Browsers Render - Critical Rendering Path]]
-- [[CDN & Edge Computing]] · [[Scalability Fundamentals]] · [[System Design Index]]
+- [CS Fundamentals Index](/Software%20Engineering/CS%20Fundamentals/CS%20Fundamentals%20Index)
+- [Networking - OSI, TCP-IP & Protocols](/Software%20Engineering/CS%20Fundamentals/Networking%20-%20OSI%2C%20TCP-IP%20%26%20Protocols) · [Cryptography Basics for Engineers](/Software%20Engineering/CS%20Fundamentals/Cryptography%20Basics%20for%20Engineers) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time) · [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)
+- [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Scalability Fundamentals](/Software%20Engineering/System%20Design/Scalability%20Fundamentals) · [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
 
 ## Sources
 - Kurose & Ross, *Computer Networking: A Top-Down Approach*

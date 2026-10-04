@@ -1,12 +1,16 @@
 ---
+title: "HTTP Headers vs Body - Where Data Belongs"
 tags: [apis, apis/http]
 aliases: [Data by headers, HTTP Headers, Headers vs Body, Custom Headers, Correlation ID, Request ID, traceparent]
 updated: 2026-09-27
 ---
 # HTTP Headers vs Body - Where Data Belongs
 
-> [!tldr] TL;DR
-> Put **metadata about the message** (auth, content type, caching, tracing, idempotency, versioning hints) in **headers**, and put **the business data the handler works on** in the **body** (or path/query for identifying and filtering resources). Headers are read by every hop (proxies, CDNs, gateways, logs), are size-limited and unstructured unless you use RFC 9651 Structured Fields. Don't invent `X-` prefixed headers any more (RFC 6648).
+<Note>
+**TL;DR**
+
+Put **metadata about the message** (auth, content type, caching, tracing, idempotency, versioning hints) in **headers**, and put **the business data the handler works on** in the **body** (or path/query for identifying and filtering resources). Headers are read by every hop (proxies, CDNs, gateways, logs), are size-limited and unstructured unless you use RFC 9651 Structured Fields. Don't invent `X-` prefixed headers any more (RFC 6648).
+</Note>
 
 ## The rule of thumb
 
@@ -38,7 +42,7 @@ Points the original note made, still true:
 | Tracing | `traceparent`, `tracestate` (W3C Trace Context) | often echoed `X-Request-Id` |
 | Security | `Origin` | `Strict-Transport-Security`, `Content-Security-Policy`, CORS `Access-Control-*` |
 
-HTTP caching and CORS are covered from the browser side in [[Networking - HTTP, Caching & Real-time]].
+HTTP caching and CORS are covered from the browser side in [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time).
 
 ## Custom headers
 
@@ -66,7 +70,7 @@ Content-Type: application/json
 
 - The key is **metadata about the request**, not business data, so it belongs in a header.
 - Standardisation: `draft-ietf-httpapi-idempotency-key-header` (latest -07, Oct 2025, still an Internet-Draft). Stripe popularised the pattern.
-- Full server-side implementation: [[API Versioning, Idempotency & Backward Compatibility]].
+- Full server-side implementation: [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility).
 
 ## Correlation IDs and distributed tracing
 
@@ -100,19 +104,25 @@ app.use((req, res, next) => {
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **Secrets in query strings** (`?api_key=…`, `?access_token=…`): they end up in access logs, browser history, `Referer` headers and analytics. Use `Authorization`. OAuth 2.1 forbids bearer tokens in the query.
-> - **Trusting `X-Forwarded-For` blindly.** Any client can send it. Only trust it from your own proxies (Nginx `set_real_ip_from`, Express `trust proxy`).
-> - **Business data in headers** (e.g. `Order-Amount: 50`): invisible in most API docs, dropped by some proxies, not validated by body schemas.
-> - **Forgetting `Vary`** when the response depends on a header (`Accept-Language`, `Authorization`), so a CDN serves the wrong variant.
-> - **GET with a body**: semantics are undefined and many proxies drop it. For complex read queries use `POST` to a search endpoint, or the new **`QUERY`** method (RFC 10008, June 2026).
+<Warning>
+**Common mistakes**
 
-> [!info]+ 🆕 2025–2026
-> - **2025-03:** RFC 9745 standardises the **`Deprecation`** response header (pairs with `Sunset`, RFC 8594). See [[API Versioning, Idempotency & Backward Compatibility]].
-> - **2025-10:** `Idempotency-Key` header draft reaches -07 (still a draft).
-> - **2026-05:** `RateLimit` / `RateLimit-Policy` header draft reaches -11 (still a draft). See [[Rate Limiting & Throttling]].
-> - **2026-06:** RFC 10008 defines the **`QUERY`** method: safe and idempotent like GET, but with a request body; responses are cacheable.
-> - **2026-07-28:** the MCP specification adds `Mcp-Method` / `Mcp-Name` request headers so gateways can route and meter AI tool calls without parsing JSON bodies, a textbook case of "infrastructure data goes in headers".
+- **Secrets in query strings** (`?api_key=…`, `?access_token=…`): they end up in access logs, browser history, `Referer` headers and analytics. Use `Authorization`. OAuth 2.1 forbids bearer tokens in the query.
+- **Trusting `X-Forwarded-For` blindly.** Any client can send it. Only trust it from your own proxies (Nginx `set_real_ip_from`, Express `trust proxy`).
+- **Business data in headers** (e.g. `Order-Amount: 50`): invisible in most API docs, dropped by some proxies, not validated by body schemas.
+- **Forgetting `Vary`** when the response depends on a header (`Accept-Language`, `Authorization`), so a CDN serves the wrong variant.
+- **GET with a body**: semantics are undefined and many proxies drop it. For complex read queries use `POST` to a search endpoint, or the new **`QUERY`** method (RFC 10008, June 2026).
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **2025-03:** RFC 9745 standardises the **`Deprecation`** response header (pairs with `Sunset`, RFC 8594). See [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility).
+- **2025-10:** `Idempotency-Key` header draft reaches -07 (still a draft).
+- **2026-05:** `RateLimit` / `RateLimit-Policy` header draft reaches -11 (still a draft). See [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling).
+- **2026-06:** RFC 10008 defines the **`QUERY`** method: safe and idempotent like GET, but with a request body; responses are cacheable.
+- **2026-07-28:** the MCP specification adds `Mcp-Method` / `Mcp-Name` request headers so gateways can route and meter AI tool calls without parsing JSON bodies, a textbook case of "infrastructure data goes in headers".
+</Info>
 
 ## Senior perspective
 
@@ -123,25 +133,30 @@ app.use((req, res, next) => {
 
 ## Interview questions
 
-> [!question]- When would you put data in a header rather than the body?
-> When it is metadata about the message that intermediaries or cross-cutting code must read without parsing the payload: authentication, content negotiation, caching validators, tracing IDs, idempotency keys, rate-limit info. Business data the handler processes goes in the body; resource identity in the path; read filters in the query.
+<Accordion title="When would you put data in a header rather than the body?">
+When it is metadata about the message that intermediaries or cross-cutting code must read without parsing the payload: authentication, content negotiation, caching validators, tracing IDs, idempotency keys, rate-limit info. Business data the handler processes goes in the body; resource identity in the path; read filters in the query.
+</Accordion>
 
-> [!question]- Why was the `X-` prefix deprecated?
-> RFC 6648 found that experimental `X-` headers often become de facto standards and then can't be renamed, leaving two names forever. New headers should use meaningful names without `X-`, optionally with a vendor prefix.
+<Accordion title="Why was the `X-` prefix deprecated?">
+RFC 6648 found that experimental `X-` headers often become de facto standards and then can't be renamed, leaving two names forever. New headers should use meaningful names without `X-`, optionally with a vendor prefix.
+</Accordion>
 
-> [!question]- What is a correlation ID and how is it propagated?
-> A unique ID for one logical request, created at the edge if absent, passed on every downstream HTTP call and message, and included in all logs and traces. The standard format is the W3C `traceparent` header used by OpenTelemetry.
+<Accordion title="What is a correlation ID and how is it propagated?">
+A unique ID for one logical request, created at the edge if absent, passed on every downstream HTTP call and message, and included in all logs and traces. The standard format is the W3C `traceparent` header used by OpenTelemetry.
+</Accordion>
 
-> [!question]- Why should API keys never be in the URL?
-> URLs are logged by servers, proxies and CDNs, stored in browser history, leaked via `Referer`, and shared in screenshots. Headers like `Authorization` are not logged by default and can be redacted.
+<Accordion title="Why should API keys never be in the URL?">
+URLs are logged by servers, proxies and CDNs, stored in browser history, leaked via `Referer`, and shared in screenshots. Headers like `Authorization` are not logged by default and can be redacted.
+</Accordion>
 
-> [!question]- What is the new QUERY method for?
-> RFC 10008 (June 2026) adds QUERY: a safe, idempotent method with a request body, for complex searches that don't fit in a URL. Unlike POST, it can be retried automatically and cached.
+<Accordion title="What is the new QUERY method for?">
+RFC 10008 (June 2026) adds QUERY: a safe, idempotent method with a request body, for complex searches that don't fit in a URL. Unlike POST, it can be retried automatically and cached.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[REST API Design]] · [[API Versioning, Idempotency & Backward Compatibility]] · [[Rate Limiting & Throttling]] · [[API Gateways & Reverse Proxies]] · [[Nginx]]
-- [[Networking - HTTP, Caching & Real-time]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility) · [Rate Limiting & Throttling](/Software%20Engineering/APIs%20%26%20Auth/Rate%20Limiting%20%26%20Throttling) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [Nginx](/Software%20Engineering/Backend/Nginx)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
 
 ## Sources
 - [RFC 9110: HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html)

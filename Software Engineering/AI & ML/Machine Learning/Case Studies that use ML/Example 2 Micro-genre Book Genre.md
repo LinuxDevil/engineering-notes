@@ -1,26 +1,30 @@
 ---
+title: "Example 2 Micro-genre Book Genre"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Book Micro-genres, K-means Example, Bag of Words]
 updated: 2026-09-27
 ---
 # Example 2 Micro-genre Book Genre
 
-> [!tldr] TL;DR
-> An **unsupervised clustering** case study: find hidden "micro-genres" among 800 romance books using only their back-cover descriptions. Clean the text (lowercase, normalise verb tense, drop punctuation and **stop words**), **vectorise** it as a **bag of words**, run **k-means** for many values of k, pick k with the **silhouette coefficient** (k = 19 here), then inspect clusters by hand.
+<Note>
+**TL;DR**
+
+An **unsupervised clustering** case study: find hidden "micro-genres" among 800 romance books using only their back-cover descriptions. Clean the text (lowercase, normalise verb tense, drop punctuation and **stop words**), **vectorise** it as a **bag of words**, run **k-means** for many values of k, pick k with the **silhouette coefficient** (k = 19 here), then inspect clusters by hand.
+</Note>
 
 You do editorial work for a book recommendation company and want to write about the year's biggest book trends. You believe "micro-genres" exist and that description text can reveal them. **Clustering** lets you test that hypothesis without any labels.
 
 ## Step 1: Define the problem
 *Is it possible to find clusters of similar books based on the presence of common words in the book descriptions?*
 
-![[Screenshot_2023-03-31_at_6.11.45_PM.png]]
+![Screenshot_2023-03-31_at_6.11.45_PM](/Attachments/Screenshot_2023-03-31_at_6.11.45_PM.png)
 
 There are no labels (nobody has tagged micro-genres), so this is **unsupervised learning**.
 
 ## Step 2: Build the dataset
 You gather the description text of **800 romance books** published this year.
 
-![[Screenshot_2023-03-31_at_6.12.48_PM.png]]
+![Screenshot_2023-03-31_at_6.12.48_PM](/Attachments/Screenshot_2023-03-31_at_6.12.48_PM.png)
 
 Dataset: collected → explored → cleaned → **vectorised** (transformed into numbers).
 
@@ -40,7 +44,7 @@ X.toarray()                   # word counts per book
 ## Step 3: Train the model
 You pick **k-means**, a common clustering model. Its hyperparameter **k** is how many clusters it will look for. You don't know how many micro-genres exist, so you train many times with different k. The graphs show k = 2 and k = 3.
 
-![[Untitled 8.png]]
+![Untitled 8](/Attachments/Untitled%208.png)
 
 ```python
 from sklearn.cluster import KMeans
@@ -56,7 +60,7 @@ best_k = max(scores, key=scores.get)
 ## Step 4: Evaluate the model
 The **silhouette coefficient** describes how well the data was clustered. Plotting it for each k shows the best value at **k = 19**.
 
-![[Untitled 9.png]]
+![Untitled 9](/Attachments/Untitled%209.png)
 
 **Manual inspection** matters too: one cluster is clearly "paranormal teen romance", a known industry trend, which gives you some confidence in the approach. Not every cluster will be that clean, but it's good enough to look for article material.
 
@@ -68,8 +72,11 @@ Use the clusters to explore trends for the article, continuing to inspect them b
 2. ML needs iteration: the model was trained many times with different k, and the silhouette coefficient picked the best one.
 3. During inference you keep inspecting clusters to confirm the model produces useful results.
 
-> [!info] How you'd do this today
-> Instead of bag of words, you'd embed each description with a text **embedding model** and cluster the vectors. Embeddings capture meaning ("vampire" and "undead" end up close), so clusters are much better. An LLM can then name each cluster. See [[Embeddings & Semantic Search]].
+<Info>
+**How you'd do this today**
+
+Instead of bag of words, you'd embed each description with a text **embedding model** and cluster the vectors. Embeddings capture meaning ("vampire" and "undead" end up close), so clusters are much better. An LLM can then name each cluster. See [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search).
+</Info>
 
 ## Terminology
 - **Bag of words**: extracts features from text by counting how many times each word appears in a document, producing a numeric dataset. Word order is lost.
@@ -79,16 +86,18 @@ Use the clusters to explore trends for the article, continuing to inspect them b
 
 ## Interview questions
 
-> [!question]- How do you choose k in k-means?
-> Try a range of k and compare a metric: the silhouette score (higher is better), or the elbow in within-cluster sum of squares. Then sanity-check the clusters with domain knowledge; the "best" k mathematically may not be the most useful.
+<Accordion title="How do you choose k in k-means?">
+Try a range of k and compare a metric: the silhouette score (higher is better), or the elbow in within-cluster sum of squares. Then sanity-check the clusters with domain knowledge; the "best" k mathematically may not be the most useful.
+</Accordion>
 
-> [!question]- Limitations of bag of words?
-> It ignores word order and meaning, treats synonyms as unrelated, and produces huge sparse vectors. TF-IDF helps weight rare words; embeddings solve the meaning problem.
+<Accordion title="Limitations of bag of words?">
+It ignores word order and meaning, treats synonyms as unrelated, and produces huge sparse vectors. TF-IDF helps weight rare words; embeddings solve the meaning problem.
+</Accordion>
 
 ## Related
-- [[Case Studies that use ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Example 1 Predicting Home Prices]] · Next: [[Example 3 Detecting Spills]]
-- [[Supervised vs Unsupervised Machine learning]] · [[Embeddings & Semantic Search]]
+- [Case Studies that use ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Case%20Studies%20that%20use%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Example 1 Predicting Home Prices](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%201%20Predicting%20Home%20Prices) · Next: [Example 3 Detecting Spills](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Case%20Studies%20that%20use%20ML/Example%203%20Detecting%20Spills)
+- [Supervised vs Unsupervised Machine learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Supervised%20vs%20Unsupervised%20Machine%20learning) · [Embeddings & Semantic Search](/Software%20Engineering/AI%20%26%20ML/Embeddings%20%26%20Semantic%20Search)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

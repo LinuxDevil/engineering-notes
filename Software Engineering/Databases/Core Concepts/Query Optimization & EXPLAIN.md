@@ -1,12 +1,16 @@
 ---
+title: "Query Optimization & EXPLAIN"
 tags: [databases, databases/performance, databases/postgres]
 aliases: [EXPLAIN, EXPLAIN ANALYZE, Query Plan, Query Tuning, N+1, Slow Queries, pg_stat_statements, Sargable]
 updated: 2026-09-27
 ---
 # Query Optimization & EXPLAIN
 
-> [!tldr] TL;DR
-> Find the queries that cost the most in total (`pg_stat_statements`), read their plans with `EXPLAIN (ANALYZE, BUFFERS)`, and look for the few big problems: **bad row estimates**, **sequential scans on big tables for selective filters**, **sorts/hashes spilling to disk**, **nested loops over many rows**, and **too many round trips** (N+1). Fix with the right index, a sargable predicate, fresh statistics, a rewritten query or batching. Measure again. Most wins come from indexes and from not asking the database for work you don't need.
+<Note>
+**TL;DR**
+
+Find the queries that cost the most in total (`pg_stat_statements`), read their plans with `EXPLAIN (ANALYZE, BUFFERS)`, and look for the few big problems: **bad row estimates**, **sequential scans on big tables for selective filters**, **sorts/hashes spilling to disk**, **nested loops over many rows**, and **too many round trips** (N+1). Fix with the right index, a sargable predicate, fresh statistics, a rewritten query or batching. Measure again. Most wins come from indexes and from not asking the database for work you don't need.
+</Note>
 
 ## The workflow
 
@@ -41,8 +45,11 @@ Also useful: `log_min_duration_statement = '500ms'` to log slow queries, and `au
 | `EXPLAIN (ANALYZE, BUFFERS) q` | Yes | Plus pages hit in shared buffers vs read from OS/disk |
 | `EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS, WAL) q` | Yes | Output columns, non-default settings, WAL generated |
 
-> [!warning] `ANALYZE` executes the statement
-> For `UPDATE`/`DELETE`/`INSERT`, wrap it: `BEGIN; EXPLAIN ANALYZE UPDATE ...; ROLLBACK;`
+<Warning>
+**`ANALYZE` executes the statement**
+
+For `UPDATE`/`DELETE`/`INSERT`, wrap it: `BEGIN; EXPLAIN ANALYZE UPDATE ...; ROLLBACK;`
+</Warning>
 
 ### Reading a plan
 
@@ -147,7 +154,7 @@ ORM equivalents: `include`/`select_related`/`prefetch_related`/`JOIN FETCH`/eage
 ### Other frequent issues
 
 - **`SELECT *`**: drags unneeded columns (TOASTed blobs), prevents index-only scans, breaks when columns change.
-- **`OFFSET` pagination** at depth: use keyset pagination ([[Keyset Pagination vs Offset]]).
+- **`OFFSET` pagination** at depth: use keyset pagination ([Keyset Pagination vs Offset](/Software%20Engineering/Databases/Database%20Round/Keyset%20Pagination%20vs%20Offset)).
 - **`NOT IN (subquery)` with NULLs** returns nothing and plans badly: use `NOT EXISTS`.
 - **`COUNT(*)` on huge tables** for UI badges: use estimates (`reltuples`) or cached counters.
 - **Functions/triggers per row** doing extra queries.
@@ -164,12 +171,15 @@ ORM equivalents: `include`/`select_related`/`prefetch_related`/`JOIN FETCH`/eage
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Optimising with tiny dev data: plans differ completely on production-size tables. Test on realistic volumes.
-> - Adding an index for every slow query: write amplification, memory pressure, blocked HOT updates. Consolidate into composite indexes.
-> - Trusting `EXPLAIN` without `ANALYZE` when estimates are the problem.
-> - Cold vs warm cache: run twice and compare `Buffers: read`.
-> - Blaming the database for time spent in network, serialization, or the ORM (compare DB time with request time).
+<Warning>
+**Common pitfalls**
+
+- Optimising with tiny dev data: plans differ completely on production-size tables. Test on realistic volumes.
+- Adding an index for every slow query: write amplification, memory pressure, blocked HOT updates. Consolidate into composite indexes.
+- Trusting `EXPLAIN` without `ANALYZE` when estimates are the problem.
+- Cold vs warm cache: run twice and compare `Buffers: read`.
+- Blaming the database for time spent in network, serialization, or the ORM (compare DB time with request time).
+</Warning>
 
 ## Senior perspective
 
@@ -179,36 +189,45 @@ ORM equivalents: `include`/`select_related`/`prefetch_related`/`JOIN FETCH`/eage
 - Plan stability: after upgrades or statistics changes plans can flip; PG 19 adds plan-advice tooling for this.
 - Review questions: How many queries does this endpoint run? What's the plan at 10x data? Which index serves it, and what does it cost on writes?
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)**: `EXPLAIN` gained `SERIALIZE` (cost of converting output for the client) and `MEMORY` (planner memory) options and shows local I/O timing.
-> - **PostgreSQL 18 (2025-09-25)**: `EXPLAIN ANALYZE` includes **BUFFERS by default**, reports the number of index lookups/searches in index scans, and shows extra CPU, WAL and average read statistics with `VERBOSE`. The planner got **B-tree skip scan**, better `OR`/`IN` index use and hash/merge join improvements; `pg_upgrade` keeps planner statistics so plans don't collapse right after a major upgrade.
-> - **PostgreSQL 19 (beta; Beta 4 on 2026-09-24, GA expected ~October 2026)**: `pg_plan_advice` and `pg_stash_advice` extensions to stabilise and steer planner decisions, an `IO` option for `EXPLAIN ANALYZE`, and planner improvements (eager aggregation, anti-join and incremental sort optimisations). Beta status: details may change.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)**: `EXPLAIN` gained `SERIALIZE` (cost of converting output for the client) and `MEMORY` (planner memory) options and shows local I/O timing.
+- **PostgreSQL 18 (2025-09-25)**: `EXPLAIN ANALYZE` includes **BUFFERS by default**, reports the number of index lookups/searches in index scans, and shows extra CPU, WAL and average read statistics with `VERBOSE`. The planner got **B-tree skip scan**, better `OR`/`IN` index use and hash/merge join improvements; `pg_upgrade` keeps planner statistics so plans don't collapse right after a major upgrade.
+- **PostgreSQL 19 (beta; Beta 4 on 2026-09-24, GA expected ~October 2026)**: `pg_plan_advice` and `pg_stash_advice` extensions to stabilise and steer planner decisions, an `IO` option for `EXPLAIN ANALYZE`, and planner improvements (eager aggregation, anti-join and incremental sort optimisations). Beta status: details may change.
+</Info>
 
 ## Interview questions
 
-> [!question]- How do you approach a slow query?
-> Reproduce with real parameters, run `EXPLAIN (ANALYZE, BUFFERS)`, find the node(s) where time goes and compare estimated vs actual rows, then fix: add/adjust an index, make the predicate sargable, refresh or extend statistics, rewrite the query, or reduce round trips. Re-measure and consider the write cost of any new index.
+<Accordion title="How do you approach a slow query?">
+Reproduce with real parameters, run `EXPLAIN (ANALYZE, BUFFERS)`, find the node(s) where time goes and compare estimated vs actual rows, then fix: add/adjust an index, make the predicate sargable, refresh or extend statistics, rewrite the query, or reduce round trips. Re-measure and consider the write cost of any new index.
+</Accordion>
 
-> [!question]- What's the difference between EXPLAIN and EXPLAIN ANALYZE?
-> EXPLAIN shows the planned tree with estimated costs and rows without running the query. EXPLAIN ANALYZE executes it and adds actual timings, row counts and loops, so you can spot estimate errors; it has side effects for writes.
+<Accordion title="What's the difference between EXPLAIN and EXPLAIN ANALYZE?">
+EXPLAIN shows the planned tree with estimated costs and rows without running the query. EXPLAIN ANALYZE executes it and adds actual timings, row counts and loops, so you can spot estimate errors; it has side effects for writes.
+</Accordion>
 
-> [!question]- What is the N+1 problem and how do you fix it?
-> Fetching a list with one query, then issuing one query per row for related data. Fix with joins, batched `WHERE id = ANY(...)` queries, ORM eager loading, or DataLoader batching.
+<Accordion title="What is the N+1 problem and how do you fix it?">
+Fetching a list with one query, then issuing one query per row for related data. Fix with joins, batched `WHERE id = ANY(...)` queries, ORM eager loading, or DataLoader batching.
+</Accordion>
 
-> [!question]- Why might Postgres ignore your index?
-> The predicate isn't sargable (function/cast on the column, leading wildcard), the filter isn't selective so a seq scan is cheaper, statistics are stale or misleading, the column order of a composite index doesn't match, or the table is small.
+<Accordion title="Why might Postgres ignore your index?">
+The predicate isn't sargable (function/cast on the column, leading wildcard), the filter isn't selective so a seq scan is cheaper, statistics are stale or misleading, the column order of a composite index doesn't match, or the table is small.
+</Accordion>
 
-> [!question]- What does a large gap between estimated and actual rows indicate?
-> Bad statistics or correlations the planner doesn't model (dependent columns, skew, functions). It leads to wrong join orders and algorithms. Fix with `ANALYZE`, higher statistics targets, extended statistics, or query rewrites.
+<Accordion title="What does a large gap between estimated and actual rows indicate?">
+Bad statistics or correlations the planner doesn't model (dependent columns, skew, functions). It leads to wrong join orders and algorithms. Fix with `ANALYZE`, higher statistics targets, extended statistics, or query rewrites.
+</Accordion>
 
-> [!question]- When is a sequential scan the right choice?
-> When a large fraction of the table is needed, the table is small, or rows are needed in no particular order: sequential IO over all pages beats many random index-to-heap lookups.
+<Accordion title="When is a sequential scan the right choice?">
+When a large fraction of the table is needed, the table is small, or rows are needed in no particular order: sequential IO over all pages beats many random index-to-heap lookups.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Database Internals]] · [[Database Indexes]] · [[SQL Indexes Deep Dive]] · [[Keyset Pagination vs Offset]]
-- [[MVCC & Vacuum]] · [[Data Modeling & Normalization]] · [[Connection Pooling]]
-- MongoDB: [[Unit 12 MongoDB Indexes]] (`explain()`, IXSCAN vs COLLSCAN)
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Keyset Pagination vs Offset](/Software%20Engineering/Databases/Database%20Round/Keyset%20Pagination%20vs%20Offset)
+- [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum) · [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization) · [Connection Pooling](/Software%20Engineering/Databases/Database%20Round/Connection%20Pooling)
+- MongoDB: [Unit 12 MongoDB Indexes](/Software%20Engineering/Databases/MongoDB/Unit%2012%20MongoDB%20Indexes) (`explain()`, IXSCAN vs COLLSCAN)
 
 ## Sources
 - PostgreSQL docs, Using EXPLAIN: https://www.postgresql.org/docs/current/using-explain.html

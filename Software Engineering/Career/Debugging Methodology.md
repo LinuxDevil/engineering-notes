@@ -1,12 +1,16 @@
 ---
+title: "Debugging Methodology"
 tags: [career, career/debugging]
 aliases: [Debugging, How to Debug, Troubleshooting, Git Bisect, Root Cause Analysis]
 updated: 2026-09-27
 ---
 # Debugging Methodology
 
-> [!tldr] TL;DR
-> Debugging is the **scientific method** applied to code: observe, form a hypothesis, predict, test with an experiment, and repeat until the cause is proven. The most powerful moves are **reproducing reliably**, **shrinking the search space** (bisecting code, commits, inputs, or time), and **reading the evidence** (logs, metrics, traces, stack traces) instead of guessing. In production, **mitigate first** (rollback, flag off), then find the root cause, then prevent recurrence with a test and a blameless postmortem.
+<Note>
+**TL;DR**
+
+Debugging is the **scientific method** applied to code: observe, form a hypothesis, predict, test with an experiment, and repeat until the cause is proven. The most powerful moves are **reproducing reliably**, **shrinking the search space** (bisecting code, commits, inputs, or time), and **reading the evidence** (logs, metrics, traces, stack traces) instead of guessing. In production, **mitigate first** (rollback, flag off), then find the root cause, then prevent recurrence with a test and a blameless postmortem.
+</Note>
 
 ## The loop
 
@@ -80,12 +84,15 @@ Workflow: alert → dashboard (scope: which endpoints, regions, customers) → c
 
 High-cardinality fields (user id, tenant, build version, feature flag) in events let you slice and find "it only happens for tenant X on version Y" (Charity Majors' "observability 2.0"/wide events idea).
 
-> [!example] Example: p99 latency doubled at 14:05
-> 1. Dashboard: only `/search`, all regions → not infra-wide.
-> 2. Timeline: deploy of `search-api` at 14:03.
-> 3. Traces: slow requests spend 800 ms in a new `SELECT ... FROM products WHERE lower(name) LIKE ...`.
-> 4. Hypothesis: the new query can't use the index. `EXPLAIN ANALYZE` shows a sequential scan. Confirmed.
-> 5. Mitigate: roll back. Fix: expression index or trigram index; add a query-plan check to the test suite.
+<Info>
+**Example: p99 latency doubled at 14:05**
+
+1. Dashboard: only `/search`, all regions → not infra-wide.
+2. Timeline: deploy of `search-api` at 14:03.
+3. Traces: slow requests spend 800 ms in a new `SELECT ... FROM products WHERE lower(name) LIKE ...`.
+4. Hypothesis: the new query can't use the index. `EXPLAIN ANALYZE` shows a sequential scan. Confirmed.
+5. Mitigate: roll back. Fix: expression index or trigram index; add a query-plan check to the test suite.
+</Info>
 
 ## Production incidents
 1. **Mitigate first**: rollback, disable the feature flag, scale up, fail over. Restore service before understanding everything.
@@ -101,13 +108,16 @@ High-cardinality fields (user id, tenant, build version, feature flag) in events
 - "It works on my machine": dependency versions, OS differences, data volume.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - Changing several things at once, then not knowing which fixed it.
-> - Fixing the symptom (adding a null check) without asking why the value was null.
-> - Ignoring the first error in a log and chasing the cascade.
-> - Assuming ("that part can't be wrong") instead of checking ("check the plug").
-> - Debugging for hours alone; ask for a fresh view after a timebox.
-> - Accepting an AI-suggested fix that makes the symptom disappear without understanding why.
+<Warning>
+**Common mistakes**
+
+- Changing several things at once, then not knowing which fixed it.
+- Fixing the symptom (adding a null check) without asking why the value was null.
+- Ignoring the first error in a log and chasing the cascade.
+- Assuming ("that part can't be wrong") instead of checking ("check the plug").
+- Debugging for hours alone; ask for a fresh view after a timebox.
+- Accepting an AI-suggested fix that makes the symptom disappear without understanding why.
+</Warning>
 
 ## Senior perspective
 - Invest in debuggability before you need it: structured logs with ids, tracing, dashboards per service, feature flags, easy local repro, fast CI to bisect.
@@ -116,25 +126,30 @@ High-cardinality fields (user id, tenant, build version, feature flag) in events
 - After an incident, look for systemic fixes (guardrails, tests, alerts), not heroes or culprits.
 
 ## Interview questions
-> [!question]- Walk me through how you debug a problem you've never seen before.
-> Define the exact symptom, reproduce it (ideally as a failing test), minimise, gather evidence (stack trace, logs, metrics, recent changes), form one hypothesis at a time and test it, fix the root cause, add a regression test, share the learning.
+<Accordion title="Walk me through how you debug a problem you've never seen before.">
+Define the exact symptom, reproduce it (ideally as a failing test), minimise, gather evidence (stack trace, logs, metrics, recent changes), form one hypothesis at a time and test it, fix the root cause, add a regression test, share the learning.
+</Accordion>
 
-> [!question]- How does `git bisect` work?
-> It binary-searches the commit history between a known good and a known bad commit. At each step you (or a script via `git bisect run`) mark the checked-out commit good or bad, finding the first bad commit in about log₂(n) steps.
+<Accordion title="How does `git bisect` work?">
+It binary-searches the commit history between a known good and a known bad commit. At each step you (or a script via `git bisect run`) mark the checked-out commit good or bad, finding the first bad commit in about log₂(n) steps.
+</Accordion>
 
-> [!question]- A bug only happens in production. How do you approach it?
-> Mitigate if users are affected, then use observability: scope with metrics, find failing requests with traces, read logs by trace id, compare environment differences (config, data volume, versions, traffic), and try to reproduce with production-like data in staging.
+<Accordion title="A bug only happens in production. How do you approach it?">
+Mitigate if users are affected, then use observability: scope with metrics, find failing requests with traces, read logs by trace id, compare environment differences (config, data volume, versions, traffic), and try to reproduce with production-like data in staging.
+</Accordion>
 
-> [!question]- How do you debug an intermittent (flaky) failure?
-> Collect every occurrence with context, look for patterns (time, load, host, data), increase the failure rate (stress, loop the test, add delays), suspect shared state, ordering, timing and external dependencies, and add targeted logging.
+<Accordion title="How do you debug an intermittent (flaky) failure?">
+Collect every occurrence with context, look for patterns (time, load, host, data), increase the failure rate (stress, loop the test, add delays), suspect shared state, ordering, timing and external dependencies, and add targeted logging.
+</Accordion>
 
-> [!question]- What is a blameless postmortem?
-> A review after an incident that focuses on how the system and process allowed the failure rather than who made a mistake: timeline, impact, contributing factors, and concrete action items. Blame makes people hide information.
+<Accordion title="What is a blameless postmortem?">
+A review after an incident that focuses on how the system and process allowed the failure rather than who made a mistake: timeline, impact, contributing factors, and concrete action items. Blame makes people hide information.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Working With Legacy Code]] · [[Productivity & Deep Work]] · [[Senior Engineer in the AI Era]]
-- [[Backend Interview Questions]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Working With Legacy Code](/Software%20Engineering/Career/Working%20With%20Legacy%20Code) · [Productivity & Deep Work](/Software%20Engineering/Career/Productivity%20%26%20Deep%20Work) · [Senior Engineer in the AI Era](/Software%20Engineering/Career/Senior%20Engineer%20in%20the%20AI%20Era)
+- [Backend Interview Questions](/Software%20Engineering/Interviews/Backend%20Interview%20Questions)
 
 ## Sources
 - David J. Agans, *Debugging: The 9 Indispensable Rules* (AMACOM, 2002) and [debuggingrules.com](https://debuggingrules.com/)

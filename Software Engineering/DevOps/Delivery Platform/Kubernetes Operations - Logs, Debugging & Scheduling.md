@@ -1,12 +1,16 @@
 ---
+title: "Kubernetes Operations - Logs, Debugging & Scheduling"
 tags: [devops, devops/kubernetes]
 aliases: [Kubernetes Troubleshooting, kubectl debugging, Day-2 Kubernetes, K8s Scheduling, CrashLoopBackOff, Pod Pending, kubectl logs, Kubernetes Operator Handbook]
 updated: 2026-09-27
 ---
 # Kubernetes Operations - Logs, Debugging & Scheduling
 
-> [!tldr] TL;DR
-> Day-2 Kubernetes is three loops. **Read** what happened (`kubectl logs`, `kubectl events`, Grafana/Loki), **diagnose** by comparing `spec` with `status` (`describe`, `get -o yaml`, `debug`), and **understand placement** (the scheduler filters then scores nodes; affinity, topology spread, taints and priorities steer it). Every object is kept in shape by a controller's reconciliation loop, and in a GitOps cluster Argo CD is one more reconciler, so fixes go into Git, not `kubectl edit`. This note is the operator's handbook for Acme Shop; production manifests are in [[Kubernetes Workloads in Production]].
+<Note>
+**TL;DR**
+
+Day-2 Kubernetes is three loops. **Read** what happened (`kubectl logs`, `kubectl events`, Grafana/Loki), **diagnose** by comparing `spec` with `status` (`describe`, `get -o yaml`, `debug`), and **understand placement** (the scheduler filters then scores nodes; affinity, topology spread, taints and priorities steer it). Every object is kept in shape by a controller's reconciliation loop, and in a GitOps cluster Argo CD is one more reconciler, so fixes go into Git, not `kubectl edit`. This note is the operator's handbook for Acme Shop; production manifests are in [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production).
+</Note>
 
 ## 1. Logs
 
@@ -83,7 +87,7 @@ flowchart LR
 | Access control | Kubernetes RBAC (`pods/log` get) | Argo CD RBAC: **since Argo CD 3.0 logs RBAC is enforced by default**, users need an explicit `logs, get` grant | Grafana data source permissions |
 | Best for | live debugging of one workload | app teams without kubectl access, "what just happened after this sync" | incidents, history, aggregation, alerting |
 
-Rule of thumb: kubectl for **now**, Grafana for **what happened** and **how often**. LogQL recipes are in [[Grafana & the LGTM Stack]].
+Rule of thumb: kubectl for **now**, Grafana for **what happened** and **how often**. LogQL recipes are in [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack).
 
 ## 2. The debugging toolbox
 
@@ -171,7 +175,7 @@ kubectl auth can-i --list -n shop-prod --as=system:serviceaccount:argocd:argocd-
 kubectl auth whoami
 ```
 
-`kubectl top` is a point-in-time sample; use Grafana for trends (queries in [[Grafana & the LGTM Stack]]).
+`kubectl top` is a point-in-time sample; use Grafana for trends (queries in [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)).
 
 ### 2.5 Triage decision tree
 
@@ -206,7 +210,7 @@ flowchart TD
 
 **ImagePullBackOff / ErrImagePull**
 - Commands: `kubectl -n shop-prod describe pod <p> | grep -A5 Events`, `kubectl -n shop-prod get pod <p> -o jsonpath='{.spec.containers[*].image}'`, `kubectl -n shop-prod get sa orders-api -o yaml` (imagePullSecrets).
-- Causes and fixes: wrong tag (the GitOps commit points to a SHA that CI never pushed: check Jenkins, see [[Jenkins - Pipelines as Code]]); `ghcr.io` credentials missing or expired (`kubectl create secret docker-registry ghcr-pull ...` and attach to the ServiceAccount); `manifest unknown` for the node's architecture (build multi-arch); registry rate limits.
+- Causes and fixes: wrong tag (the GitOps commit points to a SHA that CI never pushed: check Jenkins, see [Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)); `ghcr.io` credentials missing or expired (`kubectl create secret docker-registry ghcr-pull ...` and attach to the ServiceAccount); `manifest unknown` for the node's architecture (build multi-arch); registry rate limits.
 
 **CrashLoopBackOff**
 - The container starts, exits, and the kubelet restarts it with an exponential back-off (10 s doubling up to 5 min).
@@ -217,7 +221,7 @@ flowchart TD
 **OOMKilled**
 - Symptom: `Last State: Terminated, Reason: OOMKilled, Exit Code: 137`; also visible as `kube_pod_container_status_last_terminated_reason{reason="OOMKilled"}`.
 - Commands: `kubectl -n shop-prod top pod <p> --containers`, the Grafana "memory working set vs limit" panel, `kubectl -n shop-prod get pod <p> -o jsonpath='{.spec.containers[0].resources}'`.
-- Fixes: raise the memory limit (and request) to fit real peak; for Node, align `--max-old-space-size` to about 75% of the container limit so V8 GCs before the kernel kills it; find leaks with heap snapshots ([[Node.js Performance & Debugging]]). Since v1.35, **in-place resize** can change memory on a running Pod, but in GitOps the permanent fix is still a commit.
+- Fixes: raise the memory limit (and request) to fit real peak; for Node, align `--max-old-space-size` to about 75% of the container limit so V8 GCs before the kernel kills it; find leaks with heap snapshots ([Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging)). Since v1.35, **in-place resize** can change memory on a running Pod, but in GitOps the permanent fix is still a commit.
 
 **Readiness failing (Running, 0/1 READY)**
 - Symptom: events `Readiness probe failed: HTTP probe failed with statuscode: 503`; the Pod gets no traffic, rollout stalls (`Waiting for deployment "orders-api" rollout to finish: 1 of 3 updated replicas are available`).
@@ -241,7 +245,7 @@ flowchart TD
   kubectl -n shop-prod get svc orders-api -o jsonpath='{.spec.selector}{"\n"}{.spec.ports}{"\n"}'
   kubectl -n shop-prod get pods -l app=orders-api --show-labels
   ```
-- Fixes: selector doesn't match Pod labels (a Kustomize `commonLabels` change is a classic); `targetPort` name/number wrong; all Pods unready (the slice lists them with `ready: false`); for the Gateway path, check `HTTPRoute` status conditions ([[Kubernetes Networking - Services, Ingress & Gateway API]]). Use **EndpointSlices**, not `kubectl get endpoints`: the v1 Endpoints API is deprecated since v1.33.
+- Fixes: selector doesn't match Pod labels (a Kustomize `commonLabels` change is a classic); `targetPort` name/number wrong; all Pods unready (the slice lists them with `ready: false`); for the Gateway path, check `HTTPRoute` status conditions ([Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)). Use **EndpointSlices**, not `kubectl get endpoints`: the v1 Endpoints API is deprecated since v1.33.
 
 ## 3. Pod orchestration and scheduling
 
@@ -377,7 +381,7 @@ When a `shop-critical` Pod can't fit, PostFilter looks for a node where evicting
 
 ### 3.4 Requests, limits and bin packing
 
-Requests are the scheduler's currency; limits are runtime enforcement (details and QoS in [[Kubernetes Workloads in Production]]). Operational consequences:
+Requests are the scheduler's currency; limits are runtime enforcement (details and QoS in [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)). Operational consequences:
 
 - **Over-requesting** wastes nodes (low utilisation, high bill). **Under-requesting** packs too tightly: CPU contention, memory evictions, OOM kills.
 - The default scoring spreads load (`LeastAllocated`). A cost-focused cluster can configure `NodeResourcesFit` with `MostAllocated` to **bin-pack** so the autoscaler can remove empty nodes.
@@ -501,7 +505,7 @@ kubectl -n shop-prod rollout resume deployment/orders-api                 # ...i
 | `maxSurge: 0, maxUnavailable: 1` | removes 1 old first | no extra capacity needed; runs at 2/3 during rollout |
 | `maxSurge: 100%, maxUnavailable: 0` | full new set, then drop old | fastest, doubles resources briefly |
 
-A rollout that never gets Ready stalls; `progressDeadlineSeconds` (default 600) marks it `Progressing=False` (`ProgressDeadlineExceeded`) but does **not** roll back by itself. Canary and automated rollback are Argo Rollouts' job ([[Argo Rollouts - Canary & Blue-Green]]).
+A rollout that never gets Ready stalls; `progressDeadlineSeconds` (default 600) marks it `Progressing=False` (`ProgressDeadlineExceeded`) but does **not** roll back by itself. Canary and automated rollback are Argo Rollouts' job ([Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green)).
 
 **Draining a node** (kernel patch, node upgrade):
 
@@ -566,16 +570,19 @@ Argo CD applies the loop one level up: **desired state = Git**, live state = clu
 - **HPA vs `replicas` in Git**: omit `spec.replicas` from the Deployment in Git (or `ignoreDifferences` on `/spec/replicas`) so Argo CD doesn't reset the autoscaler.
 - **Allowed imperative actions**: read-only commands, `logs`, `exec`/`debug` for investigation, `rollout restart` (Argo CD also exposes a Restart action; the annotation it adds is not a Git-managed field), `cordon`/`drain` (nodes are not in Git). For an emergency manual change, **disable auto-sync on that Application first**, then write the change back to Git.
 
-Details: [[Argo CD in Practice]] and the overview in [[GitOps - Argo CD & Flux]].
+Details: [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) and the overview in [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux).
 
 ## 5. What changed recently
 
-> [!info]+ 🆕 2025–2026 for operators
-> - **`kubectl events`** has been GA since v1.28 (alpha 1.23, beta 1.26): prefer it over `kubectl get events` for sorting, `--for` and `--watch`.
-> - **v1.33 (2025-04-23)**: **native sidecars GA** (init container with `restartPolicy: Always`: log with `-c <sidecar>`, they start before and stop after the app); **v1 Endpoints API deprecated** in favour of EndpointSlices; **kuberc** introduced as alpha.
-> - **v1.34 (2025-08-27)**: **kuberc beta**: `~/.kube/kuberc` (`kind: Preference`, `apiVersion: kubectl.config.k8s.io/v1beta1`) holds kubectl aliases and default flags separately from kubeconfig; **Dynamic Resource Allocation (DRA) GA** for GPUs and other devices (ResourceClaims instead of opaque extended resources); `preStop` sleep action GA.
-> - **v1.35 (2025-12-17)**: **in-place Pod resize GA**: change CPU/memory of a running Pod through the `resize` subresource, often without a restart; kuberc gains an allowlist for credential exec plugins (blog 2026-01-09); **gang scheduling** arrives as alpha through the new **Workload API** (`scheduling.k8s.io/v1alpha1`, PodGroups with `minCount`), feature gates `GenericWorkload` and `GangScheduling`.
-> - **v1.37 (2026-08-26)**: scheduler **preemption to make room for in-place resize** (alpha); HPA scale-to-zero beta (see [[Kubernetes Workloads in Production]]).
+<Info>
+**🆕 2025–2026 for operators**
+
+- **`kubectl events`** has been GA since v1.28 (alpha 1.23, beta 1.26): prefer it over `kubectl get events` for sorting, `--for` and `--watch`.
+- **v1.33 (2025-04-23)**: **native sidecars GA** (init container with `restartPolicy: Always`: log with `-c <sidecar>`, they start before and stop after the app); **v1 Endpoints API deprecated** in favour of EndpointSlices; **kuberc** introduced as alpha.
+- **v1.34 (2025-08-27)**: **kuberc beta**: `~/.kube/kuberc` (`kind: Preference`, `apiVersion: kubectl.config.k8s.io/v1beta1`) holds kubectl aliases and default flags separately from kubeconfig; **Dynamic Resource Allocation (DRA) GA** for GPUs and other devices (ResourceClaims instead of opaque extended resources); `preStop` sleep action GA.
+- **v1.35 (2025-12-17)**: **in-place Pod resize GA**: change CPU/memory of a running Pod through the `resize` subresource, often without a restart; kuberc gains an allowlist for credential exec plugins (blog 2026-01-09); **gang scheduling** arrives as alpha through the new **Workload API** (`scheduling.k8s.io/v1alpha1`, PodGroups with `minCount`), feature gates `GenericWorkload` and `GangScheduling`.
+- **v1.37 (2026-08-26)**: scheduler **preemption to make room for in-place resize** (alpha); HPA scale-to-zero beta (see [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)).
+</Info>
 
 kuberc example:
 
@@ -610,18 +617,21 @@ The resize applies to that Pod only; the next rollout uses the Deployment templa
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Reading `kubectl logs` instead of `--previous` on a crash-looping Pod: you see the new, empty container.
-> - Relying on `kubectl logs` for incidents: rotation, deleted Pods and dead nodes lose the evidence. Ship to Loki.
-> - Apps logging to files inside the container: no `kubectl logs`, disk-pressure evictions, broken read-only filesystems.
-> - `kubectl edit` in a GitOps namespace: reverted by selfHeal, and no one knows why the "fix" vanished.
-> - Force-deleting StatefulSet Pods on a partitioned node: two Pods with the same identity writing to the same volume.
-> - Removing finalizers blindly: orphaned load balancers, volumes, DNS records.
-> - Hard anti-affinity (`required...`) with more replicas than nodes: Pods stuck Pending forever. Use topology spread or preferred rules.
-> - `topologySpreadConstraints` with `DoNotSchedule` and no `matchLabelKeys: [pod-template-hash]`: rollouts get stuck because old and new ReplicaSets count together.
-> - PDB with `minAvailable` equal to replicas (or `maxUnavailable: 0`): node drains and cluster upgrades hang.
-> - Requests copied from a template and never revisited: the autoscaler adds nodes for capacity nobody uses.
-> - Events expire after about an hour: capture them before they disappear.
+<Warning>
+**Common pitfalls**
+
+- Reading `kubectl logs` instead of `--previous` on a crash-looping Pod: you see the new, empty container.
+- Relying on `kubectl logs` for incidents: rotation, deleted Pods and dead nodes lose the evidence. Ship to Loki.
+- Apps logging to files inside the container: no `kubectl logs`, disk-pressure evictions, broken read-only filesystems.
+- `kubectl edit` in a GitOps namespace: reverted by selfHeal, and no one knows why the "fix" vanished.
+- Force-deleting StatefulSet Pods on a partitioned node: two Pods with the same identity writing to the same volume.
+- Removing finalizers blindly: orphaned load balancers, volumes, DNS records.
+- Hard anti-affinity (`required...`) with more replicas than nodes: Pods stuck Pending forever. Use topology spread or preferred rules.
+- `topologySpreadConstraints` with `DoNotSchedule` and no `matchLabelKeys: [pod-template-hash]`: rollouts get stuck because old and new ReplicaSets count together.
+- PDB with `minAvailable` equal to replicas (or `maxUnavailable: 0`): node drains and cluster upgrades hang.
+- Requests copied from a template and never revisited: the autoscaler adds nodes for capacity nobody uses.
+- Events expire after about an hour: capture them before they disappear.
+</Warning>
 
 ## Senior perspective
 
@@ -634,36 +644,44 @@ The resize applies to that Pod only; the next rollout uses the Deployment templa
 
 ## Interview questions
 
-> [!question]- A Pod is stuck in Pending. How do you debug it?
-> `kubectl describe pod` and read the FailedScheduling event: it lists why each node was rejected (insufficient CPU/memory, untolerated taint, affinity mismatch, topology spread, unbound PVC). Then check node allocatable vs requested, labels and taints, and whether the cluster autoscaler or Karpenter tried to add a node and why it didn't. Fix requests, selectors, tolerations or capacity.
+<Accordion title="A Pod is stuck in Pending. How do you debug it?">
+`kubectl describe pod` and read the FailedScheduling event: it lists why each node was rejected (insufficient CPU/memory, untolerated taint, affinity mismatch, topology spread, unbound PVC). Then check node allocatable vs requested, labels and taints, and whether the cluster autoscaler or Karpenter tried to add a node and why it didn't. Fix requests, selectors, tolerations or capacity.
+</Accordion>
 
-> [!question]- CrashLoopBackOff: what does it mean and what do you run?
-> The container keeps exiting and the kubelet restarts it with exponential back-off up to 5 minutes. Run `kubectl logs --previous` for the crashed instance, check `lastState.terminated.reason` and exit code (137 OOM or kill, 1 app error, 0 exits normally), read events for probe failures, and if needed start a copy with `kubectl debug --copy-to` and a shell to reproduce.
+<Accordion title="CrashLoopBackOff: what does it mean and what do you run?">
+The container keeps exiting and the kubelet restarts it with exponential back-off up to 5 minutes. Run `kubectl logs --previous` for the crashed instance, check `lastState.terminated.reason` and exit code (137 OOM or kill, 1 app error, 0 exits normally), read events for probe failures, and if needed start a copy with `kubectl debug --copy-to` and a shell to reproduce.
+</Accordion>
 
-> [!question]- Explain how the scheduler chooses a node.
-> For each unscheduled Pod it runs filter plugins to find feasible nodes (resources by requests, selectors/affinity, taints, spread, volumes), then score plugins to rank them (resource balance, preferred affinity, spread, image locality), then reserves and binds the best node. If no node fits, PostFilter may preempt lower-priority Pods. Actual usage is not considered, only requests.
+<Accordion title="Explain how the scheduler chooses a node.">
+For each unscheduled Pod it runs filter plugins to find feasible nodes (resources by requests, selectors/affinity, taints, spread, volumes), then score plugins to rank them (resource balance, preferred affinity, spread, image locality), then reserves and binds the best node. If no node fits, PostFilter may preempt lower-priority Pods. Actual usage is not considered, only requests.
+</Accordion>
 
-> [!question]- Taints and tolerations vs node affinity?
-> Taints are on nodes and repel Pods that don't tolerate them (keep general Pods off GPU nodes). Node affinity is on Pods and attracts them to nodes with certain labels. A toleration only allows a Pod onto a tainted node, it doesn't force it there, so dedicated pools use both.
+<Accordion title="Taints and tolerations vs node affinity?">
+Taints are on nodes and repel Pods that don't tolerate them (keep general Pods off GPU nodes). Node affinity is on Pods and attracts them to nodes with certain labels. A toleration only allows a Pod onto a tainted node, it doesn't force it there, so dedicated pools use both.
+</Accordion>
 
-> [!question]- How do you spread replicas across zones, and why topology spread over anti-affinity?
-> `topologySpreadConstraints` with `topologyKey: topology.kubernetes.io/zone`, `maxSkew: 1` and `whenUnsatisfiable: DoNotSchedule` (plus `matchLabelKeys: [pod-template-hash]`). It supports more than one replica per zone with an even skew, whereas required anti-affinity allows at most one per domain and is expensive to compute in large clusters.
+<Accordion title="How do you spread replicas across zones, and why topology spread over anti-affinity?">
+`topologySpreadConstraints` with `topologyKey: topology.kubernetes.io/zone`, `maxSkew: 1` and `whenUnsatisfiable: DoNotSchedule` (plus `matchLabelKeys: [pod-template-hash]`). It supports more than one replica per zone with an even skew, whereas required anti-affinity allows at most one per domain and is expensive to compute in large clusters.
+</Accordion>
 
-> [!question]- What are finalizers and owner references?
-> Owner references link dependents to owners (Pod → ReplicaSet → Deployment) so the garbage collector deletes dependents when owners go, in background or foreground mode, or orphans them if asked. Finalizers are keys that block an object's deletion until a controller finishes cleanup; the object stays Terminating until the list is empty.
+<Accordion title="What are finalizers and owner references?">
+Owner references link dependents to owners (Pod → ReplicaSet → Deployment) so the garbage collector deletes dependents when owners go, in background or foreground mode, or orphans them if asked. Finalizers are keys that block an object's deletion until a controller finishes cleanup; the object stays Terminating until the list is empty.
+</Accordion>
 
-> [!question]- Why shouldn't you `kubectl edit` a Deployment managed by Argo CD?
-> Argo CD continuously compares live state with Git. With selfHeal enabled it re-applies Git and reverts your edit; without it, the app shows OutOfSync and the next sync reverts it anyway. Either way Git and cluster drift. Change the manifest in Git (or disable auto-sync for a documented emergency change and commit it afterwards).
+<Accordion title="Why shouldn't you `kubectl edit` a Deployment managed by Argo CD?">
+Argo CD continuously compares live state with Git. With selfHeal enabled it re-applies Git and reverts your edit; without it, the app shows OutOfSync and the next sync reverts it anyway. Either way Git and cluster drift. Change the manifest in Git (or disable auto-sync for a documented emergency change and commit it afterwards).
+</Accordion>
 
-> [!question]- How does `kubectl drain` interact with PodDisruptionBudgets?
-> Drain cordons the node and evicts Pods through the Eviction API, which refuses evictions that would violate a PDB. Pods are evicted as their budget allows, waiting for replacements to become Ready. A PDB that allows zero disruptions blocks the drain until timeout.
+<Accordion title="How does `kubectl drain` interact with PodDisruptionBudgets?">
+Drain cordons the node and evicts Pods through the Eviction API, which refuses evictions that would violate a PDB. Pods are evicted as their budget allows, waiting for replacements to become Ready. A PDB that allows zero disruptions blocks the drain until timeout.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Kubernetes Delivery Platform - End to End]] · [[Kubernetes]] · [[Kubernetes Basics]]
-- [[Kubernetes Workloads in Production]] (probes, limits, HPA, PDB manifests) · [[Kubernetes Networking - Services, Ingress & Gateway API]]
-- [[Grafana & the LGTM Stack]] (logs and metrics history) · [[Observability - Logs, Metrics & Traces]]
-- [[Argo CD in Practice]] · [[Argo Rollouts - Canary & Blue-Green]] · [[GitOps - Argo CD & Flux]] · [[Helm & Kustomize]]
-- [[Deploying Node.js Apps to Kubernetes]] · [[Deploying Next.js Micro-frontends to Kubernetes]] · [[Site Reliability Engineering & Incident Management]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes) · [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics)
+- [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) (probes, limits, HPA, PDB manifests) · [Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)
+- [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) (logs and metrics history) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces)
+- [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Argo Rollouts - Canary & Blue-Green](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20Rollouts%20-%20Canary%20%26%20Blue-Green) · [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux) · [Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize)
+- [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes) · [Deploying Next.js Micro-frontends to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Next.js%20Micro-frontends%20to%20Kubernetes) · [Site Reliability Engineering & Incident Management](/Software%20Engineering/DevOps/Site%20Reliability%20Engineering%20%26%20Incident%20Management)
 
 ## Sources
 - [kubectl logs reference](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/) · [kubectl events reference](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_events/) · [KEP-1440 kubectl events (stages)](https://github.com/kubernetes/enhancements/issues/1440)

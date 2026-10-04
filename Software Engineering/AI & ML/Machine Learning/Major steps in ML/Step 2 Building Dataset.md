@@ -1,18 +1,22 @@
 ---
+title: "Step 2 Building Dataset"
 tags: [ai-ml, ai-ml/machine-learning, course]
 aliases: [Build the Dataset, ML Step 2, Data Preparation]
 updated: 2026-09-27
 ---
 # Step 2 Building Dataset
 
-> [!tldr] TL;DR
-> *Working with data is perhaps the most overlooked, yet most important, step of the ML process.* Building a dataset has four parts: **collect** data that matches the problem, **inspect** it (outliers, missing values, wrong formats), compute **summary statistics** (scope, scale, shape), and **visualise** it. Garbage in, garbage out.
+<Note>
+**TL;DR**
 
-![[Screenshot_2023-03-29_at_12.50.44_AM.png]]
+*Working with data is perhaps the most overlooked, yet most important, step of the ML process.* Building a dataset has four parts: **collect** data that matches the problem, **inspect** it (outliers, missing values, wrong formats), compute **summary statistics** (scope, scale, shape), and **visualise** it. Garbage in, garbage out.
+</Note>
+
+![Screenshot_2023-03-29_at_12.50.44_AM](/Attachments/Screenshot_2023-03-29_at_12.50.44_AM.png)
 
 ## The four parts of working with data
 
-![[Screenshot_2023-03-29_at_12.52.44_AM.png]]
+![Screenshot_2023-03-29_at_12.52.44_AM](/Attachments/Screenshot_2023-03-29_at_12.52.44_AM.png)
 
 ### 1. Data collection
 Gather data related to the problem (labelled or unlabelled). It can be as simple as running the right SQL queries or as complex as building a custom web scraper. You might even need to run a model over your data to generate labels.
@@ -73,15 +77,17 @@ df.plot.scatter(x="temp_c", y="sales")   # visualise the relationship
 
 ## Interview questions
 
-> [!question]- What is data leakage and how do you prevent it?
-> Information from outside the training period or from the target itself sneaks into the features, inflating offline results. Prevent it by splitting data first (by time for time series), fitting preprocessing only on the training split, and checking each feature is available at prediction time.
+<Accordion title="What is data leakage and how do you prevent it?">
+Information from outside the training period or from the target itself sneaks into the features, inflating offline results. Prevent it by splitting data first (by time for time series), fitting preprocessing only on the training split, and checking each feature is available at prediction time.
+</Accordion>
 
-> [!question]- How would you handle missing values?
-> First understand why they're missing. Options: drop rows or columns (if few or uninformative), impute (mean/median/mode, or a model), or add an "is_missing" indicator since missingness can be a signal. Fit imputers on training data only.
+<Accordion title="How would you handle missing values?">
+First understand why they're missing. Options: drop rows or columns (if few or uninformative), impute (mean/median/mode, or a model), or add an "is_missing" indicator since missingness can be a signal. Fit imputers on training data only.
+</Accordion>
 
 ## Related
-- [[Major steps in ML]] · [[Machine Learning]] (course index) · [[AI & ML Index]]
-- Previous: [[Step 1 Define The problem]] · Next: [[Step 3 Train the model]]
+- [Major steps in ML](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Major%20steps%20in%20ML) · [Machine Learning](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Machine%20Learning) (course index) · [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- Previous: [Step 1 Define The problem](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%201%20Define%20The%20problem) · Next: [Step 3 Train the model](/Software%20Engineering/AI%20%26%20ML/Machine%20Learning/Major%20steps%20in%20ML/Step%203%20Train%20the%20model)
 
 ## Sources
 - AWS DeepRacer Student: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

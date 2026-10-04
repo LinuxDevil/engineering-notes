@@ -1,12 +1,16 @@
 ---
+title: "Case Study - URL Shortener"
 tags: [system-design, system-design/case-study]
 aliases: [URL Shortener, TinyURL, Bitly Design]
 updated: 2026-09-27
 ---
 # Case Study - URL Shortener
 
-> [!tldr] TL;DR
-> A URL shortener maps a short code to a long URL and redirects. It's extremely **read-heavy** (~100:1), so the design centres on a **fast key-value lookup behind a cache and CDN**. Generate codes by **Base62-encoding a unique ID** (from a counter/range allocator or Snowflake) to avoid collisions, or hash + collision check for dedup. Use **302** if you need click analytics, 301 if you want browsers to cache. Analytics go through a queue, never on the redirect's critical path.
+<Note>
+**TL;DR**
+
+A URL shortener maps a short code to a long URL and redirects. It's extremely **read-heavy** (~100:1), so the design centres on a **fast key-value lookup behind a cache and CDN**. Generate codes by **Base62-encoding a unique ID** (from a counter/range allocator or Snowflake) to avoid collisions, or hash + collision check for dedup. Use **302** if you need click analytics, 301 if you want browsers to cache. Analytics go through a queue, never on the redirect's critical path.
+</Note>
 
 ## 1. Requirements
 **Functional**: create short URL (optional custom alias, expiry); redirect `GET /{code}` to the long URL; basic click analytics.
@@ -74,14 +78,14 @@ def base62(n: int) -> str:
     return "".join(reversed(s)) or "0"
 base62(125_000_000_000)   # '2crtgcg'  (7 chars)
 ```
-To avoid enumerable codes from a counter, permute the integer first (e.g. a Feistel cipher or multiply by a large odd number mod 62⁷) before encoding. See [[Unique ID Generation]].
+To avoid enumerable codes from a counter, permute the integer first (e.g. a Feistel cipher or multiply by a large odd number mod 62⁷) before encoding. See [Unique ID Generation](/Software%20Engineering/System%20Design/Unique%20ID%20Generation).
 
 ### 301 vs 302
 - **301 Moved Permanently**: browsers and CDNs cache it → fewer hits, but you **lose analytics** and can't change the destination.
 - **302 Found / 307**: every click hits you (or the CDN with a short TTL) → accurate analytics, editable links. Most commercial shorteners use 302.
 
 ### Read path performance
-- Cache-aside in Redis with long TTL ([[Caching Strategies]]); popular links follow a power law so a small cache gets a >90% hit ratio.
+- Cache-aside in Redis with long TTL ([Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies)); popular links follow a power law so a small cache gets a >90% hit ratio.
 - Cache **negative lookups** briefly to stop scans for random codes hitting the DB.
 - Edge caching of redirects with a short `s-maxage` for viral links.
 
@@ -89,7 +93,7 @@ To avoid enumerable codes from a counter, permute the integer first (e.g. a Feis
 Emit a click event (code, timestamp, IP-derived country, user agent, referrer) to Kafka fire-and-forget; aggregate in stream processors or an OLAP store. Losing a tiny fraction of clicks is acceptable; slowing redirects is not.
 
 ### Abuse
-Malware/phishing URLs: check against Safe Browsing lists on create and asynchronously re-scan; rate limit creation per user/IP ([[Case Study - Rate Limiter]]); interstitial warning pages.
+Malware/phishing URLs: check against Safe Browsing lists on create and asynchronously re-scan; rate limit creation per user/IP ([Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter)); interstitial warning pages.
 
 ## 7. Trade-offs and failure modes
 - Cache down → DB must handle 10k QPS briefly; size the DB or use replicas.
@@ -103,21 +107,25 @@ Malware/phishing URLs: check against Safe Browsing lists on create and asynchron
 - Privacy: IP addresses in analytics are personal data (GDPR); truncate or hash.
 
 ## Interview questions
-> [!question]- How do you avoid collisions?
-> Derive codes from unique IDs (counter/range allocator/Snowflake) encoded in Base62, which can't collide. If using hashes or random strings, enforce a unique constraint and retry on conflict.
+<Accordion title="How do you avoid collisions?">
+Derive codes from unique IDs (counter/range allocator/Snowflake) encoded in Base62, which can't collide. If using hashes or random strings, enforce a unique constraint and retry on conflict.
+</Accordion>
 
-> [!question]- How long should the code be?
-> Work from capacity: 6 B URLs needs log₆₂(6×10⁹) ≈ 5.5 → 6 chars minimum; 7 chars (3.5 T) gives headroom and makes random guessing sparse.
+<Accordion title="How long should the code be?">
+Work from capacity: 6 B URLs needs log₆₂(6×10⁹) ≈ 5.5 → 6 chars minimum; 7 chars (3.5 T) gives headroom and makes random guessing sparse.
+</Accordion>
 
-> [!question]- 301 or 302?
-> 302 (or 307) if you need analytics or editable destinations, because browsers won't cache it permanently. 301 minimizes load but you lose visibility and control.
+<Accordion title="301 or 302?">
+302 (or 307) if you need analytics or editable destinations, because browsers won't cache it permanently. 301 minimizes load but you lose visibility and control.
+</Accordion>
 
-> [!question]- How would you scale to 1 M redirects/s?
-> CDN edge caching for hot codes, large Redis cluster, stateless redirect fleet in multiple regions, replicated read-only URL store per region, async analytics pipeline.
+<Accordion title="How would you scale to 1 M redirects/s?">
+CDN edge caching for hot codes, large Redis cluster, stateless redirect fleet in multiple regions, replicated read-only URL store per region, async analytics pipeline.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[Unique ID Generation]] · [[Caching Strategies]] · [[CDN & Edge Computing]] · [[Message Queues & Event Streaming]] · [[Case Study - Rate Limiter]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [Unique ID Generation](/Software%20Engineering/System%20Design/Unique%20ID%20Generation) · [Caching Strategies](/Software%20Engineering/System%20Design/Caching%20Strategies) · [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Case Study - Rate Limiter](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Rate%20Limiter)
 
 ## Sources
 - Alex Xu, *System Design Interview*, vol. 1, ch. 8 "Design a URL Shortener"

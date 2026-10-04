@@ -1,24 +1,31 @@
 ---
+title: "Authentication & Token Storage"
 tags: [frontend, frontend/security, frontend/auth]
 aliases: [Authentication, Auth, Token Storage, OAuth, PKCE, JWT storage, Passkeys]
 updated: 2026-09-27
 ---
 # Authentication & Token Storage
 
-> [!tldr] TL;DR
-> **Authentication** proves *who* you are; **authorization** decides *what* you may do. Web apps authenticate with **server sessions** (cookie holds an opaque ID), **tokens** (usually JWTs), or delegate to an identity provider with **OAuth 2.0 / OpenID Connect** (Authorization Code + **PKCE**). Where you keep the credential is a security decision: **HttpOnly, Secure, SameSite cookies** (ideally via a **BFF**) resist XSS token theft; `localStorage` does not. **Passkeys (WebAuthn)** are replacing passwords.
+<Note>
+**TL;DR**
+
+**Authentication** proves *who* you are; **authorization** decides *what* you may do. Web apps authenticate with **server sessions** (cookie holds an opaque ID), **tokens** (usually JWTs), or delegate to an identity provider with **OAuth 2.0 / OpenID Connect** (Authorization Code + **PKCE**). Where you keep the credential is a security decision: **HttpOnly, Secure, SameSite cookies** (ideally via a **BFF**) resist XSS token theft; `localStorage` does not. **Passkeys (WebAuthn)** are replacing passwords.
+</Note>
 
 ## Authentication vs authorization
 
-> [!tip] 💡
-> - **Authentication (authn)** → verifying identity ("Are you really Sara?").
-> - **Authorization (authz)** → verifying role and determining the actions and permissions ("Can Sara cancel this booking?").
+<Tip>
+**💡**
+
+- **Authentication (authn)** → verifying identity ("Are you really Sara?").
+- **Authorization (authz)** → verifying role and determining the actions and permissions ("Can Sara cancel this booking?").
+</Tip>
 
 - Authn happens once per session; authz happens on **every request/action**.
 - The frontend can *hide* UI based on roles, but **authorization must be enforced on the server** — a hidden button is not access control.
 - HTTP 401 = not authenticated; 403 = authenticated but not allowed.
 
-More: [[Authentication vs Authorization]].
+More: [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization).
 
 ## HTTP is stateless
 HTTP doesn't remember previous requests, so various state management mechanisms carry identity between requests:
@@ -27,7 +34,7 @@ HTTP doesn't remember previous requests, so various state management mechanisms 
 - **Session Storage** – same API as Local Storage but scoped to one **tab** and cleared when that tab's page session ends (closing the tab). Used for temporary data.
 - **IndexedDB** – a low-level, async API for storing structured data, files and blobs.
 
-Full comparison: [[Browser Storage - Cookies, Web Storage & IndexedDB]].
+Full comparison: [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB).
 
 ---
 
@@ -88,13 +95,16 @@ A **JWT** = `base64url(header).base64url(payload).signature`:
 | **Tamper-proof**: the signature detects modification | **Readable**: the payload is only base64url-encoded, **not encrypted** — never put secrets/PII in it (encryption requires JWE, rarely used) |
 | Works across domains and for mobile/native clients | **Theft**: whoever holds it is the user (bearer token). HTTPS is mandatory, and storage location matters (below) |
 
-> [!warning] JWT pitfalls
-> - Accepting `alg: none` or letting the token choose the algorithm — pin the expected algorithm.
-> - Not validating `exp`, `aud`, `iss`.
-> - Long-lived access tokens with no revocation.
-> - Decoding a JWT in the browser (`jwt-decode`) is fine for *reading* claims for UI — but the frontend can't *verify* it and must never make security decisions on it.
+<Warning>
+**JWT pitfalls**
 
-Deep dive: [[JWT vs Cookies]] — and note that "JWT vs cookies" is a false dichotomy: a JWT is a *format*, a cookie is a *transport/storage*. You can put a JWT in an HttpOnly cookie.
+- Accepting `alg: none` or letting the token choose the algorithm — pin the expected algorithm.
+- Not validating `exp`, `aud`, `iss`.
+- Long-lived access tokens with no revocation.
+- Decoding a JWT in the browser (`jwt-decode`) is fine for *reading* claims for UI — but the frontend can't *verify* it and must never make security decisions on it.
+</Warning>
+
+Deep dive: [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) — and note that "JWT vs cookies" is a false dichotomy: a JWT is a *format*, a cookie is a *transport/storage*. You can put a JWT in an HttpOnly cookie.
 
 ### 3. OAuth 2.0 and OpenID Connect
 
@@ -136,30 +146,33 @@ sequenceDiagram
   API-->>App: 200 data
 ```
 
-> [!example] Generating the PKCE pair in the browser
-> ```js
-> function base64url(bytes) {
->   return btoa(String.fromCharCode(...new Uint8Array(bytes)))
->     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-> }
->
-> async function createPkce() {
->   const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
->   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
->   return { verifier, challenge: base64url(digest) };
-> }
->
-> const { verifier, challenge } = await createPkce();
-> const state = crypto.randomUUID();
-> sessionStorage.setItem('pkce', JSON.stringify({ verifier, state }));
->
-> location.assign('https://auth.example.com/authorize?' + new URLSearchParams({
->   response_type: 'code', client_id: 'travel-spa', redirect_uri: location.origin + '/callback',
->   scope: 'openid profile bookings.read', state,
->   code_challenge: challenge, code_challenge_method: 'S256',
-> }));
-> ```
-> In practice use a vetted library (oidc-client-ts, Auth.js, the provider's SDK) — or better, do the whole exchange server-side in a BFF.
+<Info>
+**Generating the PKCE pair in the browser**
+
+```js
+function base64url(bytes) {
+  return btoa(String.fromCharCode(...new Uint8Array(bytes)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function createPkce() {
+  const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  return { verifier, challenge: base64url(digest) };
+}
+
+const { verifier, challenge } = await createPkce();
+const state = crypto.randomUUID();
+sessionStorage.setItem('pkce', JSON.stringify({ verifier, state }));
+
+location.assign('https://auth.example.com/authorize?' + new URLSearchParams({
+  response_type: 'code', client_id: 'travel-spa', redirect_uri: location.origin + '/callback',
+  scope: 'openid profile bookings.read', state,
+  code_challenge: challenge, code_challenge_method: 'S256',
+}));
+```
+In practice use a vetted library (oidc-client-ts, Auth.js, the provider's SDK) — or better, do the whole exchange server-side in a BFF.
+</Info>
 
 ### Refresh tokens and rotation
 - **Access token**: short-lived (minutes), sent to APIs.
@@ -237,11 +250,14 @@ The question isn't "cookie vs JWT", it's **"can JavaScript read the credential?"
 | Built-in security flags: **`HttpOnly`** (JS can't read it), **`Secure`** (HTTPS only), **`SameSite`**, `Domain`/`Path` scoping, `Max-Age`/`Expires`, `__Host-` prefix | Scoped to a **domain/path** (not the same-origin policy) — cross-site APIs need `SameSite=None` and CORS with credentials |
 | | ~4 KB per cookie; sent on every request (overhead) |
 
-> [!example] A well-configured session cookie
-> ```http
-> Set-Cookie: __Host-sid=8f3a…; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600
-> ```
-> `__Host-` prefix forces `Secure`, `Path=/` and no `Domain` → can't be set or overridden by subdomains.
+<Info>
+**A well-configured session cookie**
+
+```http
+Set-Cookie: __Host-sid=8f3a…; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600
+```
+`__Host-` prefix forces `Secure`, `Path=/` and no `Domain` → can't be set or overridden by subdomains.
+</Info>
 
 ### Authorization header (Bearer tokens)
 The header is a *transport*; the question is where the token lives before you attach it.
@@ -265,59 +281,76 @@ The header is a *transport*; the question is where the token lives before you at
 | Cleared automatically when the **tab** closes | Same XSS exposure as localStorage |
 | JS API for temporary data | Per tab: opening a new tab requires re-authentication; not sent automatically |
 
-> [!tip] Senior answer
-> "For a browser app I'd use a BFF: the OAuth flow runs server-side, tokens stay on the server, and the browser gets an `__Host-` HttpOnly, Secure, SameSite=Lax session cookie. I'd add CSRF protection for state-changing requests and a strict CSP to reduce XSS. If there's no BFF, I'd keep a short-lived access token in memory and the refresh token in an HttpOnly cookie with rotation — never long-lived tokens in localStorage."
+<Tip>
+**Senior answer**
 
-> [!warning] Common pitfalls
-> - Treating client-side route guards as security — the API must check permissions.
-> - Putting tokens in URLs (they leak via logs, history and `Referer`).
-> - Forgetting logout must revoke server-side (session delete / refresh-token revoke), not just clear client state.
-> - Not rotating the session ID after login (session fixation).
-> - Using the Implicit flow or a client secret inside a SPA.
+"For a browser app I'd use a BFF: the OAuth flow runs server-side, tokens stay on the server, and the browser gets an `__Host-` HttpOnly, Secure, SameSite=Lax session cookie. I'd add CSRF protection for state-changing requests and a strict CSP to reduce XSS. If there's no BFF, I'd keep a short-lived access token in memory and the refresh token in an HttpOnly cookie with rotation — never long-lived tokens in localStorage."
+</Tip>
 
-> [!info]+ 🆕 2025–2026
-> - **CVE-2025-55182** (2025-12-03, CVSS 10) showed that auth code running in React Server Components/Server Functions is server code: patch RSC frameworks promptly and validate/authorize inside every Server Function. See [[Frontend Security - XSS, CSRF, CSP & Trusted Types]].
-> - **Next.js 16** replaced `middleware.ts` with **`proxy.ts`** (Node runtime) — the place where many apps check auth cookies and redirect. `cookies()`/`headers()` must now be awaited. See [[Next.js 15 to 16.3]].
-> - npm moved maintainers toward 2FA/FIDO and short-lived tokens after the 2025 supply-chain attacks — the same phishing-resistant direction as passkeys. See [[Supply Chain Security]].
+<Warning>
+**Common pitfalls**
+
+- Treating client-side route guards as security — the API must check permissions.
+- Putting tokens in URLs (they leak via logs, history and `Referer`).
+- Forgetting logout must revoke server-side (session delete / refresh-token revoke), not just clear client state.
+- Not rotating the session ID after login (session fixation).
+- Using the Implicit flow or a client secret inside a SPA.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **CVE-2025-55182** (2025-12-03, CVSS 10) showed that auth code running in React Server Components/Server Functions is server code: patch RSC frameworks promptly and validate/authorize inside every Server Function. See [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types).
+- **Next.js 16** replaced `middleware.ts` with **`proxy.ts`** (Node runtime) — the place where many apps check auth cookies and redirect. `cookies()`/`headers()` must now be awaited. See [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+- npm moved maintainers toward 2FA/FIDO and short-lived tokens after the 2025 supply-chain attacks — the same phishing-resistant direction as passkeys. See [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security).
+</Info>
 
 ## Interview questions
 
-> [!question]- Authentication vs authorization?
-> Authentication verifies identity (login, passkey, OIDC). Authorization decides what that identity may do (roles, scopes, ownership checks) and must be enforced server-side on every request.
+<Accordion title="Authentication vs authorization?">
+Authentication verifies identity (login, passkey, OIDC). Authorization decides what that identity may do (roles, scopes, ownership checks) and must be enforced server-side on every request.
+</Accordion>
 
-> [!question]- Session-based vs JWT-based auth — trade-offs?
-> Sessions: opaque ID in a cookie, state on the server; easy revocation, needs a shared store to scale, CSRF considerations. JWT: self-contained signed claims; stateless and easy to verify across services, but hard to revoke, larger, and readable. Common hybrid: short-lived JWT access tokens + rotating refresh tokens, or sessions at the edge (BFF) with JWTs between services.
+<Accordion title="Session-based vs JWT-based auth — trade-offs?">
+Sessions: opaque ID in a cookie, state on the server; easy revocation, needs a shared store to scale, CSRF considerations. JWT: self-contained signed claims; stateless and easy to verify across services, but hard to revoke, larger, and readable. Common hybrid: short-lived JWT access tokens + rotating refresh tokens, or sessions at the edge (BFF) with JWTs between services.
+</Accordion>
 
-> [!question]- Where should a SPA store its tokens?
-> Ideally nowhere: use a BFF with an HttpOnly, Secure, SameSite cookie. Otherwise keep the access token in memory and the refresh token in an HttpOnly cookie with rotation. Avoid localStorage for long-lived tokens because any XSS (including a malicious dependency) can read it.
+<Accordion title="Where should a SPA store its tokens?">
+Ideally nowhere: use a BFF with an HttpOnly, Secure, SameSite cookie. Otherwise keep the access token in memory and the refresh token in an HttpOnly cookie with rotation. Avoid localStorage for long-lived tokens because any XSS (including a malicious dependency) can read it.
+</Accordion>
 
-> [!question]- What is PKCE and why is it needed?
-> Proof Key for Code Exchange. The client sends a hash (`code_challenge`) of a random secret when starting the flow and the secret (`code_verifier`) when exchanging the code. An attacker who intercepts the authorization code can't redeem it. Required for public clients (SPAs, mobile) that can't hold a client secret; recommended for all clients.
+<Accordion title="What is PKCE and why is it needed?">
+Proof Key for Code Exchange. The client sends a hash (`code_challenge`) of a random secret when starting the flow and the secret (`code_verifier`) when exchanging the code. An attacker who intercepts the authorization code can't redeem it. Required for public clients (SPAs, mobile) that can't hold a client secret; recommended for all clients.
+</Accordion>
 
-> [!question]- OAuth vs OpenID Connect?
-> OAuth 2.0 is delegated authorization (access tokens for APIs). OIDC adds authentication: an ID token (JWT) with identity claims, a UserInfo endpoint and standard scopes (`openid`, `profile`). "Sign in with Google" is OIDC.
+<Accordion title="OAuth vs OpenID Connect?">
+OAuth 2.0 is delegated authorization (access tokens for APIs). OIDC adds authentication: an ID token (JWT) with identity claims, a UserInfo endpoint and standard scopes (`openid`, `profile`). "Sign in with Google" is OIDC.
+</Accordion>
 
-> [!question]- What is refresh token rotation?
-> Each refresh returns a new refresh token and invalidates the previous one. If an old one is reused, the server detects theft and revokes the whole family, forcing re-login.
+<Accordion title="What is refresh token rotation?">
+Each refresh returns a new refresh token and invalidates the previous one. If an old one is reused, the server detects theft and revokes the whole family, forcing re-login.
+</Accordion>
 
-> [!question]- What is the BFF pattern and why is it recommended?
-> A server component, owned by the frontend team, that runs the OAuth flow as a confidential client, stores tokens server-side and gives the browser only an HttpOnly session cookie. It removes tokens from JS reach and simplifies CORS and token refresh.
+<Accordion title="What is the BFF pattern and why is it recommended?">
+A server component, owned by the frontend team, that runs the OAuth flow as a confidential client, stores tokens server-side and gives the browser only an HttpOnly session cookie. It removes tokens from JS reach and simplifies CORS and token refresh.
+</Accordion>
 
-> [!question]- Why are passkeys phishing-resistant?
-> The credential is bound to the site's origin; the browser only uses it for the matching RP ID, and authentication signs a server challenge with a private key that never leaves the device. There's no shared secret to type into a fake site or leak in a breach.
+<Accordion title="Why are passkeys phishing-resistant?">
+The credential is bound to the site's origin; the browser only uses it for the matching RP ID, and authentication signs a server challenge with a private key that never leaves the device. There's no shared secret to type into a fake site or leak in a breach.
+</Accordion>
 
 ## Related
-- [[JWT vs Cookies]]
-- [[Authentication vs Authorization]]
-- [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- [[Browser Storage - Cookies, Web Storage & IndexedDB]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[Next.js App Router Fundamentals]]
-- [[Supply Chain Security]]
-- [[Ultimate NextJs Course]]
+- [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies)
+- [Authentication vs Authorization](/Software%20Engineering/APIs%20%26%20Auth/Authentication%20vs%20Authorization)
+- [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Browser%20Storage%20-%20Cookies%2C%20Web%20Storage%20%26%20IndexedDB)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
+- [Ultimate NextJs Course](/Software%20Engineering/Frontend/Courses%20%26%20Books/FE%20Masters/Ultimate%20NextJs%20Course)
 
 ## Sources
-- Migrated from the owner's [[Ultimate NextJs Course]] note (Authentication / Authorization, types of authentication, HTTP state management, storing session tokens)
+- Migrated from the owner's [Ultimate NextJs Course](/Software%20Engineering/Frontend/Courses%20%26%20Books/FE%20Masters/Ultimate%20NextJs%20Course) note (Authentication / Authorization, types of authentication, HTTP state management, storing session tokens)
 - [OAuth 2.0 Security Best Current Practice – RFC 9700](https://www.rfc-editor.org/rfc/rfc9700)
 - [RFC 7636 – PKCE](https://www.rfc-editor.org/rfc/rfc7636)
 - [OAuth 2.0 for Browser-Based Apps (IETF draft)](https://datatracker.ietf.org/doc/draft-ietf-oauth-browser-based-apps/)

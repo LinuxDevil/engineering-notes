@@ -1,20 +1,24 @@
 ---
+title: "Site Reliability Engineering & Incident Management"
 tags: [devops, devops/sre]
 aliases: [SRE, Incident Management, On-call, Postmortem, Runbook, Blameless Postmortem, Incident Response]
 updated: 2026-09-27
 ---
 # Site Reliability Engineering & Incident Management
 
-> [!tldr] TL;DR
-> **SRE** is Google's answer to "what happens when you ask software engineers to run operations": reliability is a feature managed with **SLOs and error budgets**, repetitive manual work (**toil**) is capped and automated away, and failures are learning opportunities. **Incident management** is the practiced process for restoring service fast (clear roles, one incident commander, communication cadence), followed by a **blameless postmortem** with tracked action items. Sustainable **on-call** and good **runbooks** make it all work.
+<Note>
+**TL;DR**
+
+**SRE** is Google's answer to "what happens when you ask software engineers to run operations": reliability is a feature managed with **SLOs and error budgets**, repetitive manual work (**toil**) is capped and automated away, and failures are learning opportunities. **Incident management** is the practiced process for restoring service fast (clear roles, one incident commander, communication cadence), followed by a **blameless postmortem** with tracked action items. Sustainable **on-call** and good **runbooks** make it all work.
+</Note>
 
 ## 1. Core SRE principles
 
-- **Reliability is the most important feature**, but 100% is the wrong target. Choose an SLO users actually notice; spend the rest (the **error budget**) on shipping. See [[Observability - Logs, Metrics & Traces]] for SLIs, SLOs and burn-rate alerts.
+- **Reliability is the most important feature**, but 100% is the wrong target. Choose an SLO users actually notice; spend the rest (the **error budget**) on shipping. See [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) for SLIs, SLOs and burn-rate alerts.
 - **Error budget policy**: agreed in advance. E.g. if the 28-day budget is exhausted, freeze non-critical launches and prioritise reliability work until it recovers.
 - **Toil** = manual, repetitive, automatable, reactive work that scales with traffic. Google's guideline: keep it under ~50% of an SRE's time.
 - **Automation and simplicity**: automate recoveries (auto-rollback, autoscaling, self-healing), remove complexity rather than adding monitoring on top of it.
-- **Release engineering**: small, frequent, reversible changes. Most outages are caused by changes (code, config, data, infrastructure). See [[CI-CD Pipelines]].
+- **Release engineering**: small, frequent, reversible changes. Most outages are caused by changes (code, config, data, infrastructure). See [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines).
 - **Capacity planning and load testing**: know your limits before traffic finds them.
 
 ```mermaid
@@ -123,22 +127,28 @@ Share postmortems widely and review them in a regular forum; patterns across inc
 - **Staged rollouts for config and data**, not just code.
 - **Disaster recovery**: RTO/RPO per system, tested backups (restore drills), documented failover.
 
-> [!info]+ 🆕 2025–2026 incidents worth studying
-> - **2025-10-19/20, AWS us-east-1 (~14.5 h)**: a latent race condition between two DNS "Enactor" processes in DynamoDB's automated DNS management applied a stale plan and cleanup deleted it, leaving the regional endpoint with **no DNS records**. Impact cascaded into EC2 instance launches, Network Load Balancer health checks, Lambda, STS/IAM sign-in and thousands of customer apps. Lessons: automation needs safeguards against stale state, recovery paths should not depend on the failing control plane, and hidden single-region dependencies are common.
-> - **2025-11-18, Cloudflare (~6 h to full recovery)**: a database permissions change made a query return duplicate rows, doubling the Bot Management **feature file**; it exceeded a hard-coded limit in the proxy, which panicked across the global network. Lessons: treat generated config/data like code (validate, stage, roll out gradually, fail safe to last known good) and avoid crashing the critical path on bad input.
-> - **2025-03-14/15, tj-actions/changed-files**: a CI supply-chain incident; see [[CI-CD Pipelines]].
-> - **DORA 2025**: AI-assisted development correlates with more instability (change failures, rework), which puts more weight on SRE guardrails. See [[CI-CD Pipelines]].
+<Info>
+**🆕 2025–2026 incidents worth studying**
+
+- **2025-10-19/20, AWS us-east-1 (~14.5 h)**: a latent race condition between two DNS "Enactor" processes in DynamoDB's automated DNS management applied a stale plan and cleanup deleted it, leaving the regional endpoint with **no DNS records**. Impact cascaded into EC2 instance launches, Network Load Balancer health checks, Lambda, STS/IAM sign-in and thousands of customer apps. Lessons: automation needs safeguards against stale state, recovery paths should not depend on the failing control plane, and hidden single-region dependencies are common.
+- **2025-11-18, Cloudflare (~6 h to full recovery)**: a database permissions change made a query return duplicate rows, doubling the Bot Management **feature file**; it exceeded a hard-coded limit in the proxy, which panicked across the global network. Lessons: treat generated config/data like code (validate, stage, roll out gradually, fail safe to last known good) and avoid crashing the critical path on bad input.
+- **2025-03-14/15, tj-actions/changed-files**: a CI supply-chain incident; see [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines).
+- **DORA 2025**: AI-assisted development correlates with more instability (change failures, rework), which puts more weight on SRE guardrails. See [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines).
+</Info>
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Paging on every metric: alert fatigue, real alerts ignored.
-> - Debugging in production before mitigating: prolonged outages.
-> - The most senior engineer as both IC and debugger: nobody coordinates.
-> - Postmortems whose action items are never done, or are all "add monitoring".
-> - Blame in postmortems: next time people hide mistakes.
-> - Runbooks that are stale, or only exist in one person's head.
-> - Untested backups: they are not backups until a restore has succeeded.
+<Warning>
+**Common pitfalls**
+
+- Paging on every metric: alert fatigue, real alerts ignored.
+- Debugging in production before mitigating: prolonged outages.
+- The most senior engineer as both IC and debugger: nobody coordinates.
+- Postmortems whose action items are never done, or are all "add monitoring".
+- Blame in postmortems: next time people hide mistakes.
+- Runbooks that are stale, or only exist in one person's head.
+- Untested backups: they are not backups until a restore has succeeded.
+</Warning>
 
 ## Senior perspective
 
@@ -149,27 +159,33 @@ Share postmortems widely and review them in a regular forum; patterns across inc
 
 ## Interview questions
 
-> [!question]- What is an error budget and how is it used?
-> 1 − SLO: the allowed amount of unreliability in a window. While budget remains, teams ship freely; when it is exhausted, an agreed policy shifts priority to reliability (e.g. release freeze). It aligns product and ops incentives with data instead of opinions.
+<Accordion title="What is an error budget and how is it used?">
+1 − SLO: the allowed amount of unreliability in a window. While budget remains, teams ship freely; when it is exhausted, an agreed policy shifts priority to reliability (e.g. release freeze). It aligns product and ops incentives with data instead of opinions.
+</Accordion>
 
-> [!question]- What does an incident commander do?
-> Coordinates the response: sets severity, assigns roles and tasks, keeps a decision log, ensures regular communication, decides on mitigations and when the incident is resolved. They deliberately do not do hands-on debugging.
+<Accordion title="What does an incident commander do?">
+Coordinates the response: sets severity, assigns roles and tasks, keeps a decision log, ensures regular communication, decides on mitigations and when the incident is resolved. They deliberately do not do hands-on debugging.
+</Accordion>
 
-> [!question]- What makes a postmortem blameless and why does it matter?
-> It focuses on how the system and process allowed the failure, assumes good intent, and avoids naming and shaming. People then share full, honest information, which is required to find real contributing factors and fix them.
+<Accordion title="What makes a postmortem blameless and why does it matter?">
+It focuses on how the system and process allowed the failure, assumes good intent, and avoids naming and shaming. People then share full, honest information, which is required to find real contributing factors and fix them.
+</Accordion>
 
-> [!question]- What is toil?
-> Manual, repetitive, automatable, tactical work with no enduring value that grows linearly with service size (e.g. manually restarting services, handling routine tickets). SRE caps it and automates it.
+<Accordion title="What is toil?">
+Manual, repetitive, automatable, tactical work with no enduring value that grows linearly with service size (e.g. manually restarting services, handling routine tickets). SRE caps it and automates it.
+</Accordion>
 
-> [!question]- First five minutes after being paged for a production outage?
-> Acknowledge; check the alert's dashboard to confirm user impact; declare an incident with severity and open a channel; check recent changes (deploys, flags, config); apply the safest mitigation (rollback, disable flag, failover) while communicating status; escalate if needed.
+<Accordion title="First five minutes after being paged for a production outage?">
+Acknowledge; check the alert's dashboard to confirm user impact; declare an incident with severity and open a channel; check recent changes (deploys, flags, config); apply the safest mitigation (rollback, disable flag, failover) while communicating status; escalate if needed.
+</Accordion>
 
-> [!question]- What did the October 2025 AWS outage and the November 2025 Cloudflare outage have in common?
-> Both were triggered by automated internal systems producing bad state (an empty DNS record; an oversized generated config file) that propagated widely and quickly, and both were made worse by dependencies on that state across many services. Lesson: validate and stage automated config/data changes and design for safe failure.
+<Accordion title="What did the October 2025 AWS outage and the November 2025 Cloudflare outage have in common?">
+Both were triggered by automated internal systems producing bad state (an empty DNS record; an oversized generated config file) that propagated widely and quickly, and both were made worse by dependencies on that state across many services. Lesson: validate and stage automated config/data changes and design for safe failure.
+</Accordion>
 
 ## Related
-- [[DevOps Index]] · [[Observability - Logs, Metrics & Traces]] · [[CI-CD Pipelines]] · [[Kubernetes Workloads in Production]] · [[Cloud Fundamentals]]
-- [[Microservices Architecture]] · [[Platform Engineering & Internal Developer Platforms]]
+- [DevOps Index](/Software%20Engineering/DevOps/DevOps%20Index) · [Observability - Logs, Metrics & Traces](/Software%20Engineering/DevOps/Observability%20-%20Logs%2C%20Metrics%20%26%20Traces) · [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines) · [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production) · [Cloud Fundamentals](/Software%20Engineering/DevOps/Cloud%20Fundamentals)
+- [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Platform Engineering & Internal Developer Platforms](/Software%20Engineering/DevOps/Platform%20Engineering%20%26%20Internal%20Developer%20Platforms)
 
 ## Sources
 - [Google SRE books (free online): *Site Reliability Engineering*, *The Site Reliability Workbook*](https://sre.google/books/)

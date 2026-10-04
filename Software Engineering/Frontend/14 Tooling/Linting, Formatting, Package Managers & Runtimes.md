@@ -1,12 +1,16 @@
 ---
+title: "Linting, Formatting, Package Managers & Runtimes"
 tags: [frontend, frontend/tooling]
 aliases: [ESLint, Prettier, Biome, Oxlint, pnpm, npm, Yarn, Bun, Deno, Node.js, Package Managers]
 updated: 2026-09-27
 ---
 # Linting, Formatting, Package Managers & Runtimes
 
-> [!tldr] TL;DR
-> **Linters** (ESLint, Oxlint, Biome) catch bugs and enforce conventions; **formatters** (Prettier, Biome, Oxfmt) end style debates by rewriting code to one style. **Package managers** (npm, pnpm, Yarn, Bun) install and lock dependencies — pnpm is the common choice for monorepos and security defaults. **Runtimes** (Node.js, Bun, Deno) run your tooling, SSR and tests. 2025–2026 brought Rust-based speed (Oxlint, Biome 2, pnpm 12), ESLint 10's flat-config-only world, Node's new yearly release schedule, and VoidZero's all-in-one **Vite+**.
+<Note>
+**TL;DR**
+
+**Linters** (ESLint, Oxlint, Biome) catch bugs and enforce conventions; **formatters** (Prettier, Biome, Oxfmt) end style debates by rewriting code to one style. **Package managers** (npm, pnpm, Yarn, Bun) install and lock dependencies — pnpm is the common choice for monorepos and security defaults. **Runtimes** (Node.js, Bun, Deno) run your tooling, SSR and tests. 2025–2026 brought Rust-based speed (Oxlint, Biome 2, pnpm 12), ESLint 10's flat-config-only world, Node's new yearly release schedule, and VoidZero's all-in-one **Vite+**.
+</Note>
 
 ## Linting vs formatting vs type checking
 
@@ -30,37 +34,40 @@ flowchart LR
 - **Flat config** (`eslint.config.js`) replaced `.eslintrc`: a plain array of config objects, explicit imports of plugins, no magic string resolution or cascading.
 - **ESLint 10** (2026-02-06) is **flat config only** — `.eslintrc*` is gone.
 
-> [!example] `eslint.config.js` for a React + TypeScript app
-> ```js
-> import js from '@eslint/js';
-> import tseslint from 'typescript-eslint';
-> import reactHooks from 'eslint-plugin-react-hooks';
-> import jsxA11y from 'eslint-plugin-jsx-a11y';
-> import prettier from 'eslint-config-prettier';
-> import { defineConfig, globalIgnores } from 'eslint/config';
->
-> export default defineConfig([
->   globalIgnores(['dist', 'coverage']),
->   js.configs.recommended,
->   tseslint.configs.recommendedTypeChecked,
->   {
->     languageOptions: {
->       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
->     },
->   },
->   reactHooks.configs.flat.recommended,   // incl. React Compiler rules
->   jsxA11y.flatConfigs.recommended,
->   {
->     files: ['**/*.{ts,tsx}'],
->     rules: {
->       '@typescript-eslint/no-floating-promises': 'error',
->       'no-console': ['warn', { allow: ['warn', 'error'] }],
->     },
->   },
->   prettier, // last: turns off rules that conflict with Prettier
-> ]);
-> ```
-> Plugin export names vary by version — check each plugin's README for its flat-config export.
+<Info>
+**`eslint.config.js` for a React + TypeScript app**
+
+```js
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import prettier from 'eslint-config-prettier';
+import { defineConfig, globalIgnores } from 'eslint/config';
+
+export default defineConfig([
+  globalIgnores(['dist', 'coverage']),
+  js.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
+  reactHooks.configs.flat.recommended,   // incl. React Compiler rules
+  jsxA11y.flatConfigs.recommended,
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  prettier, // last: turns off rules that conflict with Prettier
+]);
+```
+Plugin export names vary by version — check each plugin's README for its flat-config export.
+</Info>
 
 - `eslint-plugin-react-hooks` v6 uses flat config and (with React Compiler 1.0) ships compiler-powered rules like `set-state-in-render`, `set-state-in-effect`, `refs`.
 - Next.js 16 removed `next lint`; run ESLint (or Biome) directly.
@@ -133,7 +140,7 @@ pnpm timeline:
 - **pnpm 11** (2026-04-28): **`minimumReleaseAge` defaults to 1 day**, `blockExoticSubdeps` on by default, SQLite store, native publish, requires Node 22+.
 - **pnpm 12** (2026-08-26): **rewritten in Rust**, compatible with 11.
 
-Security implications (cooldowns, install scripts, lockfiles): [[Supply Chain Security]]. Workspaces: [[Monorepos]].
+Security implications (cooldowns, install scripts, lockfiles): [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security). Workspaces: [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos).
 
 ## Runtimes
 
@@ -172,51 +179,63 @@ Tip: pin the Node version per repo (`.nvmrc`, `engines`, `packageManager` field,
 - VoidZero **joined Cloudflare** on 2026-06-04; the projects remain MIT.
 - Still beta — evaluate, but don't bet a large production monorepo on it yet.
 
-> [!warning] Common pitfalls
-> - Mixing package managers in one repo (two lockfiles) → non-reproducible installs. Enforce one via the `packageManager` field and CI.
-> - Running ESLint stylistic rules *and* Prettier → endless conflicts.
-> - Type-aware lint rules on every keystroke in huge repos — slow; scope them or use Biome/Oxlint for the fast path.
-> - Relying on phantom dependencies (works with npm, breaks with pnpm).
-> - Using Node's type stripping with `enum`s — use `as const` objects instead.
+<Warning>
+**Common pitfalls**
 
-> [!info]+ 🆕 2025–2026
-> - **ESLint 10** (2026-02-06): flat config only.
-> - **Biome v2** (2025-06-17): type-aware linting without `tsc`, GritQL plugins; v2.5 (2026-06-12) ~500 rules.
-> - **Oxlint 1.0** (2025-06-10), now 1.85; **Oxfmt** in alpha (later status unverified).
-> - **Vite+ beta** (2026-07-02, MIT); **VoidZero joined Cloudflare** (2026-06-04).
-> - **pnpm 11** (2026-04-28) 1-day `minimumReleaseAge` default; **pnpm 12** (2026-08-26) Rust rewrite.
-> - **Node 24 LTS** (2025-10-28); **Node 26** (2026-05-05); yearly majors with every release LTS starting Node 27.
-> - **Bun 1.4** (2026-08-20); **Deno 2.9**.
-> - Next.js 16 removed `next lint`; `eslint-plugin-react-hooks` v6 uses flat config and includes React Compiler rules.
+- Mixing package managers in one repo (two lockfiles) → non-reproducible installs. Enforce one via the `packageManager` field and CI.
+- Running ESLint stylistic rules *and* Prettier → endless conflicts.
+- Type-aware lint rules on every keystroke in huge repos — slow; scope them or use Biome/Oxlint for the fast path.
+- Relying on phantom dependencies (works with npm, breaks with pnpm).
+- Using Node's type stripping with `enum`s — use `as const` objects instead.
+</Warning>
+
+<Info>
+**🆕 2025–2026**
+
+- **ESLint 10** (2026-02-06): flat config only.
+- **Biome v2** (2025-06-17): type-aware linting without `tsc`, GritQL plugins; v2.5 (2026-06-12) ~500 rules.
+- **Oxlint 1.0** (2025-06-10), now 1.85; **Oxfmt** in alpha (later status unverified).
+- **Vite+ beta** (2026-07-02, MIT); **VoidZero joined Cloudflare** (2026-06-04).
+- **pnpm 11** (2026-04-28) 1-day `minimumReleaseAge` default; **pnpm 12** (2026-08-26) Rust rewrite.
+- **Node 24 LTS** (2025-10-28); **Node 26** (2026-05-05); yearly majors with every release LTS starting Node 27.
+- **Bun 1.4** (2026-08-20); **Deno 2.9**.
+- Next.js 16 removed `next lint`; `eslint-plugin-react-hooks` v6 uses flat config and includes React Compiler rules.
+</Info>
 
 ## Interview questions
 
-> [!question]- Linter vs formatter?
-> A linter analyses code for bugs and bad patterns (and can auto-fix some); a formatter only reprints code in a consistent style. Use both, and disable stylistic lint rules so they don't fight.
+<Accordion title="Linter vs formatter?">
+A linter analyses code for bugs and bad patterns (and can auto-fix some); a formatter only reprints code in a consistent style. Use both, and disable stylistic lint rules so they don't fight.
+</Accordion>
 
-> [!question]- What changed with ESLint flat config?
-> Config is a JS array of objects in `eslint.config.js`, plugins are imported as modules, there's no cascading `.eslintrc` lookup or string-based `extends`. ESLint 10 supports only flat config.
+<Accordion title="What changed with ESLint flat config?">
+Config is a JS array of objects in `eslint.config.js`, plugins are imported as modules, there's no cascading `.eslintrc` lookup or string-based `extends`. ESLint 10 supports only flat config.
+</Accordion>
 
-> [!question]- Why pnpm over npm?
-> A content-addressable store with hard links saves disk and time; a strict symlinked `node_modules` prevents phantom dependencies; excellent workspace filtering for monorepos; safer defaults (no dependency install scripts since v10, 1-day release-age cooldown since v11).
+<Accordion title="Why pnpm over npm?">
+A content-addressable store with hard links saves disk and time; a strict symlinked `node_modules` prevents phantom dependencies; excellent workspace filtering for monorepos; safer defaults (no dependency install scripts since v10, 1-day release-age cooldown since v11).
+</Accordion>
 
-> [!question]- What is a phantom dependency?
-> Importing a package you didn't declare in `package.json` that happens to be hoisted into `node_modules` by another dependency. It can break whenever that dependency changes; pnpm's strict layout surfaces it.
+<Accordion title="What is a phantom dependency?">
+Importing a package you didn't declare in `package.json` that happens to be hoisted into `node_modules` by another dependency. It can break whenever that dependency changes; pnpm's strict layout surfaces it.
+</Accordion>
 
-> [!question]- Node vs Bun vs Deno?
-> Node (V8) is the mature default with the largest ecosystem and now strips TS types natively. Bun (JavaScriptCore) is an all-in-one fast runtime/package manager/test runner with Node compatibility. Deno (V8 + Rust) is secure-by-default with built-in tooling and good npm compatibility.
+<Accordion title="Node vs Bun vs Deno?">
+Node (V8) is the mature default with the largest ecosystem and now strips TS types natively. Bun (JavaScriptCore) is an all-in-one fast runtime/package manager/test runner with Node compatibility. Deno (V8 + Rust) is secure-by-default with built-in tooling and good npm compatibility.
+</Accordion>
 
-> [!question]- How does Node's release schedule work now?
-> Previously: two majors a year, even-numbered ones became LTS. From Node 27 (alpha Oct 2026, current Apr 2027): one major per year, and every release becomes LTS.
+<Accordion title="How does Node's release schedule work now?">
+Previously: two majors a year, even-numbered ones became LTS. From Node 27 (alpha Oct 2026, current Apr 2027): one major per year, and every release becomes LTS.
+</Accordion>
 
 ## Related
-- [[Build Tools & Bundlers]]
-- [[Monorepos]]
-- [[Supply Chain Security]]
-- [[Frontend Testing]]
-- [[TypeScript 5.8 to 7.0]]
-- [[TypeScript Essentials]]
-- [[What's New in Frontend 2025-2026]]
+- [Build Tools & Bundlers](/Software%20Engineering/Frontend/14%20Tooling/Build%20Tools%20%26%20Bundlers)
+- [Monorepos](/Software%20Engineering/Frontend/14%20Tooling/Monorepos)
+- [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
+- [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing)
+- [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0)
+- [TypeScript Essentials](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%20Essentials)
+- [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026)
 
 ## Sources
 - [ESLint – Configuration files (flat config)](https://eslint.org/docs/latest/use/configure/configuration-files)

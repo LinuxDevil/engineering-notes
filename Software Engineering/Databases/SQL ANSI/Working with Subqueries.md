@@ -1,14 +1,18 @@
 ---
+title: "Working with Subqueries"
 tags: [databases, databases/sql]
 aliases: [Subqueries, Subquery, Correlated Subquery, Derived Table, LATERAL, CTE]
 updated: 2026-09-27
 ---
 # Working with Subqueries
 
-> [!tldr] TL;DR
-> A subquery is a `SELECT` nested inside another statement. Use it in `WHERE ... IN (...)` / `EXISTS (...)` to filter, in the `SELECT` list as a calculated field, or in `FROM` as a derived table. A **correlated** subquery references the outer row and logically runs once per outer row. Modern optimizers often turn subqueries into joins, but for readability of multi-step queries use **CTEs** (`WITH`), and for "top N per row" use `LATERAL`.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 11 · Prev: [[Grouping Data]] · Next: [[Joining Tables]]
+A subquery is a `SELECT` nested inside another statement. Use it in `WHERE ... IN (...)` / `EXISTS (...)` to filter, in the `SELECT` list as a calculated field, or in `FROM` as a derived table. A **correlated** subquery references the outer row and logically runs once per outer row. Modern optimizers often turn subqueries into joins, but for readability of multi-step queries use **CTEs** (`WITH`), and for "top N per row" use `LATERAL`.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 11 · Prev: [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data) · Next: [Joining Tables](/Software%20Engineering/Databases/SQL%20ANSI/Joining%20Tables)
 
 ## Understanding subqueries
 
@@ -67,12 +71,15 @@ WHERE cust_id IN (SELECT cust_id
 
 **Analysis:** logically, subqueries are processed from the innermost `SELECT` outward. First `SELECT order_num FROM OrderItems WHERE prod_id = 'RGAN01'` returns `20007` and `20008`. Those are passed, comma-delimited, to the `IN` of the next query, which becomes `SELECT cust_id FROM Orders WHERE order_num IN (20007, 20008)`. Its customer IDs then feed the top-level query, which returns the data. Three `SELECT`s, one statement.
 
-> [!note] Subquery rules
-> - A subquery used with `IN` or `=` must return a **single column**.
-> - A subquery used with `=`, `<`, `>` (a *scalar* subquery) must return **at most one row**, or you get "more than one row returned by a subquery used as an expression".
-> - Nesting has no hard limit, but deep nesting hurts readability. Use joins or CTEs.
+<Note>
+**Subquery rules**
 
-The same result with joins (often clearer, see [[Joining Tables]]):
+- A subquery used with `IN` or `=` must return a **single column**.
+- A subquery used with `=`, `<`, `>` (a *scalar* subquery) must return **at most one row**, or you get "more than one row returned by a subquery used as an expression".
+- Nesting has no hard limit, but deep nesting hurts readability. Use joins or CTEs.
+</Note>
+
+The same result with joins (often clearer, see [Joining Tables](/Software%20Engineering/Databases/SQL%20ANSI/Joining%20Tables)):
 
 ```sql
 SELECT DISTINCT c.cust_name, c.cust_contact
@@ -112,8 +119,9 @@ SELECT COUNT(*) FROM Orders WHERE cust_id = cust_id
 
 That compares `Orders.cust_id` with itself, which is always true (for non-null values), so every customer would get the **total** number of orders in the table.
 
-> [!note]
-> Subqueries are very useful for this kind of `SELECT`, but always qualify ambiguous column names.
+<Note>
+Subqueries are very useful for this kind of `SELECT`, but always qualify ambiguous column names.
+</Note>
 
 The join + `GROUP BY` equivalent (note the `LEFT JOIN` so customers with no orders get 0):
 
@@ -154,10 +162,13 @@ JOIN Orders o    ON o.order_num = b.order_num
 JOIN Customers c ON c.cust_id = o.cust_id;
 ```
 
-CTEs read top-to-bottom like steps, and each can be referenced several times. Recursive CTEs (hierarchies, graphs) are covered in [[Understanding Advanced SQL Features]].
+CTEs read top-to-bottom like steps, and each can be referenced several times. Recursive CTEs (hierarchies, graphs) are covered in [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features).
 
-> [!note] CTE performance in PostgreSQL
-> Before PostgreSQL 12, every CTE was an "optimization fence" (computed separately, conditions not pushed in). Since 12, a non-recursive CTE referenced once is inlined like a subquery. Force the old behaviour with `WITH x AS MATERIALIZED (...)`.
+<Note>
+**CTE performance in PostgreSQL**
+
+Before PostgreSQL 12, every CTE was an "optimization fence" (computed separately, conditions not pushed in). Since 12, a non-recursive CTE referenced once is inlined like a subquery. Force the old behaviour with `WITH x AS MATERIALIZED (...)`.
+</Note>
 
 ## `LATERAL`: a subquery per outer row, returning many rows
 
@@ -180,31 +191,36 @@ Use `LEFT JOIN LATERAL (...) r ON true` to keep customers with no orders. SQL Se
 
 ## Beyond the book / Senior perspective
 
-- **"Subqueries are slow" is mostly folklore now.** PostgreSQL, SQL Server and Oracle rewrite `IN`/`EXISTS` subqueries into semi-joins and anti-joins. Correlated scalar subqueries in the `SELECT` list, though, can still run once per row; check the plan ([[Query Optimization & EXPLAIN]]).
-- **`NOT IN` + NULL** returns nothing; use `NOT EXISTS` (details in [[Advanced Filtering Data]]).
-- **Pick the form that states intent**: `EXISTS` for "has any", a join for "combine columns", a CTE for multi-step logic, `LATERAL` for "top N per row", window functions for "rank/compare within a group" ([[Grouping Data]]).
+- **"Subqueries are slow" is mostly folklore now.** PostgreSQL, SQL Server and Oracle rewrite `IN`/`EXISTS` subqueries into semi-joins and anti-joins. Correlated scalar subqueries in the `SELECT` list, though, can still run once per row; check the plan ([Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)).
+- **`NOT IN` + NULL** returns nothing; use `NOT EXISTS` (details in [Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data)).
+- **Pick the form that states intent**: `EXISTS` for "has any", a join for "combine columns", a CTE for multi-step logic, `LATERAL` for "top N per row", window functions for "rank/compare within a group" ([Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data)).
 - **Scalar subqueries must return one row.** Guard with `LIMIT 1` plus an `ORDER BY`, or an aggregate, otherwise data growth turns a working query into a runtime error.
 
 ## Interview questions
 
-> [!question]- What's a correlated subquery?
-> A subquery that references columns of the outer query, so its result depends on the current outer row. Logically it runs once per outer row; optimizers may decorrelate it into a join.
+<Accordion title="What's a correlated subquery?">
+A subquery that references columns of the outer query, so its result depends on the current outer row. Logically it runs once per outer row; optimizers may decorrelate it into a join.
+</Accordion>
 
-> [!question]- Subquery or join, which is faster?
-> It depends on the plan, and modern optimizers often produce the same plan for `IN`/`EXISTS` and semi-joins. Write the clearest form, then check `EXPLAIN`. Watch for correlated scalar subqueries in the `SELECT` list on large result sets.
+<Accordion title="Subquery or join, which is faster?">
+It depends on the plan, and modern optimizers often produce the same plan for `IN`/`EXISTS` and semi-joins. Write the clearest form, then check `EXPLAIN`. Watch for correlated scalar subqueries in the `SELECT` list on large result sets.
+</Accordion>
 
-> [!question]- What is a CTE and when would you use one?
-> A named temporary result defined with `WITH`, visible to the rest of the statement. Use it to break complex queries into readable steps, reuse an intermediate result, or write recursive queries.
+<Accordion title="What is a CTE and when would you use one?">
+A named temporary result defined with `WITH`, visible to the rest of the statement. Use it to break complex queries into readable steps, reuse an intermediate result, or write recursive queries.
+</Accordion>
 
-> [!question]- What does LATERAL do?
-> Lets a subquery in `FROM` reference columns from tables listed before it, so it runs per outer row and can return multiple rows (e.g. top 3 orders per customer with `ORDER BY ... LIMIT 3`). SQL Server calls it `APPLY`.
+<Accordion title="What does LATERAL do?">
+Lets a subquery in `FROM` reference columns from tables listed before it, so it runs per outer row and can return multiple rows (e.g. top 3 orders per customer with `ORDER BY ... LIMIT 3`). SQL Server calls it `APPLY`.
+</Accordion>
 
-> [!question]- Why must you qualify column names in a correlated subquery?
-> Unqualified names bind to the nearest scope. `WHERE cust_id = cust_id` inside a subquery on `Orders` compares the column with itself, silently returning wrong results.
+<Accordion title="Why must you qualify column names in a correlated subquery?">
+Unqualified names bind to the nearest scope. `WHERE cust_id = cust_id` inside a subquery on `Orders` compares the column with itself, silently returning wrong results.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Advanced Filtering Data]] (EXISTS vs IN, NOT IN trap) · [[Joining Tables]] · [[Grouping Data]] (window functions) · [[Understanding Advanced SQL Features]] (recursive CTEs) · [[Query Optimization & EXPLAIN]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Advanced Filtering Data](/Software%20Engineering/Databases/SQL%20ANSI/Advanced%20Filtering%20Data) (EXISTS vs IN, NOT IN trap) · [Joining Tables](/Software%20Engineering/Databases/SQL%20ANSI/Joining%20Tables) · [Grouping Data](/Software%20Engineering/Databases/SQL%20ANSI/Grouping%20Data) (window functions) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (recursive CTEs) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 11 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

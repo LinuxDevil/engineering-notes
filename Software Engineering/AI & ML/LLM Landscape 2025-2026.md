@@ -1,15 +1,22 @@
 ---
+title: "LLM Landscape 2025-2026"
 tags: [ai-ml, ai-ml/llm, ai-ml/landscape]
 aliases: [LLM Landscape, Model Releases 2025, Model Releases 2026, Frontier Models, Open-weight Models, A2A, Agent2Agent]
 updated: 2026-09-27
 ---
 # LLM Landscape 2025-2026
 
-> [!tldr] TL;DR
-> A dated map of the major model families released from January 2025 to September 2026: **closed** frontier models from Anthropic (Claude), OpenAI (GPT) and Google (Gemini), and **open-weight** models from DeepSeek, Qwen, Mistral, Meta (Llama), Google (Gemma) and OpenAI (gpt-oss). Big themes: **reasoning models** became standard, **Mixture-of-Experts** open models closed much of the gap, context windows reached **1M tokens**, and the agent stack standardised around **agent SDKs**, **MCP** (agent-to-tool) and **A2A** (agent-to-agent), both now under the Linux Foundation's Agentic AI Foundation.
+<Note>
+**TL;DR**
 
-> [!warning] This changes fast
-> Written 2026-09-27. New models ship almost monthly and names, prices and limits change. Treat this as a historical map and check each vendor's model page and release notes before choosing a model. Only items verified against vendor sources are listed; anything else was left out.
+A dated map of the major model families released from January 2025 to September 2026: **closed** frontier models from Anthropic (Claude), OpenAI (GPT) and Google (Gemini), and **open-weight** models from DeepSeek, Qwen, Mistral, Meta (Llama), Google (Gemma) and OpenAI (gpt-oss). Big themes: **reasoning models** became standard, **Mixture-of-Experts** open models closed much of the gap, context windows reached **1M tokens**, and the agent stack standardised around **agent SDKs**, **MCP** (agent-to-tool) and **A2A** (agent-to-agent), both now under the Linux Foundation's Agentic AI Foundation.
+</Note>
+
+<Warning>
+**This changes fast**
+
+Written 2026-09-27. New models ship almost monthly and names, prices and limits change. Treat this as a historical map and check each vendor's model page and release notes before choosing a model. Only items verified against vendor sources are listed; anything else was left out.
+</Warning>
 
 ## How to read the landscape
 
@@ -136,7 +143,7 @@ No later Llama release was found as of this writing.
 | **Claude Agent SDK** | Anthropic | renamed from Claude Code SDK 2025-09-29 | the Claude Code harness: tools, context compaction, subagents, permissions, hooks, skills |
 | Model-agnostic frameworks | community | ongoing | e.g. LangGraph, LlamaIndex, Vercel AI SDK, Pydantic AI, CrewAI |
 
-Choosing: prefer the thinnest layer that does what you need; make sure you can see the raw prompts and tool calls; check MCP support. See [[AI Agents & Agentic Patterns]].
+Choosing: prefer the thinnest layer that does what you need; make sure you can see the raw prompts and tool calls; check MCP support. See [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns).
 
 ## Protocols: MCP and A2A
 
@@ -157,22 +164,25 @@ flowchart LR
   A2 -- MCP --> T2[Airline inventory API]
 ```
 
-Details: [[MCP]].
+Details: [MCP](/Software%20Engineering/AI%20%26%20ML/MCP).
 
-> [!info]+ 🆕 Agentic AI Foundation (AAIF)
-> Announced by the Linux Foundation on **2025-12-09**, co-founded by Anthropic, Block and OpenAI, with three founding projects: **MCP** (Anthropic), **goose** (Block) and **AGENTS.md** (OpenAI). Platinum members at launch included AWS, Anthropic, Block, Bloomberg, Cloudflare, Google, Microsoft and OpenAI. **A2A** joined on 2026-08-27.
+<Info>
+**🆕 Agentic AI Foundation (AAIF)**
+
+Announced by the Linux Foundation on **2025-12-09**, co-founded by Anthropic, Block and OpenAI, with three founding projects: **MCP** (Anthropic), **goose** (Block) and **AGENTS.md** (OpenAI). Platinum members at launch included AWS, Anthropic, Block, Bloomberg, Cloudflare, Google, Microsoft and OpenAI. **A2A** joined on 2026-08-27.
+</Info>
 
 ## Trends worth knowing
-- **Reasoning by default**: thinking modes and effort settings on most frontier models ([[Transformers & How LLMs Work]]).
+- **Reasoning by default**: thinking modes and effort settings on most frontier models ([Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work)).
 - **MoE everywhere in open weights**: huge total parameters with modest active parameters (DeepSeek V4, Mistral Large 3, Qwen3, Llama 4).
 - **Open-weight gap narrowed**: permissively licensed models (MIT, Apache 2.0) became viable for many production tasks.
-- **Long context**: 1M-token windows on several frontier models, though curation still matters ([[Prompt & Context Engineering]]).
-- **Coding agents as a flagship use case** ([[AI-Assisted Software Development]]).
+- **Long context**: 1M-token windows on several frontier models, though curation still matters ([Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering)).
+- **Coding agents as a flagship use case** ([AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development)).
 - **Restricted-access models** for dual-use capabilities (e.g. Anthropic's Mythos tier for cyber defence).
 - **Standardised agent plumbing**: MCP, A2A and AGENTS.md under neutral governance.
 
 ## Senior perspective
-- **Don't hard-code a model**: route through an abstraction, pin versions, keep an eval suite so you can switch in days when a better or cheaper model ships ([[LLM Evaluation & Observability]]).
+- **Don't hard-code a model**: route through an abstraction, pin versions, keep an eval suite so you can switch in days when a better or cheaper model ships ([LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability)).
 - **Plan for deprecations**: vendors retire models on a schedule; track notices and budget migration time.
 - **Total cost** = price per token × tokens (including thinking and cached tokens) + latency cost + ops. Cheaper per-token models can cost more if they need more retries or longer prompts.
 - **Licences and data**: check open-weight licences for commercial use and restrictions; check API data-retention terms and regions.
@@ -180,22 +190,26 @@ Details: [[MCP]].
 
 ## Interview questions
 
-> [!question]- Closed API model or open-weight model: how do you decide?
-> Consider quality needed (evaluate on your tasks), data privacy and residency, cost at your volume, latency and hosting ability, fine-tuning needs, and licence terms. Many teams use closed frontier models for hard tasks and open or small models for high-volume narrow tasks.
+<Accordion title="Closed API model or open-weight model: how do you decide?">
+Consider quality needed (evaluate on your tasks), data privacy and residency, cost at your volume, latency and hosting ability, fine-tuning needs, and licence terms. Many teams use closed frontier models for hard tasks and open or small models for high-volume narrow tasks.
+</Accordion>
 
-> [!question]- What's the difference between MCP and A2A?
-> MCP standardises how an agent connects to tools and data sources (agent-to-tool). A2A standardises how independent agents discover each other (Agent Cards) and collaborate on tasks (agent-to-agent). They're complementary and both now sit under the Agentic AI Foundation.
+<Accordion title="What's the difference between MCP and A2A?">
+MCP standardises how an agent connects to tools and data sources (agent-to-tool). A2A standardises how independent agents discover each other (Agent Cards) and collaborate on tasks (agent-to-agent). They're complementary and both now sit under the Agentic AI Foundation.
+</Accordion>
 
-> [!question]- Why did DeepSeek-R1 matter?
-> In January 2025 it released a strong reasoning model with open weights under MIT and described how large-scale reinforcement learning produced its reasoning, narrowing the gap between open and closed models and lowering costs across the industry.
+<Accordion title="Why did DeepSeek-R1 matter?">
+In January 2025 it released a strong reasoning model with open weights under MIT and described how large-scale reinforcement learning produced its reasoning, narrowing the gap between open and closed models and lowering costs across the industry.
+</Accordion>
 
-> [!question]- How do you keep an LLM product robust as models change every few months?
-> Abstract the provider, pin model versions, maintain an eval suite and run it on every candidate model, monitor quality and cost in production, track deprecation notices, and keep a fallback model.
+<Accordion title="How do you keep an LLM product robust as models change every few months?">
+Abstract the provider, pin model versions, maintain an eval suite and run it on every candidate model, monitor quality and cost in production, track deprecation notices, and keep a fallback model.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[Transformers & How LLMs Work]] · [[Fine-tuning vs RAG vs Prompting]] · [[AI Agents & Agentic Patterns]]
-- [[MCP]] · [[AI-Assisted Software Development]] · [[AI in Frontend - MCP, WebMCP & Built-in AI]]
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work) · [Fine-tuning vs RAG vs Prompting](/Software%20Engineering/AI%20%26%20ML/Fine-tuning%20vs%20RAG%20vs%20Prompting) · [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns)
+- [MCP](/Software%20Engineering/AI%20%26%20ML/MCP) · [AI-Assisted Software Development](/Software%20Engineering/AI%20%26%20ML/AI-Assisted%20Software%20Development) · [AI in Frontend - MCP, WebMCP & Built-in AI](/Software%20Engineering/Frontend/16%20AI%20in%20Frontend/AI%20in%20Frontend%20-%20MCP%2C%20WebMCP%20%26%20Built-in%20AI)
 
 ## Sources
 - Anthropic: [Release notes](https://platform.claude.com/docs/en/release-notes/overview) · [Claude 3.7 Sonnet](https://www.anthropic.com/news/claude-3-7-sonnet) · [Claude Sonnet 4.5](https://www.anthropic.com/news/claude-sonnet-4-5) · [Claude Opus 4.6](https://www.anthropic.com/news/claude-opus-4-6) · [Claude Sonnet 4.6](https://www.anthropic.com/news/claude-sonnet-4-6) · [Mythos Preview](https://www.anthropic.com/news/mythos-preview) · [Opus 4.7](https://www.anthropic.com/news/claude-opus-4-7) · [Opus 4.8](https://www.anthropic.com/news/claude-opus-4-8) · [Fable 5 and Mythos 5](https://www.anthropic.com/news/claude-fable-5-mythos-5) · [Sonnet 5](https://www.anthropic.com/news/claude-sonnet-5) · [Opus 5](https://www.anthropic.com/news/claude-opus-5) · [Opus 5.5](https://www.anthropic.com/claude-opus-5-5) · [News](https://www.anthropic.com/news)

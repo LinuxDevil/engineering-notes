@@ -1,20 +1,24 @@
 ---
+title: "Sliding Window"
 tags: [dsa, dsa/patterns]
 aliases: [Sliding window, Window, Fixed Window, Variable Window, At Most K]
 updated: 2026-09-27
 ---
 # Sliding Window
 
-> [!tldr] TL;DR
-> A **sliding window** is a contiguous subarray (or substring) described by two indices, `left` and `right`. You grow it by moving `right`, and shrink it by moving `left` whenever it breaks a constraint, updating the answer incrementally instead of recomputing each subarray. That turns O(n²) "check every subarray" into O(n). Windows are **fixed size** (length `k`) or **variable size** (grow/shrink by a rule); two extra tricks: the number of valid subarrays ending at `right` is `right - left + 1`, and "exactly K" = `atMost(K) - atMost(K - 1)`.
+<Note>
+**TL;DR**
+
+A **sliding window** is a contiguous subarray (or substring) described by two indices, `left` and `right`. You grow it by moving `right`, and shrink it by moving `left` whenever it breaks a constraint, updating the answer incrementally instead of recomputing each subarray. That turns O(n²) "check every subarray" into O(n). Windows are **fixed size** (length `k`) or **variable size** (grow/shrink by a rule); two extra tricks: the number of valid subarrays ending at `right` is `right - left + 1`, and "exactly K" = `atMost(K) - atMost(K - 1)`.
+</Note>
 
 ## The idea
 
-My original note (from [[LeetCode Crash Course]]):
+My original note (from [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)):
 
 > Sliding window is all about sub-arrays, each subarray is defined by the left bound and the right bound which will make a sub array which is called here "window"
 
-![[image 17.png]]
+![image 17](/Attachments/image%2017.png)
 
 A brute force looks at all n(n+1)/2 subarrays. The sliding window only moves forward: `right` visits each index once, `left` visits each index at most once, so the whole thing is at most 2n pointer moves.
 
@@ -37,7 +41,7 @@ Two flavours:
 | Move `left` | exactly once per step after the first `k` | in a `while` loop until the window is valid again |
 | Typical question | "max/avg sum of a subarray of length k" | "longest/shortest subarray that satisfies X", "number of subarrays that satisfy X" |
 
-State you maintain (all updated in O(1) per move): a running sum, a counter, a frequency [[Hash Tables|hash map]], or a [[Monotonic Stack & Queue|monotonic deque]] for window max/min.
+State you maintain (all updated in O(1) per move): a running sum, a counter, a frequency [hash map](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables), or a [monotonic deque](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) for window max/min.
 
 ### Counting subarrays: `right - left + 1`
 
@@ -248,8 +252,8 @@ Optimisation: store the last index of each char in a map and jump `left = max(le
 - A fixed length `k` is given ("every window of size k", "average of k consecutive").
 - The constraint is **monotonic** when you extend the window: sum with non-negative numbers, count of distinct/zeros/bad elements, "at most k replacements".
 - "Exactly K" → rewrite as `atMost(K) - atMost(K - 1)`.
-- **Negative numbers + sum target** break monotonicity: use [[Prefix Sum]] + hash map instead (LC 560).
-- Window max/min per position → [[Monotonic Stack & Queue|monotonic deque]] (LC 239).
+- **Negative numbers + sum target** break monotonicity: use [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) + hash map instead (LC 560).
+- Window max/min per position → [monotonic deque](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) (LC 239).
 
 ## Trade-offs & pitfalls
 
@@ -283,29 +287,35 @@ Optimisation: store the last index of each char in a map and jump `left = max(le
 
 ## Interview questions
 
-> [!question]- Why is a sliding window with an inner while loop still O(n)?
-> Each index is added once (when `right` reaches it) and removed at most once (when `left` passes it). Total pointer moves ≤ 2n, so the inner loop's cost is amortised across the outer loop.
+<Accordion title="Why is a sliding window with an inner while loop still O(n)?">
+Each index is added once (when `right` reaches it) and removed at most once (when `left` passes it). Total pointer moves ≤ 2n, so the inner loop's cost is amortised across the outer loop.
+</Accordion>
 
-> [!question]- Why does sliding window fail for "subarray sum equals k" with negative numbers?
-> Shrinking is only correct if removing elements can only make the window "more valid". With negatives, removing an element may increase the sum, so you can't decide which pointer to move. Use a [[Prefix Sum]] with a hash map of seen prefix counts (LC 560), O(n).
+<Accordion title="Why does sliding window fail for &quot;subarray sum equals k&quot; with negative numbers?">
+Shrinking is only correct if removing elements can only make the window "more valid". With negatives, removing an element may increase the sum, so you can't decide which pointer to move. Use a [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) with a hash map of seen prefix counts (LC 560), O(n).
+</Accordion>
 
-> [!question]- Why does `right - left + 1` count the valid subarrays ending at `right`?
-> Once `[left, right]` is valid and the constraint is monotonic, any subarray `[i, right]` with `left ≤ i ≤ right` is a sub-window, so it's valid too. Starting points `left..right` give `right - left + 1` subarrays, and each subarray is counted exactly once (at its end index).
+<Accordion title="Why does `right - left + 1` count the valid subarrays ending at `right`?">
+Once `[left, right]` is valid and the constraint is monotonic, any subarray `[i, right]` with `left ≤ i ≤ right` is a sub-window, so it's valid too. Starting points `left..right` give `right - left + 1` subarrays, and each subarray is counted exactly once (at its end index).
+</Accordion>
 
-> [!question]- How do you count subarrays with exactly K distinct values?
-> Exactly K is not monotonic, but at most K is. Count `atMost(K)` and `atMost(K - 1)` with the counting window and subtract.
+<Accordion title="How do you count subarrays with exactly K distinct values?">
+Exactly K is not monotonic, but at most K is. Count `atMost(K)` and `atMost(K - 1)` with the counting window and subtract.
+</Accordion>
 
-> [!question]- Fixed vs variable window: how do you pick?
-> If the length is given (k), it's fixed: add one, remove one each step. If the question asks for longest/shortest/count under a condition, it's variable: grow with `right`, shrink with `left` while invalid.
+<Accordion title="Fixed vs variable window: how do you pick?">
+If the length is given (k), it's fixed: add one, remove one each step. If the question asks for longest/shortest/count under a condition, it's variable: grow with `right`, shrink with `left` while invalid.
+</Accordion>
 
-> [!question]- How would you get the maximum of every window of size k in O(n)?
-> Keep a deque of indices whose values are decreasing. Pop smaller values from the back before pushing, drop the front when it leaves the window, and the front is the max. See [[Monotonic Stack & Queue]] (LC 239).
+<Accordion title="How would you get the maximum of every window of size k in O(n)?">
+Keep a deque of indices whose values are decreasing. Pop smaller values from the back before pushing, drop the front when it leaves the window, and the front is the max. See [Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) (LC 239).
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Two Pointers]] · [[Prefix Sum]] · [[Monotonic Stack & Queue]] · [[Hash Tables]] · [[Arrays & Strings]]
-- [[Big-O & Complexity Analysis]]
-- Course: [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) · [Monotonic Stack & Queue](/Software%20Engineering/DSA/04%20Patterns/Monotonic%20Stack%20%26%20Queue) · [Hash Tables](/Software%20Engineering/DSA/02%20Data%20Structures/Hash%20Tables) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Course: [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - [LeetCode's Interview Crash Course: Data Structures and Algorithms](https://leetcode.com/explore/interview/card/leetcodes-interview-crash-course-data-structures-and-algorithms/) (Arrays and strings, sliding window)

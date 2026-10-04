@@ -1,3 +1,6 @@
+---
+title: "JS Book - Secrets of JS Ninja"
+---
 Generators: Functions that generate multiple values on per-request and can suspend their execution.
 
 Proxies: Allows us to control access to certain objects

@@ -1,12 +1,16 @@
 ---
+title: "Database Backup"
 tags: [databases, databases/operations, databases/postgres]
 aliases: [Backup, Backups, Restore, PITR, Point-in-Time Recovery, RPO, RTO, pg_dump, pgBackRest, WAL archiving, 3-2-1 rule, Disaster Recovery]
 updated: 2026-09-27
 ---
 # Database Backup
 
-> [!tldr] TL;DR
-> A backup is a copy of your data you can **restore**; a backup you've never restored is a hope, not a backup. Two numbers drive every design: **RPO** (how much data you may lose) and **RTO** (how long you may be down). **Logical** backups (`pg_dump`) are portable but slow to restore; **physical** backups (`pg_basebackup`, pgBackRest, snapshots) plus continuous **WAL archiving** give **point-in-time recovery** (PITR). Follow **3-2-1** (3 copies, 2 media, 1 off-site, ideally one immutable), encrypt, and test restores on a schedule.
+<Note>
+**TL;DR**
+
+A backup is a copy of your data you can **restore**; a backup you've never restored is a hope, not a backup. Two numbers drive every design: **RPO** (how much data you may lose) and **RTO** (how long you may be down). **Logical** backups (`pg_dump`) are portable but slow to restore; **physical** backups (`pg_basebackup`, pgBackRest, snapshots) plus continuous **WAL archiving** give **point-in-time recovery** (PITR). Follow **3-2-1** (3 copies, 2 media, 1 off-site, ideally one immutable), encrypt, and test restores on a schedule.
+</Note>
 
 ## The idea
 
@@ -133,13 +137,16 @@ Define RPO/RTO per system, decide the mechanisms (backups + WAL, standby in anot
 
 ## Pitfalls
 
-> [!warning] Common pitfalls
-> - Treating **replicas** or RAID as backups.
-> - Backups stored in the **same account/region** with the same credentials as production (one compromise or mistake deletes both).
-> - `pg_dump` without roles/globals, or restoring without the right extensions/versions.
-> - Forgetting that a big logical restore also rebuilds every index: plan hours.
-> - WAL archive silently failing (disk full, permissions) while backups "succeed"; PITR then has gaps.
-> - Never testing restore. The classic incident report line: "the backups hadn't worked for months".
+<Warning>
+**Common pitfalls**
+
+- Treating **replicas** or RAID as backups.
+- Backups stored in the **same account/region** with the same credentials as production (one compromise or mistake deletes both).
+- `pg_dump` without roles/globals, or restoring without the right extensions/versions.
+- Forgetting that a big logical restore also rebuilds every index: plan hours.
+- WAL archive silently failing (disk full, permissions) while backups "succeed"; PITR then has gaps.
+- Never testing restore. The classic incident report line: "the backups hadn't worked for months".
+</Warning>
 
 ## Senior perspective
 
@@ -148,35 +155,44 @@ Define RPO/RTO per system, decide the mechanisms (backups + WAL, standby in anot
 - Consider tool sustainability: open-source tools depend on maintainers and sponsors (see the pgBackRest episode below). Prefer tools with active communities and have an exit plan.
 - Review questions: When was the last restore test and how long did it take? Can an attacker with prod credentials delete the backups? Are backups encrypted and is the key backed up elsewhere?
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (2024-09-26)** added native **incremental backups**: `pg_basebackup --incremental=<manifest>` (needs `summarize_wal = on`) and the new `pg_combinebackup` tool to reconstruct a full backup from a chain. `pg_dump` gained `--filter`.
-> - **PostgreSQL 18 (2025-09-25)**: `pg_upgrade` now keeps planner statistics and has a `--swap` mode; new clusters have data checksums on by default, which helps detect corrupted pages early.
-> - **pgBackRest**: on **2026-04-27** its sole maintainer announced the project would no longer be maintained after losing sponsorship; on **2026-05-18** it was revived with a coalition of sponsors (including AWS, Supabase, Percona, Dalibo and others per pgbackrest.org). The latest release listed is **2.59.2 (2026-09-27)** with PostgreSQL 19 beta support. Lesson: track the health of critical open-source dependencies.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (2024-09-26)** added native **incremental backups**: `pg_basebackup --incremental=<manifest>` (needs `summarize_wal = on`) and the new `pg_combinebackup` tool to reconstruct a full backup from a chain. `pg_dump` gained `--filter`.
+- **PostgreSQL 18 (2025-09-25)**: `pg_upgrade` now keeps planner statistics and has a `--swap` mode; new clusters have data checksums on by default, which helps detect corrupted pages early.
+- **pgBackRest**: on **2026-04-27** its sole maintainer announced the project would no longer be maintained after losing sponsorship; on **2026-05-18** it was revived with a coalition of sponsors (including AWS, Supabase, Percona, Dalibo and others per pgbackrest.org). The latest release listed is **2.59.2 (2026-09-27)** with PostgreSQL 19 beta support. Lesson: track the health of critical open-source dependencies.
+</Info>
 
 ## Interview questions
 
-> [!question]- What's the difference between RPO and RTO?
-> RPO is the maximum acceptable data loss measured in time (how old the last recoverable point may be). RTO is the maximum acceptable downtime to restore service. RPO drives backup/log frequency; RTO drives restore speed and standby architecture.
+<Accordion title="What's the difference between RPO and RTO?">
+RPO is the maximum acceptable data loss measured in time (how old the last recoverable point may be). RTO is the maximum acceptable downtime to restore service. RPO drives backup/log frequency; RTO drives restore speed and standby architecture.
+</Accordion>
 
-> [!question]- Incremental vs differential backup?
-> Incremental captures changes since the last backup of any type (small, but a restore needs the whole chain). Differential captures changes since the last full (grows over time, restore needs full + latest differential).
+<Accordion title="Incremental vs differential backup?">
+Incremental captures changes since the last backup of any type (small, but a restore needs the whole chain). Differential captures changes since the last full (grows over time, restore needs full + latest differential).
+</Accordion>
 
-> [!question]- How does point-in-time recovery work in PostgreSQL?
-> Take a physical base backup and continuously archive WAL segments. To recover, restore the base backup, configure `restore_command` and a `recovery_target_time` (or LSN/xid), and Postgres replays WAL up to that point, then promotes.
+<Accordion title="How does point-in-time recovery work in PostgreSQL?">
+Take a physical base backup and continuously archive WAL segments. To recover, restore the base backup, configure `restore_command` and a `recovery_target_time` (or LSN/xid), and Postgres replays WAL up to that point, then promotes.
+</Accordion>
 
-> [!question]- Why isn't replication a backup?
-> Replication copies every change, including mistakes and corruption, almost instantly. Backups preserve history so you can go back to before the mistake.
+<Accordion title="Why isn't replication a backup?">
+Replication copies every change, including mistakes and corruption, almost instantly. Backups preserve history so you can go back to before the mistake.
+</Accordion>
 
-> [!question]- Logical or physical backups for a 2 TB production database?
-> Physical backups with WAL archiving (pgBackRest or a managed service) for DR and PITR, because logical restores of 2 TB take too long. Logical dumps can supplement for selective table restores or version migrations.
+<Accordion title="Logical or physical backups for a 2 TB production database?">
+Physical backups with WAL archiving (pgBackRest or a managed service) for DR and PITR, because logical restores of 2 TB take too long. Logical dumps can supplement for selective table restores or version migrations.
+</Accordion>
 
-> [!question]- What is the 3-2-1 rule?
-> Keep three copies of data on two different media with one copy off-site; modern practice adds one immutable/air-gapped copy and zero errors on verified restores.
+<Accordion title="What is the 3-2-1 rule?">
+Keep three copies of data on two different media with one copy off-site; modern practice adds one immutable/air-gapped copy and zero errors on verified restores.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Replication & 2PC 3PC]] · [[Clustering and Scaling]] · [[Transactions & ACID]] (WAL)
-- [[Database Migrations & Schema Evolution]] · [[PostgreSQL 17 to 18 - What's New]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [Clustering and Scaling](/Software%20Engineering/Databases/Database%20Round/Clustering%20and%20Scaling) · [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) (WAL)
+- [Database Migrations & Schema Evolution](/Software%20Engineering/Databases/Core%20Concepts/Database%20Migrations%20%26%20Schema%20Evolution) · [PostgreSQL 17 to 18 - What's New](/Software%20Engineering/Databases/Core%20Concepts/PostgreSQL%2017%20to%2018%20-%20What's%20New)
 
 ## Sources
 - PostgreSQL docs, Backup and Restore: https://www.postgresql.org/docs/current/backup.html

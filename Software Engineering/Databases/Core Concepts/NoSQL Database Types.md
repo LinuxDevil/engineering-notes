@@ -1,23 +1,27 @@
 ---
+title: "NoSQL Database Types"
 tags: [databases, databases/nosql]
 aliases: [NoSQL, SQL vs NoSQL, NoSQL Databases, Database Types, Polyglot Persistence]
 updated: 2026-09-27
 ---
 # NoSQL Database Types
 
-> [!tldr] TL;DR
-> "NoSQL" is a family of non-relational models, each optimized for a specific access shape: **key-value** (lookup by key), **document** (JSON-like aggregates), **wide-column** (huge write-heavy partitioned tables), **graph** (relationships), **time-series**, **search**, plus neighbours like **columnar analytics**, **distributed SQL** and **vector** stores. You pick one by listing your access patterns, consistency needs and scale, not by hype. For most applications a relational database (usually Postgres) covers 80–90% of needs, and specialized stores are added only when a workload clearly outgrows it.
+<Note>
+**TL;DR**
+
+"NoSQL" is a family of non-relational models, each optimized for a specific access shape: **key-value** (lookup by key), **document** (JSON-like aggregates), **wide-column** (huge write-heavy partitioned tables), **graph** (relationships), **time-series**, **search**, plus neighbours like **columnar analytics**, **distributed SQL** and **vector** stores. You pick one by listing your access patterns, consistency needs and scale, not by hype. For most applications a relational database (usually Postgres) covers 80–90% of needs, and specialized stores are added only when a workload clearly outgrows it.
+</Note>
 
 ## The idea
 
 Relational databases model data as normalized tables joined at query time. NoSQL systems trade some of that generality (joins, ad hoc queries, multi-row transactions, fixed schema) for one or more of:
 
-- **Horizontal scale** by partitioning data across nodes ([[Sharding & Partitioning]]).
+- **Horizontal scale** by partitioning data across nodes ([Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning)).
 - **Flexible schema** (store what the app sends).
 - **A data model closer to the access pattern** (a document, a graph, a time series).
 - **Predictable latency** at very high throughput.
 
-The trade-offs are framed by [[CAP Theorem]]: during a network partition you choose consistency or availability. **PACELC** adds: *Else* (no partition) you still trade **latency vs consistency**. Dynamo-style stores (Cassandra, DynamoDB default reads) lean PA/EL; Spanner-style systems lean PC/EC.
+The trade-offs are framed by [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem): during a network partition you choose consistency or availability. **PACELC** adds: *Else* (no partition) you still trade **latency vs consistency**. Dynamo-style stores (Cassandra, DynamoDB default reads) lean PA/EL; Spanner-style systems lean PC/EC.
 
 ## The families
 
@@ -59,7 +63,7 @@ db.orders.createIndex({ customerId: 1, placedAt: -1 })
 
 - **Strengths**: aggregate read in one fetch, flexible schema, rich queries and aggregation pipeline, easy horizontal sharding.
 - **Weaknesses**: joins (`$lookup`) are limited and slower; duplication must be kept in sync; unbounded arrays and huge documents hurt.
-- **Use when**: data forms natural aggregates (orders, profiles, CMS content, catalogs) with varied shapes. See [[MongoDB]] and [[Data Modeling & Normalization]].
+- **Use when**: data forms natural aggregates (orders, profiles, CMS content, catalogs) with varied shapes. See [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) and [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization).
 
 ### Wide-column
 
@@ -128,7 +132,7 @@ rate(http_requests_total{job="api", status=~"5.."}[5m])
 ### Search engines
 
 - **Model**: documents indexed into an **inverted index** (term → list of documents), with analyzers (tokenize, lowercase, stem) and relevance scoring (BM25).
-- **Examples**: Elasticsearch, OpenSearch, Apache Solr, Meilisearch, Typesense; managed MongoDB Atlas Search ([[Unit 13 MongoDB Atlas Search]]).
+- **Examples**: Elasticsearch, OpenSearch, Apache Solr, Meilisearch, Typesense; managed MongoDB Atlas Search ([Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search)).
 
 ```json
 GET /products/_search
@@ -143,7 +147,7 @@ GET /products/_search
 
 ### Columnar / analytical (OLAP)
 
-- **Model**: data stored by column, compressed, scanned with vectorized execution. See [[Row Vs Column Oriented Databases]].
+- **Model**: data stored by column, compressed, scanned with vectorized execution. See [Row Vs Column Oriented Databases](/Software%20Engineering/Databases/Database%20Round/Row%20Vs%20Column%20Oriented%20Databases).
 - **Examples**: ClickHouse, DuckDB (in-process), Snowflake, BigQuery, Apache Druid, Pinot.
 
 ```sql
@@ -168,7 +172,7 @@ GROUP BY country ORDER BY revenue DESC;
 ### Vector
 
 - **Model**: high-dimensional embeddings indexed for approximate nearest-neighbour search (HNSW, IVF).
-- **Examples**: Pinecone, Qdrant, Weaviate, Milvus; pgvector in Postgres. Full note: [[Vector Databases & pgvector]].
+- **Examples**: Pinecone, Qdrant, Weaviate, Milvus; pgvector in Postgres. Full note: [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector).
 
 ## Big comparison
 
@@ -228,12 +232,15 @@ Using several stores, each for what it does best, is normal at scale (Postgres a
 - **Operational load**: each engine needs backups, upgrades, monitoring, on-call expertise.
 - **Staleness**: derived stores lag. The UI must tolerate it.
 
-> [!warning] Common pitfalls
-> - Choosing MongoDB/Cassandra "for scale" at 10 GB of data. Scale is rarely the first problem.
-> - Modeling Cassandra or DynamoDB like a relational DB (normalized tables, then discovering there are no joins).
-> - Treating Elasticsearch or Redis as the system of record without planning for data loss.
-> - Ignoring hot partitions: a celebrity user or a date-only partition key sends all traffic to one node.
-> - Forgetting that "eventual consistency" means your own write may not be visible on the next read.
+<Warning>
+**Common pitfalls**
+
+- Choosing MongoDB/Cassandra "for scale" at 10 GB of data. Scale is rarely the first problem.
+- Modeling Cassandra or DynamoDB like a relational DB (normalized tables, then discovering there are no joins).
+- Treating Elasticsearch or Redis as the system of record without planning for data loss.
+- Ignoring hot partitions: a celebrity user or a date-only partition key sends all traffic to one node.
+- Forgetting that "eventual consistency" means your own write may not be visible on the next read.
+</Warning>
 
 ## Senior perspective
 
@@ -244,38 +251,47 @@ Using several stores, each for what it does best, is normal at scale (Postgres a
 - **Evaluate operational maturity**: backup/restore tested? Multi-region story? Managed offering? Hiring pool?
 - **Review questions**: What is the partition key and can it get hot? What consistency does each read need? How do we reindex or reshard? What is the exit plan?
 
-> [!info]+ 🆕 2025–2026
-> - **Redis 8.0** (announced 2025-05-01) added **AGPLv3** as a license option alongside RSALv2/SSPLv1, after Redis left BSD in March 2024. Redis 8 folded the former Redis Stack modules (JSON, time series, probabilistic structures) into core and added **vector sets**.
-> - **Valkey**, the Linux Foundation fork of Redis 7.2.4 formed in 2024, announced **Valkey 9.0** on 2025-10-21: hash field expiration, atomic slot migration, and multiple databases in cluster mode.
-> - **DuckDB 1.4.0 LTS** (September 2025) is the first long-term-support release with one year of support; **DuckDB 1.5.0** was released 2026-03-09.
-> - **MongoDB 8.2** (2025-09-16) brought **Search and Vector Search** to self-managed Community and Enterprise Server in public preview (previously Atlas-only).
-> - **MongoDB 8.3** (2026-05-07) made the `$scoreFusion` hybrid-ranking aggregation stage generally available.
+<Info>
+**🆕 2025–2026**
+
+- **Redis 8.0** (announced 2025-05-01) added **AGPLv3** as a license option alongside RSALv2/SSPLv1, after Redis left BSD in March 2024. Redis 8 folded the former Redis Stack modules (JSON, time series, probabilistic structures) into core and added **vector sets**.
+- **Valkey**, the Linux Foundation fork of Redis 7.2.4 formed in 2024, announced **Valkey 9.0** on 2025-10-21: hash field expiration, atomic slot migration, and multiple databases in cluster mode.
+- **DuckDB 1.4.0 LTS** (September 2025) is the first long-term-support release with one year of support; **DuckDB 1.5.0** was released 2026-03-09.
+- **MongoDB 8.2** (2025-09-16) brought **Search and Vector Search** to self-managed Community and Enterprise Server in public preview (previously Atlas-only).
+- **MongoDB 8.3** (2026-05-07) made the `$scoreFusion` hybrid-ranking aggregation stage generally available.
+</Info>
 
 ## Interview questions
 
-> [!question]- SQL vs NoSQL: how do you choose?
-> List access patterns, consistency needs and scale. If you need multi-entity transactions, ad hoc queries and the data fits on one primary, choose relational. Choose NoSQL when a specific access shape dominates (key lookups, aggregates, massive partitioned writes, graph traversals) or scale exceeds a single node in a way replicas can't solve. Many systems use both.
+<Accordion title="SQL vs NoSQL: how do you choose?">
+List access patterns, consistency needs and scale. If you need multi-entity transactions, ad hoc queries and the data fits on one primary, choose relational. Choose NoSQL when a specific access shape dominates (key lookups, aggregates, massive partitioned writes, graph traversals) or scale exceeds a single node in a way replicas can't solve. Many systems use both.
+</Accordion>
 
-> [!question]- What are the partition key and clustering key in Cassandra?
-> The partition key decides which node(s) store the row (hashed) and must be in every efficient query. Clustering columns sort rows inside a partition and allow range queries on them. Good partition keys spread load evenly and keep partitions bounded (e.g. `(sensor_id, day)`).
+<Accordion title="What are the partition key and clustering key in Cassandra?">
+The partition key decides which node(s) store the row (hashed) and must be in every efficient query. Clustering columns sort rows inside a partition and allow range queries on them. Good partition keys spread load evenly and keep partitions bounded (e.g. `(sensor_id, day)`).
+</Accordion>
 
-> [!question]- Explain CAP and PACELC.
-> CAP: during a network partition a distributed system must choose consistency or availability. PACELC extends it: if Partitioned choose A or C; Else, choose Latency or Consistency. Cassandra/Dynamo lean PA/EL, Spanner/CockroachDB lean PC/EC.
+<Accordion title="Explain CAP and PACELC.">
+CAP: during a network partition a distributed system must choose consistency or availability. PACELC extends it: if Partitioned choose A or C; Else, choose Latency or Consistency. Cassandra/Dynamo lean PA/EL, Spanner/CockroachDB lean PC/EC.
+</Accordion>
 
-> [!question]- When is a graph database worth it?
-> When queries traverse variable-depth relationships (friends of friends, fraud rings, dependency graphs, permissions). In SQL these become recursive CTEs or many self-joins that get slow. For simple one-hop relationships, a relational DB is fine.
+<Accordion title="When is a graph database worth it?">
+When queries traverse variable-depth relationships (friends of friends, fraud rings, dependency graphs, permissions). In SQL these become recursive CTEs or many self-joins that get slow. For simple one-hop relationships, a relational DB is fine.
+</Accordion>
 
-> [!question]- Why not use Elasticsearch as the primary database?
-> It is near-real-time, has weaker durability and transactional guarantees, and mapping changes require reindexing. Use it as a derived index fed from the system of record via CDC, so you can always rebuild it.
+<Accordion title="Why not use Elasticsearch as the primary database?">
+It is near-real-time, has weaker durability and transactional guarantees, and mapping changes require reindexing. Use it as a derived index fed from the system of record via CDC, so you can always rebuild it.
+</Accordion>
 
-> [!question]- What is polyglot persistence and what does it cost?
-> Using multiple storage technologies, each for its best workload. Costs: keeping stores consistent (use CDC or outbox, not dual writes), more operational expertise, and eventual consistency between stores.
+<Accordion title="What is polyglot persistence and what does it cost?">
+Using multiple storage technologies, each for its best workload. Costs: keeping stores consistent (use CDC or outbox, not dual writes), more operational expertise, and eventual consistency between stores.
+</Accordion>
 
 ## Related
-- [[Databases Index]]
-- [[CAP Theorem]] · [[Row Vs Column Oriented Databases]] · [[Sharding & Partitioning]] · [[Replication & 2PC 3PC]]
-- [[MongoDB]] · [[Unit 13 MongoDB Atlas Search]] · [[Vector Databases & pgvector]]
-- [[Data Modeling & Normalization]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) · [Row Vs Column Oriented Databases](/Software%20Engineering/Databases/Database%20Round/Row%20Vs%20Column%20Oriented%20Databases) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Unit 13 MongoDB Atlas Search](/Software%20Engineering/Databases/MongoDB/Unit%2013%20MongoDB%20Atlas%20Search) · [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector)
+- [Data Modeling & Normalization](/Software%20Engineering/Databases/Core%20Concepts/Data%20Modeling%20%26%20Normalization)
 
 ## Sources
 - [Redis blog: Redis is open source again (AGPLv3), 2025-05-01](https://redis.io/blog/agplv3/)

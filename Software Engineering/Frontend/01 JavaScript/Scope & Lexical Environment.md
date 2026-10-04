@@ -1,12 +1,16 @@
 ---
+title: "Scope & Lexical Environment"
 tags: [frontend, frontend/javascript]
 aliases: [Scope, Lexical Scope, Lexical Environment, Scope Chain, Block Scope]
 updated: 2026-09-27
 ---
 # Scope & Lexical Environment
 
-> [!tldr] TL;DR
-> **Scope** is the region of code where a variable is accessible: "what data is available to me on the exact line I'm running". JavaScript uses **lexical (static) scoping**: *where* a function is written decides what it can see, not where it is called. The engine implements this with **Lexical Environments** (a record of bindings + a pointer to the outer environment), and the chain of those pointers is the **scope chain**, which is also what makes [[Closures & Memory Model|closures]] possible.
+<Note>
+**TL;DR**
+
+**Scope** is the region of code where a variable is accessible: "what data is available to me on the exact line I'm running". JavaScript uses **lexical (static) scoping**: *where* a function is written decides what it can see, not where it is called. The engine implements this with **Lexical Environments** (a record of bindings + a pointer to the outer environment), and the chain of those pointers is the **scope chain**, which is also what makes [closures](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) possible.
+</Note>
 
 ## Types of scope
 
@@ -21,19 +25,22 @@ updated: 2026-09-27
 - A **global variable** (declared outside any function or block) is accessible anywhere in the program.
 - A **function-scoped** variable (`var` inside a function) is visible only inside that function and its nested functions.
 - `let` and `const` are **block-scoped**: they exist only inside the nearest enclosing `{ ... }` and are not accessible outside it. `var` has **no block scope**, which often surprises newcomers.
-- **Module scope**: variables defined in an ES module stay in that module unless exported. See [[Modules (ESM)]].
+- **Module scope**: variables defined in an ES module stay in that module unless exported. See [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM)).
 
-> [!example] Block vs function scope
-> ```js
-> function demo() {
->   if (true) {
->     var a = 1;   // function-scoped: visible in the whole function
->     let b = 2;   // block-scoped: only inside this if
->   }
->   console.log(a); // 1
->   console.log(b); // ReferenceError: b is not defined
-> }
-> ```
+<Info>
+**Block vs function scope**
+
+```js
+function demo() {
+  if (true) {
+    var a = 1;   // function-scoped: visible in the whole function
+    let b = 2;   // block-scoped: only inside this if
+  }
+  console.log(a); // 1
+  console.log(b); // ReferenceError: b is not defined
+}
+```
+</Info>
 
 ### Global scope details
 
@@ -51,7 +58,7 @@ function oops() { leaked = 42; } // sloppy mode: creates window.leaked
 
 ## Lexical scoping vs dynamic scoping
 
-> JS scope rule is **lexical/static** scoping: *where I save (define) my function determines, for the rest of that function's life, what data it has access to.* Not where you run it; that would be **dynamic scoping**. So even if you return the function and call it somewhere else, it keeps access to the data around its definition. (from [[Closures]])
+> JS scope rule is **lexical/static** scoping: *where I save (define) my function determines, for the rest of that function's life, what data it has access to.* Not where you run it; that would be **dynamic scoping**. So even if you return the function and call it somewhere else, it keeps access to the data around its definition. (from [Closures](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Closures))
 
 ```js
 const x = 'global';
@@ -63,7 +70,7 @@ function run() {
 run();
 ```
 
-Only `this` behaves "dynamically" in JS (decided by the call), which is why arrow functions, which take `this` lexically, feel more predictable. See [[this, call, apply & bind]].
+Only `this` behaves "dynamically" in JS (decided by the call), which is why arrow functions, which take `this` lexically, feel more predictable. See [this, call, apply & bind](/Software%20Engineering/Frontend/01%20JavaScript/this%2C%20call%2C%20apply%20%26%20bind).
 
 All declarations (`var`, `let`, `const`, functions, classes) are lexically scoped. The difference with `var` is only the **size** of its scope (the whole function instead of the block).
 
@@ -117,7 +124,7 @@ const fn = outer();
 fn();
 ```
 
-![[image 6.png]]
+![image 6](/Attachments/image%206.png)
 
 Reading it from top to bottom:
 
@@ -128,28 +135,34 @@ Reading it from top to bottom:
 
 ## Common scope patterns
 
-> [!example] IIFE: private scope before modules/blocks existed
-> ```js
-> const counter = (function () {
->   let count = 0;                 // private
->   return { inc: () => ++count, get: () => count };
-> })();
-> counter.inc(); counter.get();    // 1
-> ```
-> Today a block `{ ... }` or an ES module gives the same isolation.
+<Info>
+**IIFE: private scope before modules/blocks existed**
 
-> [!example] Shadowing and loops
-> ```js
-> let i = 'outer';
-> for (let i = 0; i < 3; i++) {        // new `i` per iteration, shadows outer i
->   setTimeout(() => console.log(i));  // 0 1 2
-> }
-> console.log(i);                      // 'outer'
->
-> for (var j = 0; j < 3; j++) {        // one shared function-scoped `j`
->   setTimeout(() => console.log(j));  // 3 3 3
-> }
-> ```
+```js
+const counter = (function () {
+  let count = 0;                 // private
+  return { inc: () => ++count, get: () => count };
+})();
+counter.inc(); counter.get();    // 1
+```
+Today a block `{ ... }` or an ES module gives the same isolation.
+</Info>
+
+<Info>
+**Shadowing and loops**
+
+```js
+let i = 'outer';
+for (let i = 0; i < 3; i++) {        // new `i` per iteration, shadows outer i
+  setTimeout(() => console.log(i));  // 0 1 2
+}
+console.log(i);                      // 'outer'
+
+for (var j = 0; j < 3; j++) {        // one shared function-scoped `j`
+  setTimeout(() => console.log(j));  // 3 3 3
+}
+```
+</Info>
 
 ### Things that break lexical scope (avoid)
 
@@ -157,47 +170,59 @@ Reading it from top to bottom:
 - **`with (obj) { ... }`** puts an object into the scope chain. It is a `SyntaxError` in strict mode.
 - Both stop engines from optimising variable lookups.
 
-> [!info]+ 🆕 2025–2026: scope-bound cleanup with `using`
-> **Explicit Resource Management** (`using` / `await using`, `DisposableStack`) is Stage 4 targeting **ES2027** (not ES2026). A `using` declaration is block-scoped like `const`, and its `[Symbol.dispose]()` runs automatically when the block exits, even on `throw`. Baseline: **Limited** (Chrome 134, Firefox 141, no Safari).
-> ```js
-> {
->   using file = openFile();               // file[Symbol.dispose]() at block exit
->   await using conn = await db.connect(); // conn[Symbol.asyncDispose]()
-> }
-> ```
-> See [[Modern JavaScript ES2022-ES2027]].
+<Info>
+**🆕 2025–2026: scope-bound cleanup with `using`**
 
-> [!warning] Common pitfalls
-> - Expecting `var` inside `if`/`for` to stay in the block.
-> - Forgetting `let`/`const` and creating implicit globals (use strict mode / ESLint `no-undef`).
-> - Assuming top-level `let` creates `window.x`.
-> - Thinking a function "sees" the variables of the place where it's *called*.
+**Explicit Resource Management** (`using` / `await using`, `DisposableStack`) is Stage 4 targeting **ES2027** (not ES2026). A `using` declaration is block-scoped like `const`, and its `[Symbol.dispose]()` runs automatically when the block exits, even on `throw`. Baseline: **Limited** (Chrome 134, Firefox 141, no Safari).
+```js
+{
+  using file = openFile();               // file[Symbol.dispose]() at block exit
+  await using conn = await db.connect(); // conn[Symbol.asyncDispose]()
+}
+```
+See [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027).
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- Expecting `var` inside `if`/`for` to stay in the block.
+- Forgetting `let`/`const` and creating implicit globals (use strict mode / ESLint `no-undef`).
+- Assuming top-level `let` creates `window.x`.
+- Thinking a function "sees" the variables of the place where it's *called*.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is scope? What kinds are there?
-> The region of code where a binding is accessible. Global, module, function (local) and block scope; nesting follows lexical rules. `var` is function-scoped; `let`/`const`/`class` are block-scoped.
+<Accordion title="What is scope? What kinds are there?">
+The region of code where a binding is accessible. Global, module, function (local) and block scope; nesting follows lexical rules. `var` is function-scoped; `let`/`const`/`class` are block-scoped.
+</Accordion>
 
-> [!question]- What is lexical scoping?
-> Scope is determined by where code is written in the source. A function's access to outer variables is fixed at definition time (via its hidden `[[Environment]]` reference), no matter where it's later called. The opposite is dynamic scoping (resolved by call site), which JS doesn't use (only `this` is call-site dependent).
+<Accordion title="What is lexical scoping?">
+Scope is determined by where code is written in the source. A function's access to outer variables is fixed at definition time (via its hidden `[[Environment]]` reference), no matter where it's later called. The opposite is dynamic scoping (resolved by call site), which JS doesn't use (only `this` is call-site dependent).
+</Accordion>
 
-> [!question]- What is a Lexical Environment and the scope chain?
-> A structure of an environment record (identifier → binding) plus an `outer` reference to the parent environment. Resolving a name walks this `outer` chain until found or throws ReferenceError at the end. That chain is the scope chain.
+<Accordion title="What is a Lexical Environment and the scope chain?">
+A structure of an environment record (identifier → binding) plus an `outer` reference to the parent environment. Resolving a name walks this `outer` chain until found or throws ReferenceError at the end. That chain is the scope chain.
+</Accordion>
 
-> [!question]- Difference between global `var` and global `let`?
-> Both are global variables, but `var` (and function declarations) become properties of `window`/`globalThis`, while `let`/`const` live in the Script declarative record. `let` also can't be redeclared and is in TDZ before its declaration.
+<Accordion title="Difference between global `var` and global `let`?">
+Both are global variables, but `var` (and function declarations) become properties of `window`/`globalThis`, while `let`/`const` live in the Script declarative record. `let` also can't be redeclared and is in TDZ before its declaration.
+</Accordion>
 
-> [!question]- What is shadowing? Is it a problem?
-> An inner declaration with the same name hides the outer one inside the inner scope. It's legal and sometimes useful, but can hide bugs; linters have `no-shadow`. Redeclaring with `let` in the *same* scope is a SyntaxError.
+<Accordion title="What is shadowing? Is it a problem?">
+An inner declaration with the same name hides the outer one inside the inner scope. It's legal and sometimes useful, but can hide bugs; linters have `no-shadow`. Redeclaring with `let` in the *same* scope is a SyntaxError.
+</Accordion>
 
-> [!question]- Why does `for (var i...)` with `setTimeout` print the same number, and `let` doesn't?
-> `var i` is one binding for the whole function; all callbacks close over it and read it after the loop ends. `let` in a `for` header creates a fresh binding per iteration, so each callback captures its own value.
+<Accordion title="Why does `for (var i...)` with `setTimeout` print the same number, and `let` doesn't?">
+`var i` is one binding for the whole function; all callbacks close over it and read it after the loop ends. `let` in a `for` header creates a fresh binding per iteration, so each callback captures its own value.
+</Accordion>
 
 ## Related
-- [[JavaScript Index]]
-- [[Execution Context & Call Stack]] · [[Hoisting, TDZ & var-let-const]] · [[Closures & Memory Model]] · [[this, call, apply & bind]] · [[Modules (ESM)]]
-- Course notes: [[Closures]] · [[JavaScript the hard parts v2]]
-- [[JavaScript Interview Questions]] · [[Output Questions & Tricky Snippets]]
+- [JavaScript Index](/Software%20Engineering/Frontend/01%20JavaScript/JavaScript%20Index)
+- [Execution Context & Call Stack](/Software%20Engineering/Frontend/01%20JavaScript/Execution%20Context%20%26%20Call%20Stack) · [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const) · [Closures & Memory Model](/Software%20Engineering/Frontend/01%20JavaScript/Closures%20%26%20Memory%20Model) · [this, call, apply & bind](/Software%20Engineering/Frontend/01%20JavaScript/this%2C%20call%2C%20apply%20%26%20bind) · [Modules (ESM)](/Software%20Engineering/Frontend/01%20JavaScript/Modules%20(ESM))
+- Course notes: [Closures](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/Closures) · [JavaScript the hard parts v2](/Software%20Engineering/Frontend/Courses%20%26%20Books/JavaScript%20the%20Hard%20Parts%20v2/JavaScript%20the%20hard%20parts%20v2)
+- [JavaScript Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/JavaScript%20Interview%20Questions) · [Output Questions & Tricky Snippets](/Software%20Engineering/Frontend/17%20Interview%20Prep/Output%20Questions%20%26%20Tricky%20Snippets)
 
 ## Sources
 - [MDN: Grammar and types, declarations and variable scope](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#variable_scope)

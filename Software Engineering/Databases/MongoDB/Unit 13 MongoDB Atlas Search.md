@@ -1,14 +1,18 @@
 ---
+title: "Unit 13 MongoDB Atlas Search"
 tags: [databases, databases/mongodb]
 aliases: [Atlas Search, MongoDB Search, $search, Search Index, MongoDB Vector Search, MongoDB Unit 13]
 updated: 2026-09-27
 ---
 # Unit 13 MongoDB Atlas Search
 
-> [!tldr] TL;DR
-> **Atlas Search** (now also called MongoDB Search) adds Lucene-based **relevance search** (full-text, fuzzy, autocomplete, facets) next to your data, queried with the `$search` / `$searchMeta` aggregation stages. It uses **search indexes**, separate from normal database indexes, defined by **analyzers** and **field mappings** (dynamic or static). `compound` combines clauses (`must`, `mustNot`, `should`, `filter`) to shape the score, and **facets** bucket results. Since 2025 the same engine powers **Vector Search** and **hybrid search** (`$scoreFusion`), and it's available for self-managed Community/Enterprise in preview.
+<Note>
+**TL;DR**
 
-> Course: MongoDB University, Unit 13 · Prev: [[Unit 12 MongoDB Indexes]] · Next: none (end of the path, back to [[MongoDB]])
+**Atlas Search** (now also called MongoDB Search) adds Lucene-based **relevance search** (full-text, fuzzy, autocomplete, facets) next to your data, queried with the `$search` / `$searchMeta` aggregation stages. It uses **search indexes**, separate from normal database indexes, defined by **analyzers** and **field mappings** (dynamic or static). `compound` combines clauses (`must`, `mustNot`, `should`, `filter`) to shape the score, and **facets** bucket results. Since 2025 the same engine powers **Vector Search** and **hybrid search** (`$scoreFusion`), and it's available for self-managed Community/Enterprise in preview.
+</Note>
+
+> Course: MongoDB University, Unit 13 · Prev: [Unit 12 MongoDB Indexes](/Software%20Engineering/Databases/MongoDB/Unit%2012%20MongoDB%20Indexes) · Next: none (end of the path, back to [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB))
 
 ## Setup used in the lab
 Connect to the sample dataset:
@@ -17,8 +21,11 @@ Connect to the sample dataset:
 mongosh -u myAtlasDBUser -p myatlas-001 $MY_ATLAS_CONNECTION_STRING/sample_supplies
 ```
 
-> [!warning] Credentials in this note
-> The command above has the lab password in plain text (it also ends up in shell history). Treat it as exposed and **rotate it** in Atlas. Use a placeholder or env var instead, or leave out `-p` so mongosh prompts: `mongosh -u "$ATLAS_DB_USER" "$MY_ATLAS_CONNECTION_STRING/sample_supplies"`.
+<Warning>
+**Credentials in this note**
+
+The command above has the lab password in plain text (it also ends up in shell history). Treat it as exposed and **rotate it** in Atlas. Use a placeholder or env var instead, or leave out `-p` so mongosh prompts: `mongosh -u "$ATLAS_DB_USER" "$MY_ATLAS_CONNECTION_STRING/sample_supplies"`.
+</Warning>
 
 ## Relevance search vs database search
 | | Relevance-based search | Database search |
@@ -30,7 +37,7 @@ mongosh -u myAtlasDBUser -p myatlas-001 $MY_ATLAS_CONNECTION_STRING/sample_suppl
 | MongoDB tool | `$search` + search index | `find()` / `$match` + B-tree index |
 
 ## Search indexes vs database indexes
-- **Database indexes** (B-trees, [[Unit 12 MongoDB Indexes]]) make exact-match, range and sort queries efficient.
+- **Database indexes** (B-trees, [Unit 12 MongoDB Indexes](/Software%20Engineering/Databases/MongoDB/Unit%2012%20MongoDB%20Indexes)) make exact-match, range and sort queries efficient.
 - **Search indexes** (Lucene inverted indexes, run by the `mongot` process) define how text is tokenized and referenced for relevance-based search. They are updated asynchronously from the change stream, so they are **eventually consistent** with the collection.
 
 ### Components of a search index
@@ -87,11 +94,11 @@ db.sales.aggregate([
 ### Create from the Atlas UI
 Go to the **Search** tab of your cluster (Atlas Search / Search & Vector Search):
 
-![[Screenshot_2023-04-27_at_4.15.34_PM.png]]
+![Screenshot_2023-04-27_at_4.15.34_PM](/Attachments/Screenshot_2023-04-27_at_4.15.34_PM.png)
 
-![[Screenshot_2023-04-27_at_4.16.06_PM.png]]
+![Screenshot_2023-04-27_at_4.16.06_PM](/Attachments/Screenshot_2023-04-27_at_4.16.06_PM.png)
 
-![[Screenshot_2023-04-27_at_4.16.38_PM.png]]
+![Screenshot_2023-04-27_at_4.16.38_PM](/Attachments/Screenshot_2023-04-27_at_4.16.38_PM.png)
 
 And that's how you create a search index.
 
@@ -129,7 +136,7 @@ atlas clusters search indexes list --clusterName myAtlasClusterEDU --db sample_s
 | `should` | optional; matching documents get a **higher score** (weight it with `score`) |
 | `filter` | documents must match, but it **doesn't affect the score** (eliminates results) |
 
-![[Screenshot_2023-04-27_at_5.19.34_PM.png]]
+![Screenshot_2023-04-27_at_5.19.34_PM](/Attachments/Screenshot_2023-04-27_at_5.19.34_PM.png)
 
 Birds example: must live in a "field" habitat; boost those with a wingspan of 45 cm or more:
 
@@ -248,7 +255,7 @@ db.sales.aggregate([
 ```
 
 ## Beyond the course: Vector Search and hybrid search
-**Vector Search** finds documents whose **embedding** (a vector from an ML model) is close to the query's embedding: semantic search, RAG for LLM apps, recommendations. See [[Vector Databases & pgvector]].
+**Vector Search** finds documents whose **embedding** (a vector from an ML model) is close to the query's embedding: semantic search, RAG for LLM apps, recommendations. See [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector).
 
 ```js
 // Vector search index definition
@@ -291,11 +298,14 @@ db.movies.aggregate([
 ])
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **2025-02-24**: MongoDB announced the **acquisition of Voyage AI** (embedding and reranking models). ([press release](https://www.mongodb.com/press/mongodb-announces-acquisition-of-voyage-ai))
-> - **2025-09-16, MongoDB 8.2**: **Search and Vector Search for Community Edition and Enterprise Server** in public preview (previously Atlas-only), `$scoreFusion` for hybrid search, and new Queryable Encryption query types (prefix, suffix, substring). ([8.2 announcement](https://www.mongodb.com/products/updates/mongodb-8-2-is-now-available/))
-> - **May 2026, MongoDB 8.3**: `$scoreFusion` is **GA**. ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
-> - **Automated Embedding** (public preview, not for production): Vector Search generates and syncs embeddings for you with Voyage AI models (`voyage-4`, `voyage-4-lite`, `voyage-4-large`, `voyage-code-4`) using an `autoEmbed` field type; available on Atlas and self-managed Community 8.2+. ([docs](https://www.mongodb.com/docs/vector-search/crud-embeddings/automated-embedding/))
+<Info>
+**🆕 2025–2026**
+
+- **2025-02-24**: MongoDB announced the **acquisition of Voyage AI** (embedding and reranking models). ([press release](https://www.mongodb.com/press/mongodb-announces-acquisition-of-voyage-ai))
+- **2025-09-16, MongoDB 8.2**: **Search and Vector Search for Community Edition and Enterprise Server** in public preview (previously Atlas-only), `$scoreFusion` for hybrid search, and new Queryable Encryption query types (prefix, suffix, substring). ([8.2 announcement](https://www.mongodb.com/products/updates/mongodb-8-2-is-now-available/))
+- **May 2026, MongoDB 8.3**: `$scoreFusion` is **GA**. ([8.3 release notes](https://www.mongodb.com/docs/manual/release-notes/8.3/))
+- **Automated Embedding** (public preview, not for production): Vector Search generates and syncs embeddings for you with Voyage AI models (`voyage-4`, `voyage-4-lite`, `voyage-4-large`, `voyage-code-4`) using an `autoEmbed` field type; available on Atlas and self-managed Community 8.2+. ([docs](https://www.mongodb.com/docs/vector-search/crud-embeddings/automated-embedding/))
+</Info>
 
 ## Common pitfalls
 - Putting `$search` anywhere but the **first stage** (it must be first).
@@ -311,24 +321,29 @@ db.movies.aggregate([
 - **Hybrid search** usually beats pure vector or pure keyword for real users; tune weights with offline evaluation.
 
 ## Interview questions
-> [!question]- How is a search index different from a regular MongoDB index?
-> A regular index is a B-tree on field values for exact matches, ranges and sorts. A search index is a Lucene inverted index built with analyzers (tokenizing, stemming, lowercasing) for relevance-ranked full-text queries; it's maintained asynchronously by `mongot` and queried with `$search`.
+<Accordion title="How is a search index different from a regular MongoDB index?">
+A regular index is a B-tree on field values for exact matches, ranges and sorts. A search index is a Lucene inverted index built with analyzers (tokenizing, stemming, lowercasing) for relevance-ranked full-text queries; it's maintained asynchronously by `mongot` and queried with `$search`.
+</Accordion>
 
-> [!question]- Dynamic vs static mappings?
-> Dynamic indexes all supported fields automatically: easy, but bigger. Static indexes only the listed fields with explicit types and analyzers: smaller, faster and more controlled. Use static in production when query fields are known.
+<Accordion title="Dynamic vs static mappings?">
+Dynamic indexes all supported fields automatically: easy, but bigger. Static indexes only the listed fields with explicit types and analyzers: smaller, faster and more controlled. Use static in production when query fields are known.
+</Accordion>
 
-> [!question]- What's the difference between must, should and filter in compound?
-> `must` must match and adds to the score; `should` is optional and boosts matching documents; `filter` must match but doesn't affect the score; `mustNot` excludes matches.
+<Accordion title="What's the difference between must, should and filter in compound?">
+`must` must match and adds to the score; `should` is optional and boosts matching documents; `filter` must match but doesn't affect the score; `mustNot` excludes matches.
+</Accordion>
 
-> [!question]- What is $searchMeta used for?
-> Returning metadata about a search, such as total counts and facet buckets, without the documents themselves.
+<Accordion title="What is $searchMeta used for?">
+Returning metadata about a search, such as total counts and facet buckets, without the documents themselves.
+</Accordion>
 
-> [!question]- What is hybrid search and how do you do it in MongoDB?
-> Combining lexical (keyword) and semantic (vector) retrieval so you catch exact terms and meaning. In MongoDB, run `$search` and `$vectorSearch` pipelines and merge them with `$scoreFusion` (score-based, GA in 8.3) or `$rankFusion` (rank-based).
+<Accordion title="What is hybrid search and how do you do it in MongoDB?">
+Combining lexical (keyword) and semantic (vector) retrieval so you catch exact terms and meaning. In MongoDB, run `$search` and `$vectorSearch` pipelines and merge them with `$scoreFusion` (score-based, GA in 8.3) or `$rankFusion` (rank-based).
+</Accordion>
 
 ## Related
-- [[MongoDB]] · [[Databases Index]]
-- [[Vector Databases & pgvector]] · [[Database Indexes]] · [[NoSQL Database Types]]
+- [MongoDB](/Software%20Engineering/Databases/MongoDB/MongoDB) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Vector Databases & pgvector](/Software%20Engineering/Databases/Core%20Concepts/Vector%20Databases%20%26%20pgvector) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [NoSQL Database Types](/Software%20Engineering/Databases/Core%20Concepts/NoSQL%20Database%20Types)
 
 ## Sources
 - [MongoDB Search (Atlas Search) documentation](https://www.mongodb.com/docs/atlas/atlas-search/)

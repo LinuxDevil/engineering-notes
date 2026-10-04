@@ -1,14 +1,18 @@
 ---
+title: "Kubernetes CronJobs in Practice"
 tags: [backend, backend/jobs, devops/kubernetes]
 aliases: [K8s CronJob, Kubernetes CronJob, CronJob spec, kubectl create job --from, startingDeadlineSeconds, concurrencyPolicy, podFailurePolicy]
 updated: 2026-09-27
 ---
 # Kubernetes CronJobs in Practice
 
-> [!tldr] TL;DR
-> A **CronJob** creates a **Job** on a cron schedule, and the Job runs **Pods** to completion. The CronJob fields decide *when* and *whether* a run starts (`schedule`, `timeZone`, `concurrencyPolicy`, `startingDeadlineSeconds`, `suspend`, history limits); the Job template decides *how* a run behaves (`backoffLimit`, `activeDeadlineSeconds`, `ttlSecondsAfterFinished`, `podFailurePolicy`, `restartPolicy`). Operations map cleanly: **pause** = `spec.suspend: true`, **resume** = `false` (set `startingDeadlineSeconds` or a missed run fires immediately), **run now** = `kubectl create job --from=cronjob/...`, **stop** = delete the Job with foreground propagation. Kubernetes promises neither exactly one Job per tick nor any Job at all, so jobs must be **idempotent**, and you alert on both failures and missing successes with kube-state-metrics.
+<Note>
+**TL;DR**
 
-This note is the Kubernetes backend of Acme Ops. Cron syntax and the general idea are in [[Cron Jobs]]; how the `jobs-api` control plane hides BullMQ vs Kubernetes behind one interface is in [[Cron with Message Queues - Architecture]] and [[Job Control API - Pause, Resume, Run Now & Stop]]; the UI is [[Job Scheduler Dashboard with Next.js]]. Day-2 kubectl skills are in [[Kubernetes Operations - Logs, Debugging & Scheduling]].
+A **CronJob** creates a **Job** on a cron schedule, and the Job runs **Pods** to completion. The CronJob fields decide *when* and *whether* a run starts (`schedule`, `timeZone`, `concurrencyPolicy`, `startingDeadlineSeconds`, `suspend`, history limits); the Job template decides *how* a run behaves (`backoffLimit`, `activeDeadlineSeconds`, `ttlSecondsAfterFinished`, `podFailurePolicy`, `restartPolicy`). Operations map cleanly: **pause** = `spec.suspend: true`, **resume** = `false` (set `startingDeadlineSeconds` or a missed run fires immediately), **run now** = `kubectl create job --from=cronjob/...`, **stop** = delete the Job with foreground propagation. Kubernetes promises neither exactly one Job per tick nor any Job at all, so jobs must be **idempotent**, and you alert on both failures and missing successes with kube-state-metrics.
+</Note>
+
+This note is the Kubernetes backend of Acme Ops. Cron syntax and the general idea are in [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs); how the `jobs-api` control plane hides BullMQ vs Kubernetes behind one interface is in [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) and [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop); the UI is [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js). Day-2 kubectl skills are in [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling).
 
 ## 1. How it works
 
@@ -257,7 +261,7 @@ kubectl logs "$LAST" -f                                # follow a running one
 kubectl get pods -l batch.kubernetes.io/job-name=${LAST#job.batch/} # all attempts of that run
 ```
 
-Older runs are gone once history limits or the TTL delete them; that's why logs go to Loki with `job` and `run_id` fields ([[Grafana & the LGTM Stack]]):
+Older runs are gone once history limits or the TTL delete them; that's why logs go to Loki with `job` and `run_id` fields ([Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack)):
 
 ```logql
 {namespace="shop-prod", app_kubernetes_io_name="cleanup-expired-carts"} | json | run_id="cleanup-expired-carts-29315040"
@@ -332,7 +336,7 @@ kubectl wait --for=condition=complete job/cleanup-expired-carts-manual-172744000
 
 ## 5. GitOps and runtime changes
 
-In Acme Shop, Argo CD keeps `shop-prod` equal to `platform-gitops` with `selfHeal: true` ([[Argo CD in Practice]]). Toggling `suspend` from `jobs-api` or `kubectl patch` makes the live CronJob differ from Git:
+In Acme Shop, Argo CD keeps `shop-prod` equal to `platform-gitops` with `selfHeal: true` ([Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)). Toggling `suspend` from `jobs-api` or `kubectl patch` makes the live CronJob differ from Git:
 - Argo CD shows the app **OutOfSync**, and with self-heal it **resumes the job within minutes** by re-applying `suspend: false`. Operators think it's paused; it isn't.
 
 Two workable designs:
@@ -369,19 +373,22 @@ Manual Jobs created by `jobs-api` are not in Git and don't carry Argo CD's track
 
 ## 6. Pitfalls
 
-> [!warning] Common pitfalls
-> - **Assuming exactly once.** The docs say a CronJob can create multiple concurrent Jobs in some circumstances, or none (controller down, deadline passed, `Forbid` skip, clock skew). Make every job idempotent: conditional updates, `SKIP LOCKED`, and an idempotency key from the Job name (`<cronjob>-<scheduled minute>`) when calling external systems. See [[Background Jobs & Task Queues]].
-> - **Missed schedules after control plane downtime or upgrades.** Without `startingDeadlineSeconds`, a per-minute job that missed more than 100 ticks doesn't start at all. With a huge deadline, one catch-up run fires late. Set a deadline that matches the job's value ("a report started 3 hours late is useless").
-> - **Surprise run on resume**: without a starting deadline, unsuspending fires the most recent missed run immediately.
-> - **GitOps drift on `suspend`** (section 5).
-> - **`concurrencyPolicy: Allow` (the default)** on anything that touches shared data. Default to `Forbid`; `Replace` kills a running Job mid-work.
-> - **`activeDeadlineSeconds` longer than the interval** with `Forbid`: the next ticks are skipped while a stuck run hangs. Keep it below the interval.
-> - **`restartPolicy: OnFailure` + `backoffLimit`**: restarts happen inside one Pod; logs of earlier attempts are harder to get and `podFailurePolicy` can't be used. Prefer `Never`.
-> - **TTL shorter than history**: history limits look broken, `kubectl get jobs` is empty, and failure metrics vanish before alerts fire.
-> - **No timezone**: the schedule follows the controller's zone (usually UTC on managed clusters). With `timeZone: Europe/Berlin`, DST matters: on the spring-forward day 02:00–02:59 doesn't exist and on the autumn day it exists twice. How the controller's cron library treats those ticks is easy to get wrong, so test it or keep local-time schedules out of 02:00–03:00. The same applies to `nightly-sales-report` at 02:00 on BullMQ ([[BullMQ Job Schedulers in Practice]]).
-> - **No `terminationGracePeriodSeconds` handling in the job**: Stop, node drains and `Replace` all send SIGTERM; a job that ignores it gets SIGKILLed mid-write.
-> - **Manual runs skip the `concurrencyPolicy` check**: `kubectl create job --from` happily overlaps a running scheduled Job. Check for an active Job first (`jobs-api` does and returns `409`).
-> - **CronJob name longer than 52 characters**: Job creation fails.
+<Warning>
+**Common pitfalls**
+
+- **Assuming exactly once.** The docs say a CronJob can create multiple concurrent Jobs in some circumstances, or none (controller down, deadline passed, `Forbid` skip, clock skew). Make every job idempotent: conditional updates, `SKIP LOCKED`, and an idempotency key from the Job name (`<cronjob>-<scheduled minute>`) when calling external systems. See [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues).
+- **Missed schedules after control plane downtime or upgrades.** Without `startingDeadlineSeconds`, a per-minute job that missed more than 100 ticks doesn't start at all. With a huge deadline, one catch-up run fires late. Set a deadline that matches the job's value ("a report started 3 hours late is useless").
+- **Surprise run on resume**: without a starting deadline, unsuspending fires the most recent missed run immediately.
+- **GitOps drift on `suspend`** (section 5).
+- **`concurrencyPolicy: Allow` (the default)** on anything that touches shared data. Default to `Forbid`; `Replace` kills a running Job mid-work.
+- **`activeDeadlineSeconds` longer than the interval** with `Forbid`: the next ticks are skipped while a stuck run hangs. Keep it below the interval.
+- **`restartPolicy: OnFailure` + `backoffLimit`**: restarts happen inside one Pod; logs of earlier attempts are harder to get and `podFailurePolicy` can't be used. Prefer `Never`.
+- **TTL shorter than history**: history limits look broken, `kubectl get jobs` is empty, and failure metrics vanish before alerts fire.
+- **No timezone**: the schedule follows the controller's zone (usually UTC on managed clusters). With `timeZone: Europe/Berlin`, DST matters: on the spring-forward day 02:00–02:59 doesn't exist and on the autumn day it exists twice. How the controller's cron library treats those ticks is easy to get wrong, so test it or keep local-time schedules out of 02:00–03:00. The same applies to `nightly-sales-report` at 02:00 on BullMQ ([BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice)).
+- **No `terminationGracePeriodSeconds` handling in the job**: Stop, node drains and `Replace` all send SIGTERM; a job that ignores it gets SIGKILLed mid-write.
+- **Manual runs skip the `concurrencyPolicy` check**: `kubectl create job --from` happily overlaps a running scheduled Job. Check for an active Job first (`jobs-api` does and returns `409`).
+- **CronJob name longer than 52 characters**: Job creation fails.
+</Warning>
 
 ## 7. Monitoring and alerts
 
@@ -459,54 +466,65 @@ spec:
 Notes:
 - "No recent success" catches everything that "failed" alerts miss: the controller being down, deadline skips, `Forbid` skips behind a hung run, a job that exits 0 without doing its work (pair it with an app metric such as `jobs_runs_total{job,status}` or a `carts_deleted_total` counter).
 - `CronJobNotScheduling` needs a per-job threshold; generate these rules from the same list that defines the jobs, or join on a label with the interval.
-- `jobs-api` adds its own metrics (`jobs_runs_total{job,status}`, `jobs_run_duration_seconds`) across BullMQ and Kubernetes so the dashboard and alerts look the same for both ([[Cron with Message Queues - Architecture]]).
+- `jobs-api` adds its own metrics (`jobs_runs_total{job,status}`, `jobs_run_duration_seconds`) across BullMQ and Kubernetes so the dashboard and alerts look the same for both ([Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture)).
 
 ## Senior perspective
 
-- **CronJob vs a queue scheduler.** CronJobs shine for jobs that need their own image, resources, isolation or long run time (reports on big nodes, Playwright with a browser, DB maintenance). Every run pays Pod start-up (image pull, scheduling: seconds to minutes), so for "every minute, 200 ms of work" a BullMQ job scheduler inside an existing worker is cheaper ([[BullMQ Job Schedulers in Practice]]).
+- **CronJob vs a queue scheduler.** CronJobs shine for jobs that need their own image, resources, isolation or long run time (reports on big nodes, Playwright with a browser, DB maintenance). Every run pays Pod start-up (image pull, scheduling: seconds to minutes), so for "every minute, 200 ms of work" a BullMQ job scheduler inside an existing worker is cheaper ([BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice)).
 - **Design the failure modes first**: what if it runs twice, never, late, or for 3 hours? The answers become `concurrencyPolicy`, `startingDeadlineSeconds`, `activeDeadlineSeconds`, idempotency and the two alerts.
 - **Control plane dependency**: CronJobs need a healthy kube-controller-manager. On managed clusters, upgrades can pause controllers for minutes; critical schedules need the "no recent success" alert, not just "failed".
 - **Retries: pick one layer.** `backoffLimit` × in-app retries × BullMQ retries multiply. Decide where retries live and make the others 0.
 - **Treat the jobTemplate as an API.** Labels on `jobTemplate.metadata` (not only on the Pod template) make Jobs selectable; annotations for owner/runbook make the dashboard self-describing; the `acme.dev/managed-by` label is the contract with `jobs-api`.
 - **Review questions**: Is `timeZone` set? Is `concurrencyPolicy` explicit? What's the deadline and why? Does the job handle SIGTERM within the grace period? Where do logs of a run from last week live? Who gets paged when it silently stops running?
 
-> [!info]+ 🆕 2025–2026
-> - **v1.33 (2025-04-23)**: **Job backoff limit per index** and **Job success policy** reached GA (blog posts 2025-05-13 and 2025-05-15).
-> - **v1.34 (2025-08-27)**: **Pod replacement policy for Jobs** reached GA (blog 2025-09-05).
-> - **v1.35 (2025-12-17)**: **Job `managedBy`** reached GA (blog 2025-12-18), letting external controllers such as MultiKueue own a Job's status.
-> - **2026-01-21**: the **Kubernetes Dashboard** was archived; **Headlamp** (SIG UI) is the recommended web UI for browsing CronJobs and Jobs.
-> - Earlier baselines still worth knowing: `timeZone` stable in **v1.27** (2023), `podFailurePolicy` stable in **v1.31** (2024).
+<Info>
+**🆕 2025–2026**
+
+- **v1.33 (2025-04-23)**: **Job backoff limit per index** and **Job success policy** reached GA (blog posts 2025-05-13 and 2025-05-15).
+- **v1.34 (2025-08-27)**: **Pod replacement policy for Jobs** reached GA (blog 2025-09-05).
+- **v1.35 (2025-12-17)**: **Job `managedBy`** reached GA (blog 2025-12-18), letting external controllers such as MultiKueue own a Job's status.
+- **2026-01-21**: the **Kubernetes Dashboard** was archived; **Headlamp** (SIG UI) is the recommended web UI for browsing CronJobs and Jobs.
+- Earlier baselines still worth knowing: `timeZone` stable in **v1.27** (2023), `podFailurePolicy` stable in **v1.31** (2024).
+</Info>
 
 ## Interview questions
 
-> [!question]- What's the difference between a CronJob, a Job and a Pod?
-> A Pod runs containers. A Job runs Pods until a number of them succeed, retrying failures up to `backoffLimit` and within `activeDeadlineSeconds`. A CronJob creates a new Job on each tick of its schedule and manages history and overlap between those Jobs.
+<Accordion title="What's the difference between a CronJob, a Job and a Pod?">
+A Pod runs containers. A Job runs Pods until a number of them succeed, retrying failures up to `backoffLimit` and within `activeDeadlineSeconds`. A CronJob creates a new Job on each tick of its schedule and manages history and overlap between those Jobs.
+</Accordion>
 
-> [!question]- Explain concurrencyPolicy and when you'd use each value.
-> `Allow` (default) lets runs overlap; fine for independent, short, idempotent work. `Forbid` skips a tick if the previous Job is still active; the safe default for anything touching shared data. `Replace` kills the running Job and starts the new one; useful when only the latest run matters (e.g. refreshing a cache) and a stuck run should be replaced.
+<Accordion title="Explain concurrencyPolicy and when you'd use each value.">
+`Allow` (default) lets runs overlap; fine for independent, short, idempotent work. `Forbid` skips a tick if the previous Job is still active; the safe default for anything touching shared data. `Replace` kills the running Job and starts the new one; useful when only the latest run matters (e.g. refreshing a cache) and a stuck run should be replaced.
+</Accordion>
 
-> [!question]- What does startingDeadlineSeconds do, and what is the 100 missed schedules rule?
-> It skips a run that couldn't start within N seconds of its scheduled time, and it bounds the window the controller uses to count missed schedules. Without it, the controller counts from the last scheduled time; if more than 100 schedules were missed (e.g. a per-minute job after a 2-hour controller outage), it doesn't start the Job at all. With a deadline it only counts misses inside that window and starts normally.
+<Accordion title="What does startingDeadlineSeconds do, and what is the 100 missed schedules rule?">
+It skips a run that couldn't start within N seconds of its scheduled time, and it bounds the window the controller uses to count missed schedules. Without it, the controller counts from the last scheduled time; if more than 100 schedules were missed (e.g. a per-minute job after a 2-hour controller outage), it doesn't start the Job at all. With a deadline it only counts misses inside that window and starts normally.
+</Accordion>
 
-> [!question]- How do you pause, resume, run now and stop a CronJob?
-> Pause: patch `spec.suspend: true` (running Jobs continue). Resume: `false`; without `startingDeadlineSeconds` the most recent missed run starts immediately. Run now: `kubectl create job --from=cronjob/name unique-name` (copies the jobTemplate, marks it manual, ignores concurrencyPolicy). Stop: delete the Job with foreground propagation; Pods get SIGTERM and the grace period, then SIGKILL. Suspending the Job instead stops the Pods but keeps the record.
+<Accordion title="How do you pause, resume, run now and stop a CronJob?">
+Pause: patch `spec.suspend: true` (running Jobs continue). Resume: `false`; without `startingDeadlineSeconds` the most recent missed run starts immediately. Run now: `kubectl create job --from=cronjob/name unique-name` (copies the jobTemplate, marks it manual, ignores concurrencyPolicy). Stop: delete the Job with foreground propagation; Pods get SIGTERM and the grace period, then SIGKILL. Suspending the Job instead stops the Pods but keeps the record.
+</Accordion>
 
-> [!question]- Your CronJob is managed by Argo CD with self-heal. What happens when someone suspends it with kubectl?
-> Argo CD sees drift and re-applies Git's `suspend: false`, so the job resumes by itself. Either let the runtime own the field (`ignoreDifferences` on `/spec/suspend` plus `RespectIgnoreDifferences=true`) or make pausing a Git commit. Runtime is fast; Git is auditable and survives a cluster rebuild.
+<Accordion title="Your CronJob is managed by Argo CD with self-heal. What happens when someone suspends it with kubectl?">
+Argo CD sees drift and re-applies Git's `suspend: false`, so the job resumes by itself. Either let the runtime own the field (`ignoreDifferences` on `/spec/suspend` plus `RespectIgnoreDifferences=true`) or make pausing a Git commit. Runtime is fast; Git is auditable and survives a cluster rebuild.
+</Accordion>
 
-> [!question]- Does a CronJob guarantee exactly-once execution?
-> No. It can create two Jobs in rare cases, create none when the controller is down or deadlines pass, and Pods can be retried after partial work. Jobs must be idempotent: conditional writes, locks such as `SKIP LOCKED`, and idempotency keys derived from the scheduled time (the Job name encodes it).
+<Accordion title="Does a CronJob guarantee exactly-once execution?">
+No. It can create two Jobs in rare cases, create none when the controller is down or deadlines pass, and Pods can be retried after partial work. Jobs must be idempotent: conditional writes, locks such as `SKIP LOCKED`, and idempotency keys derived from the scheduled time (the Job name encodes it).
+</Accordion>
 
-> [!question]- How do you alert on scheduled jobs in Kubernetes?
-> From kube-state-metrics: alert on recent failed Jobs owned by a CronJob (`kube_job_failed` joined with `kube_job_owner`), on "no success in 2× the interval" (`kube_cronjob_status_last_successful_time`, ignoring suspended ones), on runs that take too long, and on CronJobs suspended for too long. Add application metrics so "exit 0 but did nothing" is visible too.
+<Accordion title="How do you alert on scheduled jobs in Kubernetes?">
+From kube-state-metrics: alert on recent failed Jobs owned by a CronJob (`kube_job_failed` joined with `kube_job_owner`), on "no success in 2× the interval" (`kube_cronjob_status_last_successful_time`, ignoring suspended ones), on runs that take too long, and on CronJobs suspended for too long. Add application metrics so "exit 0 but did nothing" is visible too.
+</Accordion>
 
-> [!question]- What does podFailurePolicy add over backoffLimit?
-> It classifies failures: fail the Job immediately on non-retryable exit codes (bad config), ignore disruptions like node drains or preemption so they don't consume retries, or count them normally. It requires `restartPolicy: Never` and saves compute and time on hopeless retries.
+<Accordion title="What does podFailurePolicy add over backoffLimit?">
+It classifies failures: fail the Job immediately on non-retryable exit codes (bad config), ignore disruptions like node drains or preemption so they don't consume retries, or count them normally. It requires `restartPolicy: Never` and saves compute and time on hopeless retries.
+</Accordion>
 
 ## Related
-- [[Scheduled Jobs Index]] · [[Backend Index]]
-- [[Cron Jobs]] · [[Background Jobs & Task Queues]] · [[Cron with Message Queues - Architecture]] · [[BullMQ Job Schedulers in Practice]] · [[Job Control API - Pause, Resume, Run Now & Stop]] · [[Job Scheduler Dashboard with Next.js]] · [[Playwright Automation as a Cron Job]]
-- [[Kubernetes Operations - Logs, Debugging & Scheduling]] · [[Argo CD in Practice]] · [[Grafana & the LGTM Stack]] · [[Kubernetes Delivery Platform - End to End]] · [[Deploying Node.js Apps to Kubernetes]]
+- [Scheduled Jobs Index](/Software%20Engineering/Backend/Scheduled%20Jobs/Scheduled%20Jobs%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture) · [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice) · [Job Control API - Pause, Resume, Run Now & Stop](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Control%20API%20-%20Pause%2C%20Resume%2C%20Run%20Now%20%26%20Stop) · [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) · [Playwright Automation as a Cron Job](/Software%20Engineering/Backend/Scheduled%20Jobs/Playwright%20Automation%20as%20a%20Cron%20Job)
+- [Kubernetes Operations - Logs, Debugging & Scheduling](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Operations%20-%20Logs%2C%20Debugging%20%26%20Scheduling) · [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice) · [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) · [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End) · [Deploying Node.js Apps to Kubernetes](/Software%20Engineering/DevOps/Delivery%20Platform/Deploying%20Node.js%20Apps%20to%20Kubernetes)
 
 ## Sources
 - Kubernetes docs: [CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/) · [Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/) · [Running automated tasks with a CronJob](https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/) · [Handling retriable and non-retriable Pod failures with Pod failure policy](https://kubernetes.io/docs/tasks/job/pod-failure-policy/) · [TTL-after-finished controller](https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/) · [Garbage collection (foreground/background deletion)](https://kubernetes.io/docs/concepts/architecture/garbage-collection/) · [kubectl create job](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_job/)

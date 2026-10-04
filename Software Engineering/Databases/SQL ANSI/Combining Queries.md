@@ -1,14 +1,18 @@
 ---
+title: "Combining Queries"
 tags: [databases, databases/sql]
 aliases: [UNION, UNION ALL, INTERSECT, EXCEPT, MINUS, Compound Queries, Set Operators]
 updated: 2026-09-27
 ---
 # Combining Queries
 
-> [!tldr] TL;DR
-> Set operators stack the results of several `SELECT`s **vertically**: `UNION` (all rows, duplicates removed), `UNION ALL` (all rows, duplicates kept, faster), `INTERSECT` (rows in both), `EXCEPT`/`MINUS` (rows in the first but not the second). Each `SELECT` must return the same number of columns with compatible types, and one `ORDER BY` at the end sorts the whole result. Default to `UNION ALL` unless you really need de-duplication.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 14 · Prev: [[Creating Advanced Joins]] · Next: [[Inserting Data]]
+Set operators stack the results of several `SELECT`s **vertically**: `UNION` (all rows, duplicates removed), `UNION ALL` (all rows, duplicates kept, faster), `INTERSECT` (rows in both), `EXCEPT`/`MINUS` (rows in the first but not the second). Each `SELECT` must return the same number of columns with compatible types, and one `ORDER BY` at the end sorts the whole result. Default to `UNION ALL` unless you really need de-duplication.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 14 · Prev: [Creating Advanced Joins](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Advanced%20Joins) · Next: [Inserting Data](/Software%20Engineering/Databases/SQL%20ANSI/Inserting%20Data)
 
 ## Understanding combined queries
 
@@ -54,8 +58,11 @@ WHERE cust_name = 'Fun4All';
 
 **Analysis:** both statements separated by `UNION`. The DBMS runs both and combines the output into one result set. The equivalent single query is `WHERE cust_state IN ('IL','IN','MI') OR cust_name = 'Fun4All'`.
 
-> [!note] `UNION` limits
-> There's no standard limit on how many `SELECT`s you can combine.
+<Note>
+**`UNION` limits**
+
+There's no standard limit on how many `SELECT`s you can combine.
+</Note>
 
 ## `UNION` rules
 
@@ -84,8 +91,11 @@ WHERE cust_name = 'Fun4All';
 
 **Analysis:** with `UNION ALL` duplicates are not removed, so five rows come back, one of them twice. `UNION ALL` does something `WHERE` can't: return every occurrence of every match.
 
-> [!tip] Performance
-> `UNION` must sort or hash the whole result to remove duplicates. `UNION ALL` just appends. If the branches can't overlap (different tables, disjoint conditions) or duplicates are fine, use `UNION ALL`.
+<Tip>
+**Performance**
+
+`UNION` must sort or hash the whole result to remove duplicates. `UNION ALL` just appends. If the branches can't overlap (different tables, disjoint conditions) or duplicates are fine, use `UNION ALL`.
+</Tip>
 
 ## Sorting combined query results
 
@@ -104,15 +114,19 @@ ORDER BY cust_name, cust_contact;
 
 **Analysis:** although it looks like part of the last `SELECT`, the DBMS uses this `ORDER BY` to sort the entire combined result. To sort or limit an individual branch, wrap it in parentheses or a subquery: `(SELECT ... ORDER BY x LIMIT 5) UNION ALL (SELECT ...)`.
 
-> [!note] Other set operators
-> `EXCEPT` (Oracle: `MINUS`) returns rows in the first query but not the second; `INTERSECT` returns rows in both. The book says they're rarely used because joins can do the same. They're more useful than that: they compare **whole rows**, treat `NULL`s as equal (joins don't), and are concise for data reconciliation. MySQL only added them in **8.0.31** (2022).
+<Note>
+**Other set operators**
 
-> [!note]
-> `UNION` is especially useful for combining data from several tables, even with mismatched column names, using aliases to give one set of result columns.
+`EXCEPT` (Oracle: `MINUS`) returns rows in the first query but not the second; `INTERSECT` returns rows in both. The book says they're rarely used because joins can do the same. They're more useful than that: they compare **whole rows**, treat `NULL`s as equal (joins don't), and are concise for data reconciliation. MySQL only added them in **8.0.31** (2022).
+</Note>
+
+<Note>
+`UNION` is especially useful for combining data from several tables, even with mismatched column names, using aliases to give one set of result columns.
+</Note>
 
 ## Set operators summary
 
-![[Untitled 42.png]]
+![Untitled 42](/Attachments/Untitled%2042.png)
 
 ### `UNION`
 
@@ -200,28 +214,32 @@ flowchart LR
 
 ## Beyond the book / Senior perspective
 
-- **Partitioned or archived data** is a common `UNION ALL` use: `SELECT ... FROM orders_2025 UNION ALL SELECT ... FROM orders_2026`. Declarative partitioning ([[SQL Table Partitioning]]) does this for you.
+- **Partitioned or archived data** is a common `UNION ALL` use: `SELECT ... FROM orders_2025 UNION ALL SELECT ... FROM orders_2026`. Declarative partitioning ([SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning)) does this for you.
 - **Rewriting `OR` as `UNION ALL`** can help when the `OR` spans columns with separate indexes (each branch uses its own index). Check whether your planner already does a bitmap OR.
 - **Data diffing:** `(A EXCEPT B) UNION ALL (B EXCEPT A)` lists rows that differ between two tables or environments.
-- Recursive CTEs use `UNION [ALL]` to join the anchor and recursive parts ([[Understanding Advanced SQL Features]]).
+- Recursive CTEs use `UNION [ALL]` to join the anchor and recursive parts ([Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features)).
 
 ## Interview questions
 
-> [!question]- UNION vs UNION ALL?
-> `UNION` removes duplicate rows (costing a sort or hash); `UNION ALL` keeps them and is faster. Use `UNION ALL` unless de-duplication is required.
+<Accordion title="UNION vs UNION ALL?">
+`UNION` removes duplicate rows (costing a sort or hash); `UNION ALL` keeps them and is faster. Use `UNION ALL` unless de-duplication is required.
+</Accordion>
 
-> [!question]- What are the rules for a UNION?
-> Same number of columns in each `SELECT`, matched by position, with compatible types. Names come from the first `SELECT`. One `ORDER BY`, at the end.
+<Accordion title="What are the rules for a UNION?">
+Same number of columns in each `SELECT`, matched by position, with compatible types. Names come from the first `SELECT`. One `ORDER BY`, at the end.
+</Accordion>
 
-> [!question]- JOIN vs UNION?
-> A join combines columns from related rows horizontally; a union stacks rows from several queries vertically.
+<Accordion title="JOIN vs UNION?">
+A join combines columns from related rows horizontally; a union stacks rows from several queries vertically.
+</Accordion>
 
-> [!question]- How do you find rows present in table A but not in table B?
-> `SELECT ... FROM A EXCEPT SELECT ... FROM B` (whole-row comparison, NULL-safe), or `NOT EXISTS` / `LEFT JOIN ... IS NULL` on a key.
+<Accordion title="How do you find rows present in table A but not in table B?">
+`SELECT ... FROM A EXCEPT SELECT ... FROM B` (whole-row comparison, NULL-safe), or `NOT EXISTS` / `LEFT JOIN ... IS NULL` on a key.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Creating Advanced Joins]] · [[Working with Subqueries]] · [[SQL Table Partitioning]] · [[Understanding Advanced SQL Features]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Creating Advanced Joins](/Software%20Engineering/Databases/SQL%20ANSI/Creating%20Advanced%20Joins) · [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries) · [SQL Table Partitioning](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Table%20Partitioning) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 14 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

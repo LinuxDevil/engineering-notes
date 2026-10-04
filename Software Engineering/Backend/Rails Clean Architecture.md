@@ -1,12 +1,16 @@
 ---
+title: "Rails Clean Architecture"
 tags: [backend, backend/architecture, backend/rails]
 aliases: [Clean Architecture in Rails, Service Objects, Rails Service Objects, PORO, Fat Model Skinny Controller, Use Cases]
 updated: 2026-09-27
 ---
 # Rails Clean Architecture
 
-> [!tldr] TL;DR
-> Rails' defaults (MVC + Active Record) are great for CRUD but push business logic into fat models or controllers as apps grow. **Clean Architecture** keeps business rules independent of frameworks by splitting code into **entities** (enterprise rules), **use cases** (application actions, usually Rails "service objects" written with the **Command pattern**) and **adapters** (DB, HTTP APIs, mailers). In Rails you can adopt it gradually: `app/services` for use cases, POROs for domain logic, `app/adapters` for external systems, and keep controllers skinny. Don't add the layers to simple CRUD.
+<Note>
+**TL;DR**
+
+Rails' defaults (MVC + Active Record) are great for CRUD but push business logic into fat models or controllers as apps grow. **Clean Architecture** keeps business rules independent of frameworks by splitting code into **entities** (enterprise rules), **use cases** (application actions, usually Rails "service objects" written with the **Command pattern**) and **adapters** (DB, HTTP APIs, mailers). In Rails you can adopt it gradually: `app/services` for use cases, POROs for domain logic, `app/adapters` for external systems, and keep controllers skinny. Don't add the layers to simple CRUD.
+</Note>
 
 ## Building blocks
 
@@ -155,11 +159,11 @@ it "places an order" do
 end
 ```
 
-Note: calling an external API inside a DB transaction holds the transaction open during network I/O; for high volume, create the order, commit, then charge in a job ([[Background Jobs & Task Queues]]).
+Note: calling an external API inside a DB transaction holds the transaction open during network I/O; for high volume, create the order, commit, then charge in a job ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)).
 
 ## Fat Model, Skinny Controller
 
-"Fat Model, Skinny Controller" describes how the **M** and **C** of **MVC** ([[MVC]]) should work together: any **non-response-related logic goes in the model**, ideally in small, testable methods, while the "skinny" controller is just an interface between the view and the model.
+"Fat Model, Skinny Controller" describes how the **M** and **C** of **MVC** ([MVC](/Software%20Engineering/Principles/MVC)) should work together: any **non-response-related logic goes in the model**, ideally in small, testable methods, while the "skinny" controller is just an interface between the view and the model.
 
 It was the Rails community's first answer to fat controllers. Its limit: models become "god objects" with dozens of callbacks and concerns. Service objects/use cases are the next step: **skinny controller, lean model, explicit use cases**.
 
@@ -173,12 +177,15 @@ Related ideas: **Hexagonal architecture** (ports and adapters), **DDD** (entitie
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - "Service object" as a dumping ground: `UserService` with 40 methods. Prefer one use case per class, named by the action (`Orders::PlaceOrder`).
-> - Inconsistent return conventions (some raise, some return `false`, some return hashes). Pick one (a `Result` object, or dry-monads).
-> - Callbacks that send emails or call APIs (`after_save :notify`) hidden in models; move side effects into use cases or jobs.
-> - Adding entities/repositories on top of Active Record for plain CRUD, doubling code for no benefit.
-> - Leaking Active Record objects deep into the domain, making "pure" logic depend on the DB anyway.
+<Warning>
+**Common mistakes**
+
+- "Service object" as a dumping ground: `UserService` with 40 methods. Prefer one use case per class, named by the action (`Orders::PlaceOrder`).
+- Inconsistent return conventions (some raise, some return `false`, some return hashes). Pick one (a `Result` object, or dry-monads).
+- Callbacks that send emails or call APIs (`after_save :notify`) hidden in models; move side effects into use cases or jobs.
+- Adding entities/repositories on top of Active Record for plain CRUD, doubling code for no benefit.
+- Leaking Active Record objects deep into the domain, making "pure" logic depend on the DB anyway.
+</Warning>
 
 ## Senior perspective
 
@@ -189,25 +196,30 @@ Related ideas: **Hexagonal architecture** (ports and adapters), **DDD** (entitie
 
 ## Interview questions
 
-> [!question]- What is a service object in Rails and why use it?
-> A PORO encapsulating one business action (a use case) with a single public method such as `call`. It keeps controllers and models small, groups multi-model workflows and external calls in one testable place, and makes dependencies explicit.
+<Accordion title="What is a service object in Rails and why use it?">
+A PORO encapsulating one business action (a use case) with a single public method such as `call`. It keeps controllers and models small, groups multi-model workflows and external calls in one testable place, and makes dependencies explicit.
+</Accordion>
 
-> [!question]- Explain Clean Architecture's dependency rule.
-> Source code dependencies only point inwards: frameworks and adapters depend on use cases, use cases depend on entities, and inner layers never reference outer ones. Outer details (DB, web, third-party APIs) are plugged in through interfaces.
+<Accordion title="Explain Clean Architecture's dependency rule.">
+Source code dependencies only point inwards: frameworks and adapters depend on use cases, use cases depend on entities, and inner layers never reference outer ones. Outer details (DB, web, third-party APIs) are plugged in through interfaces.
+</Accordion>
 
-> [!question]- What is the Active Record pattern and its trade-off?
-> An object that wraps a database row, carrying both data and persistence plus domain behaviour. It is simple and productive, but couples business logic to the database schema and makes pure unit testing harder, versus the Data Mapper/repository approach.
+<Accordion title="What is the Active Record pattern and its trade-off?">
+An object that wraps a database row, carrying both data and persistence plus domain behaviour. It is simple and productive, but couples business logic to the database schema and makes pure unit testing harder, versus the Data Mapper/repository approach.
+</Accordion>
 
-> [!question]- Command vs Adapter pattern?
-> Command encapsulates a request as an object so the invoker is decoupled from the receiver (service objects with `call`). Adapter converts one interface into another that clients expect, wrapping external libraries or APIs.
+<Accordion title="Command vs Adapter pattern?">
+Command encapsulates a request as an object so the invoker is decoupled from the receiver (service objects with `call`). Adapter converts one interface into another that clients expect, wrapping external libraries or APIs.
+</Accordion>
 
-> [!question]- When would you not use Clean Architecture in Rails?
-> For mostly CRUD apps, prototypes or small teams, where Rails conventions are faster and extra layers only add ceremony. Introduce it for complex domains, heavy external integrations or long-lived codebases.
+<Accordion title="When would you not use Clean Architecture in Rails?">
+For mostly CRUD apps, prototypes or small teams, where Rails conventions are faster and extra layers only add ceremony. Introduce it for complex domains, heavy external integrations or long-lived codebases.
+</Accordion>
 
 ## Related
-- [[Backend Index]]
-- [[Background Jobs & Task Queues]] · [[Cron Jobs]] · [[API Versioning, Idempotency & Backward Compatibility]]
-- [[MVC]] · [[SOLID]] · [[SOLID Principles with Ruby]] · [[Design Patterns]] · [[OOP]]
+- [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues) · [Cron Jobs](/Software%20Engineering/Backend/Cron%20Jobs) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)
+- [MVC](/Software%20Engineering/Principles/MVC) · [SOLID](/Software%20Engineering/Principles/SOLID) · [SOLID Principles with Ruby](/Software%20Engineering/Principles/SOLID%20Principles%20with%20Ruby) · [Design Patterns](/Software%20Engineering/Principles/Design%20Patterns) · [OOP](/Software%20Engineering/Principles/OOP)
 
 ## Sources
 - Robert C. Martin, *Clean Architecture* (2017) · [The Clean Architecture (blog, 2012)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)

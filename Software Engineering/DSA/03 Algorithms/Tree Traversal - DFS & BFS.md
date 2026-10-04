@@ -1,12 +1,16 @@
 ---
+title: "Tree Traversal - DFS & BFS"
 tags: [dsa, dsa/algorithms]
 aliases: [Tree Traversal, Preorder, Inorder, Postorder, Level Order, Level-order Traversal, Morris Traversal, Tree DFS, Tree BFS]
 updated: 2026-09-27
 ---
 # Tree Traversal - DFS & BFS
 
-> [!tldr] TL;DR
-> Traversing a tree means visiting every node exactly once, in `O(n)` time. **DFS** goes deep first and comes in three orders (**preorder** root-left-right, **inorder** left-root-right, **postorder** left-right-root), using recursion or an explicit stack with `O(h)` space. **BFS / level order** visits the tree level by level with a **queue** and `O(w)` space (max width). Inorder on a BST yields sorted order; postorder is for "compute from children"; BFS is for anything per-level or shortest-depth.
+<Note>
+**TL;DR**
+
+Traversing a tree means visiting every node exactly once, in `O(n)` time. **DFS** goes deep first and comes in three orders (**preorder** root-left-right, **inorder** left-root-right, **postorder** left-right-root), using recursion or an explicit stack with `O(h)` space. **BFS / level order** visits the tree level by level with a **queue** and `O(w)` space (max width). Inorder on a BST yields sorted order; postorder is for "compute from children"; BFS is for anything per-level or shortest-depth.
+</Note>
 
 ## The idea
 
@@ -37,7 +41,7 @@ flowchart LR
 ## How it works
 
 - **Recursive DFS**: the call stack remembers where to return. Three lines differ only in order.
-- **Iterative DFS**: use your own stack (see [[Stacks & Queues]]). Preorder is easy; inorder needs "go left as far as possible"; postorder is the trickiest (reverse of a modified preorder, or track the last visited node).
+- **Iterative DFS**: use your own stack (see [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues)). Preorder is easy; inorder needs "go left as far as possible"; postorder is the trickiest (reverse of a modified preorder, or track the last visited node).
 - **BFS**: push the root into a queue; repeatedly pop from the front and push children. To group by level, snapshot `queue.length` at the start of each level.
 - **Morris traversal**: inorder (or preorder) in `O(1)` extra space by temporarily threading each node's inorder predecessor's `right` pointer back to the node, then removing the thread. It mutates the tree during the walk (and restores it), so it is not safe with concurrent readers.
 
@@ -376,7 +380,7 @@ Alternatives: BFS with nulls (LeetCode's own `[1,2,3,null,null,4,5]` format), or
 
 ## Trade-offs & pitfalls
 
-- **Recursion depth**: a degenerate (linked-list-shaped) tree of 10^5 nodes overflows in CPython (limit 1000) and often in Node. See [[Recursion & Backtracking]].
+- **Recursion depth**: a degenerate (linked-list-shaped) tree of 10^5 nodes overflows in CPython (limit 1000) and often in Node. See [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking).
 - **`queue.shift()` in JS** is `O(n)` per call, turning BFS into `O(n^2)`. Use per-level arrays, an index pointer, or a deque.
 - **Level grouping**: read `len(q)` once before the inner loop; the queue grows while you iterate.
 - **Pushing nulls**: either check children before pushing or handle `null` at pop. Mixing both causes crashes or extra levels.
@@ -390,7 +394,7 @@ Alternatives: BFS with nulls (LeetCode's own `[1,2,3,null,null,4,5]` format), or
 - **Why React fibers are iterative**: a recursive walk cannot be paused and resumed; an explicit linked structure lets the scheduler yield between units of work.
 - **Memory profile**: BFS on a wide tree (e.g. a 1M-node complete tree) holds ~500k nodes in the queue; DFS holds ~20. For huge trees prefer DFS, or iterative deepening if you need BFS-like guarantees.
 - **Serialization in practice**: JSON of nested objects is a preorder serialization. Watch for cycles (graphs, not trees) and depth limits on untrusted input.
-- **Generators** let traversals stream lazily (`function*` inorder with `yield*`), useful for iterating a BST without materializing it; see [[Iterators, Generators & Iterator Helpers]].
+- **Generators** let traversals stream lazily (`function*` inorder with `yield*`), useful for iterating a BST without materializing it; see [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers).
 - **Interview signal**: write the recursive version fast, then offer the iterative version and state `O(h)` vs `O(w)` space. Mention Morris as a follow-up for `O(1)` space.
 
 ## Classic LeetCode problems
@@ -408,29 +412,35 @@ Alternatives: BFS with nulls (LeetCode's own `[1,2,3,null,null,4,5]` format), or
 
 ## Interview questions
 
-> [!question]- What is the difference between preorder, inorder, and postorder?
-> When the node is visited relative to its subtrees: before both (pre), between left and right (in), after both (post). All are DFS with `O(n)` time and `O(h)` space.
+<Accordion title="What is the difference between preorder, inorder, and postorder?">
+When the node is visited relative to its subtrees: before both (pre), between left and right (in), after both (post). All are DFS with `O(n)` time and `O(h)` space.
+</Accordion>
 
-> [!question]- Why does inorder traversal of a BST give sorted output?
-> BST invariant: everything in the left subtree is smaller than the node, everything in the right is larger. Inorder visits left subtree, node, right subtree, so by induction values come out ascending.
+<Accordion title="Why does inorder traversal of a BST give sorted output?">
+BST invariant: everything in the left subtree is smaller than the node, everything in the right is larger. Inorder visits left subtree, node, right subtree, so by induction values come out ascending.
+</Accordion>
 
-> [!question]- When would you choose BFS over DFS on a tree?
-> When the answer is about levels or the nearest/shallowest node: level order, right side view, min depth, connecting nodes on the same level. BFS finds the shallowest match first and can stop early. DFS is better for path-based questions and uses `O(h)` instead of `O(w)` memory.
+<Accordion title="When would you choose BFS over DFS on a tree?">
+When the answer is about levels or the nearest/shallowest node: level order, right side view, min depth, connecting nodes on the same level. BFS finds the shallowest match first and can stop early. DFS is better for path-based questions and uses `O(h)` instead of `O(w)` memory.
+</Accordion>
 
-> [!question]- How do you do postorder traversal iteratively?
-> Either push `(node, visited)` pairs and emit a node on its second pop, or do a root-right-left preorder with a stack and reverse the result. A third way tracks the last visited node to know whether the right subtree is done.
+<Accordion title="How do you do postorder traversal iteratively?">
+Either push `(node, visited)` pairs and emit a node on its second pop, or do a root-right-left preorder with a stack and reverse the result. A third way tracks the last visited node to know whether the right subtree is done.
+</Accordion>
 
-> [!question]- What is Morris traversal and what are its trade-offs?
-> Inorder traversal in `O(1)` extra space: for each node with a left child, find its inorder predecessor and temporarily point its `right` at the node, so you can climb back without a stack. It is `O(n)` time but mutates the tree during traversal, is not thread-safe, and must run to completion to restore the tree.
+<Accordion title="What is Morris traversal and what are its trade-offs?">
+Inorder traversal in `O(1)` extra space: for each node with a left child, find its inorder predecessor and temporarily point its `right` at the node, so you can climb back without a stack. It is `O(n)` time but mutates the tree during traversal, is not thread-safe, and must run to completion to restore the tree.
+</Accordion>
 
-> [!question]- How would you serialize a binary tree so it can be rebuilt?
-> Preorder DFS writing values and a marker like `#` for null children, joined with commas. Deserialize by reading tokens in the same order recursively. BFS with nulls also works. Without null markers, a single traversal is ambiguous.
+<Accordion title="How would you serialize a binary tree so it can be rebuilt?">
+Preorder DFS writing values and a marker like `#` for null children, joined with commas. Deserialize by reading tokens in the same order recursively. BFS with nulls also works. Without null markers, a single traversal is ambiguous.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Trees & Binary Search Trees]] · [[Stacks & Queues]] · [[Graphs]] · [[Graph BFS-DFS patterns]]
-- [[Recursion & Backtracking]] · [[Dynamic Programming]] (DP on trees uses postorder)
-- [[Big-O & Complexity Analysis]] · [[Iterators, Generators & Iterator Helpers]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees) · [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Graphs](/Software%20Engineering/DSA/02%20Data%20Structures/Graphs) · [Graph BFS-DFS patterns](/Software%20Engineering/DSA/04%20Patterns/Graph%20BFS-DFS%20patterns)
+- [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking) · [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming) (DP on trees uses postorder)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis) · [Iterators, Generators & Iterator Helpers](/Software%20Engineering/Frontend/01%20JavaScript/Iterators%2C%20Generators%20%26%20Iterator%20Helpers)
 
 ## Sources
 - Cormen et al., *Introduction to Algorithms*, 4th ed., MIT Press 2022 (ch. 12 binary search trees, ch. 20 BFS/DFS)

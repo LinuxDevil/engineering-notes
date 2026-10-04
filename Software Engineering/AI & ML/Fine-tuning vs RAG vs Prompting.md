@@ -1,12 +1,16 @@
 ---
+title: "Fine-tuning vs RAG vs Prompting"
 tags: [ai-ml, ai-ml/llm]
 aliases: [Fine-tuning, LoRA, QLoRA, PEFT, When to Fine-tune, RAG vs Fine-tuning]
 updated: 2026-09-27
 ---
 # Fine-tuning vs RAG vs Prompting
 
-> [!tldr] TL;DR
-> Three ways to adapt an LLM to your task, in the order you should try them: **prompting** (instructions and examples, minutes to iterate), **RAG** (inject the right *knowledge* at query time), and **fine-tuning** (change the model's weights to learn a *behaviour, style or format*). Rule of thumb: **RAG for knowledge, fine-tuning for behaviour**, prompting first for everything. When you do fine-tune, parameter-efficient methods like **LoRA** and **QLoRA** train small adapter weights instead of the whole model.
+<Note>
+**TL;DR**
+
+Three ways to adapt an LLM to your task, in the order you should try them: **prompting** (instructions and examples, minutes to iterate), **RAG** (inject the right *knowledge* at query time), and **fine-tuning** (change the model's weights to learn a *behaviour, style or format*). Rule of thumb: **RAG for knowledge, fine-tuning for behaviour**, prompting first for everything. When you do fine-tune, parameter-efficient methods like **LoRA** and **QLoRA** train small adapter weights instead of the whole model.
+</Note>
 
 ## The decision in one picture
 
@@ -115,25 +119,30 @@ Quality beats quantity: a few hundred clean, diverse, correct examples beat thou
 
 ## Interview questions
 
-> [!question]- When would you choose RAG over fine-tuning?
-> When the model needs knowledge that's private, changes often, is large, or must be permission-filtered and cited. RAG updates by re-indexing, grounds answers in sources and supports ACLs; fine-tuning bakes knowledge in poorly and can't cite.
+<Accordion title="When would you choose RAG over fine-tuning?">
+When the model needs knowledge that's private, changes often, is large, or must be permission-filtered and cited. RAG updates by re-indexing, grounds answers in sources and supports ACLs; fine-tuning bakes knowledge in poorly and can't cite.
+</Accordion>
 
-> [!question]- When is fine-tuning the better choice?
-> For behaviour rather than knowledge: consistent output formats or style, narrow high-volume tasks where a small tuned model can replace a large one (cost/latency), or when prompts become unwieldy with rules and examples.
+<Accordion title="When is fine-tuning the better choice?">
+For behaviour rather than knowledge: consistent output formats or style, narrow high-volume tasks where a small tuned model can replace a large one (cost/latency), or when prompts become unwieldy with rules and examples.
+</Accordion>
 
-> [!question]- Explain LoRA.
-> Freeze the pretrained weights and learn a low-rank update ΔW = B·A for selected matrices (often attention projections). Only A and B are trained, a tiny fraction of the parameters, cutting memory and storage; the update can be merged into W for zero added inference latency.
+<Accordion title="Explain LoRA.">
+Freeze the pretrained weights and learn a low-rank update ΔW = B·A for selected matrices (often attention projections). Only A and B are trained, a tiny fraction of the parameters, cutting memory and storage; the update can be merged into W for zero added inference latency.
+</Accordion>
 
-> [!question]- What does QLoRA add?
-> It quantises the frozen base model to 4-bit (NF4) and trains LoRA adapters on top, with double quantisation and paged optimisers, so very large models can be fine-tuned on a single GPU with little quality loss.
+<Accordion title="What does QLoRA add?">
+It quantises the frozen base model to 4-bit (NF4) and trains LoRA adapters on top, with double quantisation and paged optimisers, so very large models can be fine-tuned on a single GPU with little quality loss.
+</Accordion>
 
-> [!question]- A PM asks to "fine-tune the model on our wiki so the chatbot knows everything". What do you say?
-> Recommend RAG: the wiki changes, answers need citations and permission checks, and fine-tuning is unreliable for adding facts. Consider fine-tuning later only if there's a behaviour or format problem prompting can't fix, and prove it with evals.
+<Accordion title="A PM asks to &quot;fine-tune the model on our wiki so the chatbot knows everything&quot;. What do you say?">
+Recommend RAG: the wiki changes, answers need citations and permission checks, and fine-tuning is unreliable for adding facts. Consider fine-tuning later only if there's a behaviour or format problem prompting can't fix, and prove it with evals.
+</Accordion>
 
 ## Related
-- [[AI & ML Index]]
-- [[Prompt & Context Engineering]] · [[Retrieval-Augmented Generation (RAG)]] · [[Transformers & How LLMs Work]]
-- [[LLM Evaluation & Observability]] · [[LLM Landscape 2025-2026]] (open-weight models)
+- [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index)
+- [Prompt & Context Engineering](/Software%20Engineering/AI%20%26%20ML/Prompt%20%26%20Context%20Engineering) · [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG)) · [Transformers & How LLMs Work](/Software%20Engineering/AI%20%26%20ML/Transformers%20%26%20How%20LLMs%20Work)
+- [LLM Evaluation & Observability](/Software%20Engineering/AI%20%26%20ML/LLM%20Evaluation%20%26%20Observability) · [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026) (open-weight models)
 
 ## Sources
 - Hu et al. (2021), [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)

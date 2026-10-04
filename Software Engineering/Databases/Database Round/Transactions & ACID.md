@@ -1,22 +1,26 @@
 ---
+title: "Transactions & ACID"
 tags: [databases, databases/transactions]
 aliases: [ACID, Transactions, ACID Overview, Transaction Lifecycle, Durability, Atomicity]
 updated: 2026-09-27
 ---
 # Transactions & ACID
 
-> [!tldr] TL;DR
-> A **transaction** is a group of operations the database treats as one indivisible unit: it either commits completely or has no effect. **ACID** names the four guarantees: **A**tomicity (all or nothing), **C**onsistency (constraints hold before and after), **I**solation (concurrent transactions don't see each other's half-done work), **D**urability (committed data survives a crash). Atomicity and durability are built on a **write-ahead log**; isolation is built on **locks** and/or **MVCC**.
+<Note>
+**TL;DR**
+
+A **transaction** is a group of operations the database treats as one indivisible unit: it either commits completely or has no effect. **ACID** names the four guarantees: **A**tomicity (all or nothing), **C**onsistency (constraints hold before and after), **I**solation (concurrent transactions don't see each other's half-done work), **D**urability (committed data survives a crash). Atomicity and durability are built on a **write-ahead log**; isolation is built on **locks** and/or **MVCC**.
+</Note>
 
 This note merges the original *ACID Overview* (a summary of Silberschatz, Korth & Sudarshan, *Database System Concepts*, ch. 17 "Transactions") with the Hussein Nasser course notes. Deeper topics now have their own notes:
 
 | Topic | Note |
 |---|---|
-| Read phenomena and isolation levels | [[Isolation Levels & Read Phenomena]] |
-| Locks, 2PL, deadlocks, Postgres lock modes | [[Locking & Concurrency Control]] |
-| MVCC, dead tuples, VACUUM, bloat, buffer pool vs cache | [[MVCC & Vacuum]] |
-| Distributed transactions, 2PC/3PC, sagas | [[Replication & 2PC 3PC]] |
-| SQL syntax: `BEGIN`, `COMMIT`, `ROLLBACK`, `SAVEPOINT` | [[Managing Transaction Processing]] |
+| Read phenomena and isolation levels | [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) |
+| Locks, 2PL, deadlocks, Postgres lock modes | [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) |
+| MVCC, dead tuples, VACUUM, bloat, buffer pool vs cache | [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum) |
+| Distributed transactions, 2PC/3PC, sagas | [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) |
+| SQL syntax: `BEGIN`, `COMMIT`, `ROLLBACK`, `SAVEPOINT` | [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) |
 
 ## The idea
 
@@ -33,8 +37,11 @@ COMMIT;
 
 If the server dies between the two `UPDATE`s, a database without transactions would have destroyed 100 units of money. With a transaction, either both updates are visible or neither is.
 
-> [!note] Always bound your writes
-> An `UPDATE` or `DELETE` without a `WHERE` clause touches every row. Inside a transaction you can still `ROLLBACK`, outside one (autocommit) you cannot.
+<Note>
+**Always bound your writes**
+
+An `UPDATE` or `DELETE` without a `WHERE` clause touches every row. Inside a transaction you can still `ROLLBACK`, outside one (autocommit) you cannot.
+</Note>
 
 ### Transaction boundaries
 
@@ -57,8 +64,11 @@ A transaction moves the database from one state that satisfies all integrity rul
 1. **Consistency in data** (a single instance): defined by you through constraints: primary keys, foreign keys (referential integrity), `CHECK`, `UNIQUE`, `NOT NULL`, triggers. Atomicity and isolation both help keep data consistent.
 2. **Consistency in reads** (the system as a whole): after you write X, do you read X back? With replicas or caches, not always: you are **eventually consistent**.
 
-> [!example] Eventual consistency in one sentence
-> Whenever your data lives in two places (primary + replica, DB + cache), a read can return the old value for a while. Example: you update the primary, then read from a follower that hasn't replayed the change yet. Both relational and NoSQL systems have this as soon as they scale out. See [[CAP Theorem]] and [[Replication & 2PC 3PC]].
+<Info>
+**Eventual consistency in one sentence**
+
+Whenever your data lives in two places (primary + replica, DB + cache), a read can return the old value for a while. Example: you update the primary, then read from a follower that hasn't replayed the change yet. Both relational and NoSQL systems have this as soon as they scale out. See [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem) and [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC).
+</Info>
 
 The "C" in ACID is not the "C" in CAP. ACID-C is about constraints; CAP-C is **linearizability** (every read sees the latest write).
 
@@ -66,7 +76,7 @@ The "C" in ACID is not the "C" in CAP. ACID-C is about constraints; CAP-C is **l
 
 The textbook definition: even though transactions run concurrently, each transaction T sees the others as if they ran entirely **before** or entirely **after** T. The strongest form is **serializability**.
 
-Weaker isolation levels allow **read phenomena**: dirty reads, non-repeatable reads, phantom reads, lost updates, write skew. The four SQL levels (Read Uncommitted, Read Committed, Repeatable Read, Serializable) and what Postgres/MySQL really do are in [[Isolation Levels & Read Phenomena]].
+Weaker isolation levels allow **read phenomena**: dirty reads, non-repeatable reads, phantom reads, lost updates, write skew. The four SQL levels (Read Uncommitted, Read Committed, Repeatable Read, Serializable) and what Postgres/MySQL really do are in [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena).
 
 Two implementation families:
 
@@ -76,7 +86,7 @@ Two implementation families:
 | **Optimistic** | No locks; track what you read/wrote and **abort** at commit if someone else conflicted | Postgres `SERIALIZABLE` (SSI), version columns in apps |
 | **MVCC** | Keep multiple row versions; readers read a snapshot and never block writers | Postgres, MySQL InnoDB, Oracle |
 
-Details: [[Locking & Concurrency Control]], [[MVCC & Vacuum]].
+Details: [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control), [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum).
 
 ### Durability: committed means safe
 
@@ -88,10 +98,13 @@ Techniques:
 - **Append-only file (AOF)**: similar idea, log every write command. Redis.
 - **Asynchronous snapshots**: keep data in memory and dump it to disk in the background. Redis RDB. Fast, but you can lose the writes since the last snapshot.
 
-> [!warning] The OS cache can lie
-> A normal `write()` usually lands in the **OS page cache**, which batches writes for fewer IOs. If power fails before the OS flushes it, the data is gone even though the write "succeeded". Databases call **`fsync`** to force the data (and file metadata) to the device. `fdatasync` is similar but skips metadata that isn't needed to read the data back (like modification time), so it is a bit cheaper. fsync is slow, which is why databases **group commit**: many transactions share one flush.
->
-> In Postgres, `synchronous_commit = off` trades durability of the last few hundred milliseconds of commits for speed; `fsync = off` risks corruption and should never be used in production.
+<Warning>
+**The OS cache can lie**
+
+A normal `write()` usually lands in the **OS page cache**, which batches writes for fewer IOs. If power fails before the OS flushes it, the data is gone even though the write "succeeded". Databases call **`fsync`** to force the data (and file metadata) to the device. `fdatasync` is similar but skips metadata that isn't needed to read the data back (like modification time), so it is a bit cheaper. fsync is slow, which is why databases **group commit**: many transactions share one flush.
+
+In Postgres, `synchronous_commit = off` trades durability of the last few hundred milliseconds of commits for speed; `fsync = off` risks corruption and should never be used in production.
+</Warning>
 
 ```mermaid
 sequenceDiagram
@@ -147,7 +160,7 @@ The lifecycle step by step:
 
 - **Undo/redo log handling**: undo information lets an aborted transaction be reversed; redo information lets a committed one be replayed after a crash. Once no one needs them (after a checkpoint, after old snapshots end), the log space is recycled.
 - **Release locks** held by the transaction.
-- **Old row versions**: in MVCC databases, versions made obsolete by the transaction become garbage once no snapshot can see them; Postgres's `VACUUM` reclaims them ([[MVCC & Vacuum]]).
+- **Old row versions**: in MVCC databases, versions made obsolete by the transaction become garbage once no snapshot can see them; Postgres's `VACUUM` reclaims them ([MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum)).
 - **Free memory** used by the transaction.
 - **Truncate/recycle the transaction log** when entries are no longer needed.
 - **Update the transaction's status** in the transaction manager (in Postgres, the commit log `pg_xact`).
@@ -198,51 +211,61 @@ for attempt in range(5):
 
 ## Trade-offs and pitfalls
 
-> [!warning] Common pitfalls
-> - **Long transactions**: hold locks, block `VACUUM` from cleaning dead rows (bloat), and pin WAL. Watch `pg_stat_activity` for `idle in transaction` sessions; set `idle_in_transaction_session_timeout`.
-> - **Doing I/O inside a transaction** (HTTP calls, sending emails). If the call hangs, the transaction and its locks hang with it. If the transaction rolls back, the email was still sent. Use an **outbox table** instead.
-> - **Assuming the default isolation prevents lost updates.** Read Committed does not. Use `SELECT ... FOR UPDATE`, an atomic `UPDATE ... SET x = x + 1`, or optimistic version checks.
-> - **Ignoring errors inside a transaction**: in Postgres the whole transaction is poisoned after an error; you must roll back (or use a savepoint).
-> - **Drawbacks of ACID in general**: coordination costs throughput and latency, strong isolation increases aborts or waiting, and ACID across multiple machines needs expensive protocols like 2PC. That's why many distributed stores relax guarantees (BASE: basically available, soft state, eventually consistent).
+<Warning>
+**Common pitfalls**
+
+- **Long transactions**: hold locks, block `VACUUM` from cleaning dead rows (bloat), and pin WAL. Watch `pg_stat_activity` for `idle in transaction` sessions; set `idle_in_transaction_session_timeout`.
+- **Doing I/O inside a transaction** (HTTP calls, sending emails). If the call hangs, the transaction and its locks hang with it. If the transaction rolls back, the email was still sent. Use an **outbox table** instead.
+- **Assuming the default isolation prevents lost updates.** Read Committed does not. Use `SELECT ... FOR UPDATE`, an atomic `UPDATE ... SET x = x + 1`, or optimistic version checks.
+- **Ignoring errors inside a transaction**: in Postgres the whole transaction is poisoned after an error; you must roll back (or use a savepoint).
+- **Drawbacks of ACID in general**: coordination costs throughput and latency, strong isolation increases aborts or waiting, and ACID across multiple machines needs expensive protocols like 2PC. That's why many distributed stores relax guarantees (BASE: basically available, soft state, eventually consistent).
+</Warning>
 
 ## Senior perspective
 
-- **Pick isolation per use case**, not globally. Most OLTP runs at Read Committed; money movement and invariants spanning rows (e.g. "at least one doctor on call") need `SERIALIZABLE` or explicit locking. See [[Isolation Levels & Read Phenomena]].
+- **Pick isolation per use case**, not globally. Most OLTP runs at Read Committed; money movement and invariants spanning rows (e.g. "at least one doctor on call") need `SERIALIZABLE` or explicit locking. See [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena).
 - **Design for retries**: serialization failures (`40001`) and deadlocks (`40P01`) are normal under load. Make transactions idempotent and retry them with backoff.
 - **Keep transactions small and short**; batch big backfills into chunks of a few thousand rows so each commit is quick and replicas keep up.
-- **Durability knobs are business decisions**: `synchronous_commit`, synchronous replicas, and `fsync`-honest storage determine what "committed" means in a disaster. Know your RPO ([[Database Backup]]).
-- **Across services, you usually can't have ACID**. Use sagas with compensating actions, the transactional outbox, and idempotency keys instead of distributed 2PC. See [[Replication & 2PC 3PC]].
+- **Durability knobs are business decisions**: `synchronous_commit`, synchronous replicas, and `fsync`-honest storage determine what "committed" means in a disaster. Know your RPO ([Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup)).
+- **Across services, you usually can't have ACID**. Use sagas with compensating actions, the transactional outbox, and idempotency keys instead of distributed 2PC. See [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC).
 - Review questions: What happens if this transaction runs twice? What if it fails halfway? What locks does it take and for how long? What does a concurrent run of the same code see?
 
 ## Interview questions
 
-> [!question]- Explain ACID with one example per letter.
-> Atomicity: a transfer debits and credits both or neither. Consistency: a foreign key stops an order referencing a missing customer. Isolation: two concurrent transfers don't see each other's half-done balances. Durability: after `COMMIT` returns, a power cut doesn't lose the transfer, because the WAL was fsynced.
+<Accordion title="Explain ACID with one example per letter.">
+Atomicity: a transfer debits and credits both or neither. Consistency: a foreign key stops an order referencing a missing customer. Isolation: two concurrent transfers don't see each other's half-done balances. Durability: after `COMMIT` returns, a power cut doesn't lose the transfer, because the WAL was fsynced.
+</Accordion>
 
-> [!question]- How does a database guarantee atomicity and durability after a crash?
-> Write-ahead logging. Every change is first described in a sequential log that is flushed on commit. After a crash, recovery replays the log from the last checkpoint: committed changes are redone, uncommitted ones are undone (or, in Postgres, their row versions are simply treated as invisible because their transaction never committed).
+<Accordion title="How does a database guarantee atomicity and durability after a crash?">
+Write-ahead logging. Every change is first described in a sequential log that is flushed on commit. After a crash, recovery replays the log from the last checkpoint: committed changes are redone, uncommitted ones are undone (or, in Postgres, their row versions are simply treated as invisible because their transaction never committed).
+</Accordion>
 
-> [!question]- What's the difference between consistency in ACID and in CAP?
-> ACID consistency means integrity constraints hold at transaction boundaries. CAP consistency means linearizability in a replicated system: every read returns the most recent write. A single-node database can be ACID-consistent while a replicated setup reading from async followers is not CAP-consistent.
+<Accordion title="What's the difference between consistency in ACID and in CAP?">
+ACID consistency means integrity constraints hold at transaction boundaries. CAP consistency means linearizability in a replicated system: every read returns the most recent write. A single-node database can be ACID-consistent while a replicated setup reading from async followers is not CAP-consistent.
+</Accordion>
 
-> [!question]- Why are long-running transactions dangerous in PostgreSQL?
-> They hold locks, and their snapshot prevents `VACUUM` from removing dead tuples created after it started, which causes table and index bloat and eventually transaction ID wraparound pressure. They also retain WAL and replication slots may lag.
+<Accordion title="Why are long-running transactions dangerous in PostgreSQL?">
+They hold locks, and their snapshot prevents `VACUUM` from removing dead tuples created after it started, which causes table and index bloat and eventually transaction ID wraparound pressure. They also retain WAL and replication slots may lag.
+</Accordion>
 
-> [!question]- What is `fsync` and why does the database need it?
-> A system call that forces a file's buffered data from the OS page cache to the storage device. Without it, a "successful" write may only be in RAM and lost on power failure. Databases fsync the WAL on commit (often grouping many commits per flush).
+<Accordion title="What is `fsync` and why does the database need it?">
+A system call that forces a file's buffered data from the OS page cache to the storage device. Without it, a "successful" write may only be in RAM and lost on power failure. Databases fsync the WAL on commit (often grouping many commits per flush).
+</Accordion>
 
-> [!question]- Which transaction states exist and what happens in "partially committed"?
-> Active, partially committed, committed, failed, aborted, terminated. Partially committed means the last statement ran but the commit isn't durable yet; a failure at that point (disk error, deferred constraint, serialization check) still causes an abort.
+<Accordion title="Which transaction states exist and what happens in &quot;partially committed&quot;?">
+Active, partially committed, committed, failed, aborted, terminated. Partially committed means the last statement ran but the commit isn't durable yet; a failure at that point (disk error, deferred constraint, serialization check) still causes an abort.
+</Accordion>
 
-> [!question]- Can you roll back a `CREATE TABLE`?
-> In PostgreSQL and SQL Server, yes, DDL is transactional. In MySQL and Oracle, DDL causes an implicit commit, so no.
+<Accordion title="Can you roll back a `CREATE TABLE`?">
+In PostgreSQL and SQL Server, yes, DDL is transactional. In MySQL and Oracle, DDL causes an implicit commit, so no.
+</Accordion>
 
 ## Related
-- [[Databases Index]] · [[Database Round]]
-- [[Isolation Levels & Read Phenomena]] · [[Locking & Concurrency Control]] · [[MVCC & Vacuum]]
-- [[Managing Transaction Processing]] (SQL syntax chapter) · [[Replication & 2PC 3PC]] · [[CAP Theorem]]
-- [[Database Internals]] · [[Database Pages]] · [[Database Backup]]
-- MongoDB transactions: [[Unit 10 MongoDB CRUD Operations in Node.js]]
+- [Databases Index](/Software%20Engineering/Databases/Databases%20Index) · [Database Round](/Software%20Engineering/Databases/Database%20Round/Database%20Round)
+- [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) · [Locking & Concurrency Control](/Software%20Engineering/Databases/Core%20Concepts/Locking%20%26%20Concurrency%20Control) · [MVCC & Vacuum](/Software%20Engineering/Databases/Core%20Concepts/MVCC%20%26%20Vacuum)
+- [Managing Transaction Processing](/Software%20Engineering/Databases/SQL%20ANSI/Managing%20Transaction%20Processing) (SQL syntax chapter) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) · [CAP Theorem](/Software%20Engineering/Databases/Database%20Round/CAP%20Theorem)
+- [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals) · [Database Pages](/Software%20Engineering/Databases/Database%20Round/Database%20Pages) · [Database Backup](/Software%20Engineering/Databases/Database%20Round/Database%20Backup)
+- MongoDB transactions: [Unit 10 MongoDB CRUD Operations in Node.js](/Software%20Engineering/Databases/MongoDB/Unit%2010%20MongoDB%20CRUD%20Operations%20in%20Node.js)
 - Original note: `_Archive/ACID Overview (original)`
 
 ## Sources

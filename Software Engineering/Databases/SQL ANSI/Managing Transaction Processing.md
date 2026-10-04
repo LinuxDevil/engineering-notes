@@ -1,14 +1,18 @@
 ---
+title: "Managing Transaction Processing"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [Transactions, COMMIT, ROLLBACK, SAVEPOINT, Autocommit, Transactional DDL]
 updated: 2026-09-27
 ---
 # Managing Transaction Processing
 
-> [!tldr] TL;DR
-> A transaction groups statements so they all succeed (`COMMIT`) or none do (`ROLLBACK`). **Savepoints** let you undo part of a transaction. Most clients run in **autocommit** mode (each statement is its own transaction) until you `BEGIN`. What can be rolled back differs: in **PostgreSQL, DDL is transactional** (`CREATE`/`DROP`/`ALTER` roll back), while MySQL and Oracle implicitly commit on DDL.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 20 · Prev: [[Working with Stored Procedures]] · Next: [[Using Cursors]]
+A transaction groups statements so they all succeed (`COMMIT`) or none do (`ROLLBACK`). **Savepoints** let you undo part of a transaction. Most clients run in **autocommit** mode (each statement is its own transaction) until you `BEGIN`. What can be rolled back differs: in **PostgreSQL, DDL is transactional** (`CREATE`/`DROP`/`ALTER` roll back), while MySQL and Oracle implicitly commit on DDL.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 20 · Prev: [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures) · Next: [Using Cursors](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Cursors)
 
 ## Understanding transaction processing
 
@@ -31,7 +35,7 @@ Vocabulary:
 3. **Commit:** writing unsaved SQL statements to the database tables.
 4. **Savepoint:** a temporary placeholder in a transaction that you can roll back to, instead of rolling back the whole transaction.
 
-These are the "A" (atomicity) of ACID; see [[Transactions & ACID]].
+These are the "A" (atomicity) of ACID; see [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID).
 
 ## Which statements can you roll back?
 
@@ -91,8 +95,9 @@ Oracle is the exception: it **starts** a transaction implicitly with the first D
 
 ## Controlling transactions
 
-> [!note]
-> The key to managing transactions is breaking SQL into logical chunks and stating explicitly when data should be rolled back and when not.
+<Note>
+The key to managing transactions is breaking SQL into logical chunks and stating explicitly when data should be rolled back and when not.
+</Note>
 
 In the examples below, all SQL between `BEGIN TRANSACTION` and `COMMIT TRANSACTION` must execute entirely or not at all. Other DBMSs use variations. Most don't have an explicit "end transaction": the transaction lasts until something terminates it, usually `COMMIT` or `ROLLBACK`.
 
@@ -123,8 +128,11 @@ COMMIT TRANSACTION
 
 **Analysis:** order `12345` is deleted completely. Because this touches two tables, a transaction ensures the order isn't partially deleted. The `COMMIT` writes the changes only if no error occurred.
 
-> [!warning] SQL Server gotcha
-> In T-SQL, a runtime error in one statement does **not** automatically abort the transaction unless `SET XACT_ABORT ON` is set (or you use `TRY...CATCH` with `ROLLBACK`). Without it, the first `DELETE` could fail and the second still commit. Always use `SET XACT_ABORT ON` in multi-statement T-SQL transactions.
+<Warning>
+**SQL Server gotcha**
+
+In T-SQL, a runtime error in one statement does **not** automatically abort the transaction unless `SET XACT_ABORT ON` is set (or you use `TRY...CATCH` with `ROLLBACK`). Without it, the first `DELETE` could fail and the second still commit. Always use `SET XACT_ABORT ON` in multi-statement T-SQL transactions.
+</Warning>
 
 The PostgreSQL version:
 
@@ -194,36 +202,42 @@ PostgreSQL has no `IF @@ERROR` in plain SQL; the client (or a PL/pgSQL `BEGIN ..
 ## Beyond the book / Senior perspective
 
 - **Keep transactions short.** Locks are held until commit; long transactions block writers, and in PostgreSQL they stop `VACUUM` from cleaning dead rows (table bloat). Never wait for user input or call slow external APIs inside a transaction. Monitor `idle in transaction` sessions and set `idle_in_transaction_session_timeout`.
-- **Isolation levels** decide what concurrent transactions see (dirty reads, non-repeatable reads, phantoms, write skew). PostgreSQL defaults to Read Committed, MySQL InnoDB to Repeatable Read. See [[Isolation Levels & Read Phenomena]].
+- **Isolation levels** decide what concurrent transactions see (dirty reads, non-repeatable reads, phantoms, write skew). PostgreSQL defaults to Read Committed, MySQL InnoDB to Repeatable Read. See [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena).
 - **Retry on serialization failures and deadlocks** (`40001`, `40P01` in PostgreSQL). Under Serializable isolation, retries are part of the contract.
-- **Transactions don't span services.** Across databases or a DB plus a message broker, use the outbox pattern, sagas, or (rarely) two-phase commit ([[Replication & 2PC 3PC]]).
+- **Transactions don't span services.** Across databases or a DB plus a message broker, use the outbox pattern, sagas, or (rarely) two-phase commit ([Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)).
 - **Savepoints cost something.** ORMs that wrap every statement in a savepoint, or PL/pgSQL exception blocks in tight loops, add overhead; PostgreSQL also has subtransaction limits that can hurt performance at high counts.
 - **Durability knobs:** PostgreSQL `synchronous_commit = off` trades a small window of possible data loss on crash for faster commits; know when that's acceptable.
 
 ## Interview questions
 
-> [!question]- What does ACID stand for, and which part do COMMIT/ROLLBACK provide?
-> Atomicity, Consistency, Isolation, Durability. `COMMIT`/`ROLLBACK` implement atomicity (all or nothing); durability is guaranteed once `COMMIT` returns (WAL/redo log flushed).
+<Accordion title="What does ACID stand for, and which part do COMMIT/ROLLBACK provide?">
+Atomicity, Consistency, Isolation, Durability. `COMMIT`/`ROLLBACK` implement atomicity (all or nothing); durability is guaranteed once `COMMIT` returns (WAL/redo log flushed).
+</Accordion>
 
-> [!question]- Can you roll back a DROP TABLE?
-> In PostgreSQL, SQLite and (mostly) SQL Server, yes, if it ran inside an open transaction. In MySQL and Oracle, no: DDL causes an implicit commit.
+<Accordion title="Can you roll back a DROP TABLE?">
+In PostgreSQL, SQLite and (mostly) SQL Server, yes, if it ran inside an open transaction. In MySQL and Oracle, no: DDL causes an implicit commit.
+</Accordion>
 
-> [!question]- What is autocommit?
-> A mode where each statement is committed automatically as its own transaction. Most clients default to it; `BEGIN` starts an explicit multi-statement transaction.
+<Accordion title="What is autocommit?">
+A mode where each statement is committed automatically as its own transaction. Most clients default to it; `BEGIN` starts an explicit multi-statement transaction.
+</Accordion>
 
-> [!question]- What is a savepoint and when would you use it?
-> A named point inside a transaction you can roll back to without abandoning the whole transaction, e.g. to retry or skip one failed step in a batch. PostgreSQL syntax: `SAVEPOINT x; ... ROLLBACK TO SAVEPOINT x; RELEASE SAVEPOINT x;`.
+<Accordion title="What is a savepoint and when would you use it?">
+A named point inside a transaction you can roll back to without abandoning the whole transaction, e.g. to retry or skip one failed step in a batch. PostgreSQL syntax: `SAVEPOINT x; ... ROLLBACK TO SAVEPOINT x; RELEASE SAVEPOINT x;`.
+</Accordion>
 
-> [!question]- What happens in PostgreSQL after an error inside a transaction?
-> The transaction is marked aborted; every further statement errors until `ROLLBACK` (or `ROLLBACK TO SAVEPOINT` if a savepoint was set before the error). `COMMIT` on an aborted transaction rolls it back.
+<Accordion title="What happens in PostgreSQL after an error inside a transaction?">
+The transaction is marked aborted; every further statement errors until `ROLLBACK` (or `ROLLBACK TO SAVEPOINT` if a savepoint was set before the error). `COMMIT` on an aborted transaction rolls it back.
+</Accordion>
 
-> [!question]- Why are long-running transactions dangerous in PostgreSQL?
-> They hold locks, and their old snapshot prevents `VACUUM` from removing dead tuples everywhere, causing bloat and, in the extreme, transaction ID wraparound pressure.
+<Accordion title="Why are long-running transactions dangerous in PostgreSQL?">
+They hold locks, and their old snapshot prevents `VACUUM` from removing dead tuples everywhere, causing bloat and, in the extreme, transaction ID wraparound pressure.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Transactions & ACID]] · [[Isolation Levels & Read Phenomena]] · [[Replication & 2PC 3PC]]
-- [[Working with Stored Procedures]] · [[Updating and Deleting Data]] · [[Using Cursors]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Transactions & ACID](/Software%20Engineering/Databases/Database%20Round/Transactions%20%26%20ACID) · [Isolation Levels & Read Phenomena](/Software%20Engineering/Databases/Core%20Concepts/Isolation%20Levels%20%26%20Read%20Phenomena) · [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC)
+- [Working with Stored Procedures](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Stored%20Procedures) · [Updating and Deleting Data](/Software%20Engineering/Databases/SQL%20ANSI/Updating%20and%20Deleting%20Data) · [Using Cursors](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Cursors)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 20 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

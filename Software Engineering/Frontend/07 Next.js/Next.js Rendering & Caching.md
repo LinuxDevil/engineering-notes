@@ -1,12 +1,16 @@
 ---
+title: "Next.js Rendering & Caching"
 tags: [frontend, frontend/nextjs, frontend/rendering, frontend/caching]
 aliases: [Next.js Caching, Cache Components, use cache, Next.js Rendering, PPR]
 updated: 2026-09-27
 ---
 # Next.js Rendering & Caching
 
-> [!tldr] TL;DR
-> Next.js renders on the server in two flavours: **static** (at build/revalidation time, served from cache) and **dynamic** (per request). Streaming with `<Suspense>` lets a page send its fast parts first. Historically (Next 13–15) routes were **static by default** and became dynamic when they touched request data; caching was controlled by `fetch` options, `revalidate` and segment config. **Next 16 introduced Cache Components**: with `cacheComponents: true`, everything is **dynamic by default** and you **opt in** to caching with `'use cache'`, `cacheLife` and `cacheTag`; the result is a static shell plus streamed dynamic holes (the completed form of Partial Prerendering). Know both models: most codebases in 2026 still have the old one.
+<Note>
+**TL;DR**
+
+Next.js renders on the server in two flavours: **static** (at build/revalidation time, served from cache) and **dynamic** (per request). Streaming with `<Suspense>` lets a page send its fast parts first. Historically (Next 13–15) routes were **static by default** and became dynamic when they touched request data; caching was controlled by `fetch` options, `revalidate` and segment config. **Next 16 introduced Cache Components**: with `cacheComponents: true`, everything is **dynamic by default** and you **opt in** to caching with `'use cache'`, `cacheLife` and `cacheTag`; the result is a static shell plus streamed dynamic holes (the completed form of Partial Prerendering). Know both models: most codebases in 2026 still have the old one.
+</Note>
 
 ## Rendering strategies (owner's Ultimate NextJs notes, expanded)
 
@@ -18,17 +22,17 @@ updated: 2026-09-27
 | **PPR** (Partial Prerendering) | Static shell at build + dynamic parts streamed per request | Pages mixing static and personalized content | Experimental in 14/15; in 16 it's what Cache Components do |
 | **CSR** (Client-Side Rendering) | In the browser | Highly interactive widgets after load | Client Components + client fetching |
 
-Owner's definitions: SSG renders pages at build time for fast delivery (not good for frequently updated content). ISR allows updates to static content without a full rebuild, combining SSG with dynamic updates, via **revalidation** (`export const revalidate = 3600` route segment config for time-based revalidation, or on-demand revalidation). SSR generates content for each request, ensuring up-to-date content, ideal for real-time data. PPR mixes static and dynamic content on a page. The general, framework-agnostic comparison lives in [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]].
+Owner's definitions: SSG renders pages at build time for fast delivery (not good for frequently updated content). ISR allows updates to static content without a full rebuild, combining SSG with dynamic updates, via **revalidation** (`export const revalidate = 3600` route segment config for time-based revalidation, or on-demand revalidation). SSR generates content for each request, ensuring up-to-date content, ideal for real-time data. PPR mixes static and dynamic content on a page. The general, framework-agnostic comparison lives in [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands).
 
 ## The RSC lifecycle
 
 When a route renders on the server, React renders Server Components into the **RSC payload** (a compact serialized tree of rendered Server Components, placeholders for Client Components with references to their JS, and the props passed to them). Next uses it to produce HTML for the first load, and on the client React uses it to reconcile the tree and hydrate Client Components. On client-side navigations, only the RSC payload is fetched, not HTML.
 
-![[image 7.png]]
+![image 7](/Attachments/image%207.png)
 
 RSC update (navigation or `router.refresh()` / revalidation: a new RSC payload is fetched and merged into the existing tree, preserving client state):
 
-![[image 8.png]]
+![image 8](/Attachments/image%208.png)
 
 ```mermaid
 sequenceDiagram
@@ -64,17 +68,20 @@ Correction to the original note: **`after()` is not a dynamic API**; it schedule
 
 To force dynamic rendering in the old model: `export const dynamic = 'force-dynamic'` at the top of the page or layout (the opposite is `'force-static'`).
 
-> [!example] What makes this page dynamic?
-> ```tsx
-> // app/cart/page.tsx
-> import { cookies } from "next/headers";
->
-> export default async function Cart() {
->   const cartId = (await cookies()).get("cartId")?.value; // dynamic API -> per-request render
->   const cart = await getCart(cartId);
->   return <CartView cart={cart} />;
-> }
-> ```
+<Info>
+**What makes this page dynamic?**
+
+```tsx
+// app/cart/page.tsx
+import { cookies } from "next/headers";
+
+export default async function Cart() {
+  const cartId = (await cookies()).get("cartId")?.value; // dynamic API -> per-request render
+  const cart = await getCart(cartId);
+  return <CartView cart={cart} />;
+}
+```
+</Info>
 
 ## Streaming with Suspense
 
@@ -120,29 +127,35 @@ Four layers:
 | **Full Route Cache** | Server, persistent | HTML + RSC payload of static routes | Until revalidated / redeploy | Dynamic APIs, `dynamic = 'force-dynamic'`, `revalidate = 0` |
 | **Router Cache** | Browser memory | RSC payloads of visited/prefetched segments | Session / `staleTimes` | `router.refresh()`, Server Action revalidation |
 
-> [!info] Next 15 changed the defaults (Oct 2024)
-> `fetch` requests, `GET` Route Handlers and the client Router Cache for page segments are **no longer cached by default**. You opt in with `cache: 'force-cache'`, `export const dynamic = 'force-static'`, or `staleTimes` config. Many "why is my data stale?" complaints from Next 13/14 were about the old aggressive defaults.
+<Info>
+**Next 15 changed the defaults (Oct 2024)**
 
-> [!example] Old-model ISR with tags
-> ```tsx
-> // app/products/page.tsx
-> export const revalidate = 3600; // regenerate at most every hour
->
-> export default async function Products() {
->   const products = await fetch("https://api.example.com/products", {
->     next: { tags: ["products"] },
->   }).then((r) => r.json());
->   return <List items={products} />;
-> }
->
-> // app/actions.ts
-> "use server";
-> import { revalidateTag } from "next/cache";
-> export async function addProduct(fd: FormData) {
->   await db.products.create(/* ... */);
->   revalidateTag("products"); // Next 15 signature; Next 16 requires a second argument (see below)
-> }
-> ```
+`fetch` requests, `GET` Route Handlers and the client Router Cache for page segments are **no longer cached by default**. You opt in with `cache: 'force-cache'`, `export const dynamic = 'force-static'`, or `staleTimes` config. Many "why is my data stale?" complaints from Next 13/14 were about the old aggressive defaults.
+</Info>
+
+<Info>
+**Old-model ISR with tags**
+
+```tsx
+// app/products/page.tsx
+export const revalidate = 3600; // regenerate at most every hour
+
+export default async function Products() {
+  const products = await fetch("https://api.example.com/products", {
+    next: { tags: ["products"] },
+  }).then((r) => r.json());
+  return <List items={products} />;
+}
+
+// app/actions.ts
+"use server";
+import { revalidateTag } from "next/cache";
+export async function addProduct(fd: FormData) {
+  await db.products.create(/* ... */);
+  revalidateTag("products"); // Next 15 signature; Next 16 requires a second argument (see below)
+}
+```
+</Info>
 
 ## Next 16: Cache Components
 
@@ -256,53 +269,66 @@ flowchart TD
 | Non-fetch data (DB/ORM) | `unstable_cache` | `'use cache'` directly on the function |
 | Route segment config (`dynamic`, `revalidate`, `fetchCache`) | Primary tool | Superseded; not the way to control caching under Cache Components (check the migration guide) |
 
-> [!info]+ 🆕 2025–2026
-> - **16.0 (Oct 21, 2025)**: Cache Components + `'use cache'`, opt-in caching, `experimental.ppr`/`dynamicIO` removed/renamed, `revalidateTag(tag, profile)`, new `updateTag()` and `refresh()`, layout deduplication and incremental prefetching.
-> - **16.2 (Mar 18, 2026)**: 25 to 60% faster HTML rendering from an RSC deserialization fix contributed to React.
-> - **16.3 (Aug 3, 2026)**: opt-in **Instant Navigations** (`cacheComponents` plus `partialPrefetching`) with the Instant Insights devtool and Navigation Inspector; better ISR (a loading shell first, then a background prerender); `@next/playwright` `instant()` test helper.
-> Details: [[Next.js 15 to 16.3]].
+<Info>
+**🆕 2025–2026**
 
-> [!warning] Common pitfalls
-> - Reading `cookies()` inside a `'use cache'` function (not allowed) or in a layout, making everything below it dynamic.
-> - Forgetting `<Suspense>` around dynamic parts under Cache Components → build/dev error, or a whole route that can't be prerendered.
-> - Using `revalidateTag` where the user expects to see their own write immediately (use `updateTag`).
-> - Calling `revalidateTag('x')` with one argument after upgrading to 16.
-> - Caching per-user data under a shared key (leaks data between users). Include the user ID in arguments, or don't cache it.
-> - Expecting the client Router Cache to show fresh data after a mutation without `updateTag`/`revalidatePath`/`refresh`.
+- **16.0 (Oct 21, 2025)**: Cache Components + `'use cache'`, opt-in caching, `experimental.ppr`/`dynamicIO` removed/renamed, `revalidateTag(tag, profile)`, new `updateTag()` and `refresh()`, layout deduplication and incremental prefetching.
+- **16.2 (Mar 18, 2026)**: 25 to 60% faster HTML rendering from an RSC deserialization fix contributed to React.
+- **16.3 (Aug 3, 2026)**: opt-in **Instant Navigations** (`cacheComponents` plus `partialPrefetching`) with the Instant Insights devtool and Navigation Inspector; better ISR (a loading shell first, then a background prerender); `@next/playwright` `instant()` test helper.
+Details: [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3).
+</Info>
+
+<Warning>
+**Common pitfalls**
+
+- Reading `cookies()` inside a `'use cache'` function (not allowed) or in a layout, making everything below it dynamic.
+- Forgetting `<Suspense>` around dynamic parts under Cache Components → build/dev error, or a whole route that can't be prerendered.
+- Using `revalidateTag` where the user expects to see their own write immediately (use `updateTag`).
+- Calling `revalidateTag('x')` with one argument after upgrading to 16.
+- Caching per-user data under a shared key (leaks data between users). Include the user ID in arguments, or don't cache it.
+- Expecting the client Router Cache to show fresh data after a mutation without `updateTag`/`revalidatePath`/`refresh`.
+</Warning>
 
 ## Interview questions
 
-> [!question]- Static vs dynamic rendering in Next.js?
-> Static renders at build time or on revalidation and serves cached HTML + RSC payload (fast, CDN-friendly). Dynamic renders per request because the route needs request-time data (cookies, headers, searchParams). In the pre-16 model Next picks automatically based on dynamic API usage; under Cache Components everything is dynamic unless cached with `'use cache'`.
+<Accordion title="Static vs dynamic rendering in Next.js?">
+Static renders at build time or on revalidation and serves cached HTML + RSC payload (fast, CDN-friendly). Dynamic renders per request because the route needs request-time data (cookies, headers, searchParams). In the pre-16 model Next picks automatically based on dynamic API usage; under Cache Components everything is dynamic unless cached with `'use cache'`.
+</Accordion>
 
-> [!question]- What is ISR and how does it work?
-> Pages are statically generated, then regenerated in the background after a `revalidate` interval or when invalidated on demand (`revalidateTag`/`revalidatePath`). Visitors get the cached page instantly (stale-while-revalidate), and the next visitors get the fresh one. Trade-off vs SSG: fresher data without rebuilds, but the first request after expiry still sees stale content.
+<Accordion title="What is ISR and how does it work?">
+Pages are statically generated, then regenerated in the background after a `revalidate` interval or when invalidated on demand (`revalidateTag`/`revalidatePath`). Visitors get the cached page instantly (stale-while-revalidate), and the next visitors get the fresh one. Trade-off vs SSG: fresher data without rebuilds, but the first request after expiry still sees stale content.
+</Accordion>
 
-> [!question]- What is streaming and why is it useful?
-> The server sends HTML in chunks: the shell and Suspense fallbacks first, then each suspended section as it resolves. It improves TTFB/FCP, prevents one slow API from blocking the page, and enables selective hydration.
+<Accordion title="What is streaming and why is it useful?">
+The server sends HTML in chunks: the shell and Suspense fallbacks first, then each suspended section as it resolves. It improves TTFB/FCP, prevents one slow API from blocking the page, and enables selective hydration.
+</Accordion>
 
-> [!question]- Explain Partial Prerendering / Cache Components.
-> A route's static parts are prerendered into a shell served instantly; dynamic parts are Suspense holes streamed per request. With Cache Components (Next 16) you opt parts into caching with `'use cache'`, set lifetimes with `cacheLife`, label them with `cacheTag`, and invalidate with `updateTag`/`revalidateTag`.
+<Accordion title="Explain Partial Prerendering / Cache Components.">
+A route's static parts are prerendered into a shell served instantly; dynamic parts are Suspense holes streamed per request. With Cache Components (Next 16) you opt parts into caching with `'use cache'`, set lifetimes with `cacheLife`, label them with `cacheTag`, and invalidate with `updateTag`/`revalidateTag`.
+</Accordion>
 
-> [!question]- `updateTag` vs `revalidateTag` in Next 16?
-> `updateTag` (Server Actions only) expires the tag immediately so the same request reads fresh data: read-your-writes. `revalidateTag(tag, profile)` marks it stale with stale-while-revalidate semantics; good for webhooks and background updates.
+<Accordion title="`updateTag` vs `revalidateTag` in Next 16?">
+`updateTag` (Server Actions only) expires the tag immediately so the same request reads fresh data: read-your-writes. `revalidateTag(tag, profile)` marks it stale with stale-while-revalidate semantics; good for webhooks and background updates.
+</Accordion>
 
-> [!question]- How can you configure caching in a Next.js application?
-> Pre-16: `fetch` cache options and tags, route segment config (`revalidate`, `dynamic`), `unstable_cache`, `revalidatePath/Tag`, `staleTimes` for the client router cache. Next 16: `cacheComponents: true` + `'use cache'`, `cacheLife`, `cacheTag`, `updateTag`/`revalidateTag`/`refresh`. Plus HTTP caching headers and CDN for assets ([[Networking - HTTP, Caching & Real-time]]).
+<Accordion title="How can you configure caching in a Next.js application?">
+Pre-16: `fetch` cache options and tags, route segment config (`revalidate`, `dynamic`), `unstable_cache`, `revalidatePath/Tag`, `staleTimes` for the client router cache. Next 16: `cacheComponents: true` + `'use cache'`, `cacheLife`, `cacheTag`, `updateTag`/`revalidateTag`/`refresh`. Plus HTTP caching headers and CDN for assets ([Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)).
+</Accordion>
 
-> [!question]- What's the difference between SSR in Next.js and "traditional" SSR?
-> Traditional SSR renders the whole page to HTML per request and ships all component JS for hydration. Next.js App Router renders Server Components that ship no JS, streams HTML with Suspense, can mix static and dynamic parts in one route, caches at the component/function level, and navigates client-side with RSC payloads instead of full HTML.
+<Accordion title="What's the difference between SSR in Next.js and &quot;traditional&quot; SSR?">
+Traditional SSR renders the whole page to HTML per request and ships all component JS for hydration. Next.js App Router renders Server Components that ship no JS, streams HTML with Suspense, can mix static and dynamic parts in one route, caches at the component/function level, and navigates client-side with RSC payloads instead of full HTML.
+</Accordion>
 
 ## Related
-- [[Next.js Index]] (all Next.js notes)
-- [[Next.js App Router Fundamentals]]
-- [[Next.js 15 to 16.3]]
-- [[React Server Components & Server Functions]]
-- [[Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands]]
-- [[Server State - TanStack Query & RTK Query]]
-- [[Networking - HTTP, Caching & Real-time]]
-- [[Core Web Vitals]]
-- [[Ultimate NextJs Course]]
+- [Next.js Index](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Index) (all Next.js notes)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)
+- [React Server Components & Server Functions](/Software%20Engineering/Frontend/05%20React/React%20Server%20Components%20%26%20Server%20Functions)
+- [Rendering Patterns - CSR, SSR, SSG, ISR, Streaming & Islands](/Software%20Engineering/Frontend/09%20Architecture/Rendering%20Patterns%20-%20CSR%2C%20SSR%2C%20SSG%2C%20ISR%2C%20Streaming%20%26%20Islands)
+- [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- [Core Web Vitals](/Software%20Engineering/Frontend/10%20Performance/Core%20Web%20Vitals)
+- [Ultimate NextJs Course](/Software%20Engineering/Frontend/Courses%20%26%20Books/FE%20Masters/Ultimate%20NextJs%20Course)
 
 ## Sources
 - Owner's original notes (NextJS.md: static/dynamic rendering, streaming, RSC lifecycle images; Ultimate NextJs Course.md: rendering strategies)

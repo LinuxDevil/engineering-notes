@@ -1,12 +1,16 @@
 ---
+title: "Working With Legacy Code"
 tags: [career, career/legacy-code]
 aliases: [Legacy Code, Legacy Systems, Refactoring Legacy Code, Strangler Fig, Characterization Tests, Tech Debt]
 updated: 2026-09-27
 ---
 # Working With Legacy Code
 
-> [!tldr] TL;DR
-> Legacy code is code that works, earns money, and is scary to change, usually because it has **no tests** (Michael Feathers' definition). Don't rewrite it from scratch; change it **safely and incrementally**: understand it, pin its current behaviour with **characterization tests**, find **seams** to break dependencies, make the change, and refactor as you go. Replace large systems piece by piece with the **strangler fig** pattern. Manage tech debt as an explicit, prioritised investment.
+<Note>
+**TL;DR**
+
+Legacy code is code that works, earns money, and is scary to change, usually because it has **no tests** (Michael Feathers' definition). Don't rewrite it from scratch; change it **safely and incrementally**: understand it, pin its current behaviour with **characterization tests**, find **seams** to break dependencies, make the change, and refactor as you go. Replace large systems piece by piece with the **strangler fig** pattern. Manage tech debt as an explicit, prioritised investment.
+</Note>
 
 ## The idea
 - Legacy isn't an insult: it's code that survived because it's valuable.
@@ -89,12 +93,15 @@ Related: **branch by abstraction** (introduce an abstraction inside the code, bu
 - Tie proposals to business outcomes: speed, incidents, security, cost.
 
 ## Pitfalls
-> [!warning] Common mistakes
-> - The big rewrite that never catches up with the moving legacy system.
-> - Refactoring without tests, or mixing refactoring and behaviour changes in one PR.
-> - "Fixing" weird code that encoded an important edge case.
-> - Letting AI tools mass-refactor a legacy module without characterization tests; the diff looks clean and behaviour silently changes.
-> - Complaining about the previous developers; they had constraints you don't see.
+<Warning>
+**Common mistakes**
+
+- The big rewrite that never catches up with the moving legacy system.
+- Refactoring without tests, or mixing refactoring and behaviour changes in one PR.
+- "Fixing" weird code that encoded an important edge case.
+- Letting AI tools mass-refactor a legacy module without characterization tests; the diff looks clean and behaviour silently changes.
+- Complaining about the previous developers; they had constraints you don't see.
+</Warning>
 
 ## Senior perspective
 - Choose between **refactor, strangle or rewrite** with evidence: cost of change, incident rate, team knowledge, business roadmap. Rewrite only small, well-understood components.
@@ -103,21 +110,25 @@ Related: **branch by abstraction** (introduce an abstraction inside the code, bu
 - Document what you learn (ADRs, diagrams) so the next person doesn't start from zero.
 
 ## Interview questions
-> [!question]- How do you safely change code that has no tests?
-> Understand it, find a seam, write characterization tests around the area to capture current behaviour, then make small changes and refactor with the tests as a safety net. Keep refactors and behaviour changes in separate commits.
+<Accordion title="How do you safely change code that has no tests?">
+Understand it, find a seam, write characterization tests around the area to capture current behaviour, then make small changes and refactor with the tests as a safety net. Keep refactors and behaviour changes in separate commits.
+</Accordion>
 
-> [!question]- Rewrite or refactor?
-> Usually refactor or strangle incrementally: rewrites lose hidden behaviour, take longer than estimated and deliver no value until the end. Rewrite only when the component is small, well understood, or the platform is truly dead, and even then migrate incrementally.
+<Accordion title="Rewrite or refactor?">
+Usually refactor or strangle incrementally: rewrites lose hidden behaviour, take longer than estimated and deliver no value until the end. Rewrite only when the component is small, well understood, or the platform is truly dead, and even then migrate incrementally.
+</Accordion>
 
-> [!question]- What is the strangler fig pattern?
-> Put a routing facade in front of the legacy system and move functionality piece by piece to the new system until the legacy system can be removed, like a strangler fig growing around a tree.
+<Accordion title="What is the strangler fig pattern?">
+Put a routing facade in front of the legacy system and move functionality piece by piece to the new system until the legacy system can be removed, like a strangler fig growing around a tree.
+</Accordion>
 
-> [!question]- How do you convince management to invest in tech debt?
-> Quantify impact in business terms (lead time, incidents, onboarding time, security risk), propose a targeted plan with measurable outcomes, and prefer a steady allocation over a big-bang project.
+<Accordion title="How do you convince management to invest in tech debt?">
+Quantify impact in business terms (lead time, incidents, onboarding time, security risk), propose a targeted plan with measurable outcomes, and prefer a steady allocation over a big-bang project.
+</Accordion>
 
 ## Related
-- [[Career Index]]
-- [[Debugging Methodology]] · [[Code Review Best Practices]] · [[Technical Design Docs & RFCs]] · [[Estimation & Planning]]
+- [Career Index](/Software%20Engineering/Career/Career%20Index)
+- [Debugging Methodology](/Software%20Engineering/Career/Debugging%20Methodology) · [Code Review Best Practices](/Software%20Engineering/Career/Code%20Review%20Best%20Practices) · [Technical Design Docs & RFCs](/Software%20Engineering/Career/Technical%20Design%20Docs%20%26%20RFCs) · [Estimation & Planning](/Software%20Engineering/Career/Estimation%20%26%20Planning)
 
 ## Sources
 - Michael Feathers, *Working Effectively with Legacy Code* (Prentice Hall, 2004)

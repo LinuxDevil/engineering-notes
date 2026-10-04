@@ -1,14 +1,18 @@
 ---
+title: "SQL Table Partitioning"
 tags: [databases, databases/sql, databases/postgres]
 aliases: [Table Partitioning, Partitioning, Declarative Partitioning, Partition Pruning, pg_partman, PARTITION BY RANGE]
 updated: 2026-09-27
 ---
 # SQL Table Partitioning
 
-> [!tldr] TL;DR
-> Partitioning splits one big logical table into smaller physical tables (partitions) by a **partition key**, inside **one** database. PostgreSQL's declarative partitioning supports `RANGE`, `LIST` and `HASH`. The big wins are **partition pruning** (queries that filter on the key skip irrelevant partitions) and **cheap retention** (drop or detach a whole partition instead of deleting millions of rows). The costs: the key must be in every primary key/unique constraint, queries without the key touch every partition, and too many partitions slow planning. Partitioning is not sharding; sharding spreads data across servers.
+<Note>
+**TL;DR**
 
-> PostgreSQL extra, after the course. Prev extra: [[SQL Indexes Deep Dive]] · Back to [[SQL ANSI]]
+Partitioning splits one big logical table into smaller physical tables (partitions) by a **partition key**, inside **one** database. PostgreSQL's declarative partitioning supports `RANGE`, `LIST` and `HASH`. The big wins are **partition pruning** (queries that filter on the key skip irrelevant partitions) and **cheap retention** (drop or detach a whole partition instead of deleting millions of rows). The costs: the key must be in every primary key/unique constraint, queries without the key touch every partition, and too many partitions slow planning. Partitioning is not sharding; sharding spreads data across servers.
+</Note>
+
+> PostgreSQL extra, after the course. Prev extra: [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · Back to [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI)
 
 ## Why partition a table?
 
@@ -220,35 +224,44 @@ Same rule: every unique key must include all partitioning columns. Partitioned I
 | Transparency | Fully transparent to SQL | Routing by shard key; cross-shard joins/transactions are hard |
 | Tools | PostgreSQL/MySQL built in | Citus, Vitess, application-level routing, distributed SQL |
 
-*Partitioning works at the table level; sharding works at the database level.* Sharding strategies (range, hash, consistent hashing), and a worked Postgres range-partition example, are in [[Sharding & Partitioning]].
+*Partitioning works at the table level; sharding works at the database level.* Sharding strategies (range, hash, consistent hashing), and a worked Postgres range-partition example, are in [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
 
-> [!info]+ 🆕 2025–2026
-> - **PostgreSQL 17 (released 2024-09-26)** allowed **identity columns** and **exclusion constraints** on partitioned tables (exclusion constraints must compare the partition key columns with equality). Before 17, `GENERATED ... AS IDENTITY` on a partitioned parent wasn't possible.
-> - **PostgreSQL 19 is in beta** (Beta 1 on 2026-06-04, Beta 4 on 2026-09-24; GA expected around October 2026). Beta 1 included `ALTER TABLE ... MERGE PARTITIONS` and `ALTER TABLE ... SPLIT PARTITION(S)`, but the **Beta 4 announcement lists them as reverted from v19**, so don't expect them in the 19.0 release. The v19 release notes do list `COPY TO` working directly on partitioned tables.
+<Info>
+**🆕 2025–2026**
+
+- **PostgreSQL 17 (released 2024-09-26)** allowed **identity columns** and **exclusion constraints** on partitioned tables (exclusion constraints must compare the partition key columns with equality). Before 17, `GENERATED ... AS IDENTITY` on a partitioned parent wasn't possible.
+- **PostgreSQL 19 is in beta** (Beta 1 on 2026-06-04, Beta 4 on 2026-09-24; GA expected around October 2026). Beta 1 included `ALTER TABLE ... MERGE PARTITIONS` and `ALTER TABLE ... SPLIT PARTITION(S)`, but the **Beta 4 announcement lists them as reverted from v19**, so don't expect them in the 19.0 release. The v19 release notes do list `COPY TO` working directly on partitioned tables.
+</Info>
 
 ## Interview questions
 
-> [!question]- What is partition pruning?
-> The planner (or executor, for parameters) excludes partitions whose bounds can't match the query's condition on the partition key, so only relevant partitions are scanned. It requires filtering on the key in a form the planner can evaluate.
+<Accordion title="What is partition pruning?">
+The planner (or executor, for parameters) excludes partitions whose bounds can't match the query's condition on the partition key, so only relevant partitions are scanned. It requires filtering on the key in a form the planner can evaluate.
+</Accordion>
 
-> [!question]- Why must the primary key include the partition key in PostgreSQL?
-> Indexes are per partition (no global indexes), so uniqueness can only be enforced within a partition. Including the key guarantees that equal key values land in the same partition.
+<Accordion title="Why must the primary key include the partition key in PostgreSQL?">
+Indexes are per partition (no global indexes), so uniqueness can only be enforced within a partition. Including the key guarantees that equal key values land in the same partition.
+</Accordion>
 
-> [!question]- How do you implement data retention on a 2 TB events table?
-> Range-partition by time (day/month), pre-create future partitions, and drop or `DETACH ... CONCURRENTLY` partitions older than the retention window (automate with pg_partman). Much cheaper than batched `DELETE`s.
+<Accordion title="How do you implement data retention on a 2 TB events table?">
+Range-partition by time (day/month), pre-create future partitions, and drop or `DETACH ... CONCURRENTLY` partitions older than the retention window (automate with pg_partman). Much cheaper than batched `DELETE`s.
+</Accordion>
 
-> [!question]- Partitioning vs sharding?
-> Partitioning splits a table into pieces on one server, transparently to SQL; sharding distributes rows across multiple servers to scale beyond one machine, with routing and cross-shard complexity.
+<Accordion title="Partitioning vs sharding?">
+Partitioning splits a table into pieces on one server, transparently to SQL; sharding distributes rows across multiple servers to scale beyond one machine, with routing and cross-shard complexity.
+</Accordion>
 
-> [!question]- When would partitioning make performance worse?
-> When most queries don't filter on the partition key (every partition is scanned), when there are too many partitions (planning and locking overhead), or when the table was small enough to begin with.
+<Accordion title="When would partitioning make performance worse?">
+When most queries don't filter on the partition key (every partition is scanned), when there are too many partitions (planning and locking overhead), or when the table was small enough to begin with.
+</Accordion>
 
-> [!question]- RANGE vs LIST vs HASH?
-> RANGE for ordered values like time (retention by drop, range pruning); LIST for discrete categories like region/tenant; HASH to spread rows evenly when there's no natural grouping (equality pruning only, no drop-based retention).
+<Accordion title="RANGE vs LIST vs HASH?">
+RANGE for ordered values like time (retention by drop, range pruning); LIST for discrete categories like region/tenant; HASH to spread rows evenly when there's no natural grouping (equality pruning only, no drop-based retention).
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Sharding & Partitioning]] (sharding, consistent hashing, worked range example) · [[SQL Indexes Deep Dive]] · [[Query Optimization & EXPLAIN]] · [[Updating and Deleting Data]] (big deletes) · [[Combining Queries]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) (sharding, consistent hashing, worked range example) · [SQL Indexes Deep Dive](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20Indexes%20Deep%20Dive) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN) · [Updating and Deleting Data](/Software%20Engineering/Databases/SQL%20ANSI/Updating%20and%20Deleting%20Data) (big deletes) · [Combining Queries](/Software%20Engineering/Databases/SQL%20ANSI/Combining%20Queries)
 
 ## Sources
 - [PostgreSQL docs: Table partitioning](https://www.postgresql.org/docs/current/ddl-partitioning.html)

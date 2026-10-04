@@ -1,14 +1,18 @@
 ---
+title: "Grouping Data"
 tags: [databases, databases/sql]
 aliases: [GROUP BY, HAVING, Window Functions, OVER, PARTITION BY, ROW_NUMBER, ROLLUP, GROUPING SETS]
 updated: 2026-09-27
 ---
 # Grouping Data
 
-> [!tldr] TL;DR
-> `GROUP BY` splits rows into groups and computes aggregates **per group**; `HAVING` filters groups the way `WHERE` filters rows. `WHERE` runs before grouping, `HAVING` after. **Window functions** (`... OVER (PARTITION BY ... ORDER BY ...)`) compute aggregates, ranks and running totals **without collapsing rows**, and they're one of the most useful things a senior engineer can know in SQL.
+<Note>
+**TL;DR**
 
-> Course: SQL in 10 Minutes, Lesson 10 · Prev: [[Summarizing Data]] · Next: [[Working with Subqueries]]
+`GROUP BY` splits rows into groups and computes aggregates **per group**; `HAVING` filters groups the way `WHERE` filters rows. `WHERE` runs before grouping, `HAVING` after. **Window functions** (`... OVER (PARTITION BY ... ORDER BY ...)`) compute aggregates, ranks and running totals **without collapsing rows**, and they're one of the most useful things a senior engineer can know in SQL.
+</Note>
+
+> Course: SQL in 10 Minutes, Lesson 10 · Prev: [Summarizing Data](/Software%20Engineering/Databases/SQL%20ANSI/Summarizing%20Data) · Next: [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries)
 
 ## Understanding data grouping
 
@@ -38,8 +42,11 @@ GROUP BY vend_id;
 6. `NULL` values in the grouping column form **one group** together.
 7. `GROUP BY` comes after `WHERE` and before `ORDER BY`.
 
-> [!warning] MySQL and `ONLY_FULL_GROUP_BY`
-> Old MySQL let you select non-grouped columns and returned an arbitrary value from the group. Since 5.7 the `ONLY_FULL_GROUP_BY` mode (on by default) rejects that. Don't turn it off; fix the query (group by the column, aggregate it, or use `ANY_VALUE()` deliberately).
+<Warning>
+**MySQL and `ONLY_FULL_GROUP_BY`**
+
+Old MySQL let you select non-grouped columns and returned an arbitrary value from the group. Since 5.7 the `ONLY_FULL_GROUP_BY` mode (on by default) rejects that. Don't turn it off; fix the query (group by the column, aggregate it, or use `ANY_VALUE()` deliberately).
+</Warning>
 
 ## Filtering groups: `HAVING`
 
@@ -60,8 +67,11 @@ HAVING COUNT(*) >= 2;
 
 `WHERE` filters **before** data is grouped; `HAVING` filters **after**. Rows eliminated by `WHERE` are not in any group, which changes the aggregates and therefore which groups `HAVING` keeps.
 
-> [!note] Using `HAVING` and `WHERE`
-> Without `GROUP BY`, most DBMSs treat `HAVING` like `WHERE` over one big group. Keep the distinction anyway: `HAVING` only with `GROUP BY`, `WHERE` for row-level filtering. Also put every condition that doesn't need an aggregate in `WHERE`; filtering early is cheaper.
+<Note>
+**Using `HAVING` and `WHERE`**
+
+Without `GROUP BY`, most DBMSs treat `HAVING` like `WHERE` over one big group. Keep the distinction anyway: `HAVING` only with `GROUP BY`, `WHERE` for row-level filtering. Also put every condition that doesn't need an aggregate in `WHERE`; filtering early is cheaper.
+</Note>
 
 ### Example 3
 
@@ -206,42 +216,51 @@ FROM Orders;
 
 Other useful ones: `FIRST_VALUE`, `LAST_VALUE`, `NTH_VALUE`, `NTILE(4)` (quartiles), `PERCENT_RANK`, `CUME_DIST`.
 
-> [!warning] The default frame trap
-> With `ORDER BY` in the window and no frame clause, the default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. That makes `LAST_VALUE(x)` return the current row's value, and with `RANGE`, rows tied on the sort key are summed together in a "running" total. Specify `ROWS BETWEEN ...` explicitly.
+<Warning>
+**The default frame trap**
+
+With `ORDER BY` in the window and no frame clause, the default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. That makes `LAST_VALUE(x)` return the current row's value, and with `RANGE`, rows tied on the sort key are summed together in a "running" total. Specify `ROWS BETWEEN ...` explicitly.
+</Warning>
 
 Supported in PostgreSQL 8.4+, SQL Server 2012+ (full), Oracle, MySQL 8.0+, MariaDB 10.2+, SQLite 3.25+.
 
 ## Beyond the book / Senior perspective
 
 - **Filter before grouping.** Conditions in `HAVING` that don't use aggregates should move to `WHERE`, so fewer rows are grouped.
-- **Hash vs sort aggregation.** PostgreSQL chooses `HashAggregate` or `GroupAggregate` (which needs sorted input, e.g. from an index). Large hash aggregates can spill to disk; check `EXPLAIN ANALYZE` ([[Query Optimization & EXPLAIN]]).
+- **Hash vs sort aggregation.** PostgreSQL chooses `HashAggregate` or `GroupAggregate` (which needs sorted input, e.g. from an index). Large hash aggregates can spill to disk; check `EXPLAIN ANALYZE` ([Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)).
 - **Joins before grouping multiply rows.** Joining orders to items and then to payments and summing both double-counts. Aggregate each child table in a subquery/CTE first, then join.
 - **Window functions replace self-joins and correlated subqueries** for "previous row", "rank within group" and "running total" problems, usually with a single sort.
-- **Pre-aggregate for dashboards**: materialized views or rollup tables ([[Using Views]]) instead of grouping billions of rows per request.
+- **Pre-aggregate for dashboards**: materialized views or rollup tables ([Using Views](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Views)) instead of grouping billions of rows per request.
 
 ## Interview questions
 
-> [!question]- WHERE vs HAVING?
-> `WHERE` filters rows before grouping and can't use aggregates. `HAVING` filters groups after aggregation and can. Put non-aggregate conditions in `WHERE` for performance.
+<Accordion title="WHERE vs HAVING?">
+`WHERE` filters rows before grouping and can't use aggregates. `HAVING` filters groups after aggregation and can. Put non-aggregate conditions in `WHERE` for performance.
+</Accordion>
 
-> [!question]- Does GROUP BY sort the output?
-> No guarantee. Some plans produce sorted groups, hash aggregation doesn't. Use `ORDER BY`.
+<Accordion title="Does GROUP BY sort the output?">
+No guarantee. Some plans produce sorted groups, hash aggregation doesn't. Use `ORDER BY`.
+</Accordion>
 
-> [!question]- What's the difference between GROUP BY and a window function?
-> `GROUP BY` returns one row per group. A window function returns a value for every input row, computed over its partition/frame, so you can show a row alongside its group's total, rank or running sum.
+<Accordion title="What's the difference between GROUP BY and a window function?">
+`GROUP BY` returns one row per group. A window function returns a value for every input row, computed over its partition/frame, so you can show a row alongside its group's total, rank or running sum.
+</Accordion>
 
-> [!question]- ROW_NUMBER vs RANK vs DENSE_RANK?
-> On ties: `ROW_NUMBER` gives distinct numbers (1,2,3), `RANK` gives equal ranks and skips (1,2,2,4), `DENSE_RANK` gives equal ranks without gaps (1,2,2,3).
+<Accordion title="ROW_NUMBER vs RANK vs DENSE_RANK?">
+On ties: `ROW_NUMBER` gives distinct numbers (1,2,3), `RANK` gives equal ranks and skips (1,2,2,4), `DENSE_RANK` gives equal ranks without gaps (1,2,2,3).
+</Accordion>
 
-> [!question]- How do you get the top 3 rows per category?
-> `ROW_NUMBER() OVER (PARTITION BY category ORDER BY score DESC)` in a subquery/CTE, then `WHERE rn <= 3`. Alternatives: `LATERAL` join with `LIMIT 3` (PostgreSQL), `CROSS APPLY` (SQL Server).
+<Accordion title="How do you get the top 3 rows per category?">
+`ROW_NUMBER() OVER (PARTITION BY category ORDER BY score DESC)` in a subquery/CTE, then `WHERE rn <= 3`. Alternatives: `LATERAL` join with `LIMIT 3` (PostgreSQL), `CROSS APPLY` (SQL Server).
+</Accordion>
 
-> [!question]- Why can I select `cust_name` when I only `GROUP BY cust_id` in PostgreSQL?
-> Functional dependency: if `cust_id` is the primary key of the customers table, every other column of that table is determined by it, and the standard allows selecting them.
+<Accordion title="Why can I select `cust_name` when I only `GROUP BY cust_id` in PostgreSQL?">
+Functional dependency: if `cust_id` is the primary key of the customers table, every other column of that table is determined by it, and the standard allows selecting them.
+</Accordion>
 
 ## Related
-- [[SQL ANSI]] · [[Databases Index]]
-- [[Summarizing Data]] · [[Working with Subqueries]] · [[Understanding Advanced SQL Features]] (CTEs) · [[Using Views]] · [[Query Optimization & EXPLAIN]]
+- [SQL ANSI](/Software%20Engineering/Databases/SQL%20ANSI/SQL%20ANSI) · [Databases Index](/Software%20Engineering/Databases/Databases%20Index)
+- [Summarizing Data](/Software%20Engineering/Databases/SQL%20ANSI/Summarizing%20Data) · [Working with Subqueries](/Software%20Engineering/Databases/SQL%20ANSI/Working%20with%20Subqueries) · [Understanding Advanced SQL Features](/Software%20Engineering/Databases/SQL%20ANSI/Understanding%20Advanced%20SQL%20Features) (CTEs) · [Using Views](/Software%20Engineering/Databases/SQL%20ANSI/Using%20Views) · [Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)
 
 ## Sources
 - Ben Forta, *Sams Teach Yourself SQL in 10 Minutes a Day*, 5th ed., Lesson 10 ([O'Reilly](https://learning.oreilly.com/library/view/sams-teach-yourself/9780135182925/))

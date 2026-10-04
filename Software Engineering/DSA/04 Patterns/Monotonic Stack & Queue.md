@@ -1,12 +1,16 @@
 ---
+title: "Monotonic Stack & Queue"
 tags: [dsa, dsa/patterns]
 aliases: [Monotonic Stack, Monotonic Queue, Monotonic Deque, Next Greater Element, Monotone Stack]
 updated: 2026-09-27
 ---
 # Monotonic Stack & Queue
 
-> [!tldr] TL;DR
-> A **monotonic stack** is a stack whose elements are kept in sorted order (all increasing or all decreasing) by popping anything that would break the order before pushing. Each pop is the moment you learn an answer: "the element that just arrived is the **next greater (or smaller)** element for everything I popped". A **monotonic deque** applies the same idea to a sliding window, giving the window **max/min in O(1)**. Every element is pushed and popped at most once, so the whole scan is O(n).
+<Note>
+**TL;DR**
+
+A **monotonic stack** is a stack whose elements are kept in sorted order (all increasing or all decreasing) by popping anything that would break the order before pushing. Each pop is the moment you learn an answer: "the element that just arrived is the **next greater (or smaller)** element for everything I popped". A **monotonic deque** applies the same idea to a sliding window, giving the window **max/min in O(1)**. Every element is pushed and popped at most once, so the whole scan is O(n).
+</Note>
 
 ## The idea
 
@@ -212,8 +216,8 @@ def daily_temperatures(temperatures: list[int]) -> list[int]:
 ## When to use it (recognition signals)
 
 - "**Next / previous greater** (or smaller) element", "how many days until warmer", "stock span".
-- "For each element, how far can it extend left/right while it's the min/max?" → rectangles in histograms, sum of subarray minimums (LC 907), trapping rain water (LC 42, also solvable with [[Two Pointers]]).
-- **Max/min of every window** of size k, or a window constraint on `max - min` (LC 1438) → monotonic deque with a [[Sliding Window]].
+- "For each element, how far can it extend left/right while it's the min/max?" → rectangles in histograms, sum of subarray minimums (LC 907), trapping rain water (LC 42, also solvable with [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers)).
+- **Max/min of every window** of size k, or a window constraint on `max - min` (LC 1438) → monotonic deque with a [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window).
 - Removing digits/characters to get the smallest lexicographic result (LC 402, 316): a greedy increasing stack.
 - A brute force with a nested loop that "looks forward until something bigger/smaller appears".
 
@@ -247,29 +251,35 @@ def daily_temperatures(temperatures: list[int]) -> list[int]:
 
 ## Interview questions
 
-> [!question]- Why is a monotonic stack O(n) if there's a while loop inside the for loop?
-> Each index is pushed once and popped at most once. The total number of pops across the whole run is ≤ n, so the inner loop costs O(n) in total (amortised O(1) per element).
+<Accordion title="Why is a monotonic stack O(n) if there's a while loop inside the for loop?">
+Each index is pushed once and popped at most once. The total number of pops across the whole run is ≤ n, so the inner loop costs O(n) in total (amortised O(1) per element).
+</Accordion>
 
-> [!question]- Increasing or decreasing stack for "next greater element"?
-> Decreasing (from bottom to top). You pop while the top is smaller than the current element, and the current element is the popped one's next greater. For next smaller, keep it increasing.
+<Accordion title="Increasing or decreasing stack for &quot;next greater element&quot;?">
+Decreasing (from bottom to top). You pop while the top is smaller than the current element, and the current element is the popped one's next greater. For next smaller, keep it increasing.
+</Accordion>
 
-> [!question]- How does the monotonic deque give the window maximum in O(1)?
-> It only keeps candidates that could still be a max: indices with decreasing values. A new element removes all smaller ones from the back (they're older and smaller, so useless). Expired indices leave from the front. The front is always the max of the current window.
+<Accordion title="How does the monotonic deque give the window maximum in O(1)?">
+It only keeps candidates that could still be a max: indices with decreasing values. A new element removes all smaller ones from the back (they're older and smaller, so useless). Expired indices leave from the front. The front is always the max of the current window.
+</Accordion>
 
-> [!question]- Explain the largest rectangle in histogram in one minute.
-> For each bar, the best rectangle using its full height extends left and right until a shorter bar. An increasing stack finds both boundaries: when a bar is popped by a shorter bar at `i`, the right boundary is `i` and the left boundary is the new top. Width = `i - left - 1`. A sentinel 0 at the end flushes the stack. O(n).
+<Accordion title="Explain the largest rectangle in histogram in one minute.">
+For each bar, the best rectangle using its full height extends left and right until a shorter bar. An increasing stack finds both boundaries: when a bar is popped by a shorter bar at `i`, the right boundary is `i` and the left boundary is the new top. Width = `i - left - 1`. A sentinel 0 at the end flushes the stack. O(n).
+</Accordion>
 
-> [!question]- Monotonic deque vs heap for sliding window max?
-> Deque: O(n) total, O(k) space, simple, but only max/min. Heap: O(n log n) with lazy deletion of expired items, but generalises (k-th largest needs two heaps or an order-statistic structure). See [[Heaps & Priority Queues]].
+<Accordion title="Monotonic deque vs heap for sliding window max?">
+Deque: O(n) total, O(k) space, simple, but only max/min. Heap: O(n log n) with lazy deletion of expired items, but generalises (k-th largest needs two heaps or an order-statistic structure). See [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues).
+</Accordion>
 
-> [!question]- How do you handle duplicates in "sum of subarray minimums" (LC 907)?
-> Each element's contribution is `value × (left count) × (right count)`. With equal values, one side must use strict `<` and the other `<=` so each subarray's minimum is attributed to exactly one index.
+<Accordion title="How do you handle duplicates in &quot;sum of subarray minimums&quot; (LC 907)?">
+Each element's contribution is `value × (left count) × (right count)`. With equal values, one side must use strict `<` and the other `<=` so each subarray's minimum is attributed to exactly one index.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Stacks & Queues]] · [[Sliding Window]] · [[Two Pointers]] · [[Heaps & Priority Queues]] · [[Arrays & Strings]]
-- [[Big-O & Complexity Analysis]]
-- Course: [[LeetCode Crash Course]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Stacks & Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Stacks%20%26%20Queues) · [Sliding Window](/Software%20Engineering/DSA/04%20Patterns/Sliding%20Window) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues) · [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings)
+- [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
+- Course: [LeetCode Crash Course](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/LeetCode%20Crash%20Course)
 
 ## Sources
 - [cp-algorithms: Minimum stack / Minimum queue](https://cp-algorithms.com/data_structures/stack_queue_modification.html)

@@ -1,12 +1,16 @@
 ---
+title: "Modern Java 17 to 25"
 tags: [backend, backend/java]
 aliases: [Java 17, Java 21, Java 25, Java 26, Java 27, JDK 25, JDK 21, New Java features, Java LTS, Java release cadence]
 updated: 2026-09-27
 ---
 # Modern Java 17 to 25
 
-> [!tldr] TL;DR
-> Java ships a feature release every **six months** (March and September), with an **LTS** every two years: **17** (2021), **21** (2023), **25** (2025-09-16). Java 17 → 21 brought **records, sealed classes, pattern matching, text blocks and virtual threads**. Java 21 → 25 finalised **scoped values, stream gatherers, FFM API, compact source files, flexible constructors, module imports, compact object headers** and AOT startup improvements, and fixed virtual-thread pinning. JDK 26 (2026-03-17) and **JDK 27 (2026-09-15)** continue with HTTP/3, lazy constants and G1-by-default everywhere; structured concurrency is still in preview.
+<Note>
+**TL;DR**
+
+Java ships a feature release every **six months** (March and September), with an **LTS** every two years: **17** (2021), **21** (2023), **25** (2025-09-16). Java 17 → 21 brought **records, sealed classes, pattern matching, text blocks and virtual threads**. Java 21 → 25 finalised **scoped values, stream gatherers, FFM API, compact source files, flexible constructors, module imports, compact object headers** and AOT startup improvements, and fixed virtual-thread pinning. JDK 26 (2026-03-17) and **JDK 27 (2026-09-15)** continue with HTTP/3, lazy constants and G1-by-default everywhere; structured concurrency is still in preview.
+</Note>
 
 ## Release cadence
 
@@ -47,7 +51,7 @@ timeline
 ## Java 21 LTS (2023-09-19)
 | JEP | Feature | What it means |
 |---|---|---|
-| 444 | **Virtual threads** | Millions of cheap threads; blocking code scales. See [[Java Concurrency & Virtual Threads]] |
+| 444 | **Virtual threads** | Millions of cheap threads; blocking code scales. See [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) |
 | 441 | **Pattern matching for switch** | `switch` over types with `case Circle c ->`, guards with `when` |
 | 440 | **Record patterns** | Deconstruct records: `case Point(var x, var y)` |
 | 431 | **Sequenced collections** | `getFirst()`, `getLast()`, `reversed()` on List/Deque/LinkedHashMap... |
@@ -103,18 +107,21 @@ List<List<Integer>> windows = Stream.of(1,2,3,4,5)
 
 ## Java 25 LTS (2025-09-16)
 
-> [!info]+ 🆕 2025: JDK 25 is the new LTS
-> Final features:
-> - **JEP 506 Scoped Values**: immutable, inheritable per-thread context; the virtual-thread-friendly replacement for many `ThreadLocal` uses.
-> - **JEP 512 Compact Source Files and Instance Main Methods**: `void main() { IO.println("hi"); }`.
-> - **JEP 511 Module Import Declarations**: `import module java.base;`.
-> - **JEP 513 Flexible Constructor Bodies**: validate arguments before calling `super(...)`.
-> - **JEP 519 Compact Object Headers** (product feature, opt-in): 8-byte headers instead of 12, less heap.
-> - **JEP 521 Generational Shenandoah**.
-> - **JEP 514/515 AOT command-line ergonomics and method profiling**: easier AOT cache creation, faster warm-up.
-> - **JEP 510 Key Derivation Function API**; JFR CPU-time profiling (509, experimental), cooperative sampling (518), method timing & tracing (520).
-> - **JEP 503**: 32-bit x86 port removed.
-> Still preview: Structured Concurrency (5th), Stable Values (502), PEM encodings (470), primitive types in patterns (507), Vector API (10th incubator).
+<Info>
+**🆕 2025: JDK 25 is the new LTS**
+
+Final features:
+- **JEP 506 Scoped Values**: immutable, inheritable per-thread context; the virtual-thread-friendly replacement for many `ThreadLocal` uses.
+- **JEP 512 Compact Source Files and Instance Main Methods**: `void main() { IO.println("hi"); }`.
+- **JEP 511 Module Import Declarations**: `import module java.base;`.
+- **JEP 513 Flexible Constructor Bodies**: validate arguments before calling `super(...)`.
+- **JEP 519 Compact Object Headers** (product feature, opt-in): 8-byte headers instead of 12, less heap.
+- **JEP 521 Generational Shenandoah**.
+- **JEP 514/515 AOT command-line ergonomics and method profiling**: easier AOT cache creation, faster warm-up.
+- **JEP 510 Key Derivation Function API**; JFR CPU-time profiling (509, experimental), cooperative sampling (518), method timing & tracing (520).
+- **JEP 503**: 32-bit x86 port removed.
+Still preview: Structured Concurrency (5th), Stable Values (502), PEM encodings (470), primitive types in patterns (507), Vector API (10th incubator).
+</Info>
 
 ```java
 // Scoped values (final in 25)
@@ -139,22 +146,25 @@ class PositiveBigInteger extends BigInteger {
 
 ## Java 26 (2026-03-17) and Java 27 (2026-09-15)
 
-> [!info]+ 🆕 2026: JDK 26 and JDK 27
-> **JDK 26** (GA 2026-03-17):
-> - **JEP 517 HTTP/3 for the HTTP Client API**
-> - JEP 516 AOT object caching with any GC; JEP 522 G1 throughput improvement (less synchronization)
-> - JEP 500 **Prepare to make final mean final** (warnings when deep reflection mutates `final` fields)
-> - JEP 504 Applet API removed
-> - Previews: Structured Concurrency (6th), Lazy Constants (2nd, the renamed Stable Values), PEM (2nd), primitive patterns (4th); Vector API (11th incubator)
->
-> **JDK 27** (GA **2026-09-15**, current release):
-> - JEP 523 **G1 is the default GC in all environments** (including small/single-CPU containers, where Serial used to be picked)
-> - JEP 534 **Compact object headers by default**
-> - JEP 527 Post-quantum hybrid key exchange for TLS 1.3
-> - JEP 536 JFR in-process data redaction
-> - Previews: Structured Concurrency (**7th**), Lazy Constants (3rd), primitive patterns (5th), PEM (3rd); Vector API (12th incubator)
->
-> Next LTS: expected to be JDK 29 (Sept 2027) under the two-year LTS cadence (unverified until announced).
+<Info>
+**🆕 2026: JDK 26 and JDK 27**
+
+**JDK 26** (GA 2026-03-17):
+- **JEP 517 HTTP/3 for the HTTP Client API**
+- JEP 516 AOT object caching with any GC; JEP 522 G1 throughput improvement (less synchronization)
+- JEP 500 **Prepare to make final mean final** (warnings when deep reflection mutates `final` fields)
+- JEP 504 Applet API removed
+- Previews: Structured Concurrency (6th), Lazy Constants (2nd, the renamed Stable Values), PEM (2nd), primitive patterns (4th); Vector API (11th incubator)
+
+**JDK 27** (GA **2026-09-15**, current release):
+- JEP 523 **G1 is the default GC in all environments** (including small/single-CPU containers, where Serial used to be picked)
+- JEP 534 **Compact object headers by default**
+- JEP 527 Post-quantum hybrid key exchange for TLS 1.3
+- JEP 536 JFR in-process data redaction
+- Previews: Structured Concurrency (**7th**), Lazy Constants (3rd), primitive patterns (5th), PEM (3rd); Vector API (12th incubator)
+
+Next LTS: expected to be JDK 29 (Sept 2027) under the two-year LTS cadence (unverified until announced).
+</Info>
 
 ## Upgrade guidance
 - **17 → 21**: mostly smooth; biggest win is virtual threads (`spring.threads.virtual.enabled=true` in Boot 3.2+). Watch for removed/deprecated APIs and dependencies needing updates (Lombok, ByteBuddy, Mockito agents).
@@ -170,28 +180,33 @@ class PositiveBigInteger extends BigInteger {
 - Pick **LTS for production** (21 or 25 in 2026) and plan upgrades every two years; non-LTS releases are for trying features early.
 - Most gains come without code changes: newer GCs, AOT caches, compact headers. Benchmark startup, footprint and p99 latency when upgrading.
 - Data-oriented Java (records + sealed + patterns) changes how domain models and DTOs are written; update team style guides.
-- Virtual threads + scoped values change the concurrency story; reconsider reactive stacks for new I/O-bound services. See [[Java Concurrency & Virtual Threads]].
+- Virtual threads + scoped values change the concurrency story; reconsider reactive stacks for new I/O-bound services. See [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads).
 
 ## Interview questions
 
-> [!question]- What are the current Java LTS versions?
-> 17 (2021), 21 (2023) and 25 (2025-09-16). A new LTS arrives every two years; feature releases every six months (JDK 26 in March 2026, JDK 27 in September 2026).
+<Accordion title="What are the current Java LTS versions?">
+17 (2021), 21 (2023) and 25 (2025-09-16). A new LTS arrives every two years; feature releases every six months (JDK 26 in March 2026, JDK 27 in September 2026).
+</Accordion>
 
-> [!question]- What are the most important features of Java 21?
-> Virtual threads, pattern matching for switch, record patterns, sequenced collections and generational ZGC.
+<Accordion title="What are the most important features of Java 21?">
+Virtual threads, pattern matching for switch, record patterns, sequenced collections and generational ZGC.
+</Accordion>
 
-> [!question]- What did Java 25 finalise?
-> Scoped values, compact source files/instance main methods, module import declarations, flexible constructor bodies, compact object headers (opt-in), generational Shenandoah, AOT ergonomics/profiling, the KDF API.
+<Accordion title="What did Java 25 finalise?">
+Scoped values, compact source files/instance main methods, module import declarations, flexible constructor bodies, compact object headers (opt-in), generational Shenandoah, AOT ergonomics/profiling, the KDF API.
+</Accordion>
 
-> [!question]- What's the status of structured concurrency?
-> Still a preview API: 5th preview in 25, 6th in 26, 7th in 27. Use it only with `--enable-preview`; otherwise use executors/CompletableFuture.
+<Accordion title="What's the status of structured concurrency?">
+Still a preview API: 5th preview in 25, 6th in 26, 7th in 27. Use it only with `--enable-preview`; otherwise use executors/CompletableFuture.
+</Accordion>
 
-> [!question]- What is a preview feature?
-> A fully specified, implemented feature that isn't permanent yet. It must be enabled with `--enable-preview` at compile and run time and may change based on feedback.
+<Accordion title="What is a preview feature?">
+A fully specified, implemented feature that isn't permanent yet. It must be enabled with `--enable-preview` at compile and run time and may change based on feedback.
+</Accordion>
 
 ## Related
-- [[Java & Spring Index]]
-- [[Java Language Essentials]] · [[Java Concurrency & Virtual Threads]] · [[JVM Internals - Memory & Garbage Collection]] · [[Spring Boot 3 to 4 - What's New]]
+- [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Java Language Essentials](/Software%20Engineering/Backend/Java/Java%20Language%20Essentials) · [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) · [JVM Internals - Memory & Garbage Collection](/Software%20Engineering/Backend/Java/JVM%20Internals%20-%20Memory%20%26%20Garbage%20Collection) · [Spring Boot 3 to 4 - What's New](/Software%20Engineering/Backend/Java/Spring%20Boot%203%20to%204%20-%20What's%20New)
 
 ## Sources
 - [OpenJDK: JDK 21](https://openjdk.org/projects/jdk/21/) · [JDK 22](https://openjdk.org/projects/jdk/22/) · [JDK 23](https://openjdk.org/projects/jdk/23/) · [JDK 24](https://openjdk.org/projects/jdk/24/)

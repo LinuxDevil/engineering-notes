@@ -1,3 +1,6 @@
+---
+title: "Overview - Locking & Distributed DB (original)"
+---
 **Locks**
 
 A lock is a mechanism that prevents conflicts among transactions that access the same database item. Two types of locks are discussed:

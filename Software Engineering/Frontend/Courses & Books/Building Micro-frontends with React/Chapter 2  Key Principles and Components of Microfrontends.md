@@ -1,3 +1,6 @@
+---
+title: "Chapter 2  Key Principles and Components of Microfrontends"
+---
 > Microfrontends are double-edged sword, when done right they will bring a great amount of productivity; however, if not, they can make things way worse.
 
 > Its important that the Software teams to lay down a set of rules and guiding principles that all team members and code they write adhere to. This ensures that the team will come to a decision a lot faster.
@@ -7,7 +10,7 @@ Principles of the Microfrontends
 > Is Microfrontends solving a technology problem or an organizational problem ?
 
         DDD (Domain driven design) Is a well-established concept in the microservices world. Backend teams are commonly organized around these domain models. In the Frontend we extend this thinking and by re-organizing the team with these domain models, we are now able to create vertically sliced teams, where a domain driven team can own the responsibility of a business functionality from end to end and can work independently.
-![[Untitled 52.png]]
+![Untitled 52](/Attachments/Untitled%2052.png)
 
     Isolating Failure
         Microfrontends are inherently designed to be “decentralized”, this is to reduce the error blast radius (That is one common problem in the monolith SPAs). When designing a Microfrontend architecture, you ensure a graceful service degradation if one more microfrontend fails.
@@ -18,12 +21,12 @@ Principles of the Microfrontends
         A very interesting observation with different teams working on microfrontends is that we need the DevOps pipeline to be configured to deploy that app independently without impacting the other apps, the best way to tackle this, is with having a “<u>**Full life cycle teams**</u>” who are responsible for building the app and also responsible fro deploying it to production. These teams work closely with the DevOps team to build the CI/CD pipelines and then take over the control of managing and running them.
 
     Preferring Runtime Integrations
-![[Screenshot_2023-11-26_at_11.13.58_AM.png]]
+![Screenshot_2023-11-26_at_11.13.58_AM](/Attachments/Screenshot_2023-11-26_at_11.13.58_AM.png)
         Runtime Integration: 
 > Always preferred, Your microfront-ends should be immediately available for use the moment they are deployed.
 
             The team responsible for the script will build and push it, and other teams will embed that script inside, like for example bootstrap 
-![[Screenshot_2023-11-26_at_11.15.44_AM.png]]
+![Screenshot_2023-11-26_at_11.15.44_AM](/Attachments/Screenshot_2023-11-26_at_11.15.44_AM.png)
         Build-time Integration:
             The different teams build and publish their micro apps either to a version control system or an artifact repository such as NPM or Nexus.
             During this build-time, all these micro apps are brought together to build a single app bundle, which is then deployed to production. 

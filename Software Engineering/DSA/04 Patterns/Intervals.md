@@ -1,12 +1,16 @@
 ---
+title: "Intervals"
 tags: [dsa, dsa/patterns]
 aliases: [Interval problems, Merge Intervals, Overlapping Intervals, Sweep Line, Meeting Rooms]
 updated: 2026-09-27
 ---
 # Intervals
 
-> [!tldr] TL;DR
-> Interval problems give you ranges like `[start, end]` and ask you to merge, insert, intersect, count overlaps, or remove the fewest to avoid overlap. The core move is **sort by start** (or by end for greedy selection), then do **one linear pass** comparing each interval with the last one you kept. For "how many overlap at once" (meeting rooms), use a **min-heap of end times** or a **sweep line** over sorted start and end points. Most solutions are O(n log n) for the sort and O(n) after.
+<Note>
+**TL;DR**
+
+Interval problems give you ranges like `[start, end]` and ask you to merge, insert, intersect, count overlaps, or remove the fewest to avoid overlap. The core move is **sort by start** (or by end for greedy selection), then do **one linear pass** comparing each interval with the last one you kept. For "how many overlap at once" (meeting rooms), use a **min-heap of end times** or a **sweep line** over sorted start and end points. Most solutions are O(n log n) for the sort and O(n) after.
+</Note>
 
 ## The idea
 
@@ -50,7 +54,7 @@ flowchart TD
 1. **Merge**: sort by start. Keep a result list. If the current start is `<=` the last kept end, extend the last end to `max(lastEnd, curEnd)`. Otherwise append.
 2. **Insert** into an already sorted, non-overlapping list: copy everything that ends before the new one starts, merge everything that overlaps, copy the rest. O(n), no sort needed.
 3. **Intersections of two sorted lists**: two pointers; add the intersection if non-empty, then advance whichever interval ends first.
-4. **Minimum removals / maximum non-overlapping set**: sort by **end**, greedily keep an interval if it starts at or after the last kept end. That is classic interval scheduling (proof in [[Greedy]]).
+4. **Minimum removals / maximum non-overlapping set**: sort by **end**, greedily keep an interval if it starts at or after the last kept end. That is classic interval scheduling (proof in [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy)).
 5. **Max concurrent intervals (meeting rooms)**:
    - **Min-heap**: sort by start; heap holds end times of rooms in use. If the earliest ending room is free (`heap.top <= start`), reuse it; otherwise open a new room. Answer is heap size.
    - **Sweep line**: turn each interval into `+1` at start and `-1` at end, sort the events (ends before starts at the same time for half-open), and track the running sum's max. Same result, no heap.
@@ -113,12 +117,12 @@ def overlaps(a: list[int], b: list[int]) -> bool:
 
 Input `[[1,3],[2,6],[8,10],[15,18]]` (already sorted by start). Expected `[[1,6],[8,10],[15,18]]`.
 
-| step | current | last kept | start <= last end? | action | merged |
+| step | current | last kept | start &lt;= last end? | action | merged |
 |---|---|---|---|---|---|
 | 1 | [1,3] | none | n/a | append | `[[1,3]]` |
-| 2 | [2,6] | [1,3] | 2 <= 3 yes | end = max(3, 6) = 6 | `[[1,6]]` |
-| 3 | [8,10] | [1,6] | 8 <= 6 no | append | `[[1,6],[8,10]]` |
-| 4 | [15,18] | [8,10] | 15 <= 10 no | append | `[[1,6],[8,10],[15,18]]` |
+| 2 | [2,6] | [1,3] | 2 &lt;= 3 yes | end = max(3, 6) = 6 | `[[1,6]]` |
+| 3 | [8,10] | [1,6] | 8 &lt;= 6 no | append | `[[1,6],[8,10]]` |
+| 4 | [15,18] | [8,10] | 15 &lt;= 10 no | append | `[[1,6],[8,10],[15,18]]` |
 
 Edge case: `[[1,4],[4,5]]` merges into `[[1,5]]` because LeetCode treats touching intervals as overlapping (`<=`). Another: `[[1,4],[2,3]]` gives `[[1,4]]`, which is why you take `max` of the ends instead of just the new end.
 
@@ -218,8 +222,11 @@ def erase_overlap_intervals(intervals: list[list[int]]) -> int:
 
 ### Meeting rooms ([252](https://leetcode.com/problems/meeting-rooms/) and [253](https://leetcode.com/problems/meeting-rooms-ii/))
 
-> [!note] Premium problems
-> 252 Meeting Rooms and 253 Meeting Rooms II are **LeetCode Premium**. Free equivalents: LintCode 920 / 919, or NeetCode's versions of the same problems.
+<Note>
+**Premium problems**
+
+252 Meeting Rooms and 253 Meeting Rooms II are **LeetCode Premium**. Free equivalents: LintCode 920 / 919, or NeetCode's versions of the same problems.
+</Note>
 
 - **252 (can one person attend all?)**: sort by start, return false if any `intervals[i].start < intervals[i-1].end`.
 - **253 (minimum rooms)**: maximum number of meetings in progress at the same moment.
@@ -253,7 +260,7 @@ def min_meeting_rooms(intervals: list[list[int]]) -> int:
     return len(heap)
 ```
 
-The heap version also tells you *which* room frees next, which is handy for follow-ups like [2402. Meeting Rooms III](https://leetcode.com/problems/meeting-rooms-iii/). See [[Top-K & Heaps pattern]] for the heap in TS.
+The heap version also tells you *which* room frees next, which is handy for follow-ups like [2402. Meeting Rooms III](https://leetcode.com/problems/meeting-rooms-iii/). See [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) for the heap in TS.
 
 ## When to use it (recognition signals)
 
@@ -297,29 +304,35 @@ Also: [252. Meeting Rooms](https://leetcode.com/problems/meeting-rooms/) (Easy, 
 
 ## Interview questions
 
-> [!question]- Why sort by start for merging but by end for "maximum non-overlapping"?
-> Merging needs every overlapping group to be contiguous, which sorting by start guarantees. For selection, choosing the interval that **finishes earliest** leaves the most room for the rest; an exchange argument shows it never hurts. Sorting by start can pick one long interval that blocks many short ones.
+<Accordion title="Why sort by start for merging but by end for &quot;maximum non-overlapping&quot;?">
+Merging needs every overlapping group to be contiguous, which sorting by start guarantees. For selection, choosing the interval that **finishes earliest** leaves the most room for the rest; an exchange argument shows it never hurts. Sorting by start can pick one long interval that blocks many short ones.
+</Accordion>
 
-> [!question]- How do you test whether two intervals overlap?
-> `a.start <= b.end && b.start <= a.end` for closed intervals, or with `<` for half-open. Equivalently, they do not overlap if one ends before the other starts.
+<Accordion title="How do you test whether two intervals overlap?">
+`a.start <= b.end && b.start <= a.end` for closed intervals, or with `<` for half-open. Equivalently, they do not overlap if one ends before the other starts.
+</Accordion>
 
-> [!question]- Meeting Rooms II: heap or sweep line?
-> Both are O(n log n). The sweep line with two sorted arrays is shorter and has smaller constants. The min-heap keeps track of which room frees next, so it extends naturally to follow-ups (assign room ids, Meeting Rooms III).
+<Accordion title="Meeting Rooms II: heap or sweep line?">
+Both are O(n log n). The sweep line with two sorted arrays is shorter and has smaller constants. The min-heap keeps track of which room frees next, so it extends naturally to follow-ups (assign room ids, Meeting Rooms III).
+</Accordion>
 
-> [!question]- Insert Interval: why is it O(n) and not O(n log n)?
-> The input is already sorted and non-overlapping, so a single pass finds the three regions (left, overlapping, right). You could binary search for the boundaries, but building the output is still O(n).
+<Accordion title="Insert Interval: why is it O(n) and not O(n log n)?">
+The input is already sorted and non-overlapping, so a single pass finds the three regions (left, overlapping, right). You could binary search for the boundaries, but building the output is still O(n).
+</Accordion>
 
-> [!question]- Given each employee's sorted busy intervals, find common free time.
-> Merge all intervals (k-way merge with a heap, or flatten and sort), then the gaps between consecutive merged intervals are the free slots. This is 759 Employee Free Time (Premium).
+<Accordion title="Given each employee's sorted busy intervals, find common free time.">
+Merge all intervals (k-way merge with a heap, or flatten and sort), then the gaps between consecutive merged intervals are the free slots. This is 759 Employee Free Time (Premium).
+</Accordion>
 
-> [!question]- How would you prevent double bookings in a real system?
-> Enforce it in the database: a range column plus an exclusion constraint (PostgreSQL `EXCLUDE USING gist` with `&&`), or a unique slot table with row locks. Checking overlaps in application code alone races under concurrency.
+<Accordion title="How would you prevent double bookings in a real system?">
+Enforce it in the database: a range column plus an exclusion constraint (PostgreSQL `EXCLUDE USING gist` with `&&`), or a unique slot table with row locks. Checking overlaps in application code alone races under concurrency.
+</Accordion>
 
 ## Related
-- [[DSA Index]]
-- [[Greedy]] (interval scheduling proof) · [[Top-K & Heaps pattern]] · [[Heaps & Priority Queues]]
-- [[Sorting Algorithms]] · [[Two Pointers]] · [[Prefix Sum]] (difference arrays are a sweep line on integers)
-- [[Arrays & Strings]] · [[Big-O & Complexity Analysis]]
+- [DSA Index](/Software%20Engineering/DSA/DSA%20Index)
+- [Greedy](/Software%20Engineering/DSA/04%20Patterns/Greedy) (interval scheduling proof) · [Top-K & Heaps pattern](/Software%20Engineering/DSA/04%20Patterns/Top-K%20%26%20Heaps%20pattern) · [Heaps & Priority Queues](/Software%20Engineering/DSA/02%20Data%20Structures/Heaps%20%26%20Priority%20Queues)
+- [Sorting Algorithms](/Software%20Engineering/DSA/03%20Algorithms/Sorting%20Algorithms) · [Two Pointers](/Software%20Engineering/DSA/04%20Patterns/Two%20Pointers) · [Prefix Sum](/Software%20Engineering/DSA/04%20Patterns/Prefix%20Sum) (difference arrays are a sweep line on integers)
+- [Arrays & Strings](/Software%20Engineering/DSA/02%20Data%20Structures/Arrays%20%26%20Strings) · [Big-O & Complexity Analysis](/Software%20Engineering/DSA/01%20Foundations/Big-O%20%26%20Complexity%20Analysis)
 
 ## Sources
 - [Tech Interview Handbook: Interval](https://www.techinterviewhandbook.org/algorithms/interval/)

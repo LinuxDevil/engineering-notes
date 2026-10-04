@@ -1,12 +1,16 @@
 ---
+title: "Unique ID Generation"
 tags: [system-design, system-design/ids]
 aliases: [ID Generation, UUID, UUIDv7, UUIDv4, Snowflake ID, ULID, Distributed IDs]
 updated: 2026-09-27
 ---
 # Unique ID Generation
 
-> [!tldr] TL;DR
-> Distributed systems need IDs that are unique without a central counter. **UUIDv4** is 122 random bits: trivially unique but random order hurts B-tree indexes. **UUIDv7** (RFC 9562, 2024) puts a millisecond Unix timestamp first, so IDs are roughly time-ordered and index-friendly; it's the modern default and PostgreSQL 18 generates it natively with `uuidv7()`. **Snowflake** IDs pack timestamp + machine ID + sequence into 64 bits (compact, sortable, needs worker-ID coordination). **ULID** is a similar 128-bit, sortable, Base32 format that predates v7.
+<Note>
+**TL;DR**
+
+Distributed systems need IDs that are unique without a central counter. **UUIDv4** is 122 random bits: trivially unique but random order hurts B-tree indexes. **UUIDv7** (RFC 9562, 2024) puts a millisecond Unix timestamp first, so IDs are roughly time-ordered and index-friendly; it's the modern default and PostgreSQL 18 generates it natively with `uuidv7()`. **Snowflake** IDs pack timestamp + machine ID + sequence into 64 bits (compact, sortable, needs worker-ID coordination). **ULID** is a similar 128-bit, sortable, Base32 format that predates v7.
+</Note>
 
 ## Requirements to ask about
 - Uniqueness across nodes/regions without coordination?
@@ -64,7 +68,7 @@ Pitfalls: **clock going backwards** (NTP step) → duplicates unless you refuse 
 RFC 9562 allows using part of the random bits as a counter for monotonic ordering within the same millisecond.
 
 ## Why random keys hurt databases
-B-tree primary keys (Postgres, MySQL/InnoDB clustered index) insert in key order. Random UUIDv4 inserts land on random leaf pages → page splits, poor cache locality, more WAL and bigger indexes. Time-ordered IDs (v7, Snowflake, auto-increment) append to the "right edge" of the index, keeping the hot pages in memory. See [[Database Indexes]] and [[Computer Architecture Basics]] (locality).
+B-tree primary keys (Postgres, MySQL/InnoDB clustered index) insert in key order. Random UUIDv4 inserts land on random leaf pages → page splits, poor cache locality, more WAL and bigger indexes. Time-ordered IDs (v7, Snowflake, auto-increment) append to the "right edge" of the index, keeping the hot pages in memory. See [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) and [Computer Architecture Basics](/Software%20Engineering/CS%20Fundamentals/Computer%20Architecture%20Basics) (locality).
 
 ```sql
 -- PostgreSQL 18+
@@ -84,32 +88,40 @@ SELECT uuid_extract_timestamp(id) FROM orders LIMIT 1;  -- time is embedded
 
 ## Senior perspective
 - Default: **UUIDv7** for new internal primary keys, 64-bit Snowflake-style when size matters a lot (tweets, messages at huge scale), random/opaque tokens for anything security-sensitive (never use IDs as secrets).
-- Keep a separate **public slug** if you need short or human-friendly IDs (URL shortener: [[Case Study - URL Shortener]]).
+- Keep a separate **public slug** if you need short or human-friendly IDs (URL shortener: [Case Study - URL Shortener](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20URL%20Shortener)).
 - Check library behavior: monotonicity within a ms, clock regression handling, and whether the DB driver maps UUID natively.
 
-> [!info]+ 🆕 2025–2026
-> - **RFC 9562 (May 2024)** obsoleted RFC 4122 and standardized UUID versions 6, 7 and 8; v7 is recommended for new time-ordered use. ([RFC 9562](https://www.rfc-editor.org/rfc/rfc9562))
-> - **PostgreSQL 18 (2025-09-25)** added a built-in `uuidv7()` function (plus `uuidv4()` alias) and `uuid_extract_timestamp()` works on v7. ([PostgreSQL 18 release](https://www.postgresql.org/about/news/postgresql-18-released-3142/), [docs: UUID functions](https://www.postgresql.org/docs/18/functions-uuid.html))
+<Info>
+**🆕 2025–2026**
+
+- **RFC 9562 (May 2024)** obsoleted RFC 4122 and standardized UUID versions 6, 7 and 8; v7 is recommended for new time-ordered use. ([RFC 9562](https://www.rfc-editor.org/rfc/rfc9562))
+- **PostgreSQL 18 (2025-09-25)** added a built-in `uuidv7()` function (plus `uuidv4()` alias) and `uuid_extract_timestamp()` works on v7. ([PostgreSQL 18 release](https://www.postgresql.org/about/news/postgresql-18-released-3142/), [docs: UUID functions](https://www.postgresql.org/docs/18/functions-uuid.html))
+</Info>
 
 ## Interview questions
-> [!question]- Design an ID generator for 10k IDs/s across many services.
-> Snowflake-style 64-bit IDs generated locally: timestamp + worker ID + per-ms sequence. Assign worker IDs via etcd/ZooKeeper leases or StatefulSet ordinals, handle clock regressions by waiting or refusing, and use a custom epoch. Or UUIDv7 if 128 bits is acceptable, with no coordination at all.
+<Accordion title="Design an ID generator for 10k IDs/s across many services.">
+Snowflake-style 64-bit IDs generated locally: timestamp + worker ID + per-ms sequence. Assign worker IDs via etcd/ZooKeeper leases or StatefulSet ordinals, handle clock regressions by waiting or refusing, and use a custom epoch. Or UUIDv7 if 128 bits is acceptable, with no coordination at all.
+</Accordion>
 
-> [!question]- UUIDv4 vs UUIDv7 as a primary key?
-> Both are unique without coordination. v4 is fully random, so inserts scatter across the B-tree causing page splits and cache misses. v7 starts with a timestamp, so inserts are nearly sequential, giving better locality and smaller, faster indexes; the trade-off is that it reveals creation time.
+<Accordion title="UUIDv4 vs UUIDv7 as a primary key?">
+Both are unique without coordination. v4 is fully random, so inserts scatter across the B-tree causing page splits and cache misses. v7 starts with a timestamp, so inserts are nearly sequential, giving better locality and smaller, faster indexes; the trade-off is that it reveals creation time.
+</Accordion>
 
-> [!question]- What happens if the clock goes backwards in Snowflake?
-> You could generate duplicate IDs. Implementations detect `now < last` and either wait until the clock catches up, fail, or use a logical clock (keep using `last`, increment sequence).
+<Accordion title="What happens if the clock goes backwards in Snowflake?">
+You could generate duplicate IDs. Implementations detect `now < last` and either wait until the clock catches up, fail, or use a logical clock (keep using `last`, increment sequence).
+</Accordion>
 
-> [!question]- Why not use a database sequence everywhere?
-> One sequence is a single point of coordination and a throughput bottleneck across shards/regions, and it leaks business volume. Per-shard offsets or ranges help but complicate operations.
+<Accordion title="Why not use a database sequence everywhere?">
+One sequence is a single point of coordination and a throughput bottleneck across shards/regions, and it leaks business volume. Per-shard offsets or ranges help but complicate operations.
+</Accordion>
 
-> [!question]- When would you avoid time-ordered IDs?
-> When creation time must not be exposed, or in range-partitioned stores where monotonically increasing keys create a write hotspot on the last partition.
+<Accordion title="When would you avoid time-ordered IDs?">
+When creation time must not be exposed, or in range-partitioned stores where monotonically increasing keys create a write hotspot on the last partition.
+</Accordion>
 
 ## Related
-- [[System Design Index]]
-- [[Case Study - URL Shortener]] · [[Case Study - Chat System]] · [[Sharding & Partitioning]] · [[Database Indexes]] · [[Encoding, Serialization & Character Sets]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
+- [Case Study - URL Shortener](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20URL%20Shortener) · [Case Study - Chat System](/Software%20Engineering/System%20Design/Case%20Studies/Case%20Study%20-%20Chat%20System) · [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning) · [Database Indexes](/Software%20Engineering/Databases/Database%20Round/Indexes/Database%20Indexes) · [Encoding, Serialization & Character Sets](/Software%20Engineering/CS%20Fundamentals/Encoding%2C%20Serialization%20%26%20Character%20Sets)
 
 ## Sources
 - [RFC 9562: Universally Unique IDentifiers (UUIDs)](https://www.rfc-editor.org/rfc/rfc9562)

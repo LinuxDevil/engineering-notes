@@ -1,12 +1,16 @@
 ---
+title: "Case Study - Video Streaming"
 tags: [system-design, system-design/case-study]
 aliases: [Video Streaming Design, YouTube Design, Netflix Design, HLS, DASH, Adaptive Bitrate]
 updated: 2026-09-27
 ---
 # Case Study - Video Streaming
 
-> [!tldr] TL;DR
-> Video platforms split into an **upload and processing pipeline** (resumable upload to object storage → transcode into many resolutions/bitrates and codecs → package into small segments with **HLS/DASH** manifests) and a **delivery path** dominated by **CDNs**. Players use **adaptive bitrate (ABR)** to switch quality per segment based on bandwidth. Metadata, search, recommendations and view counts are ordinary services around it. Cost is driven by **egress bandwidth** and **transcoding compute**.
+<Note>
+**TL;DR**
+
+Video platforms split into an **upload and processing pipeline** (resumable upload to object storage → transcode into many resolutions/bitrates and codecs → package into small segments with **HLS/DASH** manifests) and a **delivery path** dominated by **CDNs**. Players use **adaptive bitrate (ABR)** to switch quality per segment based on bandwidth. Metadata, search, recommendations and view counts are ordinary services around it. Cost is driven by **egress bandwidth** and **transcoding compute**.
+</Note>
 
 ## 1. Requirements
 **Functional**: upload videos; watch on web/mobile/TV with adaptive quality; seek; video metadata, search, view counts; (optional) live streaming.
@@ -61,7 +65,7 @@ flowchart LR
 ### Adaptive bitrate streaming
 - **HLS** (`.m3u8`, Apple) and **MPEG-DASH** (`.mpd`) describe renditions and 2–6 s segments; **CMAF** lets both share the same fMP4 segments.
 - The player measures throughput and buffer level and picks the rendition for the next segment (buffer-based algorithms like BOLA).
-- Plain HTTP GETs of static files = perfectly cacheable by CDNs ([[CDN & Edge Computing]]).
+- Plain HTTP GETs of static files = perfectly cacheable by CDNs ([CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing)).
 
 ```text
 #EXTM3U
@@ -97,21 +101,25 @@ Encrypt segments (CENC/AES); license servers (Widevine, FairPlay, PlayReady); si
 - Moderation, copyright matching (fingerprinting) and legal takedowns are part of the pipeline.
 
 ## Interview questions
-> [!question]- Why split videos into segments?
-> Segments let the player switch bitrate at segment boundaries (ABR), start playback quickly, seek without downloading everything, and be cached by CDNs as ordinary static files.
+<Accordion title="Why split videos into segments?">
+Segments let the player switch bitrate at segment boundaries (ABR), start playback quickly, seek without downloading everything, and be cached by CDNs as ordinary static files.
+</Accordion>
 
-> [!question]- How do you transcode a long video quickly?
-> Split at GOP boundaries into chunks, transcode chunks in parallel across many workers for each rendition, then concatenate and package. Orchestrate as a DAG with idempotent, retryable tasks.
+<Accordion title="How do you transcode a long video quickly?">
+Split at GOP boundaries into chunks, transcode chunks in parallel across many workers for each rendition, then concatenate and package. Orchestrate as a DAG with idempotent, retryable tasks.
+</Accordion>
 
-> [!question]- How does adaptive bitrate work?
-> The manifest lists renditions at different bitrates. The player estimates bandwidth and monitors its buffer, choosing a higher or lower rendition for the next segment to avoid rebuffering while maximizing quality.
+<Accordion title="How does adaptive bitrate work?">
+The manifest lists renditions at different bitrates. The player estimates bandwidth and monitors its buffer, choosing a higher or lower rendition for the next segment to avoid rebuffering while maximizing quality.
+</Accordion>
 
-> [!question]- What dominates cost and how do you reduce it?
-> Bandwidth egress. Reduce with CDN/ISP caching, more efficient codecs (HEVC/AV1) for popular content, per-title encoding, and serving appropriate resolutions for device sizes.
+<Accordion title="What dominates cost and how do you reduce it?">
+Bandwidth egress. Reduce with CDN/ISP caching, more efficient codecs (HEVC/AV1) for popular content, per-title encoding, and serving appropriate resolutions for device sizes.
+</Accordion>
 
 ## Related
-- [[System Design Index]] · [[System Design Interview Framework]]
-- [[CDN & Edge Computing]] · [[Blob Storage & File Uploads]] · [[Message Queues & Event Streaming]] · [[Search Systems & Inverted Indexes]]
+- [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index) · [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework)
+- [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing) · [Blob Storage & File Uploads](/Software%20Engineering/System%20Design/Blob%20Storage%20%26%20File%20Uploads) · [Message Queues & Event Streaming](/Software%20Engineering/System%20Design/Message%20Queues%20%26%20Event%20Streaming) · [Search Systems & Inverted Indexes](/Software%20Engineering/System%20Design/Search%20Systems%20%26%20Inverted%20Indexes)
 
 ## Sources
 - Alex Xu, *System Design Interview*, vol. 1, ch. 14 "Design YouTube"

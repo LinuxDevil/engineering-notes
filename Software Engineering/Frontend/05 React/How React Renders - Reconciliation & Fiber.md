@@ -1,12 +1,16 @@
 ---
+title: "How React Renders - Reconciliation & Fiber"
 tags: [frontend, frontend/react, frontend/react/internals]
 aliases: [Reconciliation, React Fiber, Virtual DOM, Render and Commit, React rendering]
 updated: 2026-09-27
 ---
 # How React Renders - Reconciliation & Fiber
 
-> [!tldr] TL;DR
-> A render has three steps: **trigger** (initial mount or a state update), **render** (React calls your components to get a new element tree, then diffs it against the previous one) and **commit** (React applies the minimal DOM changes, then the browser paints). The diff is called **reconciliation**. Since React 16 it runs on **Fiber**: a mutable, linked-list tree of "units of work" that React can pause, resume, prioritise or throw away. That is the base of concurrent features like transitions.
+<Note>
+**TL;DR**
+
+A render has three steps: **trigger** (initial mount or a state update), **render** (React calls your components to get a new element tree, then diffs it against the previous one) and **commit** (React applies the minimal DOM changes, then the browser paints). The diff is called **reconciliation**. Since React 16 it runs on **Fiber**: a mutable, linked-list tree of "units of work" that React can pause, resume, prioritise or throw away. That is the base of concurrent features like transitions.
+</Note>
 
 ## 1. Trees everywhere
 
@@ -16,7 +20,7 @@ React models the UI as a **tree**, like the browser does:
 - **Accessibility tree**: what screen readers consume. The browser builds it from the DOM plus ARIA.
 - **React's trees**: the **render tree** of components, the **element tree** (what components return), and the **Fiber tree** (React's internal working copy).
 
-![[Untitled 45.png]]
+![Untitled 45](/Attachments/Untitled%2045.png)
 
 **The state lives inside React, not inside your function.** React ties each piece of state to the right component by **where that component sits in the UI tree**. You can think of it as `index: componentData`. Each component on screen has **fully isolated state**: two `<Counter />`s get two separate counts.
 
@@ -35,12 +39,15 @@ There are only two reasons a component renders:
 1. **It's the initial render.** You start it with `createRoot(domNode).render(<App />)`.
 2. **Its state, or an ancestor's state, was updated.** Updating state automatically **queues** a render. Context changes count too: a context change is a state change in a provider.
 
-> [!example] Initial render
-> ```jsx
-> import { createRoot } from 'react-dom/client';
-> const root = createRoot(document.getElementById('root'));
-> root.render(<Gallery />); // on the initial render React creates DOM nodes for <section>, <h1>, 3x <img>
-> ```
+<Info>
+**Initial render**
+
+```jsx
+import { createRoot } from 'react-dom/client';
+const root = createRoot(document.getElementById('root'));
+root.render(<Gallery />); // on the initial render React creates DOM nodes for <section>, <h1>, 3x <img>
+```
+</Info>
 
 ### Step 2: rendering = calling your components
 - "Rendering" means **React calls your component function**. The JSX it returns is a **snapshot** of the UI at that moment, built from that render's props, state and context.
@@ -54,21 +61,24 @@ When React re-renders a component:
 2. The function returns a new JSX snapshot.
 3. React updates the screen to match the snapshot you returned.
 
-Rendering must be **pure**: same inputs, same JSX, with no side effects. That is why React can safely render twice in StrictMode, or throw a render away in concurrent mode. See [[Component Patterns]].
+Rendering must be **pure**: same inputs, same JSX, with no side effects. That is why React can safely render twice in StrictMode, or throw a render away in concurrent mode. See [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns).
 
 ### Step 3: committing to the DOM
 - **Initial render:** React inserts every DOM node it created, using `appendChild()`.
 - **Re-renders:** React applies the **minimal operations** needed to make the DOM match the latest render output. If nothing changed, React **does not touch the DOM**, even though the component rendered.
-- Then the browser **repaints**. See [[How Browsers Render - Critical Rendering Path]].
+- Then the browser **repaints**. See [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path).
 
-> [!warning] "Render" ≠ "DOM update"
-> A re-render that produces the same output costs CPU time for the function call and the diff, but it causes **zero DOM writes**. People optimise re-renders when the real cost is often elsewhere. Measure first ([[React Performance]]).
+<Warning>
+**"Render" ≠ "DOM update"**
+
+A re-render that produces the same output costs CPU time for the function call and the diff, but it causes **zero DOM writes**. People optimise re-renders when the real cost is often elsewhere. Measure first ([React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)).
+</Warning>
 
 ## 3. The phases in more detail (render → commit → cleanup)
 
 This comes from the React Performance course. The cycle is **Render phase ⇒ Commit phase ⇒ Clean-up/effects**.
 
-![[Screenshot_2023-08-03_at_8.18.59_PM.png]]
+![Screenshot_2023-08-03_at_8.18.59_PM](/Attachments/Screenshot_2023-08-03_at_8.18.59_PM.png)
 
 **Render phase** (pure, can be interrupted, runs no side effects):
 - It starts with a state change, then enters the render cycle.
@@ -77,8 +87,8 @@ This comes from the React Performance course. The cycle is **Render phase ⇒ Co
 - If a component **didn't exist before**, there is nothing to diff: it's just created. If it **did exist**, React diffs it.
 - `useState` is implemented internally as a `useReducer` with a built-in "replace" reducer.
 
-![[Screenshot_2023-08-03_at_8.24.21_PM.png]]
-![[Screenshot_2023-08-03_at_8.39.18_PM.png]]
+![Screenshot_2023-08-03_at_8.24.21_PM](/Attachments/Screenshot_2023-08-03_at_8.24.21_PM.png)
+![Screenshot_2023-08-03_at_8.39.18_PM](/Attachments/Screenshot_2023-08-03_at_8.39.18_PM.png)
 
 **Rendering strategy:** from the component where state changed, **everything below it re-renders** unless it is bailed out by `memo`, by an identical element reference, or by the Compiler.
 
@@ -115,17 +125,23 @@ sequenceDiagram
 - It lets React guarantee that **the DOM matches the state**. It abstracts away attribute updates, event handling and manual DOM manipulation that you would otherwise write yourself.
 - In React, "virtual DOM" usually means **React elements**: plain immutable objects that describe the UI. React also keeps internal objects called **Fibers** that hold extra information about the component tree.
 
-> [!example] What JSX really is
-> ```jsx
-> const el = <button className="primary" onClick={save}>Save</button>;
-> // compiles (automatic JSX runtime) to roughly:
-> import { jsx as _jsx } from 'react/jsx-runtime';
-> const el2 = _jsx('button', { className: 'primary', onClick: save, children: 'Save' });
-> // el is a plain object: { $$typeof: Symbol(react.transitional.element), type: 'button', key: null, props: {...} }
-> ```
+<Info>
+**What JSX really is**
 
-> [!warning] Correction: "the virtual DOM is faster than the DOM"
-> My old interview note said "Virtual DOM is faster due to minimal updates via diffing". That isn't quite right. A diff is **extra work** on top of the DOM update. Hand-written, targeted DOM updates are always at least as fast. The VDOM's value is that it is **declarative**: you describe the UI for any state and get "fast enough" minimal updates for free. Frameworks without a VDOM (Svelte, Solid, Vue Vapor mode) show that you don't need a VDOM to be fast. See [[Other Frameworks - Vue, Svelte, Solid, Astro]].
+```jsx
+const el = <button className="primary" onClick={save}>Save</button>;
+// compiles (automatic JSX runtime) to roughly:
+import { jsx as _jsx } from 'react/jsx-runtime';
+const el2 = _jsx('button', { className: 'primary', onClick: save, children: 'Save' });
+// el is a plain object: { $$typeof: Symbol(react.transitional.element), type: 'button', key: null, props: {...} }
+```
+</Info>
+
+<Warning>
+**Correction: "the virtual DOM is faster than the DOM"**
+
+My old interview note said "Virtual DOM is faster due to minimal updates via diffing". That isn't quite right. A diff is **extra work** on top of the DOM update. Hand-written, targeted DOM updates are always at least as fast. The VDOM's value is that it is **declarative**: you describe the UI for any state and get "fast enough" minimal updates for free. Frameworks without a VDOM (Svelte, Solid, Vue Vapor mode) show that you don't need a VDOM to be fast. See [Other Frameworks - Vue, Svelte, Solid, Astro](/Software%20Engineering/Frontend/09%20Architecture/Other%20Frameworks%20-%20Vue%2C%20Svelte%2C%20Solid%2C%20Astro).
+</Warning>
 
 ### Shadow DOM vs Virtual DOM
 
@@ -134,7 +150,7 @@ sequenceDiagram
 | What | A JS object tree kept in memory by a library | A **browser** feature: an encapsulated DOM subtree attached to an element |
 | Purpose | Work out minimal DOM updates declaratively | **Scoping**: CSS and markup encapsulation for Web Components |
 | Owner | React (and other libraries) | The browser (the Web Components standard) |
-| Related? | No. They solve different problems and can be used together | See [[Web Components & Shadow DOM]] |
+| Related? | No. They solve different problems and can be used together | See [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM) |
 
 ## 5. Elements vs components (Advanced React, ch. 2)
 
@@ -145,31 +161,34 @@ sequenceDiagram
 - So **elements passed as props (including `children`) are not re-rendered** when the component that receives them re-renders from its own state. They were created by the parent, whose render didn't run again.
 - **`children` is just a prop.** It behaves like any other prop when you pass it with JSX nesting syntax.
 
-> [!example] Children-as-props stops re-renders
-> ```jsx
-> // ❌ every mouse move re-renders <VerySlowComponent />
-> function App() {
->   const [pos, setPos] = useState({ x: 0, y: 0 });
->   return (
->     <div onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}>
->       <MovingBlock position={pos} />
->       <VerySlowComponent />
->     </div>
->   );
-> }
->
-> // ✅ move the state into a wrapper, pass the slow part as children
-> function ScrollableArea({ children }) {
->   const [pos, setPos] = useState({ x: 0, y: 0 });
->   return (
->     <div onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}>
->       <MovingBlock position={pos} />
->       {children}{/* same element object as last time → skipped */}
->     </div>
->   );
-> }
-> const App = () => <ScrollableArea><VerySlowComponent /></ScrollableArea>;
-> ```
+<Info>
+**Children-as-props stops re-renders**
+
+```jsx
+// ❌ every mouse move re-renders <VerySlowComponent />
+function App() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  return (
+    <div onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}>
+      <MovingBlock position={pos} />
+      <VerySlowComponent />
+    </div>
+  );
+}
+
+// ✅ move the state into a wrapper, pass the slow part as children
+function ScrollableArea({ children }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  return (
+    <div onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}>
+      <MovingBlock position={pos} />
+      {children}{/* same element object as last time → skipped */}
+    </div>
+  );
+}
+const App = () => <ScrollableArea><VerySlowComponent /></ScrollableArea>;
+```
+</Info>
 
 ## 6. Where re-renders come from (Advanced React, ch. 1)
 
@@ -201,17 +220,20 @@ flowchart TD
   F -- "unkeyed" --> H["Match by index"]
 ```
 
-> [!warning] Two classic bugs that follow from rule 1
-> **Declaring a component inside another component.** Every render creates a *new function*, so it's a *new type*. React **remounts** it each time: state is lost, inputs lose focus, and it's slow.
-> ```jsx
-> function Parent() {
->   const Child = () => <input />; // ❌ new type each render → remount
->   return <Child />;
-> }
-> ```
-> Move `Child` to module scope.
->
-> **Why don't we need `key` outside lists?** Outside lists, an element's **position in the JSX** already identifies it. `{isA ? <Counter /> : <Counter />}` keeps the same state, because it's the same type at the same position. Add different `key`s to reset it. See [[State, Props & Data Flow]].
+<Warning>
+**Two classic bugs that follow from rule 1**
+
+**Declaring a component inside another component.** Every render creates a *new function*, so it's a *new type*. React **remounts** it each time: state is lost, inputs lose focus, and it's slow.
+```jsx
+function Parent() {
+  const Child = () => <input />; // ❌ new type each render → remount
+  return <Child />;
+}
+```
+Move `Child` to module scope.
+
+**Why don't we need `key` outside lists?** Outside lists, an element's **position in the JSX** already identifies it. `{isA ? <Counter /> : <Counter />}` keeps the same state, because it's the same type at the same position. Add different `key`s to reset it. See [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow).
+</Warning>
 
 ### Keys (think of a hashmap key)
 The key tells React **which item is which** between renders, so it can work out what really happened (insert, delete, move) and update the DOM correctly.
@@ -222,13 +244,16 @@ The key tells React **which item is which** between renders, so it can work out 
 - **Index as key** is only fine for static lists that never reorder, filter or insert. Otherwise state "sticks" to the wrong row.
 - Components **don't receive `key` as a prop**. It's a hint for React only. If you need the ID, pass it separately: `<Profile key={id} userId={id} />`.
 
-> [!example] Index keys breaking state
-> ```jsx
-> // Each row has an uncontrolled <input>. Prepend an item with key={index}:
-> // React thinks row 0 was "updated" and row N is "new", so typed text shifts to the wrong row.
-> {items.map((item, i) => <Row key={i} item={item} />)}      // ❌
-> {items.map(item => <Row key={item.id} item={item} />)}     // ✅
-> ```
+<Info>
+**Index keys breaking state**
+
+```jsx
+// Each row has an uncontrolled <input>. Prepend an item with key={index}:
+// React thinks row 0 was "updated" and row N is "new", so typed text shifts to the wrong row.
+{items.map((item, i) => <Row key={i} item={item} />)}      // ❌
+{items.map(item => <Row key={item.id} item={item} />)}     // ✅
+```
+</Info>
 
 ## 8. Fiber: the reconciliation engine (React 16+)
 
@@ -256,70 +281,84 @@ flowchart TD
   Header -->|"return"| App
 ```
 
-![[Screenshot_2023-08-03_at_8.42.54_PM.png]]
+![Screenshot_2023-08-03_at_8.42.54_PM](/Attachments/Screenshot_2023-08-03_at_8.42.54_PM.png)
 
 ### current vs workInProgress (double buffering)
 - **`current`**: the fiber tree that matches what's **on screen now**.
 - **`workInProgress`**: the tree React builds for an update. It reflects the **future** state to flush to the screen. **All work happens on the workInProgress tree.** Each fiber has an `alternate` pointer to its twin in the other tree.
 - **At commit, React swaps the pointers:** workInProgress becomes `current`. If a render is interrupted by higher-priority work, React simply **throws the unfinished workInProgress away**. The screen never showed it, and that is why the render phase must be pure.
 
-> [!example] What a fiber roughly holds
-> ```js
-> {
->   type: Counter,            // function/class or 'div'
->   key: null,
->   stateNode: null,          // DOM node for host components
->   child, sibling, return,   // linked-list pointers
->   pendingProps, memoizedProps,
->   memoizedState,            // for function components: linked list of hooks
->   updateQueue,              // queued setState updates
->   flags,                    // Placement | Update | Deletion ...
->   lanes,                    // priority of pending work
->   alternate,                // twin in current/workInProgress
-> }
-> ```
+<Info>
+**What a fiber roughly holds**
+
+```js
+{
+  type: Counter,            // function/class or 'div'
+  key: null,
+  stateNode: null,          // DOM node for host components
+  child, sibling, return,   // linked-list pointers
+  pendingProps, memoizedProps,
+  memoizedState,            // for function components: linked list of hooks
+  updateQueue,              // queued setState updates
+  flags,                    // Placement | Update | Deletion ...
+  lanes,                    // priority of pending work
+  alternate,                // twin in current/workInProgress
+}
+```
+</Info>
 
 ### Why Fiber matters
 - **Time slicing:** the work loop checks `shouldYield()` between units of work and gives control back to the browser so input stays responsive.
-- **Priorities (lanes):** a keystroke (`SyncLane`) beats a transition (`TransitionLane`). This powers `useTransition` and `useDeferredValue`. See [[Hooks Reference]].
+- **Priorities (lanes):** a keystroke (`SyncLane`) beats a transition (`TransitionLane`). This powers `useTransition` and `useDeferredValue`. See [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference).
 - **Suspense, streaming SSR, selective hydration, `<Activity>`** all rely on being able to pause and resume work on part of the tree.
 
-> [!info]+ 🆕 2025–2026
-> - **React 19.2 (2025-10-01)** added **Performance Tracks** to Chrome DevTools. You can now see scheduler priorities and component render/commit timings on the Performance panel ([[React Performance]]).
-> - **React 19.2 `<Activity mode="hidden">`** keeps a subtree's state (its fibers) while hiding it. Hidden trees unmount their effects and render at low priority.
-> - **React 19.3 (2026-09-09):** "transitions now render independently".
-> - Details: [[React 19 to 19.3 & React Compiler]].
+<Info>
+**🆕 2025–2026**
+
+- **React 19.2 (2025-10-01)** added **Performance Tracks** to Chrome DevTools. You can now see scheduler priorities and component render/commit timings on the Performance panel ([React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)).
+- **React 19.2 `<Activity mode="hidden">`** keeps a subtree's state (its fibers) while hiding it. Hidden trees unmount their effects and render at low priority.
+- **React 19.3 (2026-09-09):** "transitions now render independently".
+- Details: [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler).
+</Info>
 
 ## Interview questions
-> [!question]- Walk me through what happens when you call `setState`.
-> React queues the update on the component's fiber with a priority (lane) and schedules a render. In the **render phase** it calls the component (and its subtree) to get new elements, then reconciles them against the current fibers in a workInProgress tree. This phase can be interrupted. In the **commit phase** it applies DOM mutations, attaches refs and runs `useLayoutEffect`, all synchronously. The browser paints, then `useEffect`s run. Several `setState` calls in the same tick are batched into one render.
+<Accordion title="Walk me through what happens when you call `setState`.">
+React queues the update on the component's fiber with a priority (lane) and schedules a render. In the **render phase** it calls the component (and its subtree) to get new elements, then reconciles them against the current fibers in a workInProgress tree. This phase can be interrupted. In the **commit phase** it applies DOM mutations, attaches refs and runs `useLayoutEffect`, all synchronously. The browser paints, then `useEffect`s run. Several `setState` calls in the same tick are batched into one render.
+</Accordion>
 
-> [!question]- What is reconciliation, and how does React make it O(n)?
-> Reconciliation compares the new element tree with the previous one to find the minimal DOM changes. React uses heuristics. Different types mean the subtree is replaced. The same type means the node is kept and its props updated. Children are matched by `key`. Because of this it never does a general tree-edit-distance search.
+<Accordion title="What is reconciliation, and how does React make it O(n)?">
+Reconciliation compares the new element tree with the previous one to find the minimal DOM changes. React uses heuristics. Different types mean the subtree is replaced. The same type means the node is kept and its props updated. Children are matched by `key`. Because of this it never does a general tree-edit-distance search.
+</Accordion>
 
-> [!question]- What's the role of keys? Why not index or `Math.random()`?
-> Keys give list items a stable identity, so React can match items across renders and move them instead of recreating them. An index breaks when the list reorders or has inserts: state and uncontrolled input attach to the wrong item. A random key changes every render, so every item remounts: it's slow and loses state. Use a stable ID from the data.
+<Accordion title="What's the role of keys? Why not index or `Math.random()`?">
+Keys give list items a stable identity, so React can match items across renders and move them instead of recreating them. An index breaks when the list reorders or has inserts: state and uncontrolled input attach to the wrong item. A random key changes every render, so every item remounts: it's slow and loses state. Use a stable ID from the data.
+</Accordion>
 
-> [!question]- What is React Fiber?
-> It's the reconciliation engine since React 16. Each element maps to a mutable fiber node, which is a unit of work holding state, props, hooks and effects. Fibers form a linked list (child/sibling/return), so React can walk the tree iteratively, pause, resume, prioritise work (lanes) and discard it. It keeps two trees, `current` and `workInProgress`, and swaps them at commit. This is what makes concurrent rendering, Suspense and transitions possible.
+<Accordion title="What is React Fiber?">
+It's the reconciliation engine since React 16. Each element maps to a mutable fiber node, which is a unit of work holding state, props, hooks and effects. Fibers form a linked list (child/sibling/return), so React can walk the tree iteratively, pause, resume, prioritise work (lanes) and discard it. It keeps two trees, `current` and `workInProgress`, and swaps them at commit. This is what makes concurrent rendering, Suspense and transitions possible.
+</Accordion>
 
-> [!question]- Virtual DOM vs Shadow DOM vs real DOM?
-> The real DOM is the browser's live tree. The virtual DOM is an in-memory JS description of the UI that a library diffs to update the real DOM declaratively. The Shadow DOM is a browser feature for encapsulating markup and styles inside Web Components. VDOM and Shadow DOM solve unrelated problems.
+<Accordion title="Virtual DOM vs Shadow DOM vs real DOM?">
+The real DOM is the browser's live tree. The virtual DOM is an in-memory JS description of the UI that a library diffs to update the real DOM declaratively. The Shadow DOM is a browser feature for encapsulating markup and styles inside Web Components. VDOM and Shadow DOM solve unrelated problems.
+</Accordion>
 
-> [!question]- Does a component re-render when its props change?
-> It re-renders when its **parent** re-renders, whether or not the props changed. Props only decide the outcome when the component is memoized (`React.memo` or the Compiler), and then a shallow comparison decides. The root cause of every re-render is a state change (including context and external stores).
+<Accordion title="Does a component re-render when its props change?">
+It re-renders when its **parent** re-renders, whether or not the props changed. Props only decide the outcome when the component is memoized (`React.memo` or the Compiler), and then a shallow comparison decides. The root cause of every re-render is a state change (including context and external stores).
+</Accordion>
 
-> [!question]- Element vs component?
-> A component is a function (or class) that returns elements. An element is an immutable object `{ type, props, key }` describing what to render. React re-renders a child when its element object is a new reference. That's why `children` passed from above don't re-render when the wrapper's own state changes.
+<Accordion title="Element vs component?">
+A component is a function (or class) that returns elements. An element is an immutable object `{ type, props, key }` describing what to render. React re-renders a child when its element object is a new reference. That's why `children` passed from above don't re-render when the wrapper's own state changes.
+</Accordion>
 
-> [!question]- Why must rendering be pure?
-> React may call your component several times, throw away a render (concurrent mode), or render twice in StrictMode. Side effects during render would run an unpredictable number of times, and could change things the screen never showed. Side effects belong in event handlers or effects.
+<Accordion title="Why must rendering be pure?">
+React may call your component several times, throw away a render (concurrent mode), or render twice in StrictMode. Side effects during render would run an unpredictable number of times, and could change things the screen never showed. Side effects belong in event handlers or effects.
+</Accordion>
 
 ## Related
-- [[React Index]] · [[State, Props & Data Flow]] · [[Hooks Reference]] · [[React Performance]]
-- [[How Browsers Render - Critical Rendering Path]] · [[Web Components & Shadow DOM]]
-- [[Event Loop - Microtasks & Macrotasks]] (how React's scheduler yields to the browser)
-- [[Advance React Book]] · [[React Interview Questions]]
+- [React Index](/Software%20Engineering/Frontend/05%20React/React%20Index) · [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow) · [Hooks Reference](/Software%20Engineering/Frontend/05%20React/Hooks%20Reference) · [React Performance](/Software%20Engineering/Frontend/05%20React/React%20Performance)
+- [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path) · [Web Components & Shadow DOM](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Web%20Components%20%26%20Shadow%20DOM)
+- [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks) (how React's scheduler yields to the browser)
+- [Advance React Book](/Software%20Engineering/Frontend/Courses%20%26%20Books/Advance%20React%20Book) · [React Interview Questions](/Software%20Engineering/Frontend/17%20Interview%20Prep/React%20Interview%20Questions)
 
 ## Sources
 - [react.dev: Render and Commit](https://react.dev/learn/render-and-commit) · [Preserving and Resetting State](https://react.dev/learn/preserving-and-resetting-state) · [Rendering Lists (keys)](https://react.dev/learn/rendering-lists) · [Keeping Components Pure](https://react.dev/learn/keeping-components-pure)

@@ -1,24 +1,28 @@
 ---
+title: "gRPC vs REST"
 tags: [apis, apis/grpc]
 aliases: [gRPC, RPC, Protocol Buffers, Protobuf, Connect RPC, gRPC-Web]
 updated: 2026-09-27
 ---
 # gRPC vs REST
 
-> [!tldr] TL;DR
-> **REST** models an API as resources over HTTP with (usually) JSON; it is universal, human-readable and cache-friendly. **gRPC** models it as typed remote functions defined in **Protocol Buffers**, runs over **HTTP/2**, generates client/server code, and supports **streaming** in both directions. Use gRPC for internal service-to-service calls where performance and strict contracts matter; use REST (or GraphQL) at the public/browser edge. **Connect** and **gRPC-Web** bridge gRPC to browsers.
+<Note>
+**TL;DR**
 
-![[Untitled 20.png]]
+**REST** models an API as resources over HTTP with (usually) JSON; it is universal, human-readable and cache-friendly. **gRPC** models it as typed remote functions defined in **Protocol Buffers**, runs over **HTTP/2**, generates client/server code, and supports **streaming** in both directions. Use gRPC for internal service-to-service calls where performance and strict contracts matter; use REST (or GraphQL) at the public/browser edge. **Connect** and **gRPC-Web** bridge gRPC to browsers.
+</Note>
+
+![Untitled 20](/Attachments/Untitled%2020.png)
 
 ## What is an API
 
 APIs (Application Programming Interfaces) are a software intermediary that establishes the rules for **applications to interact and talk to each other**. An API specifies the **types of requests** one application (web page, mobile app, service) can make to another, how to make them, which **data formats** to use, and the conventions callers must follow.
 
-![[Untitled 21.png]]
+![Untitled 21](/Attachments/Untitled%2021.png)
 
 ### APIs and microservices
 
-In a **monolithic application**, all functionality ships as a single unit from a single codebase. A **microservice architecture** splits it into smaller services that communicate over the network (HTTP, gRPC, messaging). Those services talk to each other **through APIs**, so the choice of API style directly affects latency, coupling and reliability. See [[Microservices Architecture]].
+In a **monolithic application**, all functionality ships as a single unit from a single codebase. A **microservice architecture** splits it into smaller services that communicate over the network (HTTP, gRPC, messaging). Those services talk to each other **through APIs**, so the choice of API style directly affects latency, coupling and reliability. See [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture).
 
 ## What is RPC
 
@@ -32,7 +36,7 @@ In a **monolithic application**, all functionality ships as a single unit from a
 
 ## What is REST
 
-REST responses are usually JSON (sometimes XML) over HTTP, and each piece of the system is exposed as a **resource** manipulated with `GET`, `POST`, `PUT`, `PATCH`, `DELETE`. Typical RESTful services run over HTTP/HTTPS on TCP/IP. Many so-called REST APIs are really "RPC over HTTP+JSON" (`POST /sendEmail`), which is fine as long as it is consistent. Design guidance: [[REST API Design]].
+REST responses are usually JSON (sometimes XML) over HTTP, and each piece of the system is exposed as a **resource** manipulated with `GET`, `POST`, `PUT`, `PATCH`, `DELETE`. Typical RESTful services run over HTTP/HTTPS on TCP/IP. Many so-called REST APIs are really "RPC over HTTP+JSON" (`POST /sendEmail`), which is fine as long as it is consistent. Design guidance: [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design).
 
 ## What is gRPC
 
@@ -99,7 +103,7 @@ gRPC is **built on HTTP/2**. Many calls are **multiplexed** as independent strea
 - **Client streaming**: a stream of requests, one response (e.g. uploading telemetry).
 - **Bidirectional streaming**: both sides stream independently, in any order, over the same call. The client starts the call; either side can finish its half.
 
-![[Untitled 22.png]]
+![Untitled 22](/Attachments/Untitled%2022.png)
 
 ### Browser support
 
@@ -133,12 +137,15 @@ REST mostly uses **JSON**: flexible, **human-readable**, needs no schema to get 
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **L4 load balancing with gRPC**: long-lived HTTP/2 connections pin all traffic to one backend. Use an L7 proxy (Envoy, Nginx `grpc_pass`, service mesh) or client-side balancing (xDS).
-> - **No deadlines**: a slow downstream holds resources forever. Set a deadline on every call and propagate it.
-> - **Breaking protobuf compatibility**: changing a field's number or type, or reusing a deleted number. Add fields; `reserved` removed ones; run `buf breaking` in CI.
-> - **Retrying non-idempotent calls** blindly on `UNAVAILABLE`.
-> - Exposing gRPC directly to third parties who expect REST/JSON; use transcoding (`google.api.http` annotations + Envoy/gRPC-Gateway) or Connect.
+<Warning>
+**Common mistakes**
+
+- **L4 load balancing with gRPC**: long-lived HTTP/2 connections pin all traffic to one backend. Use an L7 proxy (Envoy, Nginx `grpc_pass`, service mesh) or client-side balancing (xDS).
+- **No deadlines**: a slow downstream holds resources forever. Set a deadline on every call and propagate it.
+- **Breaking protobuf compatibility**: changing a field's number or type, or reusing a deleted number. Add fields; `reserved` removed ones; run `buf breaking` in CI.
+- **Retrying non-idempotent calls** blindly on `UNAVAILABLE`.
+- Exposing gRPC directly to third parties who expect REST/JSON; use transcoding (`google.api.http` annotations + Envoy/gRPC-Gateway) or Connect.
+</Warning>
 
 ## Senior perspective
 
@@ -150,26 +157,31 @@ REST mostly uses **JSON**: flexible, **human-readable**, needs no schema to get 
 
 ## Interview questions
 
-> [!question]- What are the main differences between gRPC and REST?
-> gRPC is contract-first RPC over HTTP/2 with binary Protobuf, generated clients, deadlines and four streaming modes. REST is a resource-oriented style over any HTTP version, usually JSON, universally supported, human-readable and cacheable. gRPC suits internal high-throughput calls; REST suits public and browser-facing APIs.
+<Accordion title="What are the main differences between gRPC and REST?">
+gRPC is contract-first RPC over HTTP/2 with binary Protobuf, generated clients, deadlines and four streaming modes. REST is a resource-oriented style over any HTTP version, usually JSON, universally supported, human-readable and cacheable. gRPC suits internal high-throughput calls; REST suits public and browser-facing APIs.
+</Accordion>
 
-> [!question]- Why does gRPC need HTTP/2?
-> It relies on HTTP/2 streams for multiplexing many calls on one connection, bidirectional streaming, and trailers to send the final status after a streamed body. Browsers don't expose trailers to JavaScript, hence gRPC-Web and Connect.
+<Accordion title="Why does gRPC need HTTP/2?">
+It relies on HTTP/2 streams for multiplexing many calls on one connection, bidirectional streaming, and trailers to send the final status after a streamed body. Browsers don't expose trailers to JavaScript, hence gRPC-Web and Connect.
+</Accordion>
 
-> [!question]- How do you evolve a protobuf schema without breaking clients?
-> Only add new fields with new numbers; never change a field's number or type; mark removed fields and names as `reserved`; treat new enum values carefully; version the package (`v1`, `v2`) for breaking changes; enforce with `buf breaking` in CI.
+<Accordion title="How do you evolve a protobuf schema without breaking clients?">
+Only add new fields with new numbers; never change a field's number or type; mark removed fields and names as `reserved`; treat new enum values carefully; version the package (`v1`, `v2`) for breaking changes; enforce with `buf breaking` in CI.
+</Accordion>
 
-> [!question]- Why is load balancing gRPC tricky?
-> gRPC keeps long-lived HTTP/2 connections and multiplexes calls on them, so connection-level (L4) balancing sends everything from a client to one server. You need request-level (L7) balancing through an HTTP/2-aware proxy or client-side load balancing.
+<Accordion title="Why is load balancing gRPC tricky?">
+gRPC keeps long-lived HTTP/2 connections and multiplexes calls on them, so connection-level (L4) balancing sends everything from a client to one server. You need request-level (L7) balancing through an HTTP/2-aware proxy or client-side load balancing.
+</Accordion>
 
-> [!question]- What is Connect RPC?
-> A protocol and set of libraries from Buf that serve the same Protobuf services over gRPC, gRPC-Web and a simple HTTP/JSON-friendly Connect protocol, so browsers and curl can call them without a translating proxy. It is a CNCF Sandbox project (accepted April 2024).
+<Accordion title="What is Connect RPC?">
+A protocol and set of libraries from Buf that serve the same Protobuf services over gRPC, gRPC-Web and a simple HTTP/JSON-friendly Connect protocol, so browsers and curl can call them without a translating proxy. It is a CNCF Sandbox project (accepted April 2024).
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[REST API Design]] · [[GraphQL vs REST]] · [[API Gateways & Reverse Proxies]] · [[Webhooks, Polling, SSE & WebSockets]] · [[API Versioning, Idempotency & Backward Compatibility]]
-- [[Microservices Architecture]] · [[Networking - HTTP, Caching & Real-time]]
-- Other domains: [[Microservices Architecture]] · [[System Design Index]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design) · [GraphQL vs REST](/Software%20Engineering/APIs%20%26%20Auth/GraphQL%20vs%20REST) · [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [Webhooks, Polling, SSE & WebSockets](/Software%20Engineering/APIs%20%26%20Auth/Webhooks%2C%20Polling%2C%20SSE%20%26%20WebSockets) · [API Versioning, Idempotency & Backward Compatibility](/Software%20Engineering/APIs%20%26%20Auth/API%20Versioning%2C%20Idempotency%20%26%20Backward%20Compatibility)
+- [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
+- Other domains: [Microservices Architecture](/Software%20Engineering/DevOps/Microservices%20Architecture) · [System Design Index](/Software%20Engineering/System%20Design/System%20Design%20Index)
 
 ## Sources
 - [grpc.io: Introduction](https://grpc.io/docs/what-is-grpc/introduction/) · [Core concepts](https://grpc.io/docs/what-is-grpc/core-concepts/) · [Status codes](https://grpc.io/docs/guides/status-codes/) · [Deadlines](https://grpc.io/docs/guides/deadlines/)

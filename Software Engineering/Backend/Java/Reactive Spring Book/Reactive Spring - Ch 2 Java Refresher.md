@@ -1,14 +1,18 @@
 ---
+title: "Reactive Spring - Ch 2 Java Refresher"
 tags: [backend, backend/java, book]
 aliases: [Java Refresher, Lambdas, Functional Interface, Method References, Abstract class vs interface Java]
 updated: 2026-09-27
 ---
 # Reactive Spring - Ch 2 Java Refresher
 
-> [!tldr] TL;DR
-> The book's quick Java refresher: **type inference** with `var`, **lambdas** (to methods what anonymous classes are to classes), **functional interfaces** (exactly one abstract method, the target type of a lambda), and **method references** (`obj::method`). Plus the classic comparison of **abstract classes vs interfaces**. These features are everywhere in Reactor and Spring code.
+<Note>
+**TL;DR**
 
-*Part of [[Reactive Spring Book]] (book notes). Renamed from "Chapter 2".*
+The book's quick Java refresher: **type inference** with `var`, **lambdas** (to methods what anonymous classes are to classes), **functional interfaces** (exactly one abstract method, the target type of a lambda), and **method references** (`obj::method`). Plus the classic comparison of **abstract classes vs interfaces**. These features are everywhere in Reactor and Spring code.
+</Note>
+
+*Part of [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) (book notes). Renamed from "Chapter 2".*
 
 ## Type inference
 
@@ -81,25 +85,31 @@ process(delegate::pleaseHandle);
 | Extended / implemented | Extended (single inheritance) | Implemented (many) | Implemented, usually via lambdas | n/a |
 | Purpose | Share code and state among related classes | Define a contract across unrelated classes | Target type for lambdas/method references | Concise lambdas |
 
-See also [[Abstract Class and Interface]] and [[Java Language Essentials]].
+See also [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) and [Java Language Essentials](/Software%20Engineering/Backend/Java/Java%20Language%20Essentials).
 
-> [!info]+ 🆕 Since the book
-> Java 16–25 added records, sealed interfaces, pattern matching (21) and `void main()` compact source files (25). Sealed interfaces + records are now the idiomatic way to model closed sets of types. See [[Modern Java 17 to 25]].
+<Info>
+**🆕 Since the book**
+
+Java 16–25 added records, sealed interfaces, pattern matching (21) and `void main()` compact source files (25). Sealed interfaces + records are now the idiomatic way to model closed sets of types. See [Modern Java 17 to 25](/Software%20Engineering/Backend/Java/Modern%20Java%2017%20to%2025).
+</Info>
 
 ## Interview questions
 
-> [!question]- What is a functional interface?
-> An interface with exactly one abstract method, so a lambda or method reference can implement it. `@FunctionalInterface` makes the compiler enforce that.
+<Accordion title="What is a functional interface?">
+An interface with exactly one abstract method, so a lambda or method reference can implement it. `@FunctionalInterface` makes the compiler enforce that.
+</Accordion>
 
-> [!question]- When would you choose an abstract class over an interface?
-> When related classes share state or implementation and you need constructors or protected members. Use interfaces for capabilities/contracts that unrelated classes can implement, and because a class can implement many interfaces but extend only one class.
+<Accordion title="When would you choose an abstract class over an interface?">
+When related classes share state or implementation and you need constructors or protected members. Use interfaces for capabilities/contracts that unrelated classes can implement, and because a class can implement many interfaces but extend only one class.
+</Accordion>
 
-> [!question]- What are the four kinds of method references?
-> Static (`Integer::parseInt`), bound instance (`obj::method`), unbound instance (`String::length`), and constructor (`ArrayList::new`).
+<Accordion title="What are the four kinds of method references?">
+Static (`Integer::parseInt`), bound instance (`obj::method`), unbound instance (`String::length`), and constructor (`ArrayList::new`).
+</Accordion>
 
 ## Related
-- [[Reactive Spring Book]] · [[Java & Spring Index]]
-- [[Java Language Essentials]] · [[Abstract Class and Interface]] · [[Reactive Spring - Ch 3 Spring Fundamentals]]
+- [Reactive Spring Book](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20Book) · [Java & Spring Index](/Software%20Engineering/Backend/Java/Java%20%26%20Spring%20Index)
+- [Java Language Essentials](/Software%20Engineering/Backend/Java/Java%20Language%20Essentials) · [Abstract Class and Interface](/Software%20Engineering/Principles/Abstract%20Class%20and%20Interface) · [Reactive Spring - Ch 3 Spring Fundamentals](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%203%20Spring%20Fundamentals)
 
 ## Sources
 - Josh Long, *Reactive Spring* (2020), chapter 2

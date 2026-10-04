@@ -1,12 +1,16 @@
 ---
+title: "TypeScript Essentials"
 tags: [frontend, frontend/typescript]
 aliases: [TypeScript, TS basics, type vs interface, enum vs union, satisfies, unknown vs any]
 updated: 2026-09-27
 ---
 # TypeScript Essentials
 
-> [!tldr] TL;DR
-> TypeScript adds a **static, structural** type system on top of JavaScript; types are erased at compile time and don't exist at runtime. The core skills: choosing between `type`, `interface` and `abstract class`; preferring **union types** over `enum`; **narrowing** unions safely; using `unknown` (not `any`) for untrusted data; `never` for exhaustiveness; and `satisfies` to validate a value without widening it.
+<Note>
+**TL;DR**
+
+TypeScript adds a **static, structural** type system on top of JavaScript; types are erased at compile time and don't exist at runtime. The core skills: choosing between `type`, `interface` and `abstract class`; preferring **union types** over `enum`; **narrowing** unions safely; using `unknown` (not `any`) for untrusted data; `never` for exhaustiveness; and `satisfies` to validate a value without widening it.
+</Note>
 
 ## Mental model
 
@@ -73,11 +77,17 @@ class StripeProvider extends PaymentProvider {
 new PaymentProvider('k'); // Error: cannot create an instance of an abstract class
 ```
 
-> [!tip] Practical rule
-> Use `interface` for public object contracts that might be extended (props of shared components, API models, library augmentation). Use `type` for unions, tuples, function types and anything computed with generics/utility types. Use an `abstract class` only when you need shared runtime code plus a contract (common in Angular services; rare in React code). Consistency within a codebase matters more than the choice.
+<Tip>
+**Practical rule**
 
-> [!warning] Parameter properties are not "erasable"
-> `constructor(protected readonly apiKey: string)` generates runtime code. With `--erasableSyntaxOnly` (for Node's native type stripping) it's an error; write the field and assignment explicitly. See [[TypeScript 5.8 to 7.0]].
+Use `interface` for public object contracts that might be extended (props of shared components, API models, library augmentation). Use `type` for unions, tuples, function types and anything computed with generics/utility types. Use an `abstract class` only when you need shared runtime code plus a contract (common in Angular services; rare in React code). Consistency within a codebase matters more than the choice.
+</Tip>
+
+<Warning>
+**Parameter properties are not "erasable"**
+
+`constructor(protected readonly apiKey: string)` generates runtime code. With `--erasableSyntaxOnly` (for Node's native type stripping) it's an error; write the field and assignment explicitly. See [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0).
+</Warning>
 
 ## `enum` vs union types
 
@@ -108,8 +118,11 @@ type CabinC = typeof CABIN[keyof typeof CABIN];   // 'ECONOMY' | 'BUSINESS'
 Object.values(CABIN).map(renderOption);
 ```
 
-> [!note] `const enum`
-> Inlined at compile time (no object), but it breaks with isolated per-file transpilers (Babel, SWC, esbuild, `isolatedModules`) across files. Avoid in libraries. In 2026 the recommended default is **unions or `as const` objects**.
+<Note>
+**`const enum`**
+
+Inlined at compile time (no object), but it breaks with isolated per-file transpilers (Babel, SWC, esbuild, `isolatedModules`) across files. Avoid in libraries. In 2026 the recommended default is **unions or `as const` objects**.
+</Note>
 
 ## `any` vs `unknown` vs `never`
 
@@ -150,35 +163,41 @@ TypeScript follows control flow and narrows union types inside branches.
 | Type predicate | `function isFlight(x): x is Flight` |
 | Assertion function | `function assert(c: unknown): asserts c` |
 
-> [!example] Discriminated union + exhaustive check with `never`
-> ```ts
-> type SearchState =
->   | { status: 'idle' }
->   | { status: 'loading' }
->   | { status: 'success'; results: Flight[] }
->   | { status: 'error'; error: string };
->
-> function render(s: SearchState) {
->   switch (s.status) {
->     case 'idle':    return 'Search for flights';
->     case 'loading': return 'Loading...';
->     case 'success': return `${s.results.length} flights`;   // s.results available here
->     case 'error':   return s.error;
->     default: {
->       const _exhaustive: never = s;   // compile error if a new status is added and not handled
->       return _exhaustive;
->     }
->   }
-> }
-> ```
-> This pattern also makes "impossible states impossible" (no `results` while `loading`), which is great for React state. See [[State, Props & Data Flow]].
+<Info>
+**Discriminated union + exhaustive check with `never`**
 
-> [!example] Type predicate
-> ```ts
-> const isDefined = <T,>(x: T | null | undefined): x is T => x != null;
-> const ids = [1, null, 3].filter(isDefined);   // number[]
-> ```
-> Since TS 5.5, simple predicates like `x => x != null` are **inferred** automatically in `filter`.
+```ts
+type SearchState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; results: Flight[] }
+  | { status: 'error'; error: string };
+
+function render(s: SearchState) {
+  switch (s.status) {
+    case 'idle':    return 'Search for flights';
+    case 'loading': return 'Loading...';
+    case 'success': return `${s.results.length} flights`;   // s.results available here
+    case 'error':   return s.error;
+    default: {
+      const _exhaustive: never = s;   // compile error if a new status is added and not handled
+      return _exhaustive;
+    }
+  }
+}
+```
+This pattern also makes "impossible states impossible" (no `results` while `loading`), which is great for React state. See [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow).
+</Info>
+
+<Info>
+**Type predicate**
+
+```ts
+const isDefined = <T,>(x: T | null | undefined): x is T => x != null;
+const ids = [1, null, 3].filter(isDefined);   // number[]
+```
+Since TS 5.5, simple predicates like `x => x != null` are **inferred** automatically in `filter`.
+</Info>
 
 ## `satisfies` (TS 4.9)
 
@@ -245,53 +264,64 @@ const inputRef = useRef<HTMLInputElement>(null);
 const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value);
 ```
 
-In React 19, `ref` is a normal prop for function components, so you type it via `React.ComponentProps<'input'>` instead of `forwardRef`. See [[React 19 to 19.3 & React Compiler]].
+In React 19, `ref` is a normal prop for function components, so you type it via `React.ComponentProps<'input'>` instead of `forwardRef`. See [React 19 to 19.3 & React Compiler](/Software%20Engineering/Frontend/05%20React/React%2019%20to%2019.3%20%26%20React%20Compiler).
 
 ## Recommended strictness
 
-Turn on `"strict": true` (TS 6.0 makes it the default) plus `noUncheckedIndexedAccess` (array/record access returns `T | undefined`) and `exactOptionalPropertyTypes` if the team can handle it. See [[TypeScript 5.8 to 7.0]] for a full modern tsconfig.
+Turn on `"strict": true` (TS 6.0 makes it the default) plus `noUncheckedIndexedAccess` (array/record access returns `T | undefined`) and `exactOptionalPropertyTypes` if the team can handle it. See [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0) for a full modern tsconfig.
 
-> [!warning] Common pitfalls
-> - `any` leaking from untyped libraries or `JSON.parse`; prefer `unknown` + validation (Zod/Valibot) at the boundary.
-> - Using `as` to silence errors instead of narrowing.
-> - Thinking types validate runtime data: API responses are still `unknown` in reality.
-> - Numeric enums accepting arbitrary numbers, and the reverse mapping appearing in `Object.values`.
-> - `{}` type means "any non-nullish value", not "empty object"; use `Record<string, never>` for an empty object.
-> - Object literal excess property checks only apply to *fresh* literals.
+<Warning>
+**Common pitfalls**
+
+- `any` leaking from untyped libraries or `JSON.parse`; prefer `unknown` + validation (Zod/Valibot) at the boundary.
+- Using `as` to silence errors instead of narrowing.
+- Thinking types validate runtime data: API responses are still `unknown` in reality.
+- Numeric enums accepting arbitrary numbers, and the reverse mapping appearing in `Object.values`.
+- `{}` type means "any non-nullish value", not "empty object"; use `Record<string, never>` for an empty object.
+- Object literal excess property checks only apply to *fresh* literals.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What is the difference between `type` and `interface`?
-> Both describe object shapes. Interfaces can be extended with `extends` and support declaration merging; type aliases can express unions, intersections, tuples, primitives and mapped/conditional types but can't merge. Use interfaces for extendable object contracts and types for everything computed.
+<Accordion title="What is the difference between `type` and `interface`?">
+Both describe object shapes. Interfaces can be extended with `extends` and support declaration merging; type aliases can express unions, intersections, tuples, primitives and mapped/conditional types but can't merge. Use interfaces for extendable object contracts and types for everything computed.
+</Accordion>
 
-> [!question]- When would you use an abstract class instead of an interface?
-> When you need shared runtime implementation (methods, constructor logic, protected fields) along with a contract subclasses must fulfil. Interfaces are type-only and disappear at compile time.
+<Accordion title="When would you use an abstract class instead of an interface?">
+When you need shared runtime implementation (methods, constructor logic, protected fields) along with a contract subclasses must fulfil. Interfaces are type-only and disappear at compile time.
+</Accordion>
 
-> [!question]- Enum vs union type: which do you prefer and why?
-> Usually unions (or `as const` objects): zero runtime cost, better tree shaking, exact type safety, and compatible with `erasableSyntaxOnly`/Node type stripping. Enums generate runtime objects, numeric ones are loosely typed, and they don't work under type stripping.
+<Accordion title="Enum vs union type: which do you prefer and why?">
+Usually unions (or `as const` objects): zero runtime cost, better tree shaking, exact type safety, and compatible with `erasableSyntaxOnly`/Node type stripping. Enums generate runtime objects, numeric ones are loosely typed, and they don't work under type stripping.
+</Accordion>
 
-> [!question]- What's the difference between `any` and `unknown`?
-> Both accept any value, but `any` disables checking and propagates silently; `unknown` forces you to narrow before using the value. Use `unknown` for untrusted input and `catch` variables.
+<Accordion title="What's the difference between `any` and `unknown`?">
+Both accept any value, but `any` disables checking and propagates silently; `unknown` forces you to narrow before using the value. Use `unknown` for untrusted input and `catch` variables.
+</Accordion>
 
-> [!question]- What is `never` used for?
-> A type with no values: return type of functions that throw or loop forever, the result of impossible intersections/narrowing, and exhaustiveness checks in `switch` statements over unions.
+<Accordion title="What is `never` used for?">
+A type with no values: return type of functions that throw or loop forever, the result of impossible intersections/narrowing, and exhaustiveness checks in `switch` statements over unions.
+</Accordion>
 
-> [!question]- What does `satisfies` do?
-> Validates that an expression matches a type while keeping its own, more specific inferred type, unlike an annotation, which widens the value to the annotated type.
+<Accordion title="What does `satisfies` do?">
+Validates that an expression matches a type while keeping its own, more specific inferred type, unlike an annotation, which widens the value to the annotated type.
+</Accordion>
 
-> [!question]- What is a discriminated union?
-> A union of object types sharing a literal "tag" property (e.g. `status`). Checking the tag narrows to the matching member, which models state machines safely and enables exhaustive checks.
+<Accordion title="What is a discriminated union?">
+A union of object types sharing a literal "tag" property (e.g. `status`). Checking the tag narrows to the matching member, which models state machines safely and enables exhaustive checks.
+</Accordion>
 
-> [!question]- What is structural typing?
-> Type compatibility is based on shape (properties and their types), not on declared names or inheritance, so any object with the required members is assignable.
+<Accordion title="What is structural typing?">
+Type compatibility is based on shape (properties and their types), not on declared names or inheritance, so any object with the required members is assignable.
+</Accordion>
 
 ## Related
-- [[Advanced TypeScript - Generics & Utility Types]]
-- [[TypeScript 5.8 to 7.0]]
-- [[Types, Coercion & Equality]]
-- [[Prototypes, Classes & Inheritance]]
-- [[State, Props & Data Flow]]
-- [[Angular Fundamentals]]
+- [Advanced TypeScript - Generics & Utility Types](/Software%20Engineering/Frontend/02%20TypeScript/Advanced%20TypeScript%20-%20Generics%20%26%20Utility%20Types)
+- [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0)
+- [Types, Coercion & Equality](/Software%20Engineering/Frontend/01%20JavaScript/Types%2C%20Coercion%20%26%20Equality)
+- [Prototypes, Classes & Inheritance](/Software%20Engineering/Frontend/01%20JavaScript/Prototypes%2C%20Classes%20%26%20Inheritance)
+- [State, Props & Data Flow](/Software%20Engineering/Frontend/05%20React/State%2C%20Props%20%26%20Data%20Flow)
+- [Angular Fundamentals](/Software%20Engineering/Frontend/08%20Angular/Angular%20Fundamentals)
 
 ## Sources
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html): [Everyday types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html), [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html), [Enums](https://www.typescriptlang.org/docs/handbook/enums.html), [Classes (abstract)](https://www.typescriptlang.org/docs/handbook/2/classes.html)

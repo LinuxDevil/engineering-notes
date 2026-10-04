@@ -1,12 +1,16 @@
 ---
+title: "URL as State"
 tags: [frontend, frontend/state-management, frontend/routing, frontend/seo]
 aliases: [URL State, Search Params, Query Params State, nuqs]
 updated: 2026-09-27
 ---
 # URL as State
 
-> [!tldr] TL;DR
-> The URL is a **global, persistent, shareable** state container that the browser gives you for free. Filters, search queries, sort order, pagination, tabs and "which item is open" usually belong in the URL: they survive refresh, work with back/forward, can be bookmarked and shared, and (for public pages) give search engines a distinct, indexable URL per state. Read with `URLSearchParams` / `useSearchParams`, write with the router, and use a typed helper like **nuqs** in bigger apps.
+<Note>
+**TL;DR**
+
+The URL is a **global, persistent, shareable** state container that the browser gives you for free. Filters, search queries, sort order, pagination, tabs and "which item is open" usually belong in the URL: they survive refresh, work with back/forward, can be bookmarked and shared, and (for public pages) give search engines a distinct, indexable URL per state. Read with `URLSearchParams` / `useSearchParams`, write with the router, and use a typed helper like **nuqs** in bigger apps.
+</Note>
 
 ## Anatomy of a URL
 
@@ -46,11 +50,15 @@ alig.com/editor/xxxxx?filter=course_name%3Aeq%3Aultimate-next-js-13-course-ebook
 
 Imagine your website is a big library and each URL is a unique bookshelf. When you organize your books (content) on different bookshelves (URLs), it's easier for people (search engines) to find the specific book they're looking for. This helps visibility and ranking because search engines better understand the structure and relevance of your content. Unique URLs also make it easier for users to share specific content.
 
-> [!question]- How does URL-as-state improve SEO?
-> When you use unique URLs to represent different states or pages, each URL is a distinct entry point for search engines to crawl and index. Variations of your content (filters, sorting, pagination) get their own URLs, making it easier for search engines to discover and rank those pages appropriately.
+<Accordion title="How does URL-as-state improve SEO?">
+When you use unique URLs to represent different states or pages, each URL is a distinct entry point for search engines to crawl and index. Variations of your content (filters, sorting, pagination) get their own URLs, making it easier for search engines to discover and rank those pages appropriately.
+</Accordion>
 
-> [!warning] SEO nuance (added)
-> Not every combination should be indexed. Infinite filter/sort permutations create **duplicate content** and waste crawl budget. Common practice: index meaningful landing states (e.g. `/flights/dubai-to-london` or a category page), set a `<link rel="canonical">` pointing sort/tracking variants to the main URL, and consider `noindex` for deep filter combinations. In Next.js set `alternates.canonical` in `generateMetadata` ([[Next.js App Router Fundamentals]]).
+<Warning>
+**SEO nuance (added)**
+
+Not every combination should be indexed. Infinite filter/sort permutations create **duplicate content** and waste crawl budget. Common practice: index meaningful landing states (e.g. `/flights/dubai-to-london` or a category page), set a `<link rel="canonical">` pointing sort/tracking variants to the main URL, and consider `noindex` for deep filter combinations. In Next.js set `alternates.canonical` in `generateMetadata` ([Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)).
+</Warning>
 
 ## The platform API: `URL` and `URLSearchParams`
 
@@ -100,7 +108,7 @@ function FlightFilters() {
 }
 ```
 
-In data routers, loaders receive the request, so `new URL(request.url).searchParams` lets you fetch on the server/loader side. See [[React Router]].
+In data routers, loaders receive the request, so `new URL(request.url).searchParams` lets you fetch on the server/loader side. See [React Router](/Software%20Engineering/Frontend/05%20React/React%20Router).
 
 ## Next.js App Router
 
@@ -149,7 +157,7 @@ export function SortSelect() {
 }
 ```
 
-Changing search params with the router triggers a server render of the page with the new `searchParams`, so the server-fetched results update. `<Link href={{ pathname: "/flights", query: { sort: "price" } }}>` also works for plain links. `next/form`'s `<Form action="/search">` does GET-form navigation to a URL with search params (see [[Next.js 15 to 16.3]]).
+Changing search params with the router triggers a server render of the page with the new `searchParams`, so the server-fetched results update. `<Link href={{ pathname: "/flights", query: { sort: "price" } }}>` also works for plain links. `next/form`'s `<Form action="/search">` does GET-form navigation to a URL with search params (see [Next.js 15 to 16.3](/Software%20Engineering/Frontend/07%20Next.js/Next.js%2015%20to%2016.3)).
 
 ### Owner's `formUrlQuery` helper (with the `query-string` package)
 
@@ -240,34 +248,40 @@ Useful options: `history: "push" | "replace"` (default replace), `shallow: false
 
 ## Patterns
 
-> [!example] Search box: local input state, debounced URL state
-> ```tsx
-> "use client";
-> function SearchBox() {
->   const [q, setQ] = useQueryState("q", parseAsString.withDefault(""));
->   const [draft, setDraft] = useState(q);          // instant typing feedback
->
->   useEffect(() => {
->     const id = setTimeout(() => setQ(draft || null), 300); // debounce URL writes
->     return () => clearTimeout(id);
->   }, [draft, setQ]);
->
->   return <input value={draft} onChange={(e) => setDraft(e.target.value)} />;
-> }
-> ```
+<Info>
+**Search box: local input state, debounced URL state**
 
-> [!example] URL as the query key for server state
-> ```tsx
-> const [params] = useQueryStates({ from: parseAsString, to: parseAsString, page: parseAsInteger.withDefault(1) });
-> const { data } = useQuery({ queryKey: ["flights", params], queryFn: () => getFlights(params) });
-> ```
-> The URL is the single source of truth; the query cache is keyed by it. Back button = previous results instantly from cache. See [[Server State - TanStack Query & RTK Query]].
+```tsx
+"use client";
+function SearchBox() {
+  const [q, setQ] = useQueryState("q", parseAsString.withDefault(""));
+  const [draft, setDraft] = useState(q);          // instant typing feedback
+
+  useEffect(() => {
+    const id = setTimeout(() => setQ(draft || null), 300); // debounce URL writes
+    return () => clearTimeout(id);
+  }, [draft, setQ]);
+
+  return <input value={draft} onChange={(e) => setDraft(e.target.value)} />;
+}
+```
+</Info>
+
+<Info>
+**URL as the query key for server state**
+
+```tsx
+const [params] = useQueryStates({ from: parseAsString, to: parseAsString, page: parseAsInteger.withDefault(1) });
+const { data } = useQuery({ queryKey: ["flights", params], queryFn: () => getFlights(params) });
+```
+The URL is the single source of truth; the query cache is keyed by it. Back button = previous results instantly from cache. See [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query).
+</Info>
 
 Other patterns:
 - **Reset dependent params**: changing a filter should reset `page`.
 - **Omit defaults** from the URL to keep links short and canonical (`?sort=price` when price is the default is noise).
 - **Replace vs push**: typing and slider dragging → `replace`; discrete navigational choices (tab, page) → `push` so back works.
-- **Modals as routes**: in Next.js, intercepting + parallel routes make "open photo/login modal" a URL ([[Next.js App Router Fundamentals]]).
+- **Modals as routes**: in Next.js, intercepting + parallel routes make "open photo/login modal" a URL ([Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)).
 - **Validate** with a schema (Zod/Valibot or nuqs parsers) and fall back to defaults on garbage.
 
 ```mermaid
@@ -283,45 +297,53 @@ flowchart LR
 
 ## What NOT to put in the URL
 
-- **Secrets and PII**: tokens, emails, passport numbers, payment data. URLs end up in history, server logs, analytics, `Referer` headers and screenshots. (Tokens in URLs are a known leak vector; see [[Authentication & Token Storage]].)
+- **Secrets and PII**: tokens, emails, passport numbers, payment data. URLs end up in history, server logs, analytics, `Referer` headers and screenshots. (Tokens in URLs are a known leak vector; see [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).)
 - **Large or deeply nested data**: browsers and servers have practical length limits (a few KB is safe); use an ID and fetch the rest.
 - **Ephemeral UI state**: hover, "is dropdown open", animation state.
 - **High-frequency values** (scroll position, drag coordinates) without throttling: history writes are rate-limited by browsers.
 - **Form drafts** that users don't expect to share.
 - **Anything the server must trust**: the URL is user input; always validate and authorize on the server.
 
-> [!warning] Common pitfalls
-> - Forgetting `encodeURIComponent` when concatenating strings by hand (use `URLSearchParams`).
-> - Mutating the `ReadonlyURLSearchParams` returned by Next's `useSearchParams` (copy it first).
-> - Using `push` for every keystroke, making the back button useless.
-> - Duplicating URL state into `useState` and letting them drift apart.
-> - Reading `searchParams` in a Next.js layout: layouts don't receive it (they don't re-render on navigation); read it in the page or a client component.
+<Warning>
+**Common pitfalls**
+
+- Forgetting `encodeURIComponent` when concatenating strings by hand (use `URLSearchParams`).
+- Mutating the `ReadonlyURLSearchParams` returned by Next's `useSearchParams` (copy it first).
+- Using `push` for every keystroke, making the back button useless.
+- Duplicating URL state into `useState` and letting them drift apart.
+- Reading `searchParams` in a Next.js layout: layouts don't receive it (they don't re-render on navigation); read it in the page or a client component.
+</Warning>
 
 ## Interview questions
 
-> [!question]- What kind of state belongs in the URL?
-> State that should survive refresh and be shareable/bookmarkable: search terms, filters, sort, pagination, selected tab, the open item or modal. Not secrets, large data, or ephemeral UI state.
+<Accordion title="What kind of state belongs in the URL?">
+State that should survive refresh and be shareable/bookmarkable: search terms, filters, sort, pagination, selected tab, the open item or modal. Not secrets, large data, or ephemeral UI state.
+</Accordion>
 
-> [!question]- Path params vs query params?
-> Path params identify a resource (`/flights/EK1`) and usually map to a route. Query params describe a view of that resource (filters, sort, page) and are optional.
+<Accordion title="Path params vs query params?">
+Path params identify a resource (`/flights/EK1`) and usually map to a route. Query params describe a view of that resource (filters, sort, page) and are optional.
+</Accordion>
 
-> [!question]- How do you read and update search params in Next.js App Router?
-> Server: the page's `searchParams` prop (awaited Promise in 15+). Client: `useSearchParams()` to read, then build a new `URLSearchParams` and call `router.push`/`router.replace` with `pathname + '?' + params`. Libraries like nuqs wrap this with typed hooks.
+<Accordion title="How do you read and update search params in Next.js App Router?">
+Server: the page's `searchParams` prop (awaited Promise in 15+). Client: `useSearchParams()` to read, then build a new `URLSearchParams` and call `router.push`/`router.replace` with `pathname + '?' + params`. Libraries like nuqs wrap this with typed hooks.
+</Accordion>
 
-> [!question]- push vs replace when updating the URL?
-> `push` adds a history entry (back returns to the previous state), right for discrete navigations. `replace` overwrites the current entry, right for continuous changes like typing or sliders.
+<Accordion title="push vs replace when updating the URL?">
+`push` adds a history entry (back returns to the previous state), right for discrete navigations. `replace` overwrites the current entry, right for continuous changes like typing or sliders.
+</Accordion>
 
-> [!question]- How does URL state help SEO, and what's the risk?
-> Each meaningful state gets its own crawlable, shareable URL that can be server-rendered. The risk is combinatorial explosion of near-duplicate pages; manage it with canonical URLs, `noindex` for deep combinations, and curated landing URLs.
+<Accordion title="How does URL state help SEO, and what's the risk?">
+Each meaningful state gets its own crawlable, shareable URL that can be server-rendered. The risk is combinatorial explosion of near-duplicate pages; manage it with canonical URLs, `noindex` for deep combinations, and curated landing URLs.
+</Accordion>
 
 ## Related
-- [[State Management Overview]]
-- [[Server State - TanStack Query & RTK Query]]
-- [[React Router]]
-- [[Next.js App Router Fundamentals]]
-- [[Case Study - Flight Search & Booking]]
-- [[Case Study - Autocomplete]]
-- [[Networking - HTTP, Caching & Real-time]]
+- [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview)
+- [Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)
+- [React Router](/Software%20Engineering/Frontend/05%20React/React%20Router)
+- [Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)
+- [Case Study - Flight Search & Booking](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Flight%20Search%20%26%20Booking)
+- [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20Design/Case%20Study%20-%20Autocomplete)
+- [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)
 
 ## Sources
 - Owner's original notes (Front End.md, URL State Management section)

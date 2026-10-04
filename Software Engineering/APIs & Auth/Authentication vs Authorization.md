@@ -1,12 +1,16 @@
 ---
+title: "Authentication vs Authorization"
 tags: [apis, apis/auth]
 aliases: [AuthN vs AuthZ, AuthN, AuthZ, Authorization Models, RBAC, ABAC, ReBAC, Access Control]
 updated: 2026-09-27
 ---
 # Authentication vs Authorization
 
-> [!tldr] TL;DR
-> **Authentication (AuthN)** answers *who are you?* and **authorization (AuthZ)** answers *what are you allowed to do?* AuthN always comes first and produces an identity (a session or token with claims); AuthZ then checks that identity against a policy on **every request**. Authorization models range from simple roles (**RBAC**) to attributes (**ABAC**) to relationships (**ReBAC**, Google Zanzibar style). Broken authorization, not broken login, is the #1 API vulnerability.
+<Note>
+**TL;DR**
+
+**Authentication (AuthN)** answers *who are you?* and **authorization (AuthZ)** answers *what are you allowed to do?* AuthN always comes first and produces an identity (a session or token with claims); AuthZ then checks that identity against a policy on **every request**. Authorization models range from simple roles (**RBAC**) to attributes (**ABAC**) to relationships (**ReBAC**, Google Zanzibar style). Broken authorization, not broken login, is the #1 API vulnerability.
+</Note>
 
 ## The idea
 
@@ -22,10 +26,13 @@ updated: 2026-09-27
 | Works through passwords, one-time codes, passkeys, biometrics, client certificates | Works through roles, permissions, policies and ownership rules maintained by the app |
 | Output: an identity (session, ID token, access token with claims) | Output: allow / deny (sometimes with a filtered result set) |
 | Example: an employee signs in with a passkey | Example: once signed in, an employee sees their own payslip; an HR manager sees everyone's in their department |
-| Standards: [[Passkeys, WebAuthn & MFA|WebAuthn]], OpenID Connect, SAML | Standards: [[OAuth 2.x & OpenID Connect|OAuth 2.x]] scopes, XACML, Cedar, OPA/Rego |
+| Standards: [WebAuthn](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA), OpenID Connect, SAML | Standards: [OAuth 2.x](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) scopes, XACML, Cedar, OPA/Rego |
 
-> [!warning] OAuth is authorization, not authentication
-> OAuth 2.x delegates *access* (an app can call an API on your behalf). It does not tell the client who you are. **OpenID Connect** adds the ID token that does. See [[OAuth 2.x & OpenID Connect]].
+<Warning>
+**OAuth is authorization, not authentication**
+
+OAuth 2.x delegates *access* (an app can call an API on your behalf). It does not tell the client who you are. **OpenID Connect** adds the ID token that does. See [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect).
+</Warning>
 
 ## How it fits in a request
 
@@ -43,7 +50,7 @@ sequenceDiagram
   S-->>C: 200 invoice  |  403 Forbidden  |  404 (hide existence)
 ```
 
-- Coarse checks (is the token valid, has it scope `invoices:read`?) can live at the [[API Gateways & Reverse Proxies|gateway]].
+- Coarse checks (is the token valid, has it scope `invoices:read`?) can live at the [gateway](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies).
 - **Fine-grained checks (does user 7 own invoice 42?) must live in the service**, next to the data. A gateway cannot know ownership.
 
 ## Authorization models
@@ -110,18 +117,21 @@ Question asked at runtime: `check(user:alice, viewer, document:roadmap)` → the
 
 Not every caller is a human:
 - **API keys**: simple, but they are bearer secrets with no expiry by default. Scope them, rotate them, hash them at rest (store like passwords).
-- **OAuth client credentials grant**: a service gets a short-lived access token ([[OAuth 2.x & OpenID Connect]]).
+- **OAuth client credentials grant**: a service gets a short-lived access token ([OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect)).
 - **mTLS / workload identity (SPIFFE)**: the service's certificate *is* its identity; common inside a service mesh.
 
 ## Pitfalls
 
-> [!warning] Common mistakes
-> - **Checking authorization only in the UI.** Hiding a button is not access control; the API must enforce it.
-> - **Trusting IDs from the client** (`GET /users/123/orders` without checking 123 is the caller). This is **BOLA/IDOR**, #1 in the [[API Security|OWASP API Top 10]].
-> - **Checking at the gateway only.** Gateways do coarse checks; object-level rules belong in the service.
-> - **Stale permissions in long-lived JWTs.** Roles baked into a token stay valid until it expires. Keep access tokens short or look up permissions server-side. See [[JWT vs Cookies]].
-> - **Returning 403 for other tenants' resources**, which confirms they exist. Prefer 404.
-> - **Mass assignment**: `PATCH /users/me {"role":"admin"}` accepted because the handler spreads the body into the model.
+<Warning>
+**Common mistakes**
+
+- **Checking authorization only in the UI.** Hiding a button is not access control; the API must enforce it.
+- **Trusting IDs from the client** (`GET /users/123/orders` without checking 123 is the caller). This is **BOLA/IDOR**, #1 in the [OWASP API Top 10](/Software%20Engineering/Security/API%20Security).
+- **Checking at the gateway only.** Gateways do coarse checks; object-level rules belong in the service.
+- **Stale permissions in long-lived JWTs.** Roles baked into a token stay valid until it expires. Keep access tokens short or look up permissions server-side. See [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies).
+- **Returning 403 for other tenants' resources**, which confirms they exist. Prefer 404.
+- **Mass assignment**: `PATCH /users/me {"role":"admin"}` accepted because the handler spreads the body into the model.
+</Warning>
 
 ## Senior perspective
 
@@ -134,30 +144,36 @@ Not every caller is a human:
 
 ## Interview questions
 
-> [!question]- What is the difference between authentication and authorization?
-> Authentication verifies identity (who you are) using credentials such as passwords, passkeys or certificates. Authorization decides what that identity may do, using roles, attributes or relationships. AuthN happens first and produces an identity; AuthZ runs on every request against that identity.
+<Accordion title="What is the difference between authentication and authorization?">
+Authentication verifies identity (who you are) using credentials such as passwords, passkeys or certificates. Authorization decides what that identity may do, using roles, attributes or relationships. AuthN happens first and produces an identity; AuthZ runs on every request against that identity.
+</Accordion>
 
-> [!question]- 401 vs 403?
-> 401 means the request lacks valid authentication (missing/expired token); the response should carry `WWW-Authenticate`. 403 means the server knows who you are but you are not allowed. For resources in another tenant, many APIs return 404 so they don't reveal existence.
+<Accordion title="401 vs 403?">
+401 means the request lacks valid authentication (missing/expired token); the response should carry `WWW-Authenticate`. 403 means the server knows who you are but you are not allowed. For resources in another tenant, many APIs return 404 so they don't reveal existence.
+</Accordion>
 
-> [!question]- RBAC vs ABAC vs ReBAC?
-> RBAC grants permissions through roles; simple but coarse and prone to role explosion. ABAC evaluates attributes of user, resource, action and context; flexible but harder to audit. ReBAC derives permissions from a relationship graph (owner, member, parent), which models sharing hierarchies like Google Drive; it needs a dedicated engine such as Zanzibar/SpiceDB/OpenFGA.
+<Accordion title="RBAC vs ABAC vs ReBAC?">
+RBAC grants permissions through roles; simple but coarse and prone to role explosion. ABAC evaluates attributes of user, resource, action and context; flexible but harder to audit. ReBAC derives permissions from a relationship graph (owner, member, parent), which models sharing hierarchies like Google Drive; it needs a dedicated engine such as Zanzibar/SpiceDB/OpenFGA.
+</Accordion>
 
-> [!question]- What is BOLA/IDOR and how do you prevent it?
-> Broken Object Level Authorization: the API accepts an object ID from the client and returns it without checking the caller may access it. Prevent it with object-level checks in every handler, scoping queries by owner/tenant, row-level security, unguessable IDs as defence in depth, and automated tests that try other users' IDs.
+<Accordion title="What is BOLA/IDOR and how do you prevent it?">
+Broken Object Level Authorization: the API accepts an object ID from the client and returns it without checking the caller may access it. Prevent it with object-level checks in every handler, scoping queries by owner/tenant, row-level security, unguessable IDs as defence in depth, and automated tests that try other users' IDs.
+</Accordion>
 
-> [!question]- Is OAuth an authentication protocol?
-> No. OAuth 2.x is a delegated authorization framework: it issues access tokens for APIs. OpenID Connect is the identity layer on top that adds the ID token and UserInfo endpoint to authenticate the user.
+<Accordion title="Is OAuth an authentication protocol?">
+No. OAuth 2.x is a delegated authorization framework: it issues access tokens for APIs. OpenID Connect is the identity layer on top that adds the ID token and UserInfo endpoint to authenticate the user.
+</Accordion>
 
-> [!question]- Where should authorization be enforced in a microservice architecture?
-> Coarse checks (valid token, scope) at the gateway; fine-grained, object-level checks inside each service close to the data, ideally using a shared policy engine or library so rules stay consistent. Never only in the frontend.
+<Accordion title="Where should authorization be enforced in a microservice architecture?">
+Coarse checks (valid token, scope) at the gateway; fine-grained, object-level checks inside each service close to the data, ideally using a shared policy engine or library so rules stay consistent. Never only in the frontend.
+</Accordion>
 
 ## Related
-- [[APIs & Auth Index]] · [[Backend Index]]
-- [[JWT vs Cookies]] · [[OAuth 2.x & OpenID Connect]] · [[Passkeys, WebAuthn & MFA]] · [[API Security]]
-- [[API Gateways & Reverse Proxies]] · [[REST API Design]]
-- Frontend view: [[Authentication & Token Storage]] · [[Frontend Security - XSS, CSRF, CSP & Trusted Types]]
-- Other domains: [[Security Index]] · [[API Security]] · [[Backend Security Essentials]]
+- [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index) · [Backend Index](/Software%20Engineering/Backend/Backend%20Index)
+- [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) · [OAuth 2.x & OpenID Connect](/Software%20Engineering/APIs%20%26%20Auth/OAuth%202.x%20%26%20OpenID%20Connect) · [Passkeys, WebAuthn & MFA](/Software%20Engineering/APIs%20%26%20Auth/Passkeys%2C%20WebAuthn%20%26%20MFA) · [API Security](/Software%20Engineering/Security/API%20Security)
+- [API Gateways & Reverse Proxies](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies) · [REST API Design](/Software%20Engineering/APIs%20%26%20Auth/REST%20API%20Design)
+- Frontend view: [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage) · [Frontend Security - XSS, CSRF, CSP & Trusted Types](/Software%20Engineering/Frontend/11%20Security/Frontend%20Security%20-%20XSS%2C%20CSRF%2C%20CSP%20%26%20Trusted%20Types)
+- Other domains: [Security Index](/Software%20Engineering/Security/Security%20Index) · [API Security](/Software%20Engineering/Security/API%20Security) · [Backend Security Essentials](/Software%20Engineering/Security/Backend%20Security%20Essentials)
 
 ## Sources
 - [MDN: 401 Unauthorized](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401) · [MDN: 403 Forbidden](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403)

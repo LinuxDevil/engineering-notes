@@ -1,14 +1,18 @@
 ---
+title: "Node.js Hard Parts - Streams & Event Loop Queues"
 tags: [backend, backend/node, course]
 aliases: [Node Streams, Streams, highWaterMark, Backpressure in Node, Node queues]
 updated: 2026-09-27
 ---
 # Node.js Hard Parts - Streams & Event Loop Queues
 
-> [!tldr] TL;DR
-> A **stream** processes data chunk by chunk (64 KiB by default for file streams) instead of loading it all into memory. Node emits a `data` event per chunk and auto-runs your handler, but only when the **call stack is empty**; until then the callback waits in a **queue**. Node has several queues (nextTick, promise microtasks, timers, I/O, check/`setImmediate`, close) and the **event loop** follows fixed rules to pick the next one. Use `stream.pipeline()` or async iteration so **backpressure** is handled for you.
+<Note>
+**TL;DR**
 
-*Part of [[The Hard Parts of Servers & Node.js]] (course notes). Renamed from "Streams". The precise, current phase model is in [[Node.js Event Loop & libuv]].*
+A **stream** processes data chunk by chunk (64 KiB by default for file streams) instead of loading it all into memory. Node emits a `data` event per chunk and auto-runs your handler, but only when the **call stack is empty**; until then the callback waits in a **queue**. Node has several queues (nextTick, promise microtasks, timers, I/O, check/`setImmediate`, close) and the **event loop** follows fixed rules to pick the next one. Use `stream.pipeline()` or async iteration so **backpressure** is handled for you.
+</Note>
+
+*Part of [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) (course notes). Renamed from "Streams". The precise, current phase model is in [Node.js Event Loop & libuv](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Event%20Loop%20%26%20libuv).*
 
 ## Streams: data in chunks
 
@@ -16,15 +20,15 @@ updated: 2026-09-27
 - The chunk size is set by the **highWaterMark**. For `fs.createReadStream` it is **64 KiB**; you can change it.
 - A stream is chunks of data, like buckets of water. Each time a chunk arrives Node **broadcasts** a `data` event, and the function we attached auto-runs with the chunk.
 
-![[Screenshot_2023-05-05_at_5.44.26_PM.png]]
+![Screenshot_2023-05-05_at_5.44.26_PM](/Attachments/Screenshot_2023-05-05_at_5.44.26_PM.png)
 
 - When the file stream opens, Node broadcasts `open`.
 
-![[Screenshot_2023-05-05_at_6.07.46_PM.png]]
+![Screenshot_2023-05-05_at_6.07.46_PM](/Attachments/Screenshot_2023-05-05_at_6.07.46_PM.png)
 
 - When all the data has been read, Node emits `end`, and once the underlying file descriptor is released, `close`.
 
-![[Screenshot_2023-05-05_at_6.06.13_PM.png]]
+![Screenshot_2023-05-05_at_6.06.13_PM](/Attachments/Screenshot_2023-05-05_at_6.06.13_PM.png)
 
 ```js
 const fs = require('node:fs');
@@ -52,7 +56,7 @@ First, some definitions.
 
 When all global code has finished and only the global context is left on the call stack, libuv and Node check whether anything is left to do. If so, the event loop takes a function from one of the queues, puts it on the call stack and creates a brand new execution context for it.
 
-![[Screenshot_2023-05-05_at_9.09.37_PM.png]]
+![Screenshot_2023-05-05_at_9.09.37_PM](/Attachments/Screenshot_2023-05-05_at_9.09.37_PM.png)
 
 So the second batch's `data` callback simply **waits in a queue** until the first `doOnNewBatch` returns and the stack is empty. JS never interrupts a running function.
 
@@ -69,7 +73,7 @@ So the second batch's `data` callback simply **waits in a queue** until the firs
 
 ### Rules for the automatic execution of JS code by Node
 
-![[Screenshot_2023-05-05_at_6.55.37_PM.png]]
+![Screenshot_2023-05-05_at_6.55.37_PM](/Attachments/Screenshot_2023-05-05_at_6.55.37_PM.png)
 
 1. Hold each deferred (auto-run) function in one of the task queues when the Node background API "completes".
 2. Add the function to the call stack (i.e. execute it) **only** when the call stack is totally empty (the event loop checks this).
@@ -92,8 +96,11 @@ console.log('sync');
 // io, check from io, timer from io
 ```
 
-> [!note] Correction to the simple model
-> Since libuv 1.45 (Node 20) timers are processed after the poll phase in each iteration (plus once before the loop starts). The practical rules above still hold; details in [[Node.js Event Loop & libuv]].
+<Note>
+**Correction to the simple model**
+
+Since libuv 1.45 (Node 20) timers are processed after the poll phase in each iteration (plus once before the loop starts). The practical rules above still hold; details in [Node.js Event Loop & libuv](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Event%20Loop%20%26%20libuv).
+</Note>
 
 ## Modern stream usage (beyond the course)
 
@@ -133,10 +140,13 @@ http.createServer((req, res) => {
 }).listen(3000);
 ```
 
-> [!info]+ 🆕 2025–2026
-> - **Node 22** (Apr 2024) raised the default highWaterMark for generic streams from **16 KiB to 64 KiB** (`stream.setDefaultHighWaterMark()` to change it). File streams were already 64 KiB.
-> - **Node 26.0.0** (2026-05-05) removed the legacy internal modules `_stream_readable`, `_stream_writable`, `_stream_duplex`, `_stream_transform`, `_stream_passthrough`, `_stream_wrap`; import from `node:stream` instead.
-> - Web Streams (`ReadableStream`, `WritableStream`) are global and interoperate via `Readable.fromWeb()` / `Readable.toWeb()`; `fetch` bodies are web streams.
+<Info>
+**🆕 2025–2026**
+
+- **Node 22** (Apr 2024) raised the default highWaterMark for generic streams from **16 KiB to 64 KiB** (`stream.setDefaultHighWaterMark()` to change it). File streams were already 64 KiB.
+- **Node 26.0.0** (2026-05-05) removed the legacy internal modules `_stream_readable`, `_stream_writable`, `_stream_duplex`, `_stream_transform`, `_stream_passthrough`, `_stream_wrap`; import from `node:stream` instead.
+- Web Streams (`ReadableStream`, `WritableStream`) are global and interoperate via `Readable.fromWeb()` / `Readable.toWeb()`; `fetch` bodies are web streams.
+</Info>
 
 ## Pitfalls
 - `.pipe()` does not forward errors or clean up; prefer `pipeline`.
@@ -145,22 +155,26 @@ http.createServer((req, res) => {
 
 ## Interview questions
 
-> [!question]- What is a stream and why use one?
-> An abstraction for data that arrives or is produced over time in chunks. It keeps memory bounded (you never hold the whole file), lets you start processing sooner, and composes (read → transform → write).
+<Accordion title="What is a stream and why use one?">
+An abstraction for data that arrives or is produced over time in chunks. It keeps memory bounded (you never hold the whole file), lets you start processing sooner, and composes (read → transform → write).
+</Accordion>
 
-> [!question]- What is backpressure and how does Node handle it?
-> When a consumer is slower than a producer, buffered data grows. Writable streams signal this by returning `false` from `write()`; the producer should pause until `drain`. `pipeline()` and `for await` handle it automatically.
+<Accordion title="What is backpressure and how does Node handle it?">
+When a consumer is slower than a producer, buffered data grows. Writable streams signal this by returning `false` from `write()`; the producer should pause until `drain`. `pipeline()` and `for await` handle it automatically.
+</Accordion>
 
-> [!question]- If a `data` event fires while your handler is still running, what happens?
-> Nothing interrupts it. The next callback waits in the queue until the call stack is empty; JS runs one function to completion at a time.
+<Accordion title="If a `data` event fires while your handler is still running, what happens?">
+Nothing interrupts it. The next callback waits in the queue until the call stack is empty; JS runs one function to completion at a time.
+</Accordion>
 
-> [!question]- Order of `process.nextTick`, promises, `setTimeout(0)` and `setImmediate`?
-> Sync code, then nextTick queue, then promise microtasks, then timers vs check. From the main module timeout vs immediate order is not guaranteed; inside an I/O callback `setImmediate` always runs first.
+<Accordion title="Order of `process.nextTick`, promises, `setTimeout(0)` and `setImmediate`?">
+Sync code, then nextTick queue, then promise microtasks, then timers vs check. From the main module timeout vs immediate order is not guaranteed; inside an I/O callback `setImmediate` always runs first.
+</Accordion>
 
 ## Related
-- [[The Hard Parts of Servers & Node.js]] · [[Node.js Index]]
-- [[Node.js Event Loop & libuv]] · [[Event Loop - Microtasks & Macrotasks]] · [[Node.js Hard Parts - File System]]
-- [[Promises, Async-Await & Cancellation]]
+- [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js) · [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Node.js Event Loop & libuv](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Event%20Loop%20%26%20libuv) · [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks) · [Node.js Hard Parts - File System](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Hard%20Parts%20-%20File%20System)
+- [Promises, Async-Await & Cancellation](/Software%20Engineering/Frontend/01%20JavaScript/Promises%2C%20Async-Await%20%26%20Cancellation)
 
 ## Sources
 - [Node.js docs: Stream](https://nodejs.org/api/stream.html)

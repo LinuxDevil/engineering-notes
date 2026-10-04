@@ -1,12 +1,16 @@
 ---
+title: "Node.js 22 to 24+ - What's New"
 tags: [backend, backend/node]
 aliases: [Node 24, Node 22, Node 25, Node 26, Node 27, What's new in Node, Node release schedule, Node TypeScript type stripping, node:sqlite, require(esm)]
 updated: 2026-09-27
 ---
 # Node.js 22 to 24+ - What's New
 
-> [!tldr] TL;DR
-> As of **September 2026**: **Node 24 "Krypton"** is the Active LTS (LTS since 2025-10-28), **Node 22 "Jod"** is Maintenance LTS, **Node 26** is Current and becomes LTS on **2026-10-28**, and Node 20 and 25 are end-of-life. The big themes of 2024–2026: Node runs **TypeScript natively** (type stripping, stable), a **stable built-in test runner**, `require()` of ES modules, a stable **permission model**, built-in **`fetch`/`WebSocket`/`node:sqlite`/Web Storage/`URLPattern`/Temporal**, and, from Node 27, **one major release per year, every one LTS**.
+<Note>
+**TL;DR**
+
+As of **September 2026**: **Node 24 "Krypton"** is the Active LTS (LTS since 2025-10-28), **Node 22 "Jod"** is Maintenance LTS, **Node 26** is Current and becomes LTS on **2026-10-28**, and Node 20 and 25 are end-of-life. The big themes of 2024–2026: Node runs **TypeScript natively** (type stripping, stable), a **stable built-in test runner**, `require()` of ES modules, a stable **permission model**, built-in **`fetch`/`WebSocket`/`node:sqlite`/Web Storage/`URLPattern`/Temporal**, and, from Node 27, **one major release per year, every one LTS**.
+</Note>
 
 ## Release timeline
 
@@ -32,12 +36,15 @@ timeline
   2026-10 : Node 26 LTS : Node 27 alpha channel opens
 ```
 
-> [!info]+ 🆕 2026: new release schedule
-> Announced **2026-03-10** on nodejs.org. Starting with **Node 27**:
-> - **One major per year.** A 6-month **Alpha** channel (October–March, semver-major changes allowed, versions like `27.0.0-alpha.1`, for library authors and CI, not production), then the **Current** release in **April**, then **LTS in October**.
-> - **Every major becomes LTS**; no more odd/even split. LTS lasts **30 months** from first release, 36 months total to EOL.
-> - Node 26 is the **last** release under the old model.
-> Production advice is unchanged: run Active or Maintenance LTS only.
+<Info>
+**🆕 2026: new release schedule**
+
+Announced **2026-03-10** on nodejs.org. Starting with **Node 27**:
+- **One major per year.** A 6-month **Alpha** channel (October–March, semver-major changes allowed, versions like `27.0.0-alpha.1`, for library authors and CI, not production), then the **Current** release in **April**, then **LTS in October**.
+- **Every major becomes LTS**; no more odd/even split. LTS lasts **30 months** from first release, 36 months total to EOL.
+- Node 26 is the **last** release under the old model.
+Production advice is unchanged: run Active or Maintenance LTS only.
+</Info>
 
 ## Headline features
 
@@ -58,7 +65,7 @@ node server.ts          # no flag needed (Node 22.18+ / 23.6+)
 | **Stable** | **25.2.0 (2025-11-11) / 24.12.0 (2025-12-10)** |
 | `--experimental-transform-types` removed | 26.0.0 |
 
-See [[TypeScript 5.8 to 7.0]] for the TS side.
+See [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0) for the TS side.
 
 ### Built-in test runner (`node:test`)
 
@@ -80,7 +87,7 @@ describe('createUser', () => {
 });
 ```
 
-Jest/Vitest are still richer for frontend-style testing; `node:test` is great for libraries and services wanting zero dependencies. See [[Frontend Testing]].
+Jest/Vitest are still richer for frontend-style testing; `node:test` is great for libraries and services wanting zero dependencies. See [Frontend Testing](/Software%20Engineering/Frontend/13%20Testing/Frontend%20Testing).
 
 ### `require()` of ES modules
 
@@ -95,7 +102,7 @@ CommonJS code can `require()` a synchronous ESM module (no top-level `await`, el
 
 ### Permission model
 
-`node --permission --allow-fs-read=... --allow-net ...`. Stable since 23.5.0 / 22.13.0; flag renamed from `--experimental-permission` in 24.0.0; `--allow-net` added in 25.0.0. A seat belt, not a sandbox. See [[Node.js Security Best Practices]].
+`node --permission --allow-fs-read=... --allow-net ...`. Stable since 23.5.0 / 22.13.0; flag renamed from `--experimental-permission` in 24.0.0; `--allow-net` added in 25.0.0. A seat belt, not a sandbox. See [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices).
 
 ### Web-platform APIs in core
 
@@ -139,7 +146,7 @@ Added in 22.5.0 (flagged), unflagged in 23.4.0 / 22.13.0, **release candidate (s
 | 25 | 14.1 | faster `JSON.stringify`, `Uint8Array` base64/hex |
 | 26 | 14.6 | `Map.prototype.getOrInsert(Computed)`, `Iterator.concat`, Temporal |
 
-See [[Modern JavaScript ES2022-ES2027]].
+See [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027).
 
 ## Breaking changes & removals to know
 
@@ -153,7 +160,7 @@ See [[Modern JavaScript ES2022-ES2027]].
 
 - **Deno 2** (Oct 2024) added strong Node/npm compatibility (`package.json`, `npm:` specifiers), keeps secure-by-default permissions and built-in tooling (fmt, lint, test, compile).
 - **Bun** (JavaScriptCore + Zig) is an all-in-one runtime, package manager, bundler and test runner focused on speed, with high Node API compatibility.
-- Node's recent features (TS stripping, test runner, sqlite, permissions, watch, `--env-file`) closed much of the gap. Details and comparison: [[Linting, Formatting, Package Managers & Runtimes]].
+- Node's recent features (TS stripping, test runner, sqlite, permissions, watch, `--env-file`) closed much of the gap. Details and comparison: [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes).
 
 ## Upgrade playbook
 1. Read the release's "semver-major" list and deprecation codes; run tests with `--pending-deprecation` / `--throw-deprecation` on the old version first.
@@ -170,25 +177,30 @@ See [[Modern JavaScript ES2022-ES2027]].
 
 ## Interview questions
 
-> [!question]- Which Node version should production use in late 2026?
-> Node 24 (Active LTS until Oct 2026's handover, supported to April 2028) or Node 22 (Maintenance to April 2027). Node 26 becomes LTS on 2026-10-28. Avoid odd/Current releases and EOL versions like 20.
+<Accordion title="Which Node version should production use in late 2026?">
+Node 24 (Active LTS until Oct 2026's handover, supported to April 2028) or Node 22 (Maintenance to April 2027). Node 26 becomes LTS on 2026-10-28. Avoid odd/Current releases and EOL versions like 20.
+</Accordion>
 
-> [!question]- How does Node run TypeScript natively and what are the limits?
-> It strips erasable type syntax and runs the JS without type checking or reading tsconfig. Enums, runtime namespaces, parameter properties, import aliases and decorators aren't supported. Stable since 25.2 / 24.12.
+<Accordion title="How does Node run TypeScript natively and what are the limits?">
+It strips erasable type syntax and runs the JS without type checking or reading tsconfig. Enums, runtime namespaces, parameter properties, import aliases and decorators aren't supported. Stable since 25.2 / 24.12.
+</Accordion>
 
-> [!question]- What is `require(esm)` and why does it matter?
-> CommonJS can now `require()` synchronous ES modules (no top-level await). It removes the need for dual CJS/ESM packages. Unflagged in 22.12/20.19, stable in 25.4.
+<Accordion title="What is `require(esm)` and why does it matter?">
+CommonJS can now `require()` synchronous ES modules (no top-level await). It removes the need for dual CJS/ESM packages. Unflagged in 22.12/20.19, stable in 25.4.
+</Accordion>
 
-> [!question]- What changes with Node's 2026 release schedule?
-> From Node 27: one major per year (April), preceded by a 6-month alpha channel, LTS every October, and every release becomes LTS with 30 months of LTS support. Node 26 is the last odd/even-model release.
+<Accordion title="What changes with Node's 2026 release schedule?">
+From Node 27: one major per year (April), preceded by a 6-month alpha channel, LTS every October, and every release becomes LTS with 30 months of LTS support. Node 26 is the last odd/even-model release.
+</Accordion>
 
-> [!question]- Name built-in features that replace common npm packages.
-> `fetch` (node-fetch/axios for simple cases), `WebSocket` client, `node:test` (Jest/Mocha for many cases), `--watch` (nodemon), `--env-file` (dotenv), `fs.glob` (glob), `node:sqlite` (better-sqlite3 for simple uses), `util.parseArgs`, `util.styleText` (chalk), native TS (ts-node/tsx for simple cases).
+<Accordion title="Name built-in features that replace common npm packages.">
+`fetch` (node-fetch/axios for simple cases), `WebSocket` client, `node:test` (Jest/Mocha for many cases), `--watch` (nodemon), `--env-file` (dotenv), `fs.glob` (glob), `node:sqlite` (better-sqlite3 for simple uses), `util.parseArgs`, `util.styleText` (chalk), native TS (ts-node/tsx for simple cases).
+</Accordion>
 
 ## Related
-- [[Node.js Index]]
-- [[Node.js Security Best Practices]] · [[Node.js Event Loop & libuv]] · [[Node.js Performance & Debugging]]
-- [[Linting, Formatting, Package Managers & Runtimes]] · [[TypeScript 5.8 to 7.0]] · [[Modern JavaScript ES2022-ES2027]] · [[Supply Chain Security]]
+- [Node.js Index](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Index)
+- [Node.js Security Best Practices](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Security%20Best%20Practices) · [Node.js Event Loop & libuv](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Event%20Loop%20%26%20libuv) · [Node.js Performance & Debugging](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Performance%20%26%20Debugging)
+- [Linting, Formatting, Package Managers & Runtimes](/Software%20Engineering/Frontend/14%20Tooling/Linting%2C%20Formatting%2C%20Package%20Managers%20%26%20Runtimes) · [TypeScript 5.8 to 7.0](/Software%20Engineering/Frontend/02%20TypeScript/TypeScript%205.8%20to%207.0) · [Modern JavaScript ES2022-ES2027](/Software%20Engineering/Frontend/01%20JavaScript/Modern%20JavaScript%20ES2022-ES2027) · [Supply Chain Security](/Software%20Engineering/Frontend/11%20Security/Supply%20Chain%20Security)
 
 ## Sources
 - [Node.js releases (status table)](https://nodejs.org/en/about/previous-releases)
