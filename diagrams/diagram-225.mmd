@@ -1,0 +1,6 @@
+stateDiagram-v2
+  [*] --> Pending
+  Pending --> Fulfilled: resolve(value)
+  Pending --> Rejected: reject(reason) or throw
+  Fulfilled --> [*]
+  Rejected --> [*]

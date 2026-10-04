@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph Rolling
+    R1[v1 v1 v1 v1] --> R2[v2 v1 v1 v1] --> R3[v2 v2 v1 v1] --> R4[v2 v2 v2 v2]
+  end
+  subgraph BlueGreen["Blue/Green"]
+    B1[Blue v1: 100% traffic] -. switch router .-> G1[Green v2: 0% → 100%]
+  end
+  subgraph Canary
+    C1[v2 gets 1% → 5% → 25% → 100%, gated by metrics]
+  end

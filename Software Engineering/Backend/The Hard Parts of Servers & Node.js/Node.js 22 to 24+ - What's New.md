@@ -24,17 +24,8 @@ As of **September 2026**: **Node 24 "Krypton"** is the Active LTS (LTS since 202
 | **26** | 2026-05-05 | **2026-10-28** (scheduled) | Current | April 2029 |
 | **27** | alpha from Oct 2026 | Oct 2027 | first release April 2027 | April 2030 |
 
-```mermaid
-timeline
-  title Node.js majors
-  2024-04 : Node 22 (require(esm) flag, WebSocket, glob, watch stable, Maglev)
-  2024-10 : Node 22 LTS : Node 23
-  2025-05 : Node 24 (V8 13.6, npm 11, URLPattern, --permission)
-  2025-10 : Node 24 LTS "Krypton" : Node 25 (Web Storage, --allow-net, no Corepack)
-  2026-03 : Annual release schedule announced
-  2026-05 : Node 26 (Temporal on, V8 14.6, undici 8)
-  2026-10 : Node 26 LTS : Node 27 alpha channel opens
-```
+{/* diagram source: /diagrams/diagram-076.mmd */}
+![diagram](/diagrams/diagram-076.svg)
 
 <Info>
 **🆕 2026: new release schedule**

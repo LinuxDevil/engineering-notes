@@ -1,0 +1,11 @@
+gantt
+  dateFormat X
+  axisFormat %Lms
+  section Sequential (waterfall)
+  getArtist   :a1, 0, 300
+  getAlbums   :a2, after a1, 300
+  getTours    :a3, after a2, 300
+  section Parallel
+  getArtist   :b1, 0, 300
+  getAlbums   :b2, 0, 300
+  getTours    :b3, 0, 300

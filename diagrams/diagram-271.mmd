@@ -1,0 +1,4 @@
+flowchart TD
+  P["Parent: owns state"] -->|"props: value"| A["Child A"]
+  P -->|"props: onChange callback"| B["Child B"]
+  B -.->|"calls onChange(newValue)"| P

@@ -16,17 +16,8 @@ This note is the theory behind the Acme Ops system. The hands-on notes are [Bull
 
 ## 1. Why "cron that enqueues" beats "cron that does the work"
 
-```mermaid
-flowchart LR
-  subgraph A["❌ Cron does the work"]
-    C1["crontab on app-1<br/>0 2 * * * node report.js"] --> W1["report.js<br/>(no retries, no metrics,<br/>dies with the host)"]
-  end
-  subgraph B["✅ Cron enqueues"]
-    S["Scheduler<br/>(one trigger per tick)"] -- "enqueue {job, scheduledTime}" --> Q[("Queue<br/>durable")]
-    Q --> W2["worker 1"] & W3["worker 2"] & W4["worker N"]
-    W2 & W3 & W4 -- "ack / retry / DLQ" --> Q
-  end
-```
+{/* diagram source: /diagrams/diagram-058.mmd */}
+![diagram](/diagrams/diagram-058.svg)
 
 | Concern | Cron runs the script | Scheduler enqueues, workers execute |
 |---|---|---|
@@ -42,19 +33,8 @@ The cost: you now operate a queue (Redis, RabbitMQ, SQS, Postgres) and must thin
 
 ## 2. The Acme Ops reference architecture
 
-```mermaid
-flowchart LR
-  subgraph shop-prod
-    SCH["BullMQ Job Schedulers<br/>(state in Redis)"] -- "delayed job per tick" --> R[("Redis<br/>noeviction + AOF")]
-    R --> JW["jobs-worker<br/>Deployment (KEDA)"]
-    CJ["K8s CronJobs<br/>cleanup-expired-carts<br/>playwright-checkout-smoke"] -- "Job per tick" --> P["Pods"]
-    API["jobs-api (Fastify)<br/>JobBackend adapters"] -- "BullMqBackend" --> R
-    API -- "K8sCronJobBackend" --> K["kube-apiserver"]
-    K --- CJ
-  end
-  UI["ops-console (Next.js 16)<br/>ops.acme.dev"] -- "REST + SSE" --> API
-  JW & P & API -- "metrics / JSON logs" --> G["Prometheus · Loki · Grafana<br/>alerts: failures, missed schedule"]
-```
+{/* diagram source: /diagrams/diagram-059.mmd */}
+![diagram](/diagrams/diagram-059.svg)
 
 - The **scheduler** for BullMQ jobs is *inside* Redis: a Job Scheduler keeps exactly one delayed job for the next tick, with a deterministic id `repeat:<schedulerId>:<millis>`. No separate scheduler process exists, so there is nothing to leader-elect.
 - The **scheduler** for K8s jobs is the CronJob controller in `kube-controller-manager`, which is itself leader-elected.
@@ -124,11 +104,8 @@ Whatever does the triggering, the **enqueue must be idempotent** on `(job, sched
 - **Chaining**: job A's success enqueues job B. Easy, but the chain is invisible and a failure in the middle needs custom handling.
 - **Flows (parent/child)**: a parent job waits until all its children finish, then runs with their results. BullMQ has `FlowProducer` and `moveToWaitingChildren`; Temporal, Step Functions and Airflow model this natively. `nightly-sales-report` uses this: one child per sales region, then the parent assembles the CSV. See [BullMQ Job Schedulers in Practice](/Software%20Engineering/Backend/Scheduled%20Jobs/BullMQ%20Job%20Schedulers%20in%20Practice#10-flows---parent-and-child-jobs).
 
-```mermaid
-flowchart TB
-  T["tick 02:00<br/>nightly-sales-report<br/>repeat:nightly-sales-report:1790467200000"] --> C1["report-part DE"] & C2["report-part AT"] & C3["report-part CH"]
-  C1 & C2 & C3 --> P["parent resumes:<br/>merge CSV → S3 → email"]
-```
+{/* diagram source: /diagrams/diagram-060.mmd */}
+![diagram](/diagrams/diagram-060.svg)
 
 When chains become DAGs with backfills and cross-job dependencies, switch to a workflow orchestrator (Temporal, Airflow, Dagster, Argo Workflows) instead of more glue code.
 
@@ -217,15 +194,8 @@ For **delays** (retry later, run at a time):
 
 ### 11.1 TTL + dead-letter exchange (the portable pattern)
 
-```mermaid
-flowchart LR
-  P["publisher / failed consumer"] -- "routing key sync-inventory" --> DX["exchange: jobs.delay"]
-  DX --> D30["queue: delay.30s<br/>x-message-ttl=30000<br/>x-dead-letter-exchange=jobs"]
-  D30 -- "expires → dead-lettered" --> JX["exchange: jobs"]
-  JX --> WQ["queue: jobs.sync-inventory<br/>(quorum, x-delivery-limit=5)"]
-  WQ --> C["consumer"]
-  WQ -- "delivery limit exceeded" --> DLQ["jobs.dlq"]
-```
+{/* diagram source: /diagrams/diagram-061.mmd */}
+![diagram](/diagrams/diagram-061.svg)
 
 ```ts
 // amqplib: one delay queue per delay "bucket"

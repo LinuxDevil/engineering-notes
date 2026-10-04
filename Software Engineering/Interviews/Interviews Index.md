@@ -12,31 +12,8 @@ updated: 2026-09-27
 Everything for software engineering interviews in one place: how the process works and an 8-week plan, behavioral stories, coding, system design, frontend and backend question banks, real past interviews, and negotiating the offer. Topic knowledge lives in the domain notes; these notes turn it into interview answers.
 </Note>
 
-```mermaid
-mindmap
-  root((Interviews))
-    Process
-      Stages & levels
-      8-week plan
-      AI-assisted rounds
-    Coding
-      DSA patterns
-      Online assessments
-    System Design
-      Backend framework
-      Frontend RADIO
-    Domain
-      JavaScript
-      React
-      Angular
-      Backend
-    Behavioral
-      STAR stories
-      Senior signals
-    Offer
-      Negotiation
-      Total comp
-```
+{/* diagram source: /diagrams/diagram-356.mmd */}
+![diagram](/diagrams/diagram-356.svg)
 
 ## 1. Beginner: understand the game
 - [Interview Process & Preparation Plan](/Software%20Engineering/Interviews/Interview%20Process%20%26%20Preparation%20Plan): stages, what each level is tested on, the 8-week plan, 2025–2026 changes (AI-assisted rounds, in-person rounds)

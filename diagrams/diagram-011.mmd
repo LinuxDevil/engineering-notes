@@ -1,0 +1,6 @@
+flowchart LR
+  U[User] --> A1[Travel agent]
+  A1 -- A2A: task + messages --> A2[Airline booking agent<br/>other vendor]
+  A1 -- A2A --> A3[Hotel agent]
+  A1 -- MCP --> T1[Calendar tool server]
+  A2 -- MCP --> T2[Airline inventory API]

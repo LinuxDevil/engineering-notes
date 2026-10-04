@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph JOIN
+    A1[A cols] --- B1[B cols]
+  end
+  subgraph UNION
+    A2[rows from query 1]
+    B2[rows from query 2]
+    A2 --- B2
+  end

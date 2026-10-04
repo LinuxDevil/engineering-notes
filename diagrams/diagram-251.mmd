@@ -1,0 +1,6 @@
+flowchart TD
+  R["root context"] --> H["header: position sticky, z-index 10"]
+  R --> M["main: transform (new context, z-index auto means level 0)"]
+  M --> D["dropdown: z-index 9999"]
+  H --> HM["header menu"]
+  D -.->|"9999 only competes inside main"| X["still painted BELOW the header"]

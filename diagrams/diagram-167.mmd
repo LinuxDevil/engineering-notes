@@ -1,0 +1,6 @@
+flowchart LR
+  WD[Working directory] -->|git add| IDX[Index / staging area]
+  IDX -->|git commit| REPO[(Local repository .git)]
+  REPO -->|git push| REMOTE[(Remote: origin)]
+  REMOTE -->|git fetch| REPO
+  REPO -->|git switch / restore| WD

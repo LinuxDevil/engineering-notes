@@ -14,18 +14,8 @@ Three ways to adapt an LLM to your task, in the order you should try them: **pro
 
 ## The decision in one picture
 
-```mermaid
-flowchart TD
-  S[Start: a good prompt + a small eval set] --> Q1{Good enough?}
-  Q1 -->|yes| Done[Ship it, keep evaluating]
-  Q1 -->|no| Q2{What's missing?}
-  Q2 -->|facts it doesn't know:<br/>private, fresh, large, permissioned| RAG[Add RAG / tools]
-  Q2 -->|consistent format, style, domain behaviour,<br/>narrow task at lower cost/latency| FT[Fine-tune<br/>LoRA / SFT / preference tuning]
-  Q2 -->|hard reasoning| RM[Better model or reasoning mode,<br/>break the task into steps]
-  RAG --> Q1
-  FT --> Q1
-  RM --> Q1
-```
+{/* diagram source: /diagrams/diagram-008.mmd */}
+![diagram](/diagrams/diagram-008.svg)
 
 ## Comparison
 

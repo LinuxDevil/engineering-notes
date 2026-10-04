@@ -1,0 +1,6 @@
+flowchart TB
+  E2E["E2E: few, slow, highest confidence per test (Playwright)"]
+  INT["Integration / component: MOST tests (Testing Library + MSW, Vitest)"]
+  UNIT["Unit: pure functions, hooks, reducers, utils"]
+  STATIC["Static: TypeScript, ESLint/Biome/Oxlint"]
+  E2E --- INT --- UNIT --- STATIC

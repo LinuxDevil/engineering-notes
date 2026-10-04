@@ -1,0 +1,4 @@
+flowchart LR
+  R[Brute-force recursion] -->|add cache| M[Top-down memo]
+  M -->|reverse the order, loops| T[Bottom-up table]
+  T -->|keep only needed rows| S[Space optimized]

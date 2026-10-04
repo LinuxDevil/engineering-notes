@@ -14,16 +14,8 @@ Next.js 15 (Oct 2024) made request APIs async and stopped caching by default. Th
 
 ## Release timeline
 
-```mermaid
-flowchart LR
-    A["15.0 (Oct 2024): async request APIs, uncached by default"] --> B["15.1-15.2: after() stable, streaming metadata"]
-    B --> C["15.3-15.5: Turbopack builds alpha to beta, Node middleware stable"]
-    C --> D["16.0 (Oct 2025): Turbopack default, Cache Components, proxy.ts"]
-    D --> E["16.1 (Dec 2025): dev FS cache, next upgrade"]
-    E --> F["16.2 (Mar 2026): fast dev startup, Adapters API, AGENTS.md"]
-    F --> G["16.3 (Aug 2026): Instant Navigations, Active LTS"]
-    G --> H["16.3.6 (Sep 2026): security fix"]
-```
+{/* diagram source: /diagrams/diagram-281.mmd */}
+![diagram](/diagrams/diagram-281.svg)
 
 | Version | Date | Highlights |
 |---|---|---|

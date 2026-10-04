@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph Blocking["Thread-per-request"]
+    R1[req 1] --> T1["thread 1 (waits on DB)"]
+    R2[req 2] --> T2["thread 2 (waits on DB)"]
+    R3[req N] --> TN["thread N ... pool exhausted"]
+  end
+  subgraph Reactive["Event loop"]
+    Q[req 1..N] --> EL["few event-loop threads"]
+    EL -- register callback --> IO[(DB / network)]
+    IO -- data ready → notify --> EL
+  end

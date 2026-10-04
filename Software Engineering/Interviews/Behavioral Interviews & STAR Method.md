@@ -19,12 +19,8 @@ Behavioral interviews test **how you actually worked** in the past, because past
 
 ## The STAR structure
 
-```mermaid
-flowchart LR
-  S["Situation<br/>context in 1–2 sentences"] --> T["Task<br/>your goal / responsibility"]
-  T --> A["Action<br/>what YOU did and why (60%)"]
-  A --> R["Result<br/>numbers, impact, lesson"]
-```
+{/* diagram source: /diagrams/diagram-354.mmd */}
+![diagram](/diagrams/diagram-354.svg)
 
 | Part | Share of time | What to say | Common mistake |
 |---|---|---|---|

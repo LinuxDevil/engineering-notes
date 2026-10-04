@@ -42,22 +42,8 @@ An **embedding** is a vector of numbers that places text, images or other items 
 
 A multi-layer proximity graph. Upper layers are sparse "express lanes", the bottom layer has every vector. Search starts at the top, greedily walks toward the query, drops a layer, repeats.
 
-```mermaid
-flowchart TB
-    subgraph L2[Layer 2: few nodes]
-      A2((A)) --- D2((D))
-    end
-    subgraph L1[Layer 1]
-      A1((A)) --- B1((B)) --- D1((D)) --- F1((F))
-    end
-    subgraph L0[Layer 0: all nodes]
-      A0((A)) --- B0((B)) --- C0((C)) --- D0((D)) --- E0((E)) --- F0((F)) --- G0((G))
-    end
-    Q[query] -.enter.-> A2
-    D2 -.descend.-> D1
-    D1 -.descend.-> D0
-    D0 -.closest.-> E0
-```
+{/* diagram source: /diagrams/diagram-110.mmd */}
+![diagram](/diagrams/diagram-110.svg)
 
 | Parameter | pgvector default | Effect |
 |---|---|---|
@@ -213,22 +199,8 @@ A **cross-encoder reranker** (Cohere Rerank, Voyage rerank, BGE reranker) on the
 
 Retrieval-Augmented Generation grounds an LLM answer in your documents.
 
-```mermaid
-flowchart LR
-    subgraph Ingest[Ingestion, offline]
-      D[Documents] --> C[Chunk<br/>300-800 tokens, overlap]
-      C --> E1[Embed chunks]
-      E1 --> S[(Vector store<br/>+ metadata + text)]
-    end
-    subgraph Query[Query time]
-      U[User question] --> E2[Embed query]
-      E2 --> R[Retrieve top-k<br/>ANN + filters + BM25]
-      S --> R
-      R --> RR[Rerank]
-      RR --> P[Build prompt with<br/>top chunks + citations]
-      P --> L[LLM generates answer]
-    end
-```
+{/* diagram source: /diagrams/diagram-111.mmd */}
+![diagram](/diagrams/diagram-111.svg)
 
 Key choices: chunk size and boundaries (split on headings, not mid-sentence), metadata for filtering and citations, same embedding model for documents and queries, and evaluation on real questions.
 

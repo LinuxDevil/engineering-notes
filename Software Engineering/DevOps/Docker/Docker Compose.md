@@ -16,7 +16,7 @@ Docker Compose describes a **multi-container application** in one `compose.yaml`
 
 Without Compose you would type long `docker run` commands with `--network`, `-v`, `-e` and `-p` for every container, in the right order. Compose makes that declarative and versionable.
 
-```mermaid
+```text
 flowchart LR
   subgraph compose network "myapp_default"
     web[web :3000] -->|http://api:8080| api[api :8080]

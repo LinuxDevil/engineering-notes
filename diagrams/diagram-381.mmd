@@ -1,0 +1,8 @@
+flowchart LR
+  U[Client / attacker] -->|untrusted input| API
+  subgraph Server
+    API[API layer<br/>authn · validation · authz] --> SVC[Business logic]
+    SVC --> DB[(Database<br/>parameterised SQL)]
+    SVC --> EXT[Outbound HTTP<br/>SSRF controls]
+    SVC --> LOG[Logs<br/>no secrets]
+  end

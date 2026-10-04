@@ -51,13 +51,8 @@ What to watch:
 - **Ground-truth performance**: once real outcomes arrive, recompute your evaluation metrics.
 - **Operational health**: latency, errors, throughput, cost.
 
-```mermaid
-flowchart LR
-  T[Train] --> R[Register model + version] --> D[Deploy] --> S[Serve predictions]
-  S --> M[Monitor: drift, metrics, latency]
-  M -->|degraded| T
-  S --> F[(Log inputs, outputs, outcomes)] --> T
-```
+{/* diagram source: /diagrams/diagram-018.mmd */}
+![diagram](/diagrams/diagram-018.svg)
 
 ## Senior perspective
 - **Roll out safely**: shadow mode (predict without acting), canary, or A/B test against the current model before full traffic.

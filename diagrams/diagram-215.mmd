@@ -1,0 +1,5 @@
+flowchart TD
+  A["Declaring a variable"] --> B{"Will it be reassigned?"}
+  B -- No --> C["const (default)"]
+  B -- Yes --> D["let"]
+  A --> E["var: only in legacy code"]

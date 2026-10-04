@@ -59,14 +59,8 @@ app/
 
 Nesting order inside a segment:
 
-```mermaid
-flowchart TD
-    L["layout.tsx"] --> T["template.tsx"]
-    T --> E["error.tsx (ErrorBoundary)"]
-    E --> LO["loading.tsx (Suspense)"]
-    LO --> NF["not-found.tsx (NotFound boundary)"]
-    NF --> P["page.tsx"]
-```
+{/* diagram source: /diagrams/diagram-282.mmd */}
+![diagram](/diagrams/diagram-282.svg)
 
 This means an `error.tsx` does **not** catch errors thrown in the *same* segment's `layout.tsx` (it sits inside it); the parent's error boundary does.
 

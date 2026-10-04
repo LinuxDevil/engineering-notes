@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph Index time
+    D[Documents] --> C[Chunk] --> E1[Embed] --> V[(Vector index<br/>+ metadata)]
+  end
+  subgraph Query time
+    Q[User query] --> E2[Embed with SAME model] --> S[ANN search top-k<br/>+ metadata filters]
+    V --> S --> R[Results / to LLM]
+  end

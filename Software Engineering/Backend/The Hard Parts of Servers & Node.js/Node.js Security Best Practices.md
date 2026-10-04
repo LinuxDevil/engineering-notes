@@ -14,14 +14,8 @@ Most Node breaches come from **untrusted input** (injection, path traversal, pro
 
 ## Threat map
 
-```mermaid
-flowchart LR
-  U[Untrusted input<br/>body, query, headers, files] --> V{Validated?}
-  V -- no --> I[Injection, traversal,<br/>prototype pollution, ReDoS]
-  D[npm dependencies] --> SC[Supply chain:<br/>malicious install scripts, typosquats]
-  C[Config & secrets] --> L[Leaks: .env in git,<br/>stack traces, logs]
-  R[Runtime] --> P[EOL Node versions,<br/>running as root]
-```
+{/* diagram source: /diagrams/diagram-083.mmd */}
+![diagram](/diagrams/diagram-083.svg)
 
 ## Input handling
 

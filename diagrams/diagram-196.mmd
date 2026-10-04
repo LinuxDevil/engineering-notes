@@ -1,0 +1,6 @@
+flowchart TD
+  S[Sorting] --> C[Comparison based<br/>lower bound Omega n log n]
+  S --> N[Non-comparison<br/>uses key structure]
+  C --> Q["O(n^2): bubble, selection, insertion"]
+  C --> F["O(n log n): merge, quick, heap, TimSort"]
+  N --> K["counting, radix, bucket: O(n + k)"]

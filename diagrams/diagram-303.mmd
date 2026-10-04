@@ -1,0 +1,9 @@
+flowchart LR
+  A[NavigationStart] --> B["RouteConfigLoadStart/End (lazy)"] --> C[RoutesRecognized]
+  C --> D[GuardsCheckStart] --> E["ChildActivationStart / ActivationStart"] --> F[GuardsCheckEnd]
+  F --> G[ResolveStart] --> H[ResolveEnd] --> I["ActivationEnd / ChildActivationEnd"]
+  I --> J{outcome}
+  J --> K[NavigationEnd]
+  J --> L[NavigationCancel]
+  J --> M[NavigationError]
+  K --> N[Scroll]

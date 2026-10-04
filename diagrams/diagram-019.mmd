@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant U as User
+  participant H as Host + LLM
+  participant C as MCP client
+  participant S as MCP server
+  C->>S: server/discover (2026-07-28) or initialize (older revisions)
+  S-->>C: versions, capabilities, identity
+  C->>S: tools/list
+  S-->>C: [{name, description, inputSchema, annotations}]
+  U->>H: "Add Ada as a user"
+  H->>H: model chooses tool create-user
+  H->>U: approve? (host policy)
+  C->>S: tools/call create-user {...}
+  S-->>C: content + structuredContent
+  C-->>H: result goes into the model context
+  H-->>U: "Created user 42"

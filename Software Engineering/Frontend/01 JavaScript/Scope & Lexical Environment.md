@@ -92,13 +92,8 @@ A new environment is created for: the global/script scope, each module, **each f
 
 ### Identifier resolution (walking the scope chain)
 
-```mermaid
-flowchart LR
-  L["Local (inner call)"] -->|"not found → outer"| C["Closure (outer function)"]
-  C -->|"not found → outer"| S["Script (top-level let/const)"]
-  S -->|"not found → outer"| G["Global object (window / globalThis)"]
-  G -->|"not found"| E["ReferenceError"]
-```
+{/* diagram source: /diagrams/diagram-230.mmd */}
+![diagram](/diagrams/diagram-230.svg)
 
 - Lookup starts in the current environment and walks `outer` until it finds the name.
 - The **first match wins**, so an inner declaration **shadows** an outer one with the same name.

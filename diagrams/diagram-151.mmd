@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant API as API server
+  participant K as kubelet
+  participant E as EndpointSlice + Gateway
+  participant P as orders-api Pod
+  API->>K: Pod marked Terminating
+  API->>E: remove Pod from endpoints (async)
+  K->>P: preStop: sleep 10s (keeps serving)
+  E-->>E: proxies update over the next seconds
+  K->>P: SIGTERM
+  P->>P: readyz=503, app.close() drains, pool.end()
+  P-->>K: exit 0
+  Note over K,P: SIGKILL if still running after terminationGracePeriodSeconds (counted from the start, preStop included)

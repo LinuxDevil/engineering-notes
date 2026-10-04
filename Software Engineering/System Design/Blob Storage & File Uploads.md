@@ -28,24 +28,8 @@ Store large binary files (images, video, backups, datasets) in **object storage*
 - Features: versioning, object lock (WORM, ransomware protection), replication across regions, event notifications, server-side encryption.
 
 ## Upload flow with presigned URLs
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant API as Upload API
-  participant DB as Metadata DB
-  participant S3 as Object storage
-  participant Q as Event queue
-  participant W as Worker
-  C->>API: POST /uploads {filename, size, type}
-  API->>API: authz, validate size/type, quota
-  API->>DB: insert file(id, key, status=PENDING)
-  API-->>C: presigned PUT URL (expires 15 min) + fileId
-  C->>S3: PUT bytes directly
-  S3-->>Q: ObjectCreated event
-  Q->>W: process (scan, thumbnails, EXIF strip)
-  W->>DB: status=READY, width, height, checksum
-  C->>API: GET /files/{id} → CDN URL when READY
-```
+{/* diagram source: /diagrams/diagram-390.mmd */}
+![diagram](/diagrams/diagram-390.svg)
 
 ```python
 import boto3

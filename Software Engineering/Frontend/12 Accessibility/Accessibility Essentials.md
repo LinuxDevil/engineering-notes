@@ -20,14 +20,8 @@ Accessibility (a11y) means everyone can perceive, operate and understand your UI
 ## 1. The accessibility tree
 Browsers build **four trees** from your page: the DOM, the CSSOM, the render tree, and the **accessibility tree**. The accessibility tree is what assistive technology (AT) such as screen readers, voice control and switch devices actually reads, through the OS accessibility APIs (UIA on Windows, NSAccessibility/AX on macOS, AT-SPI on Linux, and the Android/iOS APIs).
 
-```mermaid
-flowchart LR
-  HTML["HTML (DOM)"] --> AT["Accessibility tree"]
-  CSS["CSS (CSSOM): display none, visibility, generated content"] --> AT
-  ARIA["ARIA attributes: role, aria-*"] --> AT
-  AT --> API["OS accessibility API"]
-  API --> SR["Screen reader / voice control / switch access"]
-```
+{/* diagram source: /diagrams/diagram-329.mmd */}
+![diagram](/diagrams/diagram-329.svg)
 
 Each accessible node exposes:
 - **Role**: button, link, heading (level 2), textbox, dialog…

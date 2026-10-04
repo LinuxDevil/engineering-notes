@@ -31,17 +31,8 @@ Written 2026-09-27. New models ship almost monthly and names, prices and limits 
 
 ## Timeline
 
-```mermaid
-timeline
-  title Selected releases (Jan 2025 - Sep 2026)
-  2025 Q1 : DeepSeek-R1 (open) : Claude 3.7 Sonnet + Claude Code : Gemini 2.5 Pro : Gemma 3 : OpenAI Agents SDK
-  2025 Q2 : Llama 4 : o3 / o4-mini : Qwen3 : Claude 4 : A2A announced
-  2025 Q3 : gpt-oss (open) : GPT-5 : Claude Sonnet 4.5 : DeepSeek V3.1
-  2025 Q4 : Gemini 3 : Claude Opus 4.5 : Mistral 3 : GPT-5.2 : AAIF (MCP, AGENTS.md)
-  2026 Q1 : Claude Opus 4.6 / Sonnet 4.6 : Gemini 3.1 Pro : Qwen3.5 : A2A v1.0
-  2026 Q2 : DeepSeek V4 : GPT-5.5 : Opus 4.7 / 4.8 : Gemini 3.5 Flash : Fable 5
-  2026 Q3 : GPT-5.6 : Claude Opus 5 / 5.5 : Gemini 3.6 Flash : MCP 2026-07-28
-```
+{/* diagram source: /diagrams/diagram-010.mmd */}
+![diagram](/diagrams/diagram-010.svg)
 
 ### Anthropic (closed)
 | Date | Release | Notes |
@@ -155,14 +146,8 @@ Choosing: prefer the thinnest layer that does what you need; make sure you can s
 | Governance | Agentic AI Foundation (Linux Foundation) since 2025-12-09 | Linux Foundation project 2025-06-23; **v1.0** 2026-03-12 (protobuf data model; JSON-RPC, gRPC and HTTP/REST bindings); joined the Agentic AI Foundation 2026-08-27 |
 | Current version | spec **2026-07-28** (stateless) | v1.0 |
 
-```mermaid
-flowchart LR
-  U[User] --> A1[Travel agent]
-  A1 -- A2A: task + messages --> A2[Airline booking agent<br/>other vendor]
-  A1 -- A2A --> A3[Hotel agent]
-  A1 -- MCP --> T1[Calendar tool server]
-  A2 -- MCP --> T2[Airline inventory API]
-```
+{/* diagram source: /diagrams/diagram-011.mmd */}
+![diagram](/diagrams/diagram-011.svg)
 
 Details: [MCP](/Software%20Engineering/AI%20%26%20ML/MCP).
 

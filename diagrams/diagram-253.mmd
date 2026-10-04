@@ -1,0 +1,9 @@
+flowchart TD
+  A["1. Determine each item's flex-basis (hypothetical main size)"] --> B["2. Collect items into lines (flex-wrap)"]
+  B --> C["3. Free space = container main size - sum of bases - gaps"]
+  C --> D{"Free space positive?"}
+  D -->|yes| E["Distribute it in proportion to flex-grow"]
+  D -->|no| F["Shrink in proportion to flex-shrink x flex-basis"]
+  E --> G["4. Clamp to min/max sizes (automatic min = min-content)"]
+  F --> G
+  G --> H["5. Align: justify-content on main axis, align-items on cross axis"]

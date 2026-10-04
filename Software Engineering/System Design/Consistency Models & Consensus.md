@@ -51,15 +51,8 @@ Extras: **read repair** (fix stale replicas on read), **hinted handoff** and **s
 Goal: nodes agree on a value (or an ordered log of values) such that agreement is final, and progress happens while a **majority** is alive. With **2f+1** nodes you tolerate **f** failures (3 → 1, 5 → 2).
 
 ### Raft (the understandable one)
-```mermaid
-stateDiagram-v2
-  [*] --> Follower
-  Follower --> Candidate: election timeout (no heartbeat)
-  Candidate --> Leader: votes from majority
-  Candidate --> Follower: sees higher term / other leader
-  Leader --> Follower: sees higher term
-  Candidate --> Candidate: split vote, new term
-```
+{/* diagram source: /diagrams/diagram-400.mmd */}
+![diagram](/diagrams/diagram-400.svg)
 1. **Terms**: logical epochs; each has at most one leader.
 2. **Leader election**: a follower that misses heartbeats (randomized timeout, e.g. 150–300 ms) becomes a candidate, increments the term, requests votes. A node votes once per term and only for candidates whose log is at least as up to date.
 3. **Log replication**: clients send commands to the leader; it appends and replicates via `AppendEntries`; once a **majority** stored the entry it's **committed** and applied to the state machine.

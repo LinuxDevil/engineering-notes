@@ -1,0 +1,12 @@
+flowchart LR
+  A[Push / PR] --> B[Lint + typecheck]
+  B --> C[Unit tests]
+  C --> D[Build artifact / image]
+  D --> E[Security: SAST, deps, secrets, image scan]
+  E --> F[Integration / contract tests]
+  F --> G[Publish: signed image + SBOM]
+  G --> H[Deploy staging]
+  H --> I[E2E / smoke tests]
+  I --> J{Approval / policy}
+  J --> K[Deploy prod: canary → full]
+  K --> L[Verify: SLOs, auto-rollback]

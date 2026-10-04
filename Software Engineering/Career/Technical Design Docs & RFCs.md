@@ -24,16 +24,8 @@ A design doc (or RFC) is a short written proposal of **how** to solve a problem 
 
 ## The process
 
-```mermaid
-flowchart LR
-  P[Problem & context<br/>talk to people first] --> D[Draft<br/>1–2 days]
-  D --> I[Informal review<br/>1–2 trusted peers]
-  I --> R[Wider review<br/>comments, meeting if needed]
-  R --> Dec{Decision}
-  Dec -->|approved| B[Build<br/>update doc on big changes]
-  Dec -->|rework| D
-  Dec -->|rejected| A[Archive with reason]
-```
+{/* diagram source: /diagrams/diagram-091.mmd */}
+![diagram](/diagrams/diagram-091.svg)
 - Socialise the idea **before** the formal review: 1:1s with key stakeholders avoid surprises in the meeting.
 - Timebox reviews (e.g. one week) and name the **decision maker** up front.
 - Record decisions and unresolved questions in the doc.

@@ -1,0 +1,7 @@
+flowchart LR
+  E["Entry points (main.tsx)"] --> R["Resolve imports: build module graph (node_modules, aliases)"]
+  R --> T["Transform each module: TS/JSX to JS, CSS/PostCSS, assets"]
+  T --> TS["Tree shaking: drop unused exports"]
+  TS --> CS["Code splitting: chunks per dynamic import / route, shared vendor chunks"]
+  CS --> M["Minify + dead code elimination, scope hoisting"]
+  M --> O["Output: hashed files app.3f9a.js, CSS, assets, source maps, manifest"]

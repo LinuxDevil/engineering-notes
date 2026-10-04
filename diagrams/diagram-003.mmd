@@ -1,0 +1,17 @@
+flowchart LR
+  subgraph Chain[Prompt chaining]
+    A1[LLM 1] --> Gt{gate} --> A2[LLM 2] --> A3[LLM 3]
+  end
+  subgraph Route[Routing]
+    R[Classifier LLM] --> R1[Handler A]
+    R --> R2[Handler B]
+  end
+  subgraph Par[Parallelization]
+    P0[Input] --> P1[LLM] & P2[LLM] & P3[LLM] --> PA[Aggregate]
+  end
+  subgraph OW[Orchestrator-workers]
+    O[Orchestrator LLM] --> W1[Worker] & W2[Worker] --> S[Synthesize]
+  end
+  subgraph EO[Evaluator-optimizer]
+    Gen[Generator] --> Ev[Evaluator] -->|feedback| Gen
+  end

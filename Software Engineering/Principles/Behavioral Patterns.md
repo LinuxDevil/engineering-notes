@@ -108,16 +108,8 @@ const Cancelled: OrderState = { name: "cancelled", pay: () => { throw new Error(
 class Order { state: OrderState = Pending; pay() { this.state.pay(this); } ship() { this.state.ship(this); } cancel() { this.state.cancel(this); } }
 ```
 
-```mermaid
-stateDiagram-v2
-  [*] --> Pending
-  Pending --> Paid: pay
-  Pending --> Cancelled: cancel
-  Paid --> Shipped: ship
-  Paid --> Cancelled: cancel / refund
-  Shipped --> [*]
-  Cancelled --> [*]
-```
+{/* diagram source: /diagrams/diagram-361.mmd */}
+![diagram](/diagrams/diagram-361.svg)
 
 For complex flows, use an explicit **state machine** library (XState, Spring State Machine) or a sealed type + transition function; persist the state name, not the object.
 

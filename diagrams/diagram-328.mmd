@@ -1,0 +1,9 @@
+flowchart LR
+  M["Maintainer account (phishing, stolen token)"] --> R["npm registry"]
+  CI["Package's CI/CD (poisoned workflow)"] --> R
+  T["Typosquats / dependency confusion"] --> R
+  R -->|"npm install"| L["Your laptop / CI: postinstall scripts run with your secrets"]
+  R -->|"bundled"| B["Your production bundle: runs in users' browsers"]
+  CDN["Third-party script/CDN"] --> B
+  L --> X1["Steal env vars, npm/GitHub tokens, cloud keys; republish your packages"]
+  B --> X2["Steal user data, swap crypto addresses, inject ads"]

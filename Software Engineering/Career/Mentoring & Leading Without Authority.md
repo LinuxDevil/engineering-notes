@@ -42,15 +42,8 @@ Mix them by situation: coach when there's time and low risk, teach when it's urg
 
 ## Leading without authority (tech lead / project lead)
 
-```mermaid
-flowchart LR
-  G[Clarify goal & success metrics] --> P[Plan: design doc,<br/>milestones, risks]
-  P --> D[Delegate by growth & strengths]
-  D --> U[Unblock: dependencies,<br/>decisions, reviews]
-  U --> C[Communicate status & risks]
-  C --> R[Retrospect, share credit]
-  R -.-> G
-```
+{/* diagram source: /diagrams/diagram-089.mmd */}
+![diagram](/diagrams/diagram-089.svg)
 
 ### Responsibilities
 - **Direction**: everyone knows what we're building, why, and what "done" means.

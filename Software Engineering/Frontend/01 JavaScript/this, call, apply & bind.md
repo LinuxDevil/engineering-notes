@@ -20,20 +20,8 @@ The value of `this` is decided **by how a function is called**, not where it's d
 
 ## The rules, in order of precedence
 
-```mermaid
-flowchart TD
-  A["How is the function called?"] --> Z{"Arrow function?"}
-  Z -- Yes --> Z1["this = this of the enclosing scope (lexical); call/apply/bind can't change it"]
-  Z -- No --> B{"Called with new?"}
-  B -- Yes --> B1["this = the newly created object"]
-  B -- No --> C{"call / apply / bind?"}
-  C -- Yes --> C1["this = the object passed in"]
-  C -- No --> D{"Called as obj.fn() ?"}
-  D -- Yes --> D1["this = obj (the object left of the dot)"]
-  D -- No --> E{"Strict mode?"}
-  E -- Yes --> E1["this = undefined"]
-  E -- No --> E2["this = globalThis (window)"]
-```
+{/* diagram source: /diagrams/diagram-231.mmd */}
+![diagram](/diagrams/diagram-231.svg)
 
 <Info>
 **One function, four `this` values**

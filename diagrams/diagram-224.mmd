@@ -1,0 +1,9 @@
+flowchart TB
+  subgraph Before
+    U1[user] --> A1[address]
+    U1 --> P1[prefs]
+  end
+  subgraph After
+    U2["next (new)"] --> A2["address (new)"]
+    U2 --> P1
+  end

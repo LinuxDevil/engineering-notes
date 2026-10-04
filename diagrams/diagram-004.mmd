@@ -1,0 +1,11 @@
+flowchart LR
+  U[User input] --> APP
+  EXT[Untrusted content<br/>web, email, docs, tool results, MCP servers] -->|may contain instructions| APP
+  subgraph APP[LLM application]
+    SP[System prompt] --> LLM[Model]
+    LLM --> OUT[Output]
+    LLM --> TOOLS[Tool calls]
+  end
+  DATA[(Private data)] --> APP
+  OUT -->|rendered / executed| SINK[Browser, shell, SQL, other systems]
+  TOOLS -->|side effects| WORLD[Emails, payments, files, APIs]

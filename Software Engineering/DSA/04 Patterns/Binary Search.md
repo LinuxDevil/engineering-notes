@@ -16,12 +16,8 @@ updated: 2026-09-27
 
 Guess the middle. If the target is bigger, throw away the left half; otherwise throw away the right half. Grokking Algorithms opens with exactly this (chapter 1, [Grokking Algorithms](/Software%20Engineering/DSA/05%20Books%20%26%20Courses/Grokking%20Algorithms)): guessing a number from 1 to 100 takes at most 7 guesses, and a sorted list of 4 billion items needs at most 32 steps, because log₂(4·10⁹) ≈ 32.
 
-```mermaid
-flowchart LR
-  A["[1 .. 100]<br/>guess 50: too low"] --> B["[51 .. 100]<br/>guess 75: too high"]
-  B --> C["[51 .. 74]<br/>guess 62"]
-  C --> D["... ≤ 7 guesses"]
-```
+{/* diagram source: /diagrams/diagram-199.mmd */}
+![diagram](/diagrams/diagram-199.svg)
 
 The general view: you have a predicate `ok(x)` that is **false, false, ..., false, true, true, ..., true** over the search space. Binary search finds the first `true`. "Sorted array contains target" is just one such predicate (`a[i] >= target`).
 

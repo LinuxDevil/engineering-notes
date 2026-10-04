@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant U as User
+  participant C as Component
+  participant S as Server
+  U->>C: types "du"
+  C->>S: GET ?q=du
+  U->>C: types "dub"
+  C->>S: GET ?q=dub
+  S-->>C: results for "dub"
+  S-->>C: results for "du" (late)
+  Note over C: Without a guard the stale "du" results win

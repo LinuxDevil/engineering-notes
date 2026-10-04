@@ -24,20 +24,8 @@ PostgreSQL specifics compared with the SQL standard:
 - Views can have `INSTEAD OF` row triggers and statement-level `BEFORE`/`AFTER` triggers.
 - Since PostgreSQL 11 the keyword is `EXECUTE FUNCTION`; `EXECUTE PROCEDURE` still works but is deprecated.
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant PG as PostgreSQL
-  C->>PG: UPDATE employee SET ... (3 rows)
-  PG->>PG: BEFORE STATEMENT triggers (once)
-  loop each row
-    PG->>PG: BEFORE ROW triggers (can modify NEW or skip the row)
-    PG->>PG: write the row, check constraints
-  end
-  PG->>PG: AFTER ROW triggers (queued, fired at end of statement)
-  PG->>PG: AFTER STATEMENT triggers (once, can read transition tables)
-  PG-->>C: UPDATE 3
-```
+{/* diagram source: /diagrams/diagram-138.mmd */}
+![diagram](/diagrams/diagram-138.svg)
 
 ## Types of triggers
 

@@ -1,0 +1,8 @@
+flowchart LR
+  R[Requirements<br/>security & privacy reqs<br/>ASVS level] --> D[Design<br/>threat model<br/>security review]
+  D --> C[Code<br/>secure defaults<br/>code review · SAST · secrets scan]
+  C --> B[Build<br/>SCA · SBOM · signed provenance]
+  B --> T[Test<br/>DAST · authz tests · pentest]
+  T --> Rel[Release<br/>config checks · signing]
+  Rel --> O[Operate<br/>monitoring · vuln mgmt · incident response]
+  O -->|lessons| R

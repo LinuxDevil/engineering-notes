@@ -14,13 +14,8 @@ Every ML project follows the same five steps: **define the problem → build the
 
 ![Untitled 2](/Attachments/Untitled%202.png)
 
-```mermaid
-flowchart LR
-  S1[1. Define the problem] --> S2[2. Build the dataset] --> S3[3. Train the model] --> S4[4. Evaluate the model] --> S5[5. Use the model]
-  S4 -.not good enough.-> S2
-  S4 -.-> S3
-  S5 -.drift / new needs.-> S1
-```
+{/* diagram source: /diagrams/diagram-015.mmd */}
+![diagram](/diagrams/diagram-015.svg)
 
 | Step | Key question | Note |
 |---|---|---|

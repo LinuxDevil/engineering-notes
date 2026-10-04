@@ -20,27 +20,13 @@ Node's event loop, implemented by **libuv**, cycles through **phases**: timers â
 
 ## The phases
 
-```mermaid
-flowchart TB
-  S([start: run main module, drain microtasks]) --> T
-  T["timers<br/>expired setTimeout / setInterval"] --> P["pending callbacks<br/>some deferred system I/O errors"]
-  P --> I["idle, prepare<br/>(internal)"]
-  I --> O["poll<br/>compute timeout, wait for I/O,<br/>run I/O callbacks"]
-  O --> C["check<br/>setImmediate callbacks"]
-  C --> X["close callbacks<br/>socket.on('close')"]
-  X --> A{"alive handles<br/>or requests?"}
-  A -- yes --> T
-  A -- no --> E([process exits])
-```
+{/* diagram source: /diagrams/diagram-078.mmd */}
+![diagram](/diagrams/diagram-078.svg)
 
 Between **each callback** in any phase:
 
-```mermaid
-flowchart LR
-  CB[run one callback] --> NT[drain process.nextTick queue] --> PR[drain promise microtasks] --> NX{more nextTicks<br/>queued?}
-  NX -- yes --> NT
-  NX -- no --> NEXT[next callback / phase]
-```
+{/* diagram source: /diagrams/diagram-079.mmd */}
+![diagram](/diagrams/diagram-079.svg)
 
 | Phase | What runs | Notes |
 |---|---|---|

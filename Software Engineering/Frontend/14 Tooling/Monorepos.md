@@ -85,16 +85,8 @@ travel-platform/
 └─ .github/CODEOWNERS
 ```
 
-```mermaid
-flowchart TB
-  FW["apps/flights-web"] --> UI["packages/ui"]
-  FW --> API["packages/api-client"]
-  HW["apps/hotels-web"] --> UI
-  HW --> API
-  AD["apps/admin"] --> API
-  UI --> TS["packages/tsconfig"]
-  API --> TS
-```
+{/* diagram source: /diagrams/diagram-335.mmd */}
+![diagram](/diagrams/diagram-335.svg)
 If `packages/ui` changes → `flights-web` and `hotels-web` are **affected**; `admin` is not.
 
 ## pnpm workspaces
@@ -134,13 +126,8 @@ The core problem: `build` + `lint` + `test` for 30 packages on every PR is too s
 3. **Remote caching** — share that cache across developers and CI (Nx Cloud / self-hosted, Vercel Remote Cache / self-hosted Turborepo cache): if CI already built `ui` for this hash, your laptop downloads it.
 4. **Affected** — only run tasks for projects changed since a base commit, plus their dependents.
 
-```mermaid
-flowchart LR
-  T["Task: ui#build"] --> H["Hash inputs: files, lockfile deps, env, config"]
-  H --> C{"Hash in local or remote cache?"}
-  C -->|yes| R["Restore outputs + logs (seconds)"]
-  C -->|no| X["Run task"] --> S["Store outputs under hash"]
-```
+{/* diagram source: /diagrams/diagram-336.mmd */}
+![diagram](/diagrams/diagram-336.svg)
 
 ### Turborepo
 

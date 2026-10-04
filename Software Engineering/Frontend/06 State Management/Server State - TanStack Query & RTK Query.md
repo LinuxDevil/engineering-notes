@@ -50,15 +50,8 @@ function Flights({ from, to }) {
 
 ## TanStack Query core concepts
 
-```mermaid
-flowchart LR
-    C1["Component A: useQuery(['flights', params])"] --> QC["QueryClient cache"]
-    C2["Component B: same key"] --> QC
-    QC -->|"miss or stale"| F["queryFn: fetch"]
-    F --> QC
-    QC -->|"fresh"| C1
-    M["useMutation"] -->|"onSuccess: invalidateQueries"| QC
-```
+{/* diagram source: /diagrams/diagram-275.mmd */}
+![diagram](/diagrams/diagram-275.svg)
 
 ### Setup
 
@@ -130,17 +123,8 @@ queryClient.prefetchQuery(flightQueries.detail(id)); // e.g. on hover
 | `refetchOnWindowFocus` / `refetchOnReconnect` / `refetchOnMount` | When stale data is refetched in the background | `true` |
 | `retry` | Retries failed queries | 3 (on the client) |
 
-```mermaid
-stateDiagram-v2
-    [*] --> Fetching: first mount
-    Fetching --> Fresh: success
-    Fresh --> Stale: staleTime elapsed
-    Stale --> Fetching: mount / focus / reconnect / invalidate
-    Fresh --> Inactive: all observers unmount
-    Stale --> Inactive: all observers unmount
-    Inactive --> [*]: gcTime elapsed (garbage collected)
-    Inactive --> Stale: remounted within gcTime (shown instantly, then refetched)
-```
+{/* diagram source: /diagrams/diagram-276.mmd */}
+![diagram](/diagrams/diagram-276.svg)
 
 This is **stale-while-revalidate**: stale data is shown immediately and refreshed in the background.
 
@@ -196,22 +180,8 @@ useMutation({
 });
 ```
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Cache
-    participant S as Server
-    U->>C: click (onMutate: snapshot + setQueryData)
-    Note over U,C: UI updates instantly
-    C->>S: mutationFn
-    alt success
-        S-->>C: 200
-    else error
-        S-->>C: 500
-        C->>C: onError: restore snapshot
-    end
-    C->>S: onSettled: invalidate + refetch
-```
+{/* diagram source: /diagrams/diagram-277.mmd */}
+![diagram](/diagrams/diagram-277.svg)
 
 A simpler v5 option for a single component: render the pending item from `mutation.variables` while `isPending`, no cache surgery needed. React 19's `useOptimistic` is the equivalent for Actions ([Forms & Actions in React](/Software%20Engineering/Frontend/05%20React/Forms%20%26%20Actions%20in%20React)).
 

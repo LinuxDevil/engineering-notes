@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant U as User
+    participant C as Cache
+    participant S as Server
+    U->>C: click (onMutate: snapshot + setQueryData)
+    Note over U,C: UI updates instantly
+    C->>S: mutationFn
+    alt success
+        S-->>C: 200
+    else error
+        S-->>C: 500
+        C->>C: onError: restore snapshot
+    end
+    C->>S: onSettled: invalidate + refetch

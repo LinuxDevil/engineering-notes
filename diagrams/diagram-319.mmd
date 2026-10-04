@@ -1,0 +1,6 @@
+flowchart LR
+  M["Measure (RUM + lab)"] --> F["Find the bottleneck: network, JS, render, images"]
+  F --> X["Fix (this playbook)"]
+  X --> B["Budget in CI"]
+  B --> MON["Monitor in production"]
+  MON --> M

@@ -13,11 +13,8 @@ Source code becomes something a machine can run through a pipeline: **lexing** (
 </Note>
 
 ## The pipeline
-```mermaid
-flowchart LR
-  SRC["Source text"] --> LEX["Lexer<br/>tokens"] --> PAR["Parser<br/>AST"] --> SEM["Semantic analysis<br/>scopes, types"]
-  SEM --> IR["IR<br/>(SSA, bytecode)"] --> OPT["Optimizer<br/>inlining, const folding,<br/>dead code elim."] --> GEN["Code gen<br/>machine code / bytecode"]
-```
+{/* diagram source: /diagrams/diagram-093.mmd */}
+![diagram](/diagrams/diagram-093.svg)
 
 ```text
 let total = price * 2;

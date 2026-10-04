@@ -12,44 +12,8 @@ updated: 2026-09-27
 Entry point for Data Structures & Algorithms and coding-interview prep. Notes go from foundations (Big-O, how to approach a problem) through the core data structures and algorithms to the ~12 **patterns** that cover most interview questions. Every topic note has a complexity table, TypeScript and Python code, classic LeetCode problems and interview questions; every pattern note has a template, a worked example and practice problems.
 </Note>
 
-```mermaid
-mindmap
-  root((DSA))
-    Foundations
-      Big-O
-      Problem Solving
-    Data Structures
-      Arrays & Strings
-      Linked Lists
-      Stacks & Queues
-      Hash Tables
-      Trees & BSTs
-      Heaps
-      Graphs
-      Tries
-      Union-Find
-    Algorithms
-      Recursion
-      Tree Traversal
-      Sorting
-      Dynamic Programming
-    Patterns
-      Two Pointers
-      Sliding Window
-      Prefix Sum
-      Binary Search
-      Fast & Slow
-      Monotonic Stack
-      Top-K
-      Intervals
-      Graph BFS/DFS
-      Backtracking
-      Greedy
-      Bits
-    Books & Courses
-      Grokking Algorithms
-      LeetCode Crash Course
-```
+{/* diagram source: /diagrams/diagram-205.mmd */}
+![diagram](/diagrams/diagram-205.svg)
 
 ## 🧭 Quick links
 - 🎯 Interview mode: [Problem Solving](/Software%20Engineering/DSA/01%20Foundations/Problem%20Solving) → the [Patterns → problems](#patterns--problems) table → a curated list (below)

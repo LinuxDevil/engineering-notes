@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant Alert as Alert / report
+  participant OC as On-call engineer
+  participant IC as Incident commander
+  participant Team as Responders
+  participant Comms as Comms lead
+  Alert->>OC: Page (SLO burn / customer report)
+  OC->>OC: Acknowledge, assess impact, declare severity
+  OC->>IC: Declare incident, open channel + call
+  IC->>Team: Assign investigation & mitigation
+  IC->>Comms: Status page + stakeholder updates on a cadence
+  Team->>IC: Mitigation applied (rollback, failover, flag off)
+  IC->>IC: Monitor recovery, declare resolved
+  IC->>Team: Schedule postmortem

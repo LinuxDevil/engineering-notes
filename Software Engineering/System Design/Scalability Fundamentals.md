@@ -49,13 +49,8 @@ Stateless = instances are cattle: kill, replace, autoscale freely. Sticky sessio
 
 ## Load balancing
 
-```mermaid
-flowchart LR
-  U["Clients"] --> DNS["DNS / GeoDNS / Anycast"]
-  DNS --> L4["L4 LB (TCP/UDP)"]
-  L4 --> L7a["L7 proxy (HTTP)"] & L7b["L7 proxy (HTTP)"]
-  L7a & L7b --> A1["svc A"] & A2["svc A"] & B1["svc B"]
-```
+{/* diagram source: /diagrams/diagram-408.mmd */}
+![diagram](/diagrams/diagram-408.svg)
 
 ### L4 vs L7
 | | L4 (transport) | L7 (application) |

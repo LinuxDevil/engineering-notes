@@ -62,14 +62,8 @@ stern -A --field-selector spec.nodeName=ip-10-0-3-17.eu-west-1.compute.internal 
 
 ### 1.2 Where logs actually live
 
-```mermaid
-flowchart LR
-  APP[orders-api writes JSON to stdout/stderr] --> RT[containerd captures the streams]
-  RT --> F["/var/log/pods/shop-prod_orders-api-7c9d..._uid/api/0.log"]
-  F -. symlink .-> C["/var/log/containers/orders-api-..._shop-prod_api-containerid.log"]
-  F --> K[kubelet serves kubectl logs]
-  F --> AL[Alloy DaemonSet tails and ships to Loki]
-```
+{/* diagram source: /diagrams/diagram-157.mmd */}
+![diagram](/diagrams/diagram-157.svg)
 
 - The container runtime writes each line in the **CRI log format** (`2026-09-27T10:15:02.123Z stdout F {"level":"info",...}`) to `/var/log/pods/<namespace>_<pod>_<uid>/<container>/<restartCount>.log`.
 - The **kubelet rotates** these files: `containerLogMaxSize` (default 10Mi) and `containerLogMaxFiles` (default 5) in the kubelet config. `kubectl logs` only sees what is still on disk; `--previous` only reaches one restart back.
@@ -179,23 +173,8 @@ kubectl auth whoami
 
 ### 2.5 Triage decision tree
 
-```mermaid
-flowchart TD
-  S[Something is wrong with orders-api] --> P{Pod status?}
-  P -->|Pending| PE[Scheduling problem:<br/>describe pod, FailedScheduling event]
-  P -->|ContainerCreating for minutes| CC[Volume, secret, CNI or image pull:<br/>events on the pod]
-  P -->|ImagePullBackOff / ErrImagePull| IP[Image name/tag, registry auth, network]
-  P -->|CrashLoopBackOff| CL{lastState.terminated.reason}
-  CL -->|OOMKilled, exit 137| OOM[Memory limit too low or leak]
-  CL -->|Error, exit 1| APPERR[App crash: logs --previous]
-  CL -->|Completed, exit 0| EXIT[Process exits: wrong command, no server loop]
-  P -->|Running but 0/1 READY| RD[Readiness probe failing:<br/>events Unhealthy, probe path/port/deps]
-  P -->|Evicted / Failed| EV[Node pressure: memory, disk, ephemeral-storage]
-  P -->|Terminating forever| TE[Finalizers, dead node, preStop hanging]
-  P -->|Running 1/1, still no traffic| SV{EndpointSlices empty?}
-  SV -->|yes| SEL[Service selector / targetPort / readiness]
-  SV -->|no| NET[Gateway/HTTPRoute, NetworkPolicy, DNS]
-```
+{/* diagram source: /diagrams/diagram-158.mmd */}
+![diagram](/diagrams/diagram-158.svg)
 
 ### 2.6 Symptom playbook
 
@@ -253,15 +232,8 @@ flowchart TD
 
 The scheduler watches for Pods with no `spec.nodeName`, runs each through a plugin pipeline, and writes a **binding**. The kubelet on that node then does the rest.
 
-```mermaid
-flowchart LR
-  Q[Scheduling queue<br/>ordered by priority] --> PF[PreFilter / Filter<br/>which nodes are feasible?]
-  PF -->|none feasible| PO[PostFilter: preemption<br/>evict lower-priority pods?]
-  PF --> SC[PreScore / Score<br/>rank feasible nodes 0-100]
-  SC --> R[Reserve / Permit]
-  R --> B[PreBind / Bind<br/>write spec.nodeName]
-  PO --> Q
-```
+{/* diagram source: /diagrams/diagram-159.mmd */}
+![diagram](/diagrams/diagram-159.svg)
 
 - **Filtering** (hard rules): enough allocatable CPU/memory for the **requests** (`NodeResourcesFit`), nodeSelector and required node affinity, taints without tolerations, required pod (anti-)affinity, `DoNotSchedule` topology spread, volume zone and attach limits, host ports.
 - **Scoring** (preferences): balanced/least-allocated resources, preferred affinities, `ScheduleAnyway` spread, image already on the node, fewer intolerable `PreferNoSchedule` taints.
@@ -269,20 +241,8 @@ flowchart LR
 
 ### 3.2 Pod lifecycle
 
-```mermaid
-stateDiagram-v2
-  [*] --> Pending: created, stored in etcd
-  Pending --> Pending: unscheduled / pulling images / init containers
-  Pending --> Running: scheduled, containers started
-  Running --> Running: container restart (restartPolicy Always)
-  Running --> Succeeded: all containers exit 0 (Jobs)
-  Running --> Failed: containers exit non-zero, restartPolicy Never / evicted
-  Pending --> Failed: e.g. init container fails with restartPolicy Never
-  Running --> Unknown: node stops reporting
-  Unknown --> Running: node recovers
-  Running --> Terminating: deletionTimestamp set
-  Terminating --> [*]: preStop, SIGTERM, grace period, SIGKILL, finalizers cleared
-```
+{/* diagram source: /diagrams/diagram-160.mmd */}
+![diagram](/diagrams/diagram-160.svg)
 
 `Terminating`, `CrashLoopBackOff`, `ContainerCreating` and `ImagePullBackOff` are not phases: they are what kubectl shows from deletion timestamps and **container states** (`waiting.reason`). Pod **conditions** (`PodScheduled`, `Initialized`, `ContainersReady`, `Ready`) tell you which step is stuck.
 
@@ -525,16 +485,8 @@ kubectl uncordon ip-10-0-3-17.eu-west-1.compute.internal
 
 Every controller runs the same loop: **watch** objects through informers, **compare** desired (`spec`) with observed (`status` and the real world), **act** to close the gap, **update status**, repeat. It is level-triggered: it reacts to the current state, not to a missed event, which is why Kubernetes self-heals after crashes.
 
-```mermaid
-flowchart LR
-  GIT[(platform-gitops<br/>apps/orders-api/overlays/prod)] -- Argo CD sync --> API[kube-apiserver / etcd<br/>Deployment spec]
-  API -- watch --> DC[Deployment controller] -- creates/scales --> RS[ReplicaSet]
-  RS -- watch --> RSC[ReplicaSet controller] -- creates --> PODS[Pods]
-  PODS -- watch --> SCH[Scheduler] -- binds --> NODE[kubelet on node] -- runs --> C[containers]
-  NODE -- status --> API
-  API -- live state --> ARGO[Argo CD compares live vs Git]
-  ARGO -- selfHeal: re-apply Git --> API
-```
+{/* diagram source: /diagrams/diagram-161.mmd */}
+![diagram](/diagrams/diagram-161.svg)
 
 ### 4.2 Owner references and garbage collection
 

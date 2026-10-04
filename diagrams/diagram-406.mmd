@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph Queue
+    P1["Producer"] --> Q[["queue"]] --> W1["worker"] & W2["worker"]
+  end
+  subgraph Log["Kafka topic (3 partitions)"]
+    P2["Producer<br/>key=user_id"] --> T0["p0"] & T1["p1"] & T2["p2"]
+    T0 & T1 --> GA1["group A: c1"]
+    T2 --> GA2["group A: c2"]
+    T0 & T1 & T2 --> GB["group B: c1<br/>(own offsets)"]
+  end

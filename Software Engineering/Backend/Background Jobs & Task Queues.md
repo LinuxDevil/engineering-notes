@@ -14,25 +14,8 @@ Anything slow, unreliable or not needed for the HTTP response (emails, webhooks,
 
 ## Why
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant API
-  participant Q as Queue (Redis/DB)
-  participant W as Worker
-  participant E as Email provider
-  U->>API: POST /signup
-  API->>API: create user (DB transaction)
-  API->>Q: enqueue SendWelcomeEmail(user_id)
-  API-->>U: 201 Created (fast)
-  W->>Q: fetch job
-  W->>E: send email
-  alt success
-    W->>Q: ack / delete
-  else failure
-    W->>Q: retry later (backoff)
-  end
-```
+{/* diagram source: /diagrams/diagram-039.mmd */}
+![diagram](/diagrams/diagram-039.svg)
 
 - **Latency**: respond in 50 ms instead of 3 s.
 - **Reliability**: provider down? The job retries for hours; the user's request doesn't fail.

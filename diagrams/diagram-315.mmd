@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph Page["/flight/EK202"]
+    S1["Static shell: layout, flight info (build time)"]
+    D1["Dynamic hole: live price (request time)"]
+    D2["Dynamic hole: user's saved trips (request time)"]
+  end
+  CDN["CDN: shell instantly"] --> S1
+  Server["Server: stream holes"] --> D1
+  Server --> D2

@@ -1,0 +1,8 @@
+flowchart LR
+  P[Define success<br/>criteria per use case] --> D[Golden dataset<br/>real + edge + adversarial cases]
+  D --> R[Run system<br/>n trials per case]
+  R --> G[Graders<br/>code · LLM judge · human]
+  G --> S[Scores, slices, diffs vs baseline]
+  S --> I[Iterate prompt/model/retrieval]
+  I --> R
+  PROD[Production traces + feedback] -->|failures become cases| D

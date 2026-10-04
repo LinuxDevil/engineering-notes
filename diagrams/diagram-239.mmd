@@ -1,0 +1,11 @@
+flowchart LR
+  H["HTML bytes"] --> T["Tokenize & parse"] --> DOM["DOM tree"]
+  C["CSS bytes"] --> CP["Parse"] --> CSSOM["CSSOM tree"]
+  DOM --> RT["Render tree (visible nodes + computed styles)"]
+  CSSOM --> RT
+  RT --> L["Layout / Reflow (geometry)"]
+  L --> P["Paint (draw records per layer)"]
+  P --> CO["Composite (GPU combines layers)"]
+  CO --> S["Pixels on screen"]
+  JS["JavaScript"] -.->|"can modify"| DOM
+  JS -.->|"can modify"| CSSOM

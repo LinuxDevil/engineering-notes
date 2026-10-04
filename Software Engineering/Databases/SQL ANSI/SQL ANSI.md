@@ -12,41 +12,8 @@ updated: 2026-09-27
 A course through Ben Forta's *Sams Teach Yourself SQL in 10 Minutes a Day* (5th ed.), one note per lesson in book order, plus three PostgreSQL deep dives (triggers, indexes, partitioning). Every lesson keeps the book's examples and adds a "Beyond the book / Senior perspective" section with modern practice (window functions, CTEs, upserts, sargable queries, safe migrations) and interview questions. Part of [Databases Index](/Software%20Engineering/Databases/Databases%20Index).
 </Note>
 
-```mermaid
-mindmap
-  root((SQL ANSI))
-    Retrieving
-      SELECT
-      ORDER BY
-    Filtering
-      WHERE
-      AND OR IN NOT
-      LIKE
-    Calculating
-      Calculated fields
-      Functions
-      Aggregates
-      GROUP BY and windows
-    Combining
-      Subqueries
-      Joins
-      UNION
-    Modifying
-      INSERT and upsert
-      UPDATE DELETE
-    Schema
-      Tables
-      Views
-      Procedures
-    Advanced
-      Transactions
-      Cursors
-      Constraints indexes triggers
-    PostgreSQL extras
-      Triggers
-      Indexes
-      Partitioning
-```
+{/* diagram source: /diagrams/diagram-136.mmd */}
+![diagram](/diagrams/diagram-136.svg)
 
 ## The course, in book order
 

@@ -59,14 +59,8 @@ Other popular formats: **MADR** (Markdown Architectural Decision Records, adds "
 
 ### Lifecycle and practice
 
-```mermaid
-stateDiagram-v2
-  [*] --> Proposed
-  Proposed --> Accepted: review
-  Proposed --> Rejected
-  Accepted --> Deprecated: no longer relevant
-  Accepted --> Superseded: replaced by newer ADR
-```
+{/* diagram source: /diagrams/diagram-358.mmd */}
+![diagram](/diagrams/diagram-358.svg)
 
 - Store in the repo (`docs/adr/0007-modular-monolith.md`), numbered, reviewed as a PR like code. Tools: `adr-tools`, Log4brains, Backstage ADR plugin.
 - **Immutable once accepted**: don't edit history; write a new ADR that supersedes it and link both ways.

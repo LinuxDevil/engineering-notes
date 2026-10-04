@@ -1,0 +1,9 @@
+sequenceDiagram
+  participant V as Victim browser
+  participant E as evil.com
+  participant B as bank.com
+  V->>B: logs in, gets session cookie
+  V->>E: visits attacker page
+  E-->>V: hidden form auto-submits to bank.com/transfer
+  V->>B: POST /transfer + session cookie (attached automatically)
+  B-->>V: 200 OK, money moved (attacker cannot read, but damage done)

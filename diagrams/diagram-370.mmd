@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant B as Browser
+  participant R as Router
+  participant C as Controller
+  participant M as Model
+  participant V as View
+  B->>R: POST /users (form data)
+  R->>C: UsersController#create(params)
+  C->>M: User.create(params)
+  M-->>C: user (or validation errors)
+  C->>V: render "welcome" with user
+  V-->>B: HTML response

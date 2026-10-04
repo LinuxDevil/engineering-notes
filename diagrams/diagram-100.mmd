@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant C as Client
+  participant S as Server
+  C->>S: SYN (seq=x)
+  S-->>C: SYN-ACK (seq=y, ack=x+1)
+  C->>S: ACK (ack=y+1) [can carry data]
+  Note over C,S: ESTABLISHED: 1 RTT before first request
+  C->>S: FIN
+  S-->>C: ACK
+  S->>C: FIN
+  C-->>S: ACK (client enters TIME_WAIT ~2×MSL)

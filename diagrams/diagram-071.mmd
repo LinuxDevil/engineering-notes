@@ -1,0 +1,14 @@
+flowchart TD
+  Q1{"Is it a multi-step business process<br/>with waits, compensation, history?"} -- yes --> T["Temporal Schedules<br/>(or Step Functions on AWS)"]
+  Q1 -- no --> Q2{"Is it pure SQL inside one database?"}
+  Q2 -- yes --> PC["pg_cron"]
+  Q2 -- no --> Q3{"Where does your platform live?"}
+  Q3 -- "AWS serverless" --> EB["EventBridge Scheduler + SQS"]
+  Q3 -- "Kubernetes" --> Q4{"Needs its own image/resources per run,<br/>minutes-level frequency?"}
+  Q4 -- yes --> CJ["Kubernetes CronJob"]
+  Q4 -- "no: app code, frequent or fan-out" --> Q5{"Queue store you already run?"}
+  Q5 -- Redis --> BM["BullMQ Job Schedulers"]
+  Q5 -- Postgres --> PB["pg-boss / BullMQ Postgres backend"]
+  Q5 -- RabbitMQ --> RMQ["RabbitMQ + CronJob publisher"]
+  Q3 -- "one VM" --> CT["crontab + flock"]
+  Q3 -- "repo chores / CI" --> GH["GitHub Actions schedule / Jenkins cron"]

@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant U as User
+  participant CDN as Cache
+  participant S as Server
+  U->>CDN: GET /deals (fresh)
+  CDN-->>U: cached HTML
+  Note over CDN: revalidate window passes
+  U->>CDN: GET /deals (stale)
+  CDN-->>U: stale HTML (fast)
+  CDN->>S: regenerate in background
+  S-->>CDN: new HTML

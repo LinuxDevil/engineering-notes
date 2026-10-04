@@ -1,0 +1,8 @@
+flowchart LR
+  GIT[(platform-gitops<br/>apps/orders-api/overlays/prod)] -- Argo CD sync --> API[kube-apiserver / etcd<br/>Deployment spec]
+  API -- watch --> DC[Deployment controller] -- creates/scales --> RS[ReplicaSet]
+  RS -- watch --> RSC[ReplicaSet controller] -- creates --> PODS[Pods]
+  PODS -- watch --> SCH[Scheduler] -- binds --> NODE[kubelet on node] -- runs --> C[containers]
+  NODE -- status --> API
+  API -- live state --> ARGO[Argo CD compares live vs Git]
+  ARGO -- selfHeal: re-apply Git --> API

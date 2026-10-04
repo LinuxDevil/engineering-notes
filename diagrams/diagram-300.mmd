@@ -1,0 +1,8 @@
+sequenceDiagram
+  participant U as User / timer / network
+  participant Z as zone.js (NgZone)
+  participant A as ApplicationRef
+  U->>Z: async callback runs inside the angular zone
+  Z->>Z: run task, then drain microtasks
+  Z->>A: onMicrotaskEmpty
+  A->>A: tick(): check component tree top-down

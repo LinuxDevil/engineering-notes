@@ -14,21 +14,8 @@ updated: 2026-09-27
 
 ## The idea
 
-```mermaid
-flowchart TB
-  Dev[Product developers] --> Portal[Developer portal: Backstage / Port / Cortex]
-  Dev --> CLI[CLI / Git / PR-based workflows]
-  Portal --> API[Platform APIs & templates]
-  CLI --> API
-  subgraph Platform["Internal Developer Platform (owned by platform team)"]
-    API --> CI[CI/CD + GitOps]
-    API --> IaC[IaC modules / Crossplane compositions]
-    API --> RT[Runtime: Kubernetes, serverless]
-    API --> OBS[Observability defaults + SLO templates]
-    API --> SEC[Security: secrets, policy, identity, supply chain]
-  end
-  Platform --> Cloud[(Cloud providers & SaaS)]
-```
+{/* diagram source: /diagrams/diagram-180.mmd */}
+![diagram](/diagrams/diagram-180.svg)
 
 Key concepts:
 - **Cognitive load**: the platform absorbs undifferentiated complexity so stream-aligned teams focus on business logic (from *Team Topologies*).

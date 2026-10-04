@@ -27,16 +27,8 @@ Hooks are functions that let function components **"hook into" React features**:
 
 ![Screenshot_2023-08-01_at_10.46.26_PM](/Attachments/Screenshot_2023-08-01_at_10.46.26_PM.png)
 
-```mermaid
-flowchart LR
-  M["Mount / update"] --> R["Render: run component body, useState, useMemo..."]
-  R --> DOM["Commit: DOM mutated"]
-  DOM --> L["useLayoutEffect cleanup(prev) → useLayoutEffect"]
-  L --> P["Browser paints"]
-  P --> E["useEffect cleanup(prev) → useEffect"]
-  E -->|"setState"| R
-  U["Unmount"] --> C["all cleanups run"]
-```
+{/* diagram source: /diagrams/diagram-257.mmd */}
+![diagram](/diagrams/diagram-257.svg)
 
 ## Rules of hooks
 1. **Only call hooks at the top level.** Not inside conditions, loops, nested functions, `try/catch`, or after an early `return`. React identifies each hook by **call order**: the hooks are a linked list on the fiber.

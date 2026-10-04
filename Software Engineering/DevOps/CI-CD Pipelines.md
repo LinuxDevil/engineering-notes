@@ -22,20 +22,8 @@ updated: 2026-09-27
 
 ## 2. Pipeline stages
 
-```mermaid
-flowchart LR
-  A[Push / PR] --> B[Lint + typecheck]
-  B --> C[Unit tests]
-  C --> D[Build artifact / image]
-  D --> E[Security: SAST, deps, secrets, image scan]
-  E --> F[Integration / contract tests]
-  F --> G[Publish: signed image + SBOM]
-  G --> H[Deploy staging]
-  H --> I[E2E / smoke tests]
-  I --> J{Approval / policy}
-  J --> K[Deploy prod: canary → full]
-  K --> L[Verify: SLOs, auto-rollback]
-```
+{/* diagram source: /diagrams/diagram-140.mmd */}
+![diagram](/diagrams/diagram-140.svg)
 
 Principles:
 - **Build once, deploy many**: the same artifact (image digest) moves through environments; only config differs.
@@ -135,18 +123,8 @@ Cache keys must include everything that affects the output (lockfile, OS, tool v
 
 ## 5. Deployment strategies
 
-```mermaid
-flowchart TB
-  subgraph Rolling
-    R1[v1 v1 v1 v1] --> R2[v2 v1 v1 v1] --> R3[v2 v2 v1 v1] --> R4[v2 v2 v2 v2]
-  end
-  subgraph BlueGreen["Blue/Green"]
-    B1[Blue v1: 100% traffic] -. switch router .-> G1[Green v2: 0% → 100%]
-  end
-  subgraph Canary
-    C1[v2 gets 1% → 5% → 25% → 100%, gated by metrics]
-  end
-```
+{/* diagram source: /diagrams/diagram-141.mmd */}
+![diagram](/diagrams/diagram-141.svg)
 
 | Strategy | How | Pros | Cons |
 |---|---|---|---|

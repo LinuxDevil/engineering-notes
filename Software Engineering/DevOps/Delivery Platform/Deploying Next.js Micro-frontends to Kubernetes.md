@@ -72,18 +72,8 @@ Vercel made its Microfrontends product **generally available on 2025-10-31**. Ea
 
 ## 2. Architecture
 
-```mermaid
-flowchart LR
-  U[Browser] -->|https://shop.acme.dev| CDN[CDN: caches /_next/static and public assets]
-  CDN --> GW["Gateway shop-gateway (Envoy Gateway / Cilium / cloud)"]
-  GW -->|/catalog/*| C[Service catalog → catalog Pods]
-  GW -->|/checkout/*| K[Service checkout-active → checkout Pods]
-  GW -->|/api/orders/*| O[Service orders-api]
-  GW -->|/faro/*| F[Alloy faro.receiver]
-  GW -->|/ everything else| S[Service shell → shell Pods]
-  C & K & S --> R[(Redis: shared Next.js cache)]
-  C & K & S -->|server-side fetch| O
-```
+{/* diagram source: /diagrams/diagram-148.mmd */}
+![diagram](/diagrams/diagram-148.svg)
 
 Gateway API picks the **longest matching path prefix**, and `PathPrefix` matches whole path segments: `/catalog` matches `/catalog` and `/catalog/shoes`, but not `/catalogue`. So `/` catches everything no other route claims.
 
@@ -721,24 +711,8 @@ Adding a fourth zone is a new directory under `apps/`; no Argo CD change. Deeper
 - **Roll back one zone**: `git revert` the tag commit in `apps/catalog/overlays/prod`; Argo CD syncs `catalog-prod` back while shell and checkout stay on their versions. (Argo CD's UI "History and Rollback" works too but disables auto-sync until Git is fixed.) For `checkout`, while the previous (blue) ReplicaSet is still up after a promotion, `kubectl argo rollouts undo checkout -n shop-prod` flips traffic back instantly; then revert the tag in Git so Argo CD agrees.
 - The contract between zones is **URLs, cookies and shared packages**. Rolling back one zone is safe as long as those stay backward compatible: never rename a path another zone links to, or change the session cookie format, in the same release that depends on it.
 
-```mermaid
-flowchart LR
-  subgraph repos[Team repos]
-    s[acme/shell] --> JS[Jenkins]
-    c[acme/catalog] --> JC[Jenkins]
-    k[acme/checkout] --> JK[Jenkins]
-  end
-  JS -->|ghcr.io/acme/shell:SHA + tag bump| G[(acme/platform-gitops)]
-  JC -->|ghcr.io/acme/catalog:SHA + tag bump| G
-  JK -->|ghcr.io/acme/checkout:SHA + tag bump| G
-  JC -.->|upload .next/static| OBJ[(Object storage + CDN)]
-  G --> AS[ApplicationSet shop]
-  AS --> A1[shell-prod]
-  AS --> A2[catalog-prod]
-  AS --> A3[checkout-prod]
-  A1 & A2 & A3 --> K8s[shop-prod namespace]
-  K8s --> GR[Grafana: per-zone dashboards, Faro, Loki]
-```
+{/* diagram source: /diagrams/diagram-149.mmd */}
+![diagram](/diagrams/diagram-149.svg)
 
 ## 11. Observability
 

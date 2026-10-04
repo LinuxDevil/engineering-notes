@@ -1,0 +1,4 @@
+flowchart LR
+  A["call first([1,2,3])"] --> B["infer T = number"]
+  B --> C["substitute: first(arr: number[]): number | undefined"]
+  C --> D["result typed number | undefined"]

@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph PreSync
+    M["Job orders-api-migrate<br/>hook: PreSync"]
+  end
+  subgraph Sync
+    W1["wave -1<br/>ExternalSecret, ConfigMap, ServiceAccount"] --> W0["wave 0<br/>Deployment / Rollout, Service"] --> W1b["wave 1<br/>HTTPRoute, HPA, PDB"]
+  end
+  subgraph PostSync
+    S["Job orders-api-smoke<br/>hook: PostSync"]
+  end
+  PreSync --> Sync --> PostSync
+  Sync -. failure .-> F["SyncFail hooks<br/>(e.g. Slack, cleanup)"]

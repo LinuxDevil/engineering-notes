@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant C as Client
+  participant G as API Gateway
+  participant S as Service
+  participant P as Policy engine
+  C->>G: GET /invoices/42 (Authorization: Bearer ...)
+  G->>G: AuthN: verify token signature, exp, aud, iss
+  G->>S: forward + identity (sub, roles, tenant)
+  S->>P: can user:7 "read" invoice:42 ?
+  P-->>S: allow / deny
+  S-->>C: 200 invoice  |  403 Forbidden  |  404 (hide existence)

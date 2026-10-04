@@ -1,0 +1,7 @@
+flowchart LR
+  C[Client Pod] -->|DNS: orders.shop.svc.cluster.local| DNS[CoreDNS]
+  DNS -->|ClusterIP 10.96.12.7| C
+  C -->|10.96.12.7:80| KP[kube-proxy rules / eBPF]
+  KP --> P1[Pod 10.1.2.3:8080]
+  KP --> P2[Pod 10.1.4.5:8080]
+  ES[EndpointSlice: ready Pod IPs] -.programs.-> KP

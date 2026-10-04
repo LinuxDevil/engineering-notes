@@ -167,12 +167,8 @@ WHERE oi.order_num = 20007;
 | **Hash join** | Build a hash table on the smaller input, probe with the other | Large unsorted inputs, **equality** conditions only |
 | **Merge join** | Sort both inputs on the join key (or read them from indexes), then walk them together | Large inputs already sorted; equality (and some range) conditions |
 
-```mermaid
-flowchart LR
-  Q[JOIN condition] -->|equality, big inputs| H[Hash join]
-  Q -->|equality, sorted inputs| M[Merge join]
-  Q -->|small outer, indexed inner or non-equi| N[Nested loop]
-```
+{/* diagram source: /diagrams/diagram-135.mmd */}
+![diagram](/diagrams/diagram-135.svg)
 
 MySQL used only nested loops until 8.0.18 added hash joins. `EXPLAIN` shows which one was picked ([Query Optimization & EXPLAIN](/Software%20Engineering/Databases/Core%20Concepts/Query%20Optimization%20%26%20EXPLAIN)).
 

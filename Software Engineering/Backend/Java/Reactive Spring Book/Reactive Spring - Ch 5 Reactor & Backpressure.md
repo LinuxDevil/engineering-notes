@@ -26,17 +26,8 @@ Message queues are a critical component of distributed systems. They keep decoup
 
 In reactive programming, flow control is called **backpressure**. It ensures data is **consumed at a regulated rate** so consumers are not overwhelmed. The **subscriber** controls the flow and requests more data with `request(n)`. The publisher won't produce more than the subscriber asked for. If the subscriber is ever overwhelmed, it has only itself to blame.
 
-```mermaid
-sequenceDiagram
-  participant Sub as Subscriber (slow DB writer)
-  participant Pub as Publisher (Kafka topic)
-  Sub->>Pub: request(50)
-  Pub-->>Sub: onNext × 50
-  Note over Sub: writes batch
-  Sub->>Pub: request(50)
-  Pub-->>Sub: onNext × 50
-  Note over Pub: producer is faster → buffers upstream,<br/>or drops/latest per strategy
-```
+{/* diagram source: /diagrams/diagram-054.mmd */}
+![diagram](/diagrams/diagram-054.svg)
 
 ```java
 kafkaFlux

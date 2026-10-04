@@ -43,13 +43,8 @@ function parseConfig(text) {
 }
 ```
 
-```mermaid
-flowchart TD
-  T[try block] -->|no error| F[finally]
-  T -->|throws| C[catch block]
-  C -->|handled or rethrown| F
-  F --> N[continue, or propagate the pending throw/return]
-```
+{/* diagram source: /diagrams/diagram-207.mmd */}
+![diagram](/diagrams/diagram-207.svg)
 
 <Warning>
 **`finally` overrides**
@@ -190,15 +185,8 @@ process.on('unhandledRejection', (reason) => { log(reason); });
 - Cross-origin scripts report only "Script error." unless served with CORS headers and `crossorigin` attribute.
 - Node exits on unhandled rejections by default (since Node 15).
 
-```mermaid
-flowchart LR
-  E[Error thrown] --> L{"Local try/catch?"}
-  L -- yes --> H[Handle / recover / wrap with cause]
-  L -- no --> B{"React Error Boundary? (render errors)"}
-  B -- yes --> FB[Fallback UI + log]
-  B -- no --> G["window 'error' / 'unhandledrejection'"]
-  G --> M["Monitoring (Sentry etc.)"]
-```
+{/* diagram source: /diagrams/diagram-208.mmd */}
+![diagram](/diagrams/diagram-208.svg)
 
 ## Error handling in UI apps
 

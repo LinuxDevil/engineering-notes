@@ -1,0 +1,6 @@
+flowchart LR
+  C1[Client A] --> N1[WS node 1]
+  C2[Client B] --> N2[WS node 2]
+  N1 <--> PS[(Redis pub/sub / NATS / Kafka)]
+  N2 <--> PS
+  API[API / workers] --> PS

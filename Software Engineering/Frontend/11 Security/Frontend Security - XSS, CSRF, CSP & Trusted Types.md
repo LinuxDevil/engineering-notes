@@ -14,17 +14,8 @@ The browser's security model rests on the **same-origin policy**. Most frontend 
 
 ## Threat map
 
-```mermaid
-flowchart LR
-  A["Attacker"] -->|"injects script into your page"| XSS["XSS: runs as your origin, reads DOM, tokens, makes requests"]
-  A -->|"lures victim to evil.com which submits to your site"| CSRF["CSRF: browser attaches victim's cookies"]
-  A -->|"frames your site invisibly"| CJ["Clickjacking: victim clicks hidden buttons"]
-  A -->|"compromises a dependency or CDN"| SC["Supply chain: malicious code in your bundle"]
-  XSS --> D1["Escaping, sanitizing, CSP, Trusted Types"]
-  CSRF --> D2["SameSite cookies, CSRF tokens, Origin checks"]
-  CJ --> D3["CSP frame-ancestors, X-Frame-Options"]
-  SC --> D4["Lockfiles, SRI, provenance, see Supply Chain Security"]
-```
+{/* diagram source: /diagrams/diagram-326.mmd */}
+![diagram](/diagrams/diagram-326.svg)
 
 ## Same-origin policy (SOP) in one paragraph
 An **origin** = scheme + host + port. Scripts from one origin can't read data (DOM, responses, storage) from another origin. SOP doesn't stop a page from *sending* requests to other origins (forms, images, scripts), it stops it from *reading* the responses. That's why CSRF works (sending is allowed) and why CORS exists (to *relax* reading).
@@ -169,17 +160,8 @@ If XSS runs, anything readable by JS (`localStorage`, `sessionStorage`, non-Http
 
 The victim is logged in to `bank.com` (session cookie). They visit `evil.com`, which auto-submits a form to `bank.com/transfer`. The browser **attaches the bank cookie automatically**, so the request looks legitimate. The attacker can't read the response, but the side effect (transfer, email change) happens.
 
-```mermaid
-sequenceDiagram
-  participant V as Victim browser
-  participant E as evil.com
-  participant B as bank.com
-  V->>B: logs in, gets session cookie
-  V->>E: visits attacker page
-  E-->>V: hidden form auto-submits to bank.com/transfer
-  V->>B: POST /transfer + session cookie (attached automatically)
-  B-->>V: 200 OK, money moved (attacker cannot read, but damage done)
-```
+{/* diagram source: /diagrams/diagram-327.mmd */}
+![diagram](/diagrams/diagram-327.svg)
 
 ### Defences
 1. **`SameSite` cookies**

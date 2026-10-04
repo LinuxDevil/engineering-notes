@@ -1,0 +1,8 @@
+flowchart LR
+  C["Clients"] --> CDN["CDN"] --> LB["Load balancer"]
+  LB --> S1["API service"] & S2["API service"]
+  S1 & S2 --> Cache[("Cache")]
+  S1 & S2 --> DB[("Primary DB")]
+  DB --> RR[("Read replicas")]
+  S1 & S2 --> Q["Queue"] --> W["Workers"]
+  W --> Blob[("Object storage")]

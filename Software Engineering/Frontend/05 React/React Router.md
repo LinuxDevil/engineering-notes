@@ -113,14 +113,8 @@ function Messages() {
 ```
 Layout routes (a `<Route element>` with no `path`) wrap children without adding URL segments. Use them for auth guards and shared chrome.
 
-```mermaid
-flowchart TD
-  Root["/ (RootLayout + Outlet)"] --> Home["index → Home"]
-  Root --> Msg["messages (Messages + Outlet)"]
-  Msg --> Pick["index → PickAConversation"]
-  Msg --> Chat[":id → Chat"]
-  Root --> NF["* → NotFound"]
-```
+{/* diagram source: /diagrams/diagram-266.mmd */}
+![diagram](/diagrams/diagram-266.svg)
 
 ## 4. Hooks for reading the URL
 
@@ -175,18 +169,8 @@ In data routers, prefer `redirect()` from a loader or action. It happens before 
 ## 6. Data routers (v6.4+): loaders and actions
 Fetching in effects gives you **waterfalls**: the parent renders, then fetches, then the child renders, then fetches. Data routers **start every matched route's loader in parallel as soon as navigation starts**.
 
-```mermaid
-sequenceDiagram
-  participant U as User clicks Link
-  participant R as Router
-  participant L as Loaders (parallel)
-  participant C as Components
-  U->>R: navigate /trips/42
-  R->>L: run root, trips, trip loaders together
-  L-->>R: data
-  R->>C: render with useLoaderData()
-  Note over R: form submit → action → revalidate all loaders
-```
+{/* diagram source: /diagrams/diagram-267.mmd */}
+![diagram](/diagrams/diagram-267.svg)
 
 ```jsx
 import { createBrowserRouter, RouterProvider, useLoaderData, Form, useNavigation, redirect } from 'react-router';

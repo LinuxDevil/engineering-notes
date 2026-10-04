@@ -1,0 +1,7 @@
+flowchart LR
+  HTTP[REST controller<br/>driving adapter] --> INP((Input port<br/>PlaceOrder use case))
+  CLI[CLI / tests] --> INP
+  INP --> CORE[Domain model]
+  CORE --> OUTP((Output ports<br/>OrderRepository, PaymentGateway))
+  PG[(Postgres adapter)] -. implements .-> OUTP
+  STRIPE[Stripe adapter] -. implements .-> OUTP

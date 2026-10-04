@@ -52,19 +52,8 @@ CREATE TABLE user_inbox (    -- per-user list of conversations with last seq
 Huge groups/channels: bucket the partition by time (`(conv_id, month)`) so partitions don't grow unbounded.
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  A["Client A"] <-->|"WebSocket"| G1["Gateway 1"]
-  B["Client B"] <-->|"WebSocket"| G2["Gateway 2"]
-  G1 --> CS["Chat service"]
-  CS --> SEQ["Sequencer<br/>(per conv)"]
-  CS --> MS[("Message store<br/>Cassandra")]
-  CS --> K["Kafka<br/>(partition by conv_id)"]
-  K --> FO["Fan-out / delivery workers"]
-  FO --> PR[("Presence & session registry<br/>Redis: user → gateway")]
-  FO --> G2
-  FO -->|"offline"| PN["Push service<br/>(APNs / FCM)"]
-```
+{/* diagram source: /diagrams/diagram-392.mmd */}
+![diagram](/diagrams/diagram-392.svg)
 Flow: A sends → gateway 1 → chat service assigns `seq`, persists, acks to A → publishes event → delivery workers look up B's gateway(s) in the session registry → push to gateway 2 → B. If B is offline, send a push notification; B syncs via `afterSeq` when it reconnects.
 
 ## 6. Deep dives

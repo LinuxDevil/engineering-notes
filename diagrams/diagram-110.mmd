@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph L2[Layer 2: few nodes]
+      A2((A)) --- D2((D))
+    end
+    subgraph L1[Layer 1]
+      A1((A)) --- B1((B)) --- D1((D)) --- F1((F))
+    end
+    subgraph L0[Layer 0: all nodes]
+      A0((A)) --- B0((B)) --- C0((C)) --- D0((D)) --- E0((E)) --- F0((F)) --- G0((G))
+    end
+    Q[query] -.enter.-> A2
+    D2 -.descend.-> D1
+    D1 -.descend.-> D0
+    D0 -.closest.-> E0

@@ -91,17 +91,8 @@ The ECMAScript spec is a bit more precise. An execution context has:
 
 Every execution context goes through two phases. This is the real mechanism behind "hoisting" (see [Hoisting, TDZ & var-let-const](/Software%20Engineering/Frontend/01%20JavaScript/Hoisting%2C%20TDZ%20%26%20var-let-const)).
 
-```mermaid
-flowchart LR
-  A["Call / start script"] --> B["Creation phase"]
-  B --> B1["Create environment record(s)"]
-  B1 --> B2["Function declarations: bound to full function"]
-  B2 --> B3["var: bound to undefined"]
-  B3 --> B4["let / const / class: bound but uninitialized (TDZ)"]
-  B4 --> B5["Decide this binding + outer reference"]
-  B5 --> C["Execution phase: run lines top to bottom, assign values"]
-  C --> D["return / end: context popped off the call stack"]
-```
+{/* diagram source: /diagrams/diagram-212.mmd */}
+![diagram](/diagrams/diagram-212.svg)
 
 ## The call stack
 
@@ -134,19 +125,8 @@ a();
 // console.trace prints the stack top-down:
 // c  <- b  <- a  <- (global/anonymous)
 ```
-```mermaid
-sequenceDiagram
-  participant G as global
-  participant A as a()
-  participant B as b()
-  participant C as c()
-  G->>A: push a
-  A->>B: push b
-  B->>C: push c
-  C-->>B: pop c
-  B-->>A: pop b
-  A-->>G: pop a
-```
+{/* diagram source: /diagrams/diagram-213.mmd */}
+![diagram](/diagrams/diagram-213.svg)
 An `Error`'s `.stack` is a snapshot of this same stack at the moment it was created.
 </Info>
 

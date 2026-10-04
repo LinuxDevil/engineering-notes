@@ -104,15 +104,8 @@ Since **V8 5.9** (2017, Node 8.3), full-codegen and Crankshaft are gone. Ignitio
 
 ![Untitled 73](/Attachments/Untitled%2073.png)
 
-```mermaid
-flowchart LR
-  SRC[JS source] --> P[Parser] --> AST[AST] --> IG["Ignition<br/>bytecode interpreter"]
-  IG -- warm --> SP["Sparkplug<br/>baseline compiler (2021)"]
-  SP -- hot --> MG["Maglev<br/>mid-tier optimiser (2023)"]
-  MG -- very hot --> TF["TurboFan<br/>top-tier optimiser"]
-  TF -. deopt: assumptions broken .-> IG
-  MG -. deopt .-> IG
-```
+{/* diagram source: /diagrams/diagram-084.mmd */}
+![diagram](/diagrams/diagram-084.svg)
 
 | Tier | Kind | Trade-off |
 |---|---|---|

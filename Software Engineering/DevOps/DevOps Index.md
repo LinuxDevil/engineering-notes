@@ -12,34 +12,8 @@ updated: 2026-09-27
 Entry point to all DevOps notes: Linux and Git fundamentals, containers and Kubernetes, CI/CD and GitOps, infrastructure as code and cloud, observability and SRE, microservices and platform engineering. Every topic note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions. The original notes (course study plan, Unix/Rails table) are preserved in `_Archive`.
 </Note>
 
-```mermaid
-mindmap
-  root((DevOps))
-    Foundations
-      Linux & Shell
-      Git
-    Containers
-      Docker
-      Compose
-      Image security
-    Orchestration
-      Kubernetes
-      Networking & Gateway API
-      Helm & Kustomize
-    Delivery
-      CI/CD
-      GitOps
-    Infrastructure
-      Cloud
-      IaC
-      Containers vs VMs vs Serverless
-    Operations
-      Observability
-      SRE & Incidents
-    Architecture & Org
-      Microservices
-      Platform Engineering
-```
+{/* diagram source: /diagrams/diagram-162.mmd */}
+![diagram](/diagrams/diagram-162.svg)
 
 ## 🧭 Quick links
 - 🆕 [What's New in DevOps 2025-2026](/Software%20Engineering/DevOps/What's%20New%20in%20DevOps%202025-2026): dated timeline of every change, with an action checklist

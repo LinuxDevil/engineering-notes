@@ -1,0 +1,10 @@
+flowchart LR
+  U[Browser] -->|https://shop.acme.dev| CDN[CDN: caches /_next/static and public assets]
+  CDN --> GW["Gateway shop-gateway (Envoy Gateway / Cilium / cloud)"]
+  GW -->|/catalog/*| C[Service catalog → catalog Pods]
+  GW -->|/checkout/*| K[Service checkout-active → checkout Pods]
+  GW -->|/api/orders/*| O[Service orders-api]
+  GW -->|/faro/*| F[Alloy faro.receiver]
+  GW -->|/ everything else| S[Service shell → shell Pods]
+  C & K & S --> R[(Redis: shared Next.js cache)]
+  C & K & S -->|server-side fetch| O

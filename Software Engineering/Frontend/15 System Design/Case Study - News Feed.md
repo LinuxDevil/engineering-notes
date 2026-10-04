@@ -32,29 +32,8 @@ Design a Facebook/Twitter-style feed: an infinitely scrolling list of posts with
 
 ## A: Architecture
 
-```mermaid
-flowchart TB
-  App["FeedPage"] --> Composer["PostComposer"]
-  App --> NewPill["NewPostsPill"]
-  App --> List["FeedList (virtualized)"]
-  List --> Item["PostItem"]
-  Item --> Header["PostHeader (avatar, name, time)"]
-  Item --> Body["PostBody (rich text)"]
-  Item --> Media["PostMedia (lazy images/video)"]
-  Item --> Actions["PostActions (like, comment, share)"]
-  Item --> Comments["CommentSection (lazy)"]
-  List --> Sentinel["LoadMoreSentinel (IntersectionObserver)"]
-
-  subgraph Data["Data layer"]
-    Store["Normalized store<br/>users, posts, comments"]
-    Q["Feed query cache<br/>(pages + cursors)"]
-    RT["SSE connection<br/>new post ids"]
-  end
-  List --> Q
-  Q --> Store
-  Actions -->|"optimistic like"| Store
-  RT --> NewPill
-```
+{/* diagram source: /diagrams/diagram-343.mmd */}
+![diagram](/diagrams/diagram-343.svg)
 
 **Rendering strategy**
 - Logged-in feed: **SSR (or streaming SSR) the app shell + first page of posts** so the first screen paints fast, then hydrate and continue client-side. A pure CSR feed is acceptable if you explain the LCP cost.
@@ -169,22 +148,8 @@ After a few hundred posts the DOM has thousands of nodes: memory grows and scrol
 
 ### 3. Optimistic like
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant UI as PostActions
-  participant S as Store
-  participant API
-  U->>UI: click Like
-  UI->>S: likeCount+1, viewerHasLiked=true (optimistic)
-  UI->>API: POST /posts/p1/like
-  alt success
-    API-->>S: authoritative likeCount
-  else failure
-    API-->>S: rollback to previous values
-    S-->>UI: toast "Couldn't like, try again"
-  end
-```
+{/* diagram source: /diagrams/diagram-344.mmd */}
+![diagram](/diagrams/diagram-344.svg)
 
 <Info>
 **React 19 `useOptimistic`**

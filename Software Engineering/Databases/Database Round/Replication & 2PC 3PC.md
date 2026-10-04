@@ -154,21 +154,8 @@ Roles: one **coordinator** (transaction manager) and several **participants** (r
 1. **Prepare (voting) phase**: the coordinator sends *prepare* to every participant. Each executes the transaction up to the point of commit, makes it durable (writes it to its log) and **holds locks** on what it touched, then votes **Yes** ("I can commit") or **No** ("I can't, I abort").
 2. **Commit (decision) phase**: if **all** voted Yes, the coordinator logs the decision and sends *commit*; if **any** voted No (or timed out), it sends *abort*. Participants apply the decision and release locks.
 
-```mermaid
-sequenceDiagram
-  participant C as Coordinator
-  participant A as Participant A (restaurant)
-  participant B as Participant B (driver service)
-  C->>A: PREPARE
-  C->>B: PREPARE
-  A-->>C: YES (reserved, locks held)
-  B-->>C: YES (driver reserved)
-  Note over C: log decision = COMMIT
-  C->>A: COMMIT
-  C->>B: COMMIT
-  A-->>C: ACK
-  B-->>C: ACK
-```
+{/* diagram source: /diagrams/diagram-122.mmd */}
+![diagram](/diagrams/diagram-122.svg)
 
 **Why we need it (the Careem burger example)**: ordering food needs two independent steps: the restaurant accepts the order, and a driver is assigned. Without atomic commitment, one can succeed and the other fail: food prepared with no driver, or a driver sent to a restaurant that never accepted.
 

@@ -1,0 +1,7 @@
+flowchart LR
+  T[timers: setTimeout/setInterval] --> P[pending callbacks]
+  P --> I[idle/prepare]
+  I --> O["poll: I/O callbacks (waits here)"]
+  O --> C["check: setImmediate"]
+  C --> X[close callbacks]
+  X --> T

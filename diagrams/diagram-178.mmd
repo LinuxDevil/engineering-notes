@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant O as Orders
+  participant P as Payments
+  participant I as Inventory
+  participant S as Shipping
+  O->>O: Create order (PENDING)
+  O->>P: ReserveCredit
+  P-->>O: CreditReserved
+  O->>I: ReserveStock
+  I-->>O: OutOfStock ❌
+  O->>P: ReleaseCredit (compensation)
+  O->>O: Mark order REJECTED
+  Note over S: Shipping never called

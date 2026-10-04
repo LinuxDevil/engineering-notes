@@ -12,17 +12,8 @@ updated: 2026-09-27
 Course notes for classic machine learning: the AWS DeepRacer Student **"Introduction to machine learning"** course (what ML is, its three components, the five-step ML process and three case studies) plus notes from the Coursera / DeepLearning.AI **Machine Learning Specialization** (supervised vs unsupervised). Read them in the order below, then move on to deep learning and LLMs from the [AI & ML Index](/Software%20Engineering/AI%20%26%20ML/AI%20%26%20ML%20Index).
 </Note>
 
-```mermaid
-flowchart LR
-  A[Introduction] --> B[Components of ML]
-  B --> C[Major steps in ML]
-  C --> S1[1 Define problem] --> S2[2 Build dataset] --> S3[3 Train] --> S4[4 Evaluate] --> S5[5 Use]
-  S5 -.iterate.-> S1
-  C --> D[Case studies]
-  D --> E1[Home prices<br/>supervised regression]
-  D --> E2[Book micro-genres<br/>unsupervised clustering]
-  D --> E3[Spill detection<br/>deep learning CNN]
-```
+{/* diagram source: /diagrams/diagram-014.mmd */}
+![diagram](/diagrams/diagram-014.svg)
 
 ## AWS DeepRacer Student: Introduction to machine learning
 Course link: [Introduction to machine learning](https://student.deepracer.com/learn/85a3a216-703b-40c8-ad70-374767eba381)

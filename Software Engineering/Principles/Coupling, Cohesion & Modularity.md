@@ -19,16 +19,8 @@ A module is anything with an interface and an implementation: a function, class,
 - **Coupling**: if I change module A, how likely am I to have to change B? High coupling = changes ripple.
 - **Cohesion**: do the parts of this module change together and serve one purpose? Low cohesion = unrelated things tangled together, so a change for one reason risks breaking another.
 
-```mermaid
-flowchart LR
-  subgraph Good["High cohesion, low coupling"]
-    A1[Billing: invoice + tax + payment status] -- small API --> B1[Notifications]
-  end
-  subgraph Bad["Low cohesion, high coupling"]
-    U[Utils: tax, email, dates, pdf] <--> S[OrderService] <--> R[ReportService]
-    U <--> R
-  end
-```
+{/* diagram source: /diagrams/diagram-363.mmd */}
+![diagram](/diagrams/diagram-363.svg)
 
 Parnas (1972) showed that the best way to split a system is **not** by processing steps (read → parse → store) but by **design decisions likely to change**, each hidden in one module. That is **information hiding**, the foundation of everything below.
 

@@ -22,12 +22,8 @@ updated: 2026-09-27
 
 Rule: **don't use a linter for formatting** — turn off stylistic lint rules (`eslint-config-prettier`) and let the formatter own style.
 
-```mermaid
-flowchart LR
-  E["Editor: format on save + lint squiggles"] --> P["Pre-commit: lint-staged runs formatter + linter on staged files"]
-  P --> CI["CI: format --check, lint, type-check, test"]
-  CI --> M["Merge"]
-```
+{/* diagram source: /diagrams/diagram-334.mmd */}
+![diagram](/diagrams/diagram-334.svg)
 
 ## ESLint (10, flat config)
 - The most extensible JS/TS linter; plugins for React (`eslint-plugin-react-hooks`, `react-x`), TypeScript (`typescript-eslint`, including type-aware rules), a11y (`jsx-a11y`), imports, Angular (`angular-eslint`), testing.

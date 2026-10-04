@@ -108,11 +108,8 @@ const names = users.filter(u => u.active).map(u => u.name);
 
 Real programs must do I/O. FP doesn't avoid effects; it **isolates** them. Gary Bernhardt's **functional core, imperative shell**: a thin outer layer does I/O and calls a pure core that makes all decisions.
 
-```mermaid
-flowchart LR
-  IN["Shell: read request, load data from DB, get current time"] --> CORE["Pure core: decide (validate, compute, choose actions)"]
-  CORE --> OUT["Shell: save, send emails, respond"]
-```
+{/* diagram source: /diagrams/diagram-368.mmd */}
+![diagram](/diagrams/diagram-368.svg)
 
 ```ts
 // Pure core: decisions as data

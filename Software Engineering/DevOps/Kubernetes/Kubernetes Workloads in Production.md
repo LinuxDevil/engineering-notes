@@ -14,33 +14,8 @@ A Deployment that works on a laptop is not production-ready. Production workload
 
 ## The production checklist
 
-```mermaid
-mindmap
-  root((Production Pod))
-    Health
-      startupProbe
-      readinessProbe
-      livenessProbe
-      graceful shutdown
-    Resources
-      requests
-      limits
-      QoS class
-      HPA / VPA
-    Config
-      ConfigMap
-      Secret
-      env vs volume
-    Availability
-      replicas >= 2
-      PodDisruptionBudget
-      topology spread
-    Security
-      securityContext
-      ServiceAccount
-      RBAC
-      NetworkPolicy
-```
+{/* diagram source: /diagrams/diagram-175.mmd */}
+![diagram](/diagrams/diagram-175.svg)
 
 ## A production-grade Deployment
 

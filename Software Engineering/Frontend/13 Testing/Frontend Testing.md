@@ -19,14 +19,8 @@ Tests exist to give **confidence to ship and refactor**. Put most of your effort
 
 ## 1. Testing trophy vs pyramid
 
-```mermaid
-flowchart TB
-  E2E["E2E: few, slow, highest confidence per test (Playwright)"]
-  INT["Integration / component: MOST tests (Testing Library + MSW, Vitest)"]
-  UNIT["Unit: pure functions, hooks, reducers, utils"]
-  STATIC["Static: TypeScript, ESLint/Biome/Oxlint"]
-  E2E --- INT --- UNIT --- STATIC
-```
+{/* diagram source: /diagrams/diagram-330.mmd */}
+![diagram](/diagrams/diagram-330.svg)
 
 - **Test pyramid** (Mike Cohn): lots of unit tests, fewer integration tests, very few E2E tests. It was optimised for when UI tests were slow and flaky.
 - **Testing trophy** (Kent C. Dodds): a **static** base, a small unit layer, the **biggest integration layer**, and a small E2E top. The reasoning is that *"the more your tests resemble the way your software is used, the more confidence they can give you"*, and modern tools (jsdom/happy-dom, browser mode, MSW) made integration tests fast.
@@ -203,19 +197,8 @@ afterAll(() => server.close());
 // browser/dev: import { setupWorker } from 'msw/browser'
 ```
 
-```mermaid
-sequenceDiagram
-  participant T as Test
-  participant C as Component
-  participant F as fetch()
-  participant M as MSW handler
-  T->>C: render + user.click("Search")
-  C->>F: GET /api/flights?from=DXB
-  F->>M: intercepted (no real network)
-  M-->>F: HttpResponse.json([...])
-  F-->>C: data
-  C-->>T: results rendered, findByRole resolves
-```
+{/* diagram source: /diagrams/diagram-331.mmd */}
+![diagram](/diagrams/diagram-331.svg)
 
 Why this beats `vi.mock('axios')`: you test the real data layer (serialisation, error handling, caching, retries) and don't couple tests to which HTTP client you use.
 

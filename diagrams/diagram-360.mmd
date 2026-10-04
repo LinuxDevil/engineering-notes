@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph Outer["Outer loop (BDD, hours)"]
+    AF[Failing acceptance scenario] --> AP[Scenario passes]
+  end
+  subgraph Inner["Inner loop (TDD, minutes)"]
+    R[Red] --> G[Green] --> RF[Refactor] --> R
+  end
+  AF --> Inner --> AP

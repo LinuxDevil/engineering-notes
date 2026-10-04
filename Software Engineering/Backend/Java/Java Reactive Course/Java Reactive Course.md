@@ -23,23 +23,8 @@ Imagine calling an insurance company that puts you on hold.
 | 3. **Non-blocking** | You ask them to call you back; you keep checking your phone | Low-level: `Selector`/NIO polling, "is it ready yet?" |
 | 4. **Non-blocking + async** (the "hyped" approach) | They call you back when ready and you react; nobody waits on hold | Event loop + callbacks: Netty, Reactor, WebFlux |
 
-```mermaid
-sequenceDiagram
-  participant T as Request thread
-  participant P as Other thread
-  participant S as Remote service
-  Note over T,S: 1. Sync + blocking
-  T->>S: call
-  S-->>T: (thread idle until) response
-  Note over T,S: 2. Async
-  T->>P: hand off
-  P->>S: call (P is blocked)
-  S-->>P: response
-  P-->>T: result later
-  Note over T,S: 4. Non-blocking + async
-  T->>S: register call + callback, thread moves on
-  S-->>T: event: response ready → callback on any free thread
-```
+{/* diagram source: /diagrams/diagram-045.mmd */}
+![diagram](/diagrams/diagram-045.svg)
 
 Reactive programming (model 4) lets a handful of threads serve thousands of concurrent requests because no thread sits idle waiting for I/O. Since Java 21, **virtual threads** give similar scalability with plain blocking code; see [Java Concurrency & Virtual Threads](/Software%20Engineering/Backend/Java/Java%20Concurrency%20%26%20Virtual%20Threads) for when each fits.
 

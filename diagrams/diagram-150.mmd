@@ -1,0 +1,8 @@
+flowchart LR
+  dev[git push acme/orders-api] --> J[Jenkins: test, build, scan, push ghcr.io/acme/orders-api:SHA]
+  J --> G[commit new tag to platform-gitops/apps/orders-api/overlays/ENV]
+  G --> A[Argo CD sync]
+  A --> M[PreSync Job: DB migrations]
+  M --> R[Argo Rollouts canary in shop-prod]
+  R --> O[Grafana: Prometheus metrics, Loki logs, Tempo traces]
+  O -. analysis queries .-> R

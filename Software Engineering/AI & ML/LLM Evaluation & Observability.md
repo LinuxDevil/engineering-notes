@@ -31,16 +31,8 @@ LLM outputs are non-deterministic free text, so you can't unit-test them with `a
 
 ## Building an eval
 
-```mermaid
-flowchart LR
-  P[Define success<br/>criteria per use case] --> D[Golden dataset<br/>real + edge + adversarial cases]
-  D --> R[Run system<br/>n trials per case]
-  R --> G[Graders<br/>code · LLM judge · human]
-  G --> S[Scores, slices, diffs vs baseline]
-  S --> I[Iterate prompt/model/retrieval]
-  I --> R
-  PROD[Production traces + feedback] -->|failures become cases| D
-```
+{/* diagram source: /diagrams/diagram-009.mmd */}
+![diagram](/diagrams/diagram-009.svg)
 
 ### 1. Golden dataset
 - Start small: **20–50 real examples** beats 1,000 synthetic ones. Grow it from production failures.

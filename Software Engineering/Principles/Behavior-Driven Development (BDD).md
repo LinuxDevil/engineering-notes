@@ -18,12 +18,8 @@ Dan North introduced BDD around 2006 because teams struggled with TDD's vocabula
 
 BDD has three practices (as described by the Cucumber team):
 
-```mermaid
-flowchart LR
-  D["1. Discovery<br/>conversations, example mapping"] --> F["2. Formulation<br/>examples as Given/When/Then"]
-  F --> A["3. Automation<br/>examples become executable tests"]
-  A -->|living documentation| D
-```
+{/* diagram source: /diagrams/diagram-359.mmd */}
+![diagram](/diagrams/diagram-359.svg)
 
 1. **Discovery**: a short workshop ("Three Amigos": business/product, development, testing) explores a user story through examples, rules and open questions.
 2. **Formulation**: the useful examples are written as structured scenarios in business language.
@@ -118,16 +114,8 @@ describe("Shipping quote", () => {
 
 They combine as **double-loop TDD**: an outer failing acceptance scenario, satisfied by many inner red–green–refactor unit cycles (Freeman & Pryce).
 
-```mermaid
-flowchart LR
-  subgraph Outer["Outer loop (BDD, hours)"]
-    AF[Failing acceptance scenario] --> AP[Scenario passes]
-  end
-  subgraph Inner["Inner loop (TDD, minutes)"]
-    R[Red] --> G[Green] --> RF[Refactor] --> R
-  end
-  AF --> Inner --> AP
-```
+{/* diagram source: /diagrams/diagram-360.mmd */}
+![diagram](/diagrams/diagram-360.svg)
 
 <Info>
 **🆕 2025–2026**

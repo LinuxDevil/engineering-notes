@@ -60,16 +60,8 @@ The score `Q·K` measures relevance between every pair of tokens; softmax turns 
 
 ### A transformer block
 
-```mermaid
-flowchart TB
-  In[Token embeddings + positions] --> B1
-  subgraph B1[Transformer block × N  e.g. 32-120 layers]
-    N1[LayerNorm] --> A[Masked multi-head self-attention] --> R1((+ residual))
-    R1 --> N2[LayerNorm] --> F[Feed-forward MLP<br/>or Mixture-of-Experts] --> R2((+ residual))
-  end
-  B1 --> H[Final LayerNorm → linear → softmax over vocabulary]
-  H --> Out[Next-token probabilities]
-```
+{/* diagram source: /diagrams/diagram-025.mmd */}
+![diagram](/diagrams/diagram-025.svg)
 
 The **feed-forward** layers hold much of the model's "knowledge". **Mixture-of-Experts (MoE)** models replace one big feed-forward layer with many "experts" and a router that activates only a few per token, so a model can have huge total parameters but modest compute per token. Example: DeepSeek V4-Pro is reported as 1.6T total / 49B active parameters, and Mistral Large 3 as 675B total / 41B active.
 
@@ -78,13 +70,8 @@ During generation the keys and values of previous tokens are cached so each new 
 
 ## 4. How an LLM is trained
 
-```mermaid
-flowchart LR
-  P[Pretraining<br/>next-token prediction<br/>trillions of tokens] --> S[Supervised fine-tuning<br/>instruction/answer pairs]
-  S --> PR[Preference tuning<br/>RLHF / DPO / constitutional AI]
-  PR --> RL[RL on verifiable tasks<br/>math, code, tool use]
-  RL --> M[Assistant / reasoning model]
-```
+{/* diagram source: /diagrams/diagram-026.mmd */}
+![diagram](/diagrams/diagram-026.svg)
 
 | Stage | Data | What it gives |
 |---|---|---|

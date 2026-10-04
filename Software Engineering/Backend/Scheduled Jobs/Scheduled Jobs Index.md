@@ -12,30 +12,8 @@ updated: 2026-09-27
 This hub covers everything that runs **on a schedule**: cron syntax, "cron that enqueues" architectures, BullMQ Job Schedulers, Kubernetes CronJobs, a control API to **pause, resume, run now and stop** jobs, a Next.js dashboard on top, and Playwright synthetic checks as a scheduled job. All notes share one running example, **Acme Ops**, which extends the Acme Shop system from [Kubernetes Delivery Platform - End to End](/Software%20Engineering/DevOps/Delivery%20Platform/Kubernetes%20Delivery%20Platform%20-%20End%20to%20End). Read it beginner → senior in the order below, or jump to the decision table if you only need to pick a scheduler.
 </Note>
 
-```mermaid
-mindmap
-  root((Scheduled Jobs))
-    Foundations
-      Cron syntax & crontab
-      Queues, retries, idempotency
-    Architecture
-      Scheduler enqueues, workers execute
-      Leader election & dedupe keys
-      Overlap, misfires, DST
-      Failure modes & alerting
-    Runtimes
-      BullMQ Job Schedulers
-      Kubernetes CronJobs
-      Temporal · EventBridge · RabbitMQ
-    Control plane
-      Job Control API
-      Next.js dashboard
-      RBAC · audit · idempotency
-    Use cases
-      Reports & syncs
-      Cleanups
-      Playwright synthetics
-```
+{/* diagram source: /diagrams/diagram-069.mmd */}
+![diagram](/diagrams/diagram-069.svg)
 
 ## The running example: Acme Ops
 
@@ -54,29 +32,8 @@ mindmap
 | **`ops-console`** | Next.js 16 App Router dashboard at `ops.acme.dev` | [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js) |
 | **Grafana stack** | metrics (`jobs_runs_total`, `jobs_run_duration_seconds`), Loki logs with `job`/`run_id`, alerts on failures and missed schedules | [Cron with Message Queues - Architecture](/Software%20Engineering/Backend/Scheduled%20Jobs/Cron%20with%20Message%20Queues%20-%20Architecture), [Grafana & the LGTM Stack](/Software%20Engineering/DevOps/Delivery%20Platform/Grafana%20%26%20the%20LGTM%20Stack) |
 
-```mermaid
-flowchart LR
-  subgraph Schedulers
-    BS["BullMQ Job Schedulers<br/>(in Redis)"]
-    KC["K8s CronJob controller"]
-  end
-  subgraph shop-prod
-    R[("Redis<br/>queues")]
-    W["jobs-worker<br/>(BullMQ workers, KEDA)"]
-    J["K8s Jobs → Pods<br/>cleanup · playwright"]
-    API["jobs-api (Fastify)<br/>BullMqBackend · K8sCronJobBackend"]
-  end
-  UI["ops-console<br/>Next.js 16 · ops.acme.dev"]
-  G["Prometheus · Loki · Grafana<br/>alerts"]
-
-  BS -- "delayed job per tick" --> R --> W
-  KC -- "Job per tick" --> J
-  UI -- "Server Components / Actions<br/>REST + SSE proxy" --> API
-  API -- "pause/resume/run/stop<br/>(Redis, pub/sub)" --> R
-  API -- "patch suspend · create/delete Job<br/>pod logs" --> K["kube-apiserver"]
-  K --- KC & J
-  W & J & API -- "metrics · JSON logs" --> G
-```
+{/* diagram source: /diagrams/diagram-070.mmd */}
+![diagram](/diagrams/diagram-070.svg)
 
 ## Reading order (beginner → senior)
 
@@ -117,22 +74,8 @@ flowchart LR
 | **GitHub Actions `schedule`** | GitHub runners | GitHub | UTC by default; `timezone` since 2026-03 | workflow-level retries only; `concurrency` groups | disable workflow / `workflow_dispatch` / cancel run | repo chores: dependency bumps, stale issues, nightly builds | runs can be delayed or dropped under load, 5-minute minimum, disabled after 60 days of repo inactivity (public repos) |
 | **Jenkins cron triggers** | Jenkins agents | the Jenkins controller | `TZ=Europe/Berlin` line in the trigger | pipeline `retry`, `disableConcurrentBuilds()` | disable job / "Build now" / abort | CI-centric teams already on Jenkins | `H` hashing makes exact minutes unpredictable (by design); controller is a SPOF ([Jenkins - Pipelines as Code](/Software%20Engineering/DevOps/Delivery%20Platform/Jenkins%20-%20Pipelines%20as%20Code)) |
 
-```mermaid
-flowchart TD
-  Q1{"Is it a multi-step business process<br/>with waits, compensation, history?"} -- yes --> T["Temporal Schedules<br/>(or Step Functions on AWS)"]
-  Q1 -- no --> Q2{"Is it pure SQL inside one database?"}
-  Q2 -- yes --> PC["pg_cron"]
-  Q2 -- no --> Q3{"Where does your platform live?"}
-  Q3 -- "AWS serverless" --> EB["EventBridge Scheduler + SQS"]
-  Q3 -- "Kubernetes" --> Q4{"Needs its own image/resources per run,<br/>minutes-level frequency?"}
-  Q4 -- yes --> CJ["Kubernetes CronJob"]
-  Q4 -- "no: app code, frequent or fan-out" --> Q5{"Queue store you already run?"}
-  Q5 -- Redis --> BM["BullMQ Job Schedulers"]
-  Q5 -- Postgres --> PB["pg-boss / BullMQ Postgres backend"]
-  Q5 -- RabbitMQ --> RMQ["RabbitMQ + CronJob publisher"]
-  Q3 -- "one VM" --> CT["crontab + flock"]
-  Q3 -- "repo chores / CI" --> GH["GitHub Actions schedule / Jenkins cron"]
-```
+{/* diagram source: /diagrams/diagram-071.mmd */}
+![diagram](/diagrams/diagram-071.svg)
 
 Rule of thumb: **use the scheduler that lives next to the state you already operate**, make every run idempotent on `(job, scheduledTime)`, and put a control plane in front only when you have more than one runtime (Acme's reason for `jobs-api`).
 

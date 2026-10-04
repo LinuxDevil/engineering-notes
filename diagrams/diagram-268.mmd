@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph Server
+    RSC["Server Components<br/>(async, DB access)"] -->|"serialize"| P["RSC payload"]
+    P --> SSR["SSR: render payload + Client Components to HTML"]
+  end
+  SSR -->|"HTML stream"| B["Browser: fast first paint"]
+  P -->|"payload"| H["Browser: hydrate Client Components only"]
+  B --> H
+  H -->|"navigation"| RSC

@@ -136,16 +136,8 @@ docker start -a <container-id>     # -a = attach: stream the container's output 
 
 ![Untitled 67](/Attachments/Untitled%2067.png)
 
-```mermaid
-stateDiagram-v2
-    [*] --> Created: docker create
-    Created --> Running: docker start
-    Running --> Paused: docker pause
-    Paused --> Running: docker unpause
-    Running --> Exited: process ends / docker stop (SIGTERM) / docker kill (SIGKILL)
-    Exited --> Running: docker start / docker restart
-    Exited --> [*]: docker rm
-```
+{/* diagram source: /diagrams/diagram-163.mmd */}
+![diagram](/diagrams/diagram-163.svg)
 
 1. **Create** (`docker create`, or implicitly by `docker run`): pulls the image if needed and prepares the container.
 2. **Start** (`docker start`): runs the image's start command (or the override).

@@ -1,0 +1,6 @@
+flowchart LR
+  A["State / props / context change"] --> B["Render phase: call components, diff (Fiber)"]
+  B --> C["Commit phase: apply DOM changes"]
+  C --> D["Browser paints"]
+  D --> E["Effects run (useEffect)"]
+  E -->|"setState"| A

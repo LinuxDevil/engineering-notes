@@ -1,0 +1,3 @@
+flowchart LR
+  B[Last good recovery point] -- "RPO: data lost" --> X((Disaster))
+  X -- "RTO: downtime" --> R[Service restored]

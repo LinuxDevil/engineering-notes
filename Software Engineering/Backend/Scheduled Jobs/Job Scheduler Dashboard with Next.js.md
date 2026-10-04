@@ -49,16 +49,8 @@ Pausing does not stop a running job, and stopping a run does not pause the sched
 
 ## 2. Architecture
 
-```mermaid
-flowchart LR
-  B["Browser<br/>(no tokens)"] -- "HTML, RSC payloads,<br/>Server Action POSTs<br/>(session cookie)" --> N["ops-console<br/>Next.js 16 (Node)"]
-  B -- "EventSource<br/>/api/jobs/events<br/>/api/jobs/:id/runs/:runId/logs" --> N
-  N -- "Bearer access token<br/>REST + SSE" --> J["jobs-api<br/>(Fastify)"]
-  N -- "OIDC code flow,<br/>refresh" --> I["IdP"]
-  N -- "sessions" --> S[("Session store")]
-  J --> R[("Redis / BullMQ")]
-  J --> K["Kubernetes API<br/>(CronJobs, Jobs)"]
-```
+{/* diagram source: /diagrams/diagram-064.mmd */}
+![diagram](/diagrams/diagram-064.svg)
 
 - **Reads**: Server Components call `jobs-api` directly from the server. No client-side data fetching library is needed.
 - **Writes**: Server Actions. They are public POST endpoints, so each one authenticates, authorizes and validates.
@@ -103,24 +95,8 @@ flowchart LR
 
 ### Component tree
 
-```mermaid
-flowchart TD
-  RL["app/layout.tsx (root)"] --> CL["(console)/layout.tsx<br/>nav + Suspense(UserMenu)"]
-  CL --> LP["jobs/page.tsx (Server)<br/>requireViewer, listJobs"]
-  CL --> DP["jobs/[id]/page.tsx (Server)<br/>getJob + listRuns in parallel"]
-  LP --> JT["LiveJobsTable (Client)<br/>useEventSource, live region"]
-  JT --> SB1["StatusBadge"]
-  JT --> JA1["JobActions (Client)<br/>useActionState + useOptimistic"]
-  JA1 --> SD1["StopRunDialog (Client)<br/>&lt;dialog&gt;"]
-  DP --> JH["header (inline)<br/>badges, facts"]
-  JH --> JA2["JobActions"]
-  DP --> RH["RunHistory (Server)<br/>cursor pagination links"]
-  DP --> LR["LiveRefresh (Client)<br/>router.refresh on events"]
-  DP --> LV["LogViewer (Client)<br/>EventSource, autoscroll, ANSI strip"]
-  LV --> UES["useEventSource hook"]
-  JT --> UES
-  LR --> UES
-```
+{/* diagram source: /diagrams/diagram-065.mmd */}
+![diagram](/diagrams/diagram-065.svg)
 
 ## 3. Project structure
 

@@ -14,18 +14,8 @@ A **reverse proxy** forwards traffic to backends (TLS, routing, load balancing).
 
 ## Layers of the edge
 
-```mermaid
-flowchart LR
-  U[Clients] --> CDN[CDN / WAF<br/>cache, DDoS, bot rules]
-  CDN --> LB[L4/L7 Load balancer]
-  LB --> GW[API Gateway<br/>authN, quotas, routing, transforms]
-  GW --> BFF1[Web BFF]
-  GW --> BFF2[Mobile BFF]
-  BFF1 --> S1[Orders svc]
-  BFF1 --> S2[Users svc]
-  BFF2 --> S1
-  S1 <-. mesh sidecars / ambient: mTLS, retries, telemetry .-> S2
-```
+{/* diagram source: /diagrams/diagram-037.mmd */}
+![diagram](/diagrams/diagram-037.svg)
 
 | Component | Main job | Traffic | Examples |
 |---|---|---|---|

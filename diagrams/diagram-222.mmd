@@ -1,0 +1,3 @@
+flowchart LR
+  A["Construction: find, fetch and parse every module (build graph)"] --> B["Instantiation / linking: allocate exports, wire imports to exports (live bindings)"]
+  B --> C["Evaluation: run module bodies, dependencies first (post-order)"]

@@ -1,0 +1,9 @@
+flowchart TD
+  A["Compare old vs new element at same position"] --> B{"Same type?"}
+  B -- "No" --> C["Unmount old subtree (state lost), mount new"]
+  B -- "Yes, DOM element" --> D["Patch changed attributes, recurse children"]
+  B -- "Yes, component" --> E["Keep instance and state, re-render with new props, recurse"]
+  D --> F{"Children list?"}
+  E --> F
+  F -- "keyed" --> G["Match by key: move / insert / delete"]
+  F -- "unkeyed" --> H["Match by index"]

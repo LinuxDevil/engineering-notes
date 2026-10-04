@@ -1,0 +1,12 @@
+flowchart TD
+  A["x == y"] --> B{"Same type?"}
+  B -- Yes --> C["Compare like ==="]
+  B -- No --> D{"One is null and the other undefined?"}
+  D -- Yes --> T["true"]
+  D -- No --> E{"null/undefined vs anything else?"}
+  E -- Yes --> F["false"]
+  E -- No --> G{"Boolean involved?"}
+  G -- Yes --> H["Convert the boolean to a number, retry"]
+  G -- No --> I{"Object vs primitive?"}
+  I -- Yes --> J["ToPrimitive(object), retry"]
+  I -- No --> K["string/number/bigint: convert to numbers and compare"]

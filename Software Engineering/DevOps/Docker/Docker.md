@@ -12,14 +12,8 @@ updated: 2026-09-27
 Hub note for everything Docker and containers. Start with [Docker Basics](/Software%20Engineering/DevOps/Docker/Docker%20Basics) (images, containers, CLI, first Dockerfile), then [Dockerfile Best Practices & Image Security](/Software%20Engineering/DevOps/Docker/Dockerfile%20Best%20Practices%20%26%20Image%20Security) (multi-stage, caching, non-root, scanning), then [Docker Compose](/Software%20Engineering/DevOps/Docker/Docker%20Compose) (multi-container apps). Orchestration continues in [Kubernetes](/Software%20Engineering/DevOps/Kubernetes/Kubernetes).
 </Note>
 
-```mermaid
-flowchart LR
-  A[Docker Basics] --> B[Dockerfile Best Practices & Image Security]
-  A --> C[Docker Compose]
-  B --> D[Kubernetes Basics]
-  C --> D
-  B --> E[CI-CD Pipelines]
-```
+{/* diagram source: /diagrams/diagram-165.mmd */}
+![diagram](/diagrams/diagram-165.svg)
 
 ## Notes in order
 | Level | Note | What you learn |

@@ -56,14 +56,8 @@ Without non-linearity, stacking layers collapses into a single linear function. 
 
 ## How training works: forward pass, loss, backprop
 
-```mermaid
-flowchart LR
-  X[Input batch] --> F[Forward pass<br/>layer by layer] --> Y[Predictions]
-  Y --> L[Loss vs labels]
-  L --> B[Backward pass<br/>chain rule gives dLoss/dw for every weight]
-  B --> U[Optimizer step<br/>w = w - lr * grad]
-  U --> F
-```
+{/* diagram source: /diagrams/diagram-021.mmd */}
+![diagram](/diagrams/diagram-021.svg)
 
 1. **Forward pass**: compute predictions layer by layer.
 2. **Loss**: compare with the true labels (MSE for regression, cross-entropy for classification).

@@ -1,0 +1,9 @@
+flowchart TB
+  subgraph Platform["Platform threads (classic)"]
+    PT1[Java thread] --- OT1[OS thread ~1 MB stack]
+    PT2[Java thread] --- OT2[OS thread]
+  end
+  subgraph Virtual["Virtual threads (Java 21+)"]
+    VT1[virtual thread] & VT2[virtual thread] & VT3[virtual thread ... millions] --> CT["Carrier threads<br/>(ForkJoinPool ≈ #cores)"]
+    CT --> OS[OS threads]
+  end

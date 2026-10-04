@@ -1,0 +1,7 @@
+flowchart LR
+  JS["JS / CSS change"] --> St["Style"]
+  St --> La["Layout (reflow)"]
+  La --> Pa["Paint (repaint)"]
+  Pa --> Co["Composite"]
+  St -.->|"paint-only props: color, background, box-shadow"| Pa
+  St -.->|"compositor-only props: transform, opacity"| Co

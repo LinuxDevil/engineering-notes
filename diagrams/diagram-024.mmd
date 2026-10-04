@@ -1,0 +1,9 @@
+flowchart TD
+  Q[Question] --> A[Agent LLM]
+  A -->|search_docs query| T1[(Docs index)]
+  A -->|run_sql| T2[(Warehouse)]
+  A -->|web_search| T3[Web]
+  T1 --> A
+  T2 --> A
+  T3 --> A
+  A -->|enough evidence| Ans[Answer + citations]

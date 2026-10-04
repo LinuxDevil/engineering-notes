@@ -1,0 +1,5 @@
+flowchart TB
+  T[Throwable] --> E[Exception]
+  T --> ER["Error (OutOfMemoryError, StackOverflowError): don't catch"]
+  E --> CE["Checked: IOException, SQLException (must declare/handle)"]
+  E --> RE["RuntimeException (unchecked): NPE, IllegalArgumentException"]

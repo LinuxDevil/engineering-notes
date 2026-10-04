@@ -12,27 +12,8 @@ updated: 2026-09-27
 What makes a senior engineer beyond technical knowledge: understanding the levels, reviewing code, writing design docs, estimating, communicating and influencing, mentoring, handling legacy code, debugging systematically, protecting focus, and working well with AI tools. Each note has worked examples, pitfalls, a senior perspective and interview questions (these topics come up in behavioral rounds).
 </Note>
 
-```mermaid
-mindmap
-  root((Career))
-    Levels
-      Junior to Staff
-      Staff archetypes
-    Craft
-      Code review
-      Debugging
-      Legacy code
-      Productivity
-    Planning
-      Design docs & RFCs
-      Estimation
-    People
-      Communication & influence
-      Mentoring & leading
-    AI era
-      Judgment & verification
-      2025 evidence
-```
+{/* diagram source: /diagrams/diagram-085.mmd */}
+![diagram](/diagrams/diagram-085.svg)
 
 ## 1. Beginner: the craft
 - [Engineering Levels - Junior to Staff](/Software%20Engineering/Career/Engineering%20Levels%20-%20Junior%20to%20Staff): what each level means (scope, autonomy, influence) and how to grow

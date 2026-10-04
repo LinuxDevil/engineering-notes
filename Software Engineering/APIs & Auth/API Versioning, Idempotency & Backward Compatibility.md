@@ -67,16 +67,8 @@ Link: <https://developer.example.com/migrate-v2>; rel="deprecation"; type="text/
 
 ### Why
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant S as Payment API
-  C->>S: POST /payments (amount 50)
-  S->>S: charge card ✅
-  S--xC: response lost (timeout)
-  C->>S: retry POST /payments (amount 50)
-  S->>S: charge card again ❌ double charge
-```
+{/* diagram source: /diagrams/diagram-027.mmd */}
+![diagram](/diagrams/diagram-027.svg)
 
 `GET`, `PUT`, `DELETE` are idempotent by definition; `POST` and `PATCH` are not. Retries happen everywhere: client libraries, mobile apps on flaky networks, gateways, queues with at-least-once delivery ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)), webhook senders.
 

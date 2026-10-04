@@ -1,0 +1,6 @@
+stateDiagram-v2
+  [*] --> Closed
+  Closed --> Open: failure rate > threshold (e.g. 50% of last 100 calls)
+  Open --> HalfOpen: after cool-down (e.g. 30 s)
+  HalfOpen --> Closed: trial calls succeed
+  HalfOpen --> Open: trial call fails

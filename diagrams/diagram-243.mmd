@@ -1,0 +1,9 @@
+flowchart TD
+  R["Request for /app.js"] --> H{"In HTTP cache?"}
+  H -->|No| N["Fetch from network, store if cacheable"]
+  H -->|Yes| F{"Fresh? (age < max-age and no 'no-cache')"}
+  F -->|Yes| U["Use cached copy: no network at all"]
+  F -->|No| V["Conditional request: If-None-Match / If-Modified-Since"]
+  V --> S{"Server: changed?"}
+  S -->|"No → 304 Not Modified (empty body)"| U2["Reuse cached body, refresh its freshness"]
+  S -->|"Yes → 200 + new body"| N2["Replace cached copy"]

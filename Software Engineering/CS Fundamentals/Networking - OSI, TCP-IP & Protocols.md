@@ -27,19 +27,8 @@ The **OSI model** (7 layers) and the practical **TCP/IP model** (4 layers) descr
 
 ## TCP in depth
 ### 3-way handshake and teardown
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant S as Server
-  C->>S: SYN (seq=x)
-  S-->>C: SYN-ACK (seq=y, ack=x+1)
-  C->>S: ACK (ack=y+1) [can carry data]
-  Note over C,S: ESTABLISHED: 1 RTT before first request
-  C->>S: FIN
-  S-->>C: ACK
-  S->>C: FIN
-  C-->>S: ACK (client enters TIME_WAIT ~2×MSL)
-```
+{/* diagram source: /diagrams/diagram-100.mmd */}
+![diagram](/diagrams/diagram-100.svg)
 - Sequence numbers + acks → reliability and ordering; retransmit on timeout or 3 duplicate acks (fast retransmit).
 - **Flow control**: receiver advertises a window (how much it can buffer).
 - **Congestion control**: sender limits in-flight data (congestion window, cwnd) to avoid overwhelming the network.
@@ -58,7 +47,7 @@ sequenceDiagram
 Consequence: a new connection can't use full bandwidth immediately (slow start), which is why **connection reuse** and fewer round trips matter. Throughput ≤ window / RTT (bandwidth-delay product).
 
 ## TLS 1.3 handshake
-```mermaid
+```text
 sequenceDiagram
   participant C as Client
   participant S as Server

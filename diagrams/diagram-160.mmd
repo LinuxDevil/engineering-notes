@@ -1,0 +1,12 @@
+stateDiagram-v2
+  [*] --> Pending: created, stored in etcd
+  Pending --> Pending: unscheduled / pulling images / init containers
+  Pending --> Running: scheduled, containers started
+  Running --> Running: container restart (restartPolicy Always)
+  Running --> Succeeded: all containers exit 0 (Jobs)
+  Running --> Failed: containers exit non-zero, restartPolicy Never / evicted
+  Pending --> Failed: e.g. init container fails with restartPolicy Never
+  Running --> Unknown: node stops reporting
+  Unknown --> Running: node recovers
+  Running --> Terminating: deletionTimestamp set
+  Terminating --> [*]: preStop, SIGTERM, grace period, SIGKILL, finalizers cleared

@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant G as global
+  participant A as a()
+  participant B as b()
+  participant C as c()
+  G->>A: push a
+  A->>B: push b
+  B->>C: push c
+  C-->>B: pop c
+  B-->>A: pop b
+  A-->>G: pop a

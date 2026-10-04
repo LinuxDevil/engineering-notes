@@ -1,0 +1,15 @@
+flowchart LR
+  dev[Developer<br/>git push] --> src[(App repo<br/>acme/orders-api)]
+  src -- webhook --> J[Jenkins<br/>build · test · scan]
+  J -- push image:sha --> reg[(ghcr.io/acme)]
+  J -- bump tag commit --> gitops[(acme/platform-gitops)]
+  gitops -- watched by --> A[Argo CD]
+  A -- sync --> K8s[Kubernetes<br/>shop-dev / staging / prod]
+  K8s --> R[Argo Rollouts<br/>canary]
+  R -- analysis PromQL --> P[(Prometheus / Mimir)]
+  K8s -- stdout JSON logs --> Al[Grafana Alloy]
+  K8s -- OTLP traces --> Al
+  Al --> L[(Loki)]
+  Al --> T[(Tempo)]
+  P & L & T --> G[Grafana<br/>dashboards · Explore · alerts]
+  G -- alert --> oncall[On-call]

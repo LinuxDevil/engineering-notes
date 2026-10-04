@@ -1,0 +1,6 @@
+flowchart LR
+  U[Untrusted input<br/>body, query, headers, files] --> V{Validated?}
+  V -- no --> I[Injection, traversal,<br/>prototype pollution, ReDoS]
+  D[npm dependencies] --> SC[Supply chain:<br/>malicious install scripts, typosquats]
+  C[Config & secrets] --> L[Leaks: .env in git,<br/>stack traces, logs]
+  R[Runtime] --> P[EOL Node versions,<br/>running as root]

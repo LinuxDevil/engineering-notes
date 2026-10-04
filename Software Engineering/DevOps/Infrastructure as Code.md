@@ -32,15 +32,8 @@ Clicking in a cloud console is fast once and terrible forever: nobody knows what
 
 ## Terraform / OpenTofu workflow
 
-```mermaid
-flowchart LR
-  code[.tf files] --> init[init: download providers + modules, configure backend]
-  init --> plan[plan: refresh state, diff desired vs actual]
-  plan --> review[PR review of the plan]
-  review --> apply[apply: create/update/delete via provider APIs]
-  apply --> state[(Remote state + lock)]
-  state --> plan
-```
+{/* diagram source: /diagrams/diagram-171.mmd */}
+![diagram](/diagrams/diagram-171.svg)
 
 ```hcl
 # versions.tf

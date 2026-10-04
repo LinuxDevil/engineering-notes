@@ -37,24 +37,8 @@ Access tokens are **bearer** tokens by default: whoever holds them can use them.
 
 ## Authorization Code flow + PKCE (the default for everything with a user)
 
-```mermaid
-sequenceDiagram
-  participant U as User (browser)
-  participant C as Client (BFF / app)
-  participant AS as Authorization Server
-  participant API as Resource Server
-  C->>C: create code_verifier (random), code_challenge = BASE64URL(SHA256(verifier)), state, nonce
-  C->>U: redirect to AS /authorize?response_type=code&client_id&redirect_uri&scope=openid profile orders.read&state&nonce&code_challenge&code_challenge_method=S256
-  U->>AS: log in (password + MFA / passkey) and consent
-  AS->>U: redirect to redirect_uri?code=abc&state=xyz&iss=https://as.example
-  U->>C: GET /callback?code=abc&state=xyz
-  C->>C: check state (CSRF) and iss (mix-up)
-  C->>AS: POST /token grant_type=authorization_code, code, redirect_uri, code_verifier (+ client auth if confidential)
-  AS->>AS: SHA256(code_verifier) == code_challenge ?
-  AS-->>C: access_token, refresh_token, id_token
-  C->>C: validate id_token (sig, iss, aud, exp, nonce)
-  C->>API: GET /orders  Authorization: Bearer access_token
-```
+{/* diagram source: /diagrams/diagram-032.mmd */}
+![diagram](/diagrams/diagram-032.svg)
 
 **PKCE** (RFC 7636) binds the code to the client that started the flow: a stolen authorization code is useless without the `code_verifier`. Originally for mobile apps, it is now required for **all** clients (OAuth 2.1, RFC 9700).
 

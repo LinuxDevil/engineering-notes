@@ -56,16 +56,8 @@ Use the metric the model was trained for (most text models: cosine, or dot produ
 
 ## The semantic search pipeline
 
-```mermaid
-flowchart LR
-  subgraph Index time
-    D[Documents] --> C[Chunk] --> E1[Embed] --> V[(Vector index<br/>+ metadata)]
-  end
-  subgraph Query time
-    Q[User query] --> E2[Embed with SAME model] --> S[ANN search top-k<br/>+ metadata filters]
-    V --> S --> R[Results / to LLM]
-  end
-```
+{/* diagram source: /diagrams/diagram-007.mmd */}
+![diagram](/diagrams/diagram-007.svg)
 
 1. **Chunk** documents into passages (a few hundred tokens), keeping titles and metadata. Details in [Retrieval-Augmented Generation (RAG)](/Software%20Engineering/AI%20%26%20ML/Retrieval-Augmented%20Generation%20(RAG)).
 2. **Embed** each chunk and store the vector with its text, source and metadata (tenant, date, permissions).

@@ -106,7 +106,7 @@ A normal `write()` usually lands in the **OS page cache**, which batches writes 
 In Postgres, `synchronous_commit = off` trades durability of the last few hundred milliseconds of commits for speed; `fsync = off` risks corruption and should never be used in production.
 </Warning>
 
-```mermaid
+```text
 sequenceDiagram
   participant C as Client
   participant DB as Database
@@ -125,18 +125,8 @@ sequenceDiagram
 
 From *Database System Concepts*: a transaction moves through these states.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Active: BEGIN
-  Active --> PartiallyCommitted: last statement executed
-  Active --> Failed: error / conflict
-  PartiallyCommitted --> Committed: log flushed
-  PartiallyCommitted --> Failed: commit-time check fails
-  Failed --> Aborted: rollback done
-  Committed --> Terminated: cleanup
-  Aborted --> Terminated: cleanup
-  Terminated --> [*]
-```
+{/* diagram source: /diagrams/diagram-125.mmd */}
+![diagram](/diagrams/diagram-125.svg)
 
 | State | Meaning |
 |---|---|

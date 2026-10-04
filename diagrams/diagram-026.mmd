@@ -1,0 +1,5 @@
+flowchart LR
+  P[Pretraining<br/>next-token prediction<br/>trillions of tokens] --> S[Supervised fine-tuning<br/>instruction/answer pairs]
+  S --> PR[Preference tuning<br/>RLHF / DPO / constitutional AI]
+  PR --> RL[RL on verifiable tasks<br/>math, code, tool use]
+  RL --> M[Assistant / reasoning model]

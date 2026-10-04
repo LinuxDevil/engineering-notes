@@ -200,17 +200,8 @@ Precedence: `INTERSECT` binds tighter than `UNION` and `EXCEPT`; use parentheses
 | Number of columns from each table can differ | Each `SELECT` must return the same number of columns |
 | May return duplicate rows | `UNION` returns distinct rows; `UNION ALL` keeps duplicates |
 
-```mermaid
-flowchart LR
-  subgraph JOIN
-    A1[A cols] --- B1[B cols]
-  end
-  subgraph UNION
-    A2[rows from query 1]
-    B2[rows from query 2]
-    A2 --- B2
-  end
-```
+{/* diagram source: /diagrams/diagram-132.mmd */}
+![diagram](/diagrams/diagram-132.svg)
 
 ## Beyond the book / Senior perspective
 

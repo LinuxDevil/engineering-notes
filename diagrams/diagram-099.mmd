@@ -1,0 +1,9 @@
+flowchart TD
+  A["1. Parse URL: https://shop.example.com/cart"] --> B["2. HSTS check → force HTTPS"]
+  B --> C["3. DNS lookup (caches → recursive resolver)"]
+  C --> D["4. Connect: TCP 3-way handshake<br/>(or QUIC over UDP for HTTP/3)"]
+  D --> E["5. TLS 1.3 handshake: cert validation, keys"]
+  E --> F["6. HTTP request: GET /cart + cookies"]
+  F --> G["7. CDN edge → load balancer → app server → DB/cache"]
+  G --> H["8. HTTP response: status, headers, HTML"]
+  H --> I["9. Browser: parse HTML, fetch CSS/JS/images (more requests),<br/>build DOM/CSSOM, layout, paint"]

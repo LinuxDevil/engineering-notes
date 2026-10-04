@@ -1,0 +1,6 @@
+flowchart TD
+  A["1. Create a new empty object"] --> B["2. Set its [[Prototype]] to User.prototype"]
+  B --> C["3. Call User with this = the new object"]
+  C --> D{"4. Did User return an object?"}
+  D -- Yes --> E["Return that object"]
+  D -- No --> F["Return the new object"]

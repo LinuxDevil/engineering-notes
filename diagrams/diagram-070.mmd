@@ -1,0 +1,21 @@
+flowchart LR
+  subgraph Schedulers
+    BS["BullMQ Job Schedulers<br/>(in Redis)"]
+    KC["K8s CronJob controller"]
+  end
+  subgraph shop-prod
+    R[("Redis<br/>queues")]
+    W["jobs-worker<br/>(BullMQ workers, KEDA)"]
+    J["K8s Jobs → Pods<br/>cleanup · playwright"]
+    API["jobs-api (Fastify)<br/>BullMqBackend · K8sCronJobBackend"]
+  end
+  UI["ops-console<br/>Next.js 16 · ops.acme.dev"]
+  G["Prometheus · Loki · Grafana<br/>alerts"]
+
+  BS -- "delayed job per tick" --> R --> W
+  KC -- "Job per tick" --> J
+  UI -- "Server Components / Actions<br/>REST + SSE proxy" --> API
+  API -- "pause/resume/run/stop<br/>(Redis, pub/sub)" --> R
+  API -- "patch suspend · create/delete Job<br/>pod logs" --> K["kube-apiserver"]
+  K --- KC & J
+  W & J & API -- "metrics · JSON logs" --> G

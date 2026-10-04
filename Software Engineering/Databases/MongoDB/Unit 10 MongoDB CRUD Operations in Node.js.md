@@ -188,21 +188,8 @@ Steps:
 3. Run the sequence of operations inside the transaction, passing the session to each.
 4. Commit (or abort) and release the session's resources.
 
-```mermaid
-sequenceDiagram
-  participant App
-  participant Driver
-  participant DB as Replica set primary
-  App->>Driver: session = client.startSession()
-  App->>Driver: session.withTransaction(callback)
-  Driver->>DB: startTransaction + ops (with lsid, txnNumber)
-  DB-->>Driver: results
-  Driver->>DB: commitTransaction
-  alt TransientTransactionError / UnknownTransactionCommitResult
-    Driver->>DB: retry callback or commit
-  end
-  App->>Driver: session.endSession()
-```
+{/* diagram source: /diagrams/diagram-130.mmd */}
+![diagram](/diagrams/diagram-130.svg)
 
 ### Walkthrough (rebuilt from the course steps)
 **1. Create the variables used in the transaction**

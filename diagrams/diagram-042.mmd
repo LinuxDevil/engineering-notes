@@ -1,0 +1,3 @@
+flowchart LR
+  SRC["Hello.java"] -- javac --> BC["Hello.class (bytecode)"]
+  BC -- "java (JVM)" --> CL[Class loader] --> INT[Interpreter] --> JIT["JIT (C1/C2) hot code"]

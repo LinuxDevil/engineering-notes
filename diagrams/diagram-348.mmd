@@ -1,0 +1,13 @@
+flowchart LR
+  subgraph Dev["1. Agents in your dev loop"]
+    Agent["Coding agent<br/>(MCP host)"] --> DT["Chrome DevTools for agents"]
+    Agent --> FW["Next.js / Angular MCP servers"]
+    Agent --> PW["Playwright MCP"]
+  end
+  subgraph Web["2. Agents on your website"]
+    BrowserAgent["Browser agent"] --> WMCP["WebMCP tools<br/>document.modelContext"]
+  end
+  subgraph Prod["3. AI features you ship"]
+    UI["Chat / streaming UI"] --> Server["Your server route<br/>(holds API keys)"] --> LLM["Cloud LLM"]
+    UI --> OnDevice["Chrome built-in AI<br/>(on-device models)"]
+  end

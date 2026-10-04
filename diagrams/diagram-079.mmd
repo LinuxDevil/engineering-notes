@@ -1,0 +1,4 @@
+flowchart LR
+  CB[run one callback] --> NT[drain process.nextTick queue] --> PR[drain promise microtasks] --> NX{more nextTicks<br/>queued?}
+  NX -- yes --> NT
+  NX -- no --> NEXT[next callback / phase]

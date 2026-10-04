@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph Services
+    A[Service A + OTel SDK] -->|traceparent header| B[Service B + OTel SDK]
+  end
+  A -- OTLP --> COL[OTel Collector: receive, process, sample, export]
+  B -- OTLP --> COL
+  NODE[Node / K8s receivers, eBPF] --> COL
+  COL --> M[(Metrics: Prometheus / Mimir)]
+  COL --> L[(Logs: Loki / OpenSearch)]
+  COL --> T[(Traces: Tempo / Jaeger)]
+  COL --> P[(Profiles: Pyroscope)]
+  M & L & T & P --> G[Grafana / vendor UI + alerting]

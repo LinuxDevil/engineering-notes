@@ -1,0 +1,6 @@
+flowchart LR
+  Q[Query] --> BP{Page in<br/>buffer pool?}
+  BP -- hit --> R[Read row from page]
+  BP -- miss --> OS{In OS<br/>page cache?}
+  OS -- yes --> L[Copy page into buffer pool] --> R
+  OS -- no --> D[(Disk read 8 KB)] --> L

@@ -12,18 +12,8 @@ updated: 2026-09-27
 **Flexbox** lays items out along **one axis** and is driven by the content (items decide their size, then share leftover space). **Grid** lays out in **two dimensions** and is driven by the container (the container defines tracks and items are placed into them). **Container queries** make components respond to the space *they* get instead of the viewport. That is what lets a design-system component work in a sidebar and in a main column. Media queries are still for page-level decisions and user preferences.
 </Note>
 
-```mermaid
-flowchart TD
-  Q["What am I laying out?"] --> A{"Items in one row OR one column?"}
-  A -->|yes| F["Flexbox: nav bars, button groups, toolbars, chips that wrap"]
-  A -->|no, rows AND columns must align| G["Grid: page shells, card galleries, forms, dashboards"]
-  G --> SG{"Nested items must align to the parent's tracks?"}
-  SG -->|yes| SUB["subgrid"]
-  F --> R{"Should it adapt to its own width, not the screen?"}
-  G --> R
-  R -->|yes| CQ["@container size query"]
-  R -->|"page-level or user preference"| MQ["@media"]
-```
+{/* diagram source: /diagrams/diagram-252.mmd */}
+![diagram](/diagrams/diagram-252.svg)
 
 ---
 
@@ -35,17 +25,8 @@ flowchart TD
 - `gap` puts space **between** items, with no margin hacks or collapsing.
 
 ### The flex algorithm (simplified)
-```mermaid
-flowchart TD
-  A["1. Determine each item's flex-basis (hypothetical main size)"] --> B["2. Collect items into lines (flex-wrap)"]
-  B --> C["3. Free space = container main size - sum of bases - gaps"]
-  C --> D{"Free space positive?"}
-  D -->|yes| E["Distribute it in proportion to flex-grow"]
-  D -->|no| F["Shrink in proportion to flex-shrink x flex-basis"]
-  E --> G["4. Clamp to min/max sizes (automatic min = min-content)"]
-  F --> G
-  G --> H["5. Align: justify-content on main axis, align-items on cross axis"]
-```
+{/* diagram source: /diagrams/diagram-253.mmd */}
+![diagram](/diagrams/diagram-253.svg)
 
 The `flex` shorthand is `flex: <grow> <shrink> <basis>`:
 

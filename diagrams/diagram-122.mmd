@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant C as Coordinator
+  participant A as Participant A (restaurant)
+  participant B as Participant B (driver service)
+  C->>A: PREPARE
+  C->>B: PREPARE
+  A-->>C: YES (reserved, locks held)
+  B-->>C: YES (driver reserved)
+  Note over C: log decision = COMMIT
+  C->>A: COMMIT
+  C->>B: COMMIT
+  A-->>C: ACK
+  B-->>C: ACK

@@ -16,17 +16,8 @@ General theory lives elsewhere: [Authentication vs Authorization](/Software%20En
 
 ## The mental model
 
-```mermaid
-flowchart LR
-  B["Browser<br/>httpOnly session cookie"] --> PX["proxy.ts<br/>optimistic: cookie present?<br/>redirect / pass"]
-  PX --> R["Route: layout / page (RSC)"]
-  PX --> SA["Server Action (POST)"]
-  PX --> RH["Route Handler"]
-  R --> DAL
-  SA --> DAL
-  RH --> DAL
-  DAL["DAL (server-only)<br/>verifySession + authorize<br/>returns DTOs"] --> DB[("Sessions / users / data")]
-```
+{/* diagram source: /diagrams/diagram-283.mmd */}
+![diagram](/diagrams/diagram-283.svg)
 
 Every entry point (page render, action, route handler) reaches data only through the DAL, and the DAL checks every time. Proxy is a convenience and a performance filter, not a security boundary.
 
@@ -223,7 +214,7 @@ Without the flag, use `redirect('/login')` for unauthenticated and `notFound()` 
 
 The `ops-console` (see [Job Scheduler Dashboard with Next.js](/Software%20Engineering/Backend/Scheduled%20Jobs/Job%20Scheduler%20Dashboard%20with%20Next.js)) logs in against the company IdP with OIDC Authorization Code + PKCE. Tokens never reach the browser: the app is a **BFF** that stores tokens in a server-side session and calls `jobs-api` with the access token ([Next.js Route Handlers & Backend-for-Frontend](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Route%20Handlers%20%26%20Backend-for-Frontend)).
 
-```mermaid
+```text
 sequenceDiagram
   participant U as Browser
   participant N as ops-console (Next.js)

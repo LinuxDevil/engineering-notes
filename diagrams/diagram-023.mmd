@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph Ingest[Ingestion, offline]
+    S[Sources<br/>PDFs, wiki, tickets, DB] --> P[Parse & clean] --> C[Chunk + metadata] --> E[Embed] --> I[(Vector + keyword index)]
+  end
+  subgraph Query[Query time]
+    U[Question] --> QR[Query rewrite<br/>optional] --> H[Hybrid retrieve top 50] --> RR[Rerank → top 5-10] --> PR[Prompt: instructions + chunks + question] --> L[LLM] --> A[Answer + citations]
+  end
+  I --> H

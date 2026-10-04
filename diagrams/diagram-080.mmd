@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant JS as JS (main thread)
+  participant UV as libuv
+  participant TP as Thread pool
+  participant OS as Disk / OS
+  JS->>UV: fs.readFile(path, cb)
+  UV->>TP: queue open/read/close work
+  TP->>OS: blocking read()
+  OS-->>TP: bytes
+  TP-->>UV: done
+  UV-->>JS: cb(err, data) queued, runs when call stack is empty

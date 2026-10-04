@@ -14,14 +14,8 @@ Git is a **content-addressed object store** (blobs, trees, commits, tags) plus *
 
 ## 1. Mental model: the three areas
 
-```mermaid
-flowchart LR
-  WD[Working directory] -->|git add| IDX[Index / staging area]
-  IDX -->|git commit| REPO[(Local repository .git)]
-  REPO -->|git push| REMOTE[(Remote: origin)]
-  REMOTE -->|git fetch| REPO
-  REPO -->|git switch / restore| WD
-```
+{/* diagram source: /diagrams/diagram-167.mmd */}
+![diagram](/diagrams/diagram-167.svg)
 
 ```bash
 git status                     # what changed where
@@ -48,14 +42,8 @@ Everything in `.git/objects` is addressed by the hash of its content (SHA-1 toda
 | **commit** | Root tree hash, parent commit(s), author, committer, message |
 | **tag** (annotated) | Points at an object with tagger, message, optional signature |
 
-```mermaid
-flowchart LR
-  HEAD -->|ref: refs/heads/main| main[refs/heads/main]
-  main --> C3[commit c3]
-  C3 -->|parent| C2[commit c2] -->|parent| C1[commit c1]
-  C3 --> T3[tree] --> B1[blob README]
-  T3 --> T4[tree src] --> B2[blob app.js]
-```
+{/* diagram source: /diagrams/diagram-168.mmd */}
+![diagram](/diagrams/diagram-168.svg)
 
 ```bash
 git cat-file -p HEAD            # show the commit object
@@ -110,19 +98,8 @@ Common team policy: rebase your local feature branch on `main` to stay current (
 ### GitHub Flow
 - `main` + feature branches + PRs; deploy after merge (or from the branch before merge). A light version of trunk-based.
 
-```mermaid
-gitGraph
-  commit id: "a"
-  branch feat-x
-  commit id: "x1"
-  checkout main
-  merge feat-x id: "PR #12 (squash)"
-  branch feat-y
-  commit id: "y1"
-  checkout main
-  merge feat-y id: "PR #13"
-  commit id: "tag v1.4.0" tag: "v1.4.0"
-```
+{/* diagram source: /diagrams/diagram-169.mmd */}
+![diagram](/diagrams/diagram-169.svg)
 
 ## 5. Conventional Commits and semantic versioning
 

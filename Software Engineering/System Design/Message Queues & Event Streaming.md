@@ -28,18 +28,8 @@ Messaging decouples producers from consumers in time and scale. Three shapes: a 
 | Examples | SQS, RabbitMQ queues, Celery/Sidekiq backends | SNS, GCP Pub/Sub, Redis Pub/Sub | Kafka, Kinesis, Redpanda, Pulsar, Redis Streams |
 | Good for | Task/job processing | Notifications to many systems | Event sourcing, CDC, analytics, stream processing |
 
-```mermaid
-flowchart LR
-  subgraph Queue
-    P1["Producer"] --> Q[["queue"]] --> W1["worker"] & W2["worker"]
-  end
-  subgraph Log["Kafka topic (3 partitions)"]
-    P2["Producer<br/>key=user_id"] --> T0["p0"] & T1["p1"] & T2["p2"]
-    T0 & T1 --> GA1["group A: c1"]
-    T2 --> GA2["group A: c2"]
-    T0 & T1 & T2 --> GB["group B: c1<br/>(own offsets)"]
-  end
-```
+{/* diagram source: /diagrams/diagram-406.mmd */}
+![diagram](/diagrams/diagram-406.svg)
 
 ## Kafka core concepts
 - **Topic** split into **partitions**; each partition is an ordered, append-only log; records have **offsets**.
@@ -104,7 +94,7 @@ COMMIT;
 ## The outbox pattern
 Problem: "update DB and publish event" is a dual write; if either fails you're inconsistent.
 
-```mermaid
+```text
 sequenceDiagram
   participant S as Order service
   participant DB as Database

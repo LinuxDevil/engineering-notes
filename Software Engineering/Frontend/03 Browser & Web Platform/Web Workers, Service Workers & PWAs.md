@@ -12,17 +12,8 @@ updated: 2026-09-27
 JavaScript on a page runs on **one main thread** shared with rendering and input. **Web Workers** run scripts on background threads for CPU-heavy work and talk to the page via `postMessage`. **Service Workers** are a special kind of worker that sits between your app and the network as a programmable **proxy**, which enables offline support, caching strategies, push and background sync. **PWAs** combine a service worker, a web app manifest and HTTPS to give installable, offline-capable, app-like experiences.
 </Note>
 
-```mermaid
-flowchart LR
-  subgraph Page["Page (main thread)"]
-    UI["DOM, rendering, input, your app"]
-  end
-  UI <-->|"postMessage"| DW["Dedicated Worker (CPU work)"]
-  UI <-->|"port.postMessage"| SH["Shared Worker (one per origin, many tabs)"]
-  UI -->|"fetch"| SW["Service Worker (network proxy)"]
-  SW <--> C[("Cache API / IndexedDB")]
-  SW <--> N["Network"]
-```
+{/* diagram source: /diagrams/diagram-247.mmd */}
+![diagram](/diagrams/diagram-247.svg)
 
 ## 1. Web Workers
 
@@ -156,23 +147,8 @@ What they enable: offline support, custom caching strategies, instant repeat loa
 
 The owner's lifecycle (registration → installation → activation → idle → termination → fetch/message), with the **waiting** step added:
 
-```mermaid
-stateDiagram-v2
-  [*] --> Registered: navigator.serviceWorker.register()
-  Registered --> Installing: browser downloads & parses sw.js
-  Installing --> Installed: install event done (precache OK)
-  Installing --> Redundant: install failed
-  Installed --> Waiting: an older SW still controls open tabs
-  Waiting --> Activating: all old tabs closed, or skipWaiting()
-  Installed --> Activating: no older SW
-  Activating --> Activated: activate event (clean old caches)
-  Activated --> Idle
-  Idle --> Handling: fetch / message / push / sync event
-  Handling --> Idle
-  Idle --> Terminated: to save memory
-  Terminated --> Handling: woken by next event
-  Activated --> Redundant: replaced by a newer SW
-```
+{/* diagram source: /diagrams/diagram-248.mmd */}
+![diagram](/diagrams/diagram-248.svg)
 
 1. **Registration**: the page registers the SW with JS; the browser then tries to install it.
 2. **Installation**: the `install` event fires. Precache static assets here; if everything is cached successfully the SW becomes *installed*. If any promise passed to `waitUntil` rejects, installation fails.

@@ -1,0 +1,21 @@
+sequenceDiagram
+  participant C as Client
+  participant S as Server
+  Note over C,S: Short polling
+  C->>S: Any updates?
+  S-->>C: No
+  C->>S: Any updates? (every N s)
+  S-->>C: Yes, data
+  Note over C,S: Long polling
+  C->>S: Any updates?
+  S-->>C: (holds request open until data or timeout) data
+  C->>S: Immediately re-request
+  Note over C,S: SSE
+  C->>S: GET /stream (Accept: text/event-stream)
+  S-->>C: event 1
+  S-->>C: event 2 (same response, kept open)
+  Note over C,S: WebSocket
+  C->>S: HTTP Upgrade: websocket
+  S-->>C: 101 Switching Protocols
+  C->>S: message
+  S-->>C: message (full duplex)

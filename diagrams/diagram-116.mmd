@@ -1,0 +1,9 @@
+flowchart LR
+  A[SQL text] --> B[Parser<br/>syntax → parse tree]
+  B --> C[Analyzer<br/>tables, columns, types exist?]
+  C --> D[Rewriter<br/>views, rules]
+  D --> E[Planner / optimizer<br/>enumerate plans, estimate cost]
+  E --> F[Executor<br/>scans, joins, sort, aggregate]
+  F --> G[Rows to client]
+  S[(Statistics<br/>pg_statistic)] -.-> E
+  BP[(Buffer pool / disk)] -.-> F

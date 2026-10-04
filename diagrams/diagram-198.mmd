@@ -1,0 +1,10 @@
+flowchart TD
+  S["backtrack(state)"] --> G{"goal reached?"}
+  G -->|yes| R["record a copy of path"]
+  G -->|no| L["for each candidate choice"]
+  L --> V{"valid? (prune)"}
+  V -->|no| L
+  V -->|yes| C["choose: path.push(x)"]
+  C --> E["explore: backtrack(next state)"]
+  E --> U["unchoose: path.pop()"]
+  U --> L

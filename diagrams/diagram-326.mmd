@@ -1,0 +1,9 @@
+flowchart LR
+  A["Attacker"] -->|"injects script into your page"| XSS["XSS: runs as your origin, reads DOM, tokens, makes requests"]
+  A -->|"lures victim to evil.com which submits to your site"| CSRF["CSRF: browser attaches victim's cookies"]
+  A -->|"frames your site invisibly"| CJ["Clickjacking: victim clicks hidden buttons"]
+  A -->|"compromises a dependency or CDN"| SC["Supply chain: malicious code in your bundle"]
+  XSS --> D1["Escaping, sanitizing, CSP, Trusted Types"]
+  CSRF --> D2["SameSite cookies, CSRF tokens, Origin checks"]
+  CJ --> D3["CSP frame-ancestors, X-Frame-Options"]
+  SC --> D4["Lockfiles, SRI, provenance, see Supply Chain Security"]

@@ -33,19 +33,8 @@ Readiness probes answer "does the pod start?", not "does the new version return 
 
 The Argo Rollouts controller (namespace `argo-rollouts`) watches `Rollout` objects and manages **ReplicaSets** directly, just like the Deployment controller, but step by step. For canaries with traffic routing it also edits the router config (here: the `HTTPRoute` backend weights) and the selectors of a **stable** and a **canary** Service (it adds `rollouts-pod-template-hash`).
 
-```mermaid
-flowchart TD
-  G[Git: new image tag in overlays/prod] --> A[Argo CD syncs Rollout spec]
-  A --> RS[Rollouts controller creates canary ReplicaSet]
-  RS --> W5[setWeight 5: HTTPRoute 95/5]
-  W5 --> P1[pause 2m]
-  P1 --> BG{{Background AnalysisRun<br/>error rate + p99 every 1m}}
-  P1 --> W20[setWeight 20]
-  W20 --> P2[pause 5m] --> W50[setWeight 50] --> P4[pause 10m] --> W80[setWeight 80] --> P3[pause 5m]
-  P3 --> FULL[100%: canary becomes stable<br/>old ReplicaSet scaled down]
-  BG -- metric fails --> ABORT[Abort: weights back to 100/0<br/>canary scaled down<br/>Rollout Degraded]
-  ABORT --> FIX[Fix: git revert tag, or retry]
-```
+{/* diagram source: /diagrams/diagram-147.mmd */}
+![diagram](/diagrams/diagram-147.svg)
 
 Install:
 

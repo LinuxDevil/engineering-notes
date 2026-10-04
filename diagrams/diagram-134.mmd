@@ -1,0 +1,5 @@
+flowchart TD
+  S[Super keys: any unique column set] --> C[Candidate keys: minimal super keys]
+  C --> P[Primary key: the one you choose]
+  C --> A[Alternate keys: the rest, enforced with UNIQUE]
+  P -. referenced by .-> F[Foreign key in a child table]

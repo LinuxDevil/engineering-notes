@@ -26,28 +26,8 @@ Breaking business rules into **entities**, **use cases** and **adapters** is a f
 
 ## Clean Architecture in one picture
 
-```mermaid
-flowchart TB
-  subgraph Frameworks & Drivers
-    C[Controllers / Jobs / Rake] 
-    AR[(Active Record / DB)]
-    EXT[Stripe, S3, Mailers]
-  end
-  subgraph Interface Adapters
-    AD[app/adapters<br/>PaymentGateway, Repositories]
-  end
-  subgraph Application
-    UC[app/services<br/>Use cases: PlaceOrder]
-  end
-  subgraph Domain
-    EN[Entities / domain objects<br/>Order rules, Money]
-  end
-  C --> UC
-  UC --> EN
-  UC --> AD
-  AD --> AR
-  AD --> EXT
-```
+{/* diagram source: /diagrams/diagram-057.mmd */}
+![diagram](/diagrams/diagram-057.svg)
 
 **The dependency rule**: source code dependencies point **inwards**. Entities know nothing about use cases; use cases know nothing about controllers, HTTP or Stripe; they talk to adapters through small interfaces (in Ruby, duck-typed objects injected via the constructor).
 

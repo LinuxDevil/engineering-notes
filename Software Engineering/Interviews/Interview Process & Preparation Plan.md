@@ -14,15 +14,8 @@ A software engineering hiring process is a pipeline: recruiter screen → techni
 
 ## The stages
 
-```mermaid
-flowchart LR
-  A[Application / referral] --> B[Recruiter screen<br/>20–30 min]
-  B --> C[Technical screen<br/>45–60 min coding or take-home]
-  C --> D[Onsite loop<br/>4–6 interviews]
-  D --> E[Debrief / hiring committee]
-  E --> F["Team match<br/>(big companies)"]
-  F --> G[Offer & negotiation]
-```
+{/* diagram source: /diagrams/diagram-355.mmd */}
+![diagram](/diagrams/diagram-355.svg)
 
 | Stage | What they check | How to prepare |
 |---|---|---|

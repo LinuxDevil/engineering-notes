@@ -194,19 +194,8 @@ V8 and Node.js don't store lexical environments naively:
 - Unused bindings can be eliminated, and contexts are only created when needed.
 - **All closures created in the same scope share the same Context.** If one inner function captures a huge object, every sibling closure keeps it alive too. This is a classic source of leaks.
 
-```mermaid
-flowchart LR
-  subgraph Stack
-    F["frame: outer() (popped after return)"]
-    V["myNewFunction (reference)"]
-  end
-  subgraph Heap
-    FN["function incrementCounter<br/>[[Environment]]"]
-    CTX["Context { counter }<br/>parent: Script/Global"]
-  end
-  V --> FN
-  FN --> CTX
-```
+{/* diagram source: /diagrams/diagram-206.mmd */}
+![diagram](/diagrams/diagram-206.svg)
 
 ### When is the backpack garbage collected?
 

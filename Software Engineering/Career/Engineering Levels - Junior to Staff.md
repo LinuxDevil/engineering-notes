@@ -29,14 +29,8 @@ Engineering levels differ less by coding skill than by **scope** (task → featu
 | **Typical output** | Working, tested code | Shipped features, good reviews | Designs, delivered projects, mentored engineers, improved processes | Technical strategy, cross-team alignment, unblocked big initiatives | Direction for the whole engineering org |
 | **Failure mode** | Stuck silently | Polishing low-impact work | Hero coding instead of multiplying | Ivory-tower architecture | Disconnected from reality |
 
-```mermaid
-flowchart LR
-  J[Junior<br/>do tasks well] --> M[Mid<br/>own features]
-  M --> S[Senior<br/>own outcomes of projects,<br/>raise the team]
-  S --> ST[Staff<br/>set direction across teams]
-  S --> EM[Engineering Manager<br/>people track]
-  ST --> P[Principal]
-```
+{/* diagram source: /diagrams/diagram-087.mmd */}
+![diagram](/diagrams/diagram-087.svg)
 Senior is often a **career level**: many engineers stay there long-term, and that's healthy. Staff is a different job, not "senior but better".
 
 ## What each level looks like in practice

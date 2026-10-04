@@ -1,0 +1,5 @@
+flowchart LR
+    UI["UI (React component)"] -->|"dispatch(action)"| MW["Middleware chain (thunk, logger...)"]
+    MW --> R["Root reducer (combineReducers)"]
+    R -->|"new state"| S["Store"]
+    S -->|"subscribe / useSelector"| UI

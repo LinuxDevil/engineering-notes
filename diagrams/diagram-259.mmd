@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant S as setState
+  participant R as Render phase
+  participant C as Commit phase
+  participant B as Browser
+  participant E as Passive effects
+  S->>R: schedule update (lane/priority)
+  R->>R: call components, reconcile, build workInProgress
+  R->>C: finished tree + effect list
+  C->>C: mutate DOM, attach refs, useLayoutEffect
+  C->>B: yield
+  B->>B: paint
+  B->>E: useEffect cleanups then effects

@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant UI as Browser UI
+  participant API as Your server route (/api/chat)
+  participant LLM as Model provider
+  UI->>API: POST messages (no API key in browser)
+  API->>LLM: request with secret key + system prompt + tools
+  LLM-->>API: token stream
+  API-->>UI: stream (SSE / chunked response)
+  UI->>UI: render tokens as they arrive
+  UI->>API: abort (user clicks Stop) via AbortController

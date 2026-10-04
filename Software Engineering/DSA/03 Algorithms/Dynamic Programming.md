@@ -49,12 +49,8 @@ Recognition signals: "count the number of ways", "min/max cost", "is it possible
 | Cons | Stack depth (CPython limit 1000, Node overflow); call overhead | Must figure out the iteration order; computes every state |
 | Tools | `functools.cache` / `Map` | arrays, rolling variables |
 
-```mermaid
-flowchart LR
-  R[Brute-force recursion] -->|add cache| M[Top-down memo]
-  M -->|reverse the order, loops| T[Bottom-up table]
-  T -->|keep only needed rows| S[Space optimized]
-```
+{/* diagram source: /diagrams/diagram-193.mmd */}
+![diagram](/diagrams/diagram-193.svg)
 
 A reliable workflow in interviews: write the recursion, memoize it, then convert to bottom-up if asked.
 

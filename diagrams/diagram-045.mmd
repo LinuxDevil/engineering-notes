@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant T as Request thread
+  participant P as Other thread
+  participant S as Remote service
+  Note over T,S: 1. Sync + blocking
+  T->>S: call
+  S-->>T: (thread idle until) response
+  Note over T,S: 2. Async
+  T->>P: hand off
+  P->>S: call (P is blocked)
+  S-->>P: response
+  P-->>T: result later
+  Note over T,S: 4. Non-blocking + async
+  T->>S: register call + callback, thread moves on
+  S-->>T: event: response ready → callback on any free thread

@@ -1,0 +1,7 @@
+flowchart LR
+  App["App writes"] --> DB[("Primary DB<br/>(source of truth)")]
+  DB -->|"CDC (Debezium) / outbox events"| K["Kafka"]
+  K --> IX["Indexer workers<br/>(transform, enrich)"]
+  IX --> ES[("Search cluster<br/>shards + replicas")]
+  U["Search API"] --> ES
+  U --> RR["Re-ranker / personalization"]

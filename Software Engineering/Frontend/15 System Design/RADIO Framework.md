@@ -29,14 +29,8 @@ RADIO gives you a default path through all of that. It maps to the owner's four 
 | UI interactions | A (Architecture) + O: components, events, a11y, optimistic updates |
 | Assets management | O (Optimizations): images, fonts, bundles, CDN |
 
-```mermaid
-flowchart LR
-  R["R: Requirements<br/>scope, users, NFRs"] --> A["A: Architecture<br/>components + data flow"]
-  A --> D["D: Data model<br/>server entities + client state"]
-  D --> I["I: Interface<br/>API + component props"]
-  I --> O["O: Optimizations<br/>perf, a11y, network, i18n, security"]
-  O -. "revisit if scope changes" .-> R
-```
+{/* diagram source: /diagrams/diagram-346.mmd */}
+![diagram](/diagrams/diagram-346.svg)
 
 ## Time budget
 
@@ -90,21 +84,8 @@ Goal: a **component diagram** plus how data flows between the view, the client s
 
 Generic architecture diagram (adapt names for each problem):
 
-```mermaid
-flowchart TB
-  subgraph Client["Browser"]
-    V["View / Components"] -->|"user events"| C["Controller / Hooks<br/>(actions, event handlers)"]
-    C -->|"dispatch / mutate"| S["Client Store<br/>(UI state + normalized entities)"]
-    S -->|"subscribe / select"| V
-    C --> DL["Data layer<br/>(fetch wrapper, cache, retries)"]
-    DL --> S
-    SW["Service Worker<br/>(offline cache)"] -.-> DL
-  end
-  DL <-->|"HTTP (REST/GraphQL)"| API["API / BFF"]
-  RT["Real-time channel<br/>(SSE / WebSocket)"] --> S
-  API --> RT
-  CDN["CDN<br/>(static assets, images)"] --> V
-```
+{/* diagram source: /diagrams/diagram-347.mmd */}
+![diagram](/diagrams/diagram-347.svg)
 
 Useful vocabulary: **BFF** (Backend for Frontend, an API layer shaped for one UI), **server state vs client state** ([Server State - TanStack Query & RTK Query](/Software%20Engineering/Frontend/06%20State%20Management/Server%20State%20-%20TanStack%20Query%20%26%20RTK%20Query)), **controller/presentational split** ([Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns)).
 

@@ -1,0 +1,14 @@
+flowchart TB
+  subgraph Customer["Customer: security IN the cloud"]
+    D[Data + classification]
+    I[Identities, IAM policies, MFA]
+    A[Application code, dependencies]
+    O[OS patches, firewall config - IaaS]
+    E[Encryption settings, network config]
+  end
+  subgraph Provider["Provider: security OF the cloud"]
+    H[Hardware, data centres]
+    V[Virtualisation, host OS]
+    N[Global network]
+    M[Managed service internals]
+  end

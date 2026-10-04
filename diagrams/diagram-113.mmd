@@ -1,0 +1,2 @@
+flowchart LR
+  A[Measure: CPU, IO, locks,<br/>slow queries] --> B[Fix queries &<br/>indexes] --> C[Scale up] --> D[Connection pooling] --> E[Cache hot reads] --> F[Read replicas] --> G[Partition big tables] --> H[Split by function<br/>/ service] --> I[Shard writes]

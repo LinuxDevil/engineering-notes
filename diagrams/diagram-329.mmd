@@ -1,0 +1,6 @@
+flowchart LR
+  HTML["HTML (DOM)"] --> AT["Accessibility tree"]
+  CSS["CSS (CSSOM): display none, visibility, generated content"] --> AT
+  ARIA["ARIA attributes: role, aria-*"] --> AT
+  AT --> API["OS accessibility API"]
+  API --> SR["Screen reader / voice control / switch access"]

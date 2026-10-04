@@ -44,10 +44,8 @@ Two ways:
 
 ### When to scale, and in what order
 
-```mermaid
-flowchart LR
-  A[Measure: CPU, IO, locks,<br/>slow queries] --> B[Fix queries &<br/>indexes] --> C[Scale up] --> D[Connection pooling] --> E[Cache hot reads] --> F[Read replicas] --> G[Partition big tables] --> H[Split by function<br/>/ service] --> I[Shard writes]
-```
+{/* diagram source: /diagrams/diagram-113.mmd */}
+![diagram](/diagrams/diagram-113.svg)
 
 Most slowness is missing indexes or bad queries; fix those before buying hardware. Sharding is last because it's hard to undo. See [Sharding & Partitioning](/Software%20Engineering/Databases/Database%20Round/Sharding%20%26%20Partitioning).
 

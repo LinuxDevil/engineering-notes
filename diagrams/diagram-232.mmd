@@ -1,0 +1,6 @@
+flowchart LR
+  V["any value"] --> S["ToString"]
+  V --> N["ToNumber"]
+  V --> B["ToBoolean"]
+  O["object"] --> P["ToPrimitive: Symbol.toPrimitive, then valueOf / toString"] --> S
+  P --> N

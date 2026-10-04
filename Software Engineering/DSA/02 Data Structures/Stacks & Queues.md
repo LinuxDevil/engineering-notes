@@ -75,12 +75,8 @@ Grow it by allocating double the capacity and copying items in order (`head` bec
 
 Keep an `inStack` for pushes and an `outStack` for pops. When `outStack` is empty, pour everything from `inStack` into it (which reverses the order, so the oldest item ends on top). Each element is moved at most once, so dequeue is **amortized O(1)**.
 
-```mermaid
-flowchart LR
-  E[enqueue] --> IN["inStack: 1 2 3 (top=3)"]
-  IN -- "only when out is empty: pop all, push all" --> OUT["outStack: 3 2 1 (top=1)"]
-  OUT --> D["dequeue returns 1"]
-```
+{/* diagram source: /diagrams/diagram-190.mmd */}
+![diagram](/diagrams/diagram-190.svg)
 
 ## Complexity
 

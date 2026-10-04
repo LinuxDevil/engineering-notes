@@ -1,0 +1,5 @@
+flowchart LR
+  Q{What do you need?} -->|runs on edge / Bun / Workers| H[Hono]
+  Q -->|max throughput, schemas, plugins| F[Fastify]
+  Q -->|big team, DI, conventions| N[NestJS on Fastify]
+  Q -->|simple, huge ecosystem| E[Express 5]

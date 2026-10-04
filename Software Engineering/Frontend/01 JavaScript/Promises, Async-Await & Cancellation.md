@@ -41,14 +41,8 @@ try {
 
 ## Promise states
 
-```mermaid
-stateDiagram-v2
-  [*] --> Pending
-  Pending --> Fulfilled: resolve(value)
-  Pending --> Rejected: reject(reason) or throw
-  Fulfilled --> [*]
-  Rejected --> [*]
-```
+{/* diagram source: /diagrams/diagram-225.mmd */}
+![diagram](/diagrams/diagram-225.svg)
 
 | State | Meaning |
 |---|---|
@@ -194,15 +188,8 @@ const [a2, b2] = await Promise.all([getA(), getB()]);
 
 Promises have no `cancel()`. The standard cancellation primitive is an **`AbortSignal`**, produced by an `AbortController` and accepted by `fetch`, `addEventListener`, streams, many Node APIs and your own functions.
 
-```mermaid
-flowchart LR
-  C[AbortController] -- ".signal" --> S[AbortSignal]
-  S --> F["fetch(url, {signal})"]
-  S --> L["addEventListener(type, fn, {signal})"]
-  S --> Y["your async function"]
-  C -- ".abort(reason)" --> S
-  S -- "'abort' event, signal.aborted = true" --> F
-```
+{/* diagram source: /diagrams/diagram-226.mmd */}
+![diagram](/diagrams/diagram-226.svg)
 
 <Info>
 **Cancel stale search requests (autocomplete)**

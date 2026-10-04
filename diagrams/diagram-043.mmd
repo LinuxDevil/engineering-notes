@@ -1,0 +1,8 @@
+flowchart TB
+  C[Collection] --> L[List: ordered, duplicates]
+  C --> S[Set: unique]
+  C --> Q[Queue / Deque]
+  L --> AL[ArrayList] & LL[LinkedList]
+  S --> HS[HashSet] & LHS[LinkedHashSet] & TS[TreeSet: sorted]
+  Q --> AD[ArrayDeque] & PQ[PriorityQueue]
+  M[Map: key → value] --> HM[HashMap] & LHM[LinkedHashMap] & TM[TreeMap: sorted]

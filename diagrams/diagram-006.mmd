@@ -1,0 +1,9 @@
+flowchart LR
+  T[Task / issue / spec] --> A[Agent]
+  A -->|read| FS[Files: grep, glob, read]
+  A -->|edit| ED[Write/patch files]
+  A -->|run| SH[Shell: build, test, lint]
+  A -->|browse| BR[Docs, browser, MCP servers]
+  SH -->|errors, test output| A
+  A --> PR[Diff / commit / PR] --> H[Human review]
+  H -->|comments| A

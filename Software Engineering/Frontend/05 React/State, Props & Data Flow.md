@@ -178,12 +178,8 @@ My old note said "State: component-owned, **mutable**". More precise: state is *
 ## 7. One-way (unidirectional) data flow
 Data flows **down** from parent to child as props. Events flow **up** through callback props. The parent owns the data and decides. This keeps the data architecture clean and easy to follow: to find where a value comes from, walk up the tree.
 
-```mermaid
-flowchart TD
-  P["Parent: owns state"] -->|"props: value"| A["Child A"]
-  P -->|"props: onChange callback"| B["Child B"]
-  B -.->|"calls onChange(newValue)"| P
-```
+{/* diagram source: /diagrams/diagram-271.mmd */}
+![diagram](/diagrams/diagram-271.svg)
 
 ## 8. Lifting state up
 When two siblings need the same data, **move the state to their closest common parent** and pass it down. The children become **controlled** by the parent.

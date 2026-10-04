@@ -1,0 +1,20 @@
+flowchart TB
+  subgraph Frameworks & Drivers
+    C[Controllers / Jobs / Rake] 
+    AR[(Active Record / DB)]
+    EXT[Stripe, S3, Mailers]
+  end
+  subgraph Interface Adapters
+    AD[app/adapters<br/>PaymentGateway, Repositories]
+  end
+  subgraph Application
+    UC[app/services<br/>Use cases: PlaceOrder]
+  end
+  subgraph Domain
+    EN[Entities / domain objects<br/>Order rules, Money]
+  end
+  C --> UC
+  UC --> EN
+  UC --> AD
+  AD --> AR
+  AD --> EXT

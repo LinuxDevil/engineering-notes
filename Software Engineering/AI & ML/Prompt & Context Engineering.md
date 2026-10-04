@@ -106,18 +106,8 @@ In June 2025 Shopify CEO Tobi Lütke described context engineering as providing 
 
 **Why a new term?** In agents, the prompt you write is a small part of the context. Most tokens come from tool definitions, tool results, retrieved documents, memory and a long history that grows every step. Engineering that whole window is the job.
 
-```mermaid
-flowchart LR
-  subgraph Window[Context window: a finite attention budget]
-    SP[System prompt<br/>+ rules]
-    TD[Tool definitions]
-    MEM[Memory / notes<br/>AGENTS.md, preferences]
-    RAG[Retrieved docs]
-    H[Conversation + tool results]
-    Q[Current task]
-  end
-  Window --> LLM[Model]
-```
+{/* diagram source: /diagrams/diagram-022.mmd */}
+![diagram](/diagrams/diagram-022.svg)
 
 ### The problem: context rot
 Models have a finite **attention budget**. As the window fills, recall and instruction-following degrade (**context rot**); information in the middle is used least well (**Lost in the Middle**). So more context is not free: every token should earn its place. Anthropic's guiding principle: find the **smallest set of high-signal tokens** that maximise the chance of the desired outcome.

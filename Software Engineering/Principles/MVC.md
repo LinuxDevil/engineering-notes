@@ -45,20 +45,8 @@ The intermediary. It does not implement business rules; it tells the model what 
 3. The controller gives the data to the **view**.
 4. The view is rendered and sent back to the browser.
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant R as Router
-  participant C as Controller
-  participant M as Model
-  participant V as View
-  B->>R: POST /users (form data)
-  R->>C: UsersController#create(params)
-  C->>M: User.create(params)
-  M-->>C: user (or validation errors)
-  C->>V: render "welcome" with user
-  V-->>B: HTML response
-```
+{/* diagram source: /diagrams/diagram-370.mmd */}
+![diagram](/diagrams/diagram-370.svg)
 
 **The MVC cycle**
 1. The user interacts with the interface and triggers a request (e.g. submits a registration form).
@@ -113,18 +101,8 @@ In the original Smalltalk MVC, the **view observed the model** directly (Observe
 | **MVVM** (Model–View–ViewModel) | View binds to commands on the ViewModel | **Data binding** to observable ViewModel state | WPF, SwiftUI, Jetpack Compose + ViewModel, Angular, Vue |
 | **MVI** / unidirectional (Flux, Redux, Elm) | View emits **intents/actions** | A reducer produces a new immutable state; view re-renders | React + Redux, Elm, Compose |
 
-```mermaid
-flowchart LR
-  subgraph MVVM
-    V1[View] -- binds --> VM[ViewModel]
-    VM -- observes/updates --> M1[Model]
-  end
-  subgraph Unidirectional
-    V2[View] -- action --> R[Reducer / Store]
-    R -- new state --> V2
-    R -.-> M2[Effects / Model]
-  end
-```
+{/* diagram source: /diagrams/diagram-371.mmd */}
+![diagram](/diagrams/diagram-371.svg)
 
 Modern frontend frameworks (React, Angular with signals, SwiftUI, Compose) are mostly MVVM or unidirectional. See [State Management Overview](/Software%20Engineering/Frontend/06%20State%20Management/State%20Management%20Overview) and [Frontend Design Patterns](/Software%20Engineering/Frontend/09%20Architecture/Frontend%20Design%20Patterns).
 

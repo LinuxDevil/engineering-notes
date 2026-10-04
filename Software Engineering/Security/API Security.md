@@ -44,13 +44,8 @@ Validate JWT access tokens fully: signature with a fixed algorithm, `iss`, `aud`
 ## Authorization patterns
 
 ### Where to enforce
-```mermaid
-flowchart LR
-  C[Client] --> GW[API gateway<br/>authn, rate limit, coarse scopes]
-  GW --> S[Service<br/>fine-grained authz: object, field, business rules]
-  S --> PDP[(Policy decision point<br/>OPA / Cedar / OpenFGA)]
-  S --> DB[(Data layer<br/>tenant filters / RLS)]
-```
+{/* diagram source: /diagrams/diagram-380.mmd */}
+![diagram](/diagrams/diagram-380.svg)
 - The gateway handles coarse checks (valid token, scope `orders:read`).
 - The **service** must do object-level checks: only it knows who owns order 42.
 - Centralise the policy (a library or a policy engine) so every endpoint asks the same question the same way: `can(user, "read", order)`.

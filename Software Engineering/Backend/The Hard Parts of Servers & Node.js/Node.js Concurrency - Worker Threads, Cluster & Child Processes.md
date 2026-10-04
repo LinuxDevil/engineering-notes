@@ -25,19 +25,8 @@ See [Concurrency And Parallelism](/Software%20Engineering/Principles/Concurrency
 
 ## Worker threads
 
-```mermaid
-flowchart LR
-  subgraph Process["One Node process"]
-    M["Main thread<br/>V8 isolate + event loop"]
-    W1["Worker 1<br/>own isolate + loop"]
-    W2["Worker 2<br/>own isolate + loop"]
-    SAB[("SharedArrayBuffer<br/>(optional shared memory)")]
-  end
-  M <-- "postMessage (structured clone)" --> W1
-  M <-- postMessage --> W2
-  W1 --- SAB
-  M --- SAB
-```
+{/* diagram source: /diagrams/diagram-077.mmd */}
+![diagram](/diagrams/diagram-077.svg)
 
 - Each worker has its **own heap**; objects are **copied** via the structured clone algorithm when posted. Transfer `ArrayBuffer`s to move them without copying; use `SharedArrayBuffer` + `Atomics` to truly share memory.
 - Workers are relatively heavy (a new isolate, ~ms to start, MBs of memory): **pool** them, don't spawn one per request.

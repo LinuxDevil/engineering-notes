@@ -1,0 +1,7 @@
+flowchart TD
+  Q{Do you have labels?} -->|yes| SUP[Supervised]
+  Q -->|no| UNS[Unsupervised]
+  SUP --> L{Label type?}
+  L -->|category| CLS[Classification<br/>cat / not cat, flower species]
+  L -->|number| REG[Regression<br/>snow cones sold]
+  UNS --> CLU[Clustering<br/>book micro-genres]

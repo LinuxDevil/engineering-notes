@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph MVVM
+    V1[View] -- binds --> VM[ViewModel]
+    VM -- observes/updates --> M1[Model]
+  end
+  subgraph Unidirectional
+    V2[View] -- action --> R[Reducer / Store]
+    R -- new state --> V2
+    R -.-> M2[Effects / Model]
+  end

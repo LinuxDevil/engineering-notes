@@ -1,0 +1,18 @@
+flowchart LR
+  subgraph K8s["Kubernetes cluster, namespace jenkins"]
+    C["Controller pod<br/>UI, scheduler, queue, plugins<br/>JENKINS_HOME on a PVC<br/>0 executors"]
+    subgraph P1["Agent pod: orders-api #42"]
+      J1[jnlp container<br/>agent.jar]
+      N1[node]
+      B1[buildkit]
+    end
+    subgraph P2["Agent pod: catalog #17"]
+      J2[jnlp]
+      N2[node]
+    end
+  end
+  GH[GitHub webhook] --> C
+  C -- "creates pod via K8s API" --> P1
+  J1 -- "WebSocket / TCP 50000" --> C
+  C -- "creates pod" --> P2
+  J2 --> C

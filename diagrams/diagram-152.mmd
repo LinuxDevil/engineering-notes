@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph shop-prod
+    OA[orders-api<br/>pino JSON + prom-client + OTel SDK]
+    NX[shell / catalog / checkout<br/>Next.js + OTel]
+  end
+  subgraph monitoring
+    AL[Alloy DaemonSet]
+    PR[Prometheus<br/>kube-prometheus-stack]
+    LK[(Loki)]
+    TP[(Tempo)]
+    MI[(Mimir, optional)]
+    PY[(Pyroscope, optional)]
+    AM[Alertmanager]
+    GF[Grafana]
+  end
+  OA -- stdout --> NODE[/var/log/pods on node/] --> AL
+  NX -- stdout --> NODE
+  OA -- OTLP traces :4318 --> AL
+  NX -- OTLP traces --> AL
+  AL -- push logs --> LK
+  AL -- OTLP --> TP
+  PR -- scrape /metrics via ServiceMonitor --> OA
+  PR -- scrape --> KSM[kube-state-metrics / kubelet cAdvisor / node-exporter]
+  TP -- span metrics remote_write --> PR
+  PR -. remote_write .-> MI
+  PR -- alerts --> AM
+  GF --> PR & LK & TP & MI & PY

@@ -56,14 +56,8 @@ Also: conditional writes (`UPDATE ... WHERE version = 7`), upserts, dedupe table
 
 ## Circuit breaker
 Stop calling a dependency that is failing, fail fast, and probe for recovery.
-```mermaid
-stateDiagram-v2
-  [*] --> Closed
-  Closed --> Open: failure rate > threshold (e.g. 50% of last 100 calls)
-  Open --> HalfOpen: after cool-down (e.g. 30 s)
-  HalfOpen --> Closed: trial calls succeed
-  HalfOpen --> Open: trial call fails
-```
+{/* diagram source: /diagrams/diagram-403.mmd */}
+![diagram](/diagrams/diagram-403.svg)
 - While open: return a **fallback** (cached value, default, degraded feature) or an error immediately.
 - Libraries: Resilience4j (Java), Polly (.NET), `opossum` (Node), Envoy/Istio outlier detection at the mesh level.
 
@@ -82,19 +76,8 @@ Partition resources so one failing dependency can't sink everything (named after
 ## Sagas (distributed transactions without 2PC)
 A saga is a sequence of local transactions; each step has a **compensating** action that semantically undoes it. See [Replication & 2PC 3PC](/Software%20Engineering/Databases/Database%20Round/Replication%20%26%202PC%203PC) for why 2PC is avoided across services.
 
-```mermaid
-sequenceDiagram
-  participant O as Order svc
-  participant P as Payment svc
-  participant I as Inventory svc
-  participant S as Shipping svc
-  O->>P: charge card
-  P-->>O: charged
-  O->>I: reserve items
-  I-->>O: out of stock ❌
-  O->>P: refund (compensation)
-  O->>O: mark order cancelled
-```
+{/* diagram source: /diagrams/diagram-404.mmd */}
+![diagram](/diagrams/diagram-404.svg)
 | | Choreography | Orchestration |
 |---|---|---|
 | How | Services react to each other's events | A central orchestrator issues commands |
@@ -109,14 +92,8 @@ Write the state change and the event in one local transaction; a relay publishes
 
 ## CQRS
 **Command Query Responsibility Segregation**: separate the write model (validates commands, enforces invariants) from one or more read models (denormalized for queries), synced via events.
-```mermaid
-flowchart LR
-  C["Commands"] --> W["Write model<br/>(Postgres, normalized)"]
-  W -->|"events / CDC"| B["Event bus"]
-  B --> R1["Read model: search<br/>(Elasticsearch)"]
-  B --> R2["Read model: dashboard<br/>(ClickHouse)"]
-  Q["Queries"] --> R1 & R2
-```
+{/* diagram source: /diagrams/diagram-405.mmd */}
+![diagram](/diagrams/diagram-405.svg)
 - ✅ Scale reads and writes independently; query-optimized views.
 - ❌ Eventual consistency between models; more moving parts. Don't use it for simple CRUD.
 - Often paired with **event sourcing** (state = fold over an event log), but they're independent ideas.

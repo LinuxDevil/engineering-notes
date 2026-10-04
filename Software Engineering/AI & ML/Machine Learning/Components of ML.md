@@ -26,15 +26,8 @@ Nearly every ML task has three parts: a **model** (a generic, adjustable program
 3. **Model inference algorithm**
    The process of using the trained model to generate predictions on new data.
 
-```mermaid
-flowchart LR
-  D[(Training data)] --> T[Training algorithm]
-  M0[Untrained model<br/>random parameters] --> T
-  T -->|repeat: predict, measure loss, adjust| T
-  T --> M1[Trained model]
-  N[New input] --> I[Inference] 
-  M1 --> I --> P[Prediction]
-```
+{/* diagram source: /diagrams/diagram-012.mmd */}
+![diagram](/diagrams/diagram-012.svg)
 
 ## The teapot analogy
 

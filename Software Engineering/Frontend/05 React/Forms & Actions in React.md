@@ -64,20 +64,8 @@ function Signup() {
 ## 2. React 19 Actions
 An **Action** is an async function run inside a transition. React tracks its **pending** state, **errors** (sent to Error Boundaries), **optimistic** updates, and **form resets**.
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant F as form action
-  participant R as React
-  participant S as Server / API
-  U->>F: submit
-  F->>R: start transition (isPending = true)
-  R->>R: useOptimistic shows expected result
-  F->>S: await save(formData)
-  S-->>F: result / error
-  F->>R: return new state (useActionState)
-  R->>R: isPending = false, optimistic state replaced, uncontrolled form reset
-```
+{/* diagram source: /diagrams/diagram-255.mmd */}
+![diagram](/diagrams/diagram-255.svg)
 
 ### `<form action={fn}>`
 - Passing a **function** to `action` (or `formAction` on a button) makes React call it with the form's `FormData`.
@@ -250,16 +238,8 @@ Key APIs:
 
 ## 5. Choosing an approach
 
-```mermaid
-flowchart TD
-  A["New form"] --> B{"Server-first app (RSC / Next / RR framework)?"}
-  B -- "Yes, simple" --> C["form action + Server Function + useActionState + zod"]
-  B -- "No / rich client form" --> D{"Many fields, arrays, conditional logic?"}
-  D -- "Yes" --> E["React Hook Form + zodResolver"]
-  D -- "No" --> F{"UI depends on value while typing?"}
-  F -- "Yes" --> G["Controlled inputs (useState)"]
-  F -- "No" --> H["Uncontrolled + FormData"]
-```
+{/* diagram source: /diagrams/diagram-256.mmd */}
+![diagram](/diagrams/diagram-256.svg)
 
 <Warning>
 **Common pitfalls**

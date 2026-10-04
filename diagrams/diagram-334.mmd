@@ -1,0 +1,4 @@
+flowchart LR
+  E["Editor: format on save + lint squiggles"] --> P["Pre-commit: lint-staged runs formatter + linter on staged files"]
+  P --> CI["CI: format --check, lint, type-check, test"]
+  CI --> M["Merge"]

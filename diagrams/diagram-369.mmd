@@ -1,0 +1,5 @@
+flowchart TD
+  A[Want to prevent change?] --> B{Of what?}
+  B -->|the name/binding| C["const (JS) · final (Java/Dart) · val (Kotlin) · readonly field (TS/C#)"]
+  B -->|the object's contents| D["records/data classes with final fields · Object.freeze · immutable collections · Dart const"]
+  B -->|and fixed at compile time| E["Dart const · Kotlin const val · Java static final primitive/String · C# const"]

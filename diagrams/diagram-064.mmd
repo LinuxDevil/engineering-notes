@@ -1,0 +1,8 @@
+flowchart LR
+  B["Browser<br/>(no tokens)"] -- "HTML, RSC payloads,<br/>Server Action POSTs<br/>(session cookie)" --> N["ops-console<br/>Next.js 16 (Node)"]
+  B -- "EventSource<br/>/api/jobs/events<br/>/api/jobs/:id/runs/:runId/logs" --> N
+  N -- "Bearer access token<br/>REST + SSE" --> J["jobs-api<br/>(Fastify)"]
+  N -- "OIDC code flow,<br/>refresh" --> I["IdP"]
+  N -- "sessions" --> S[("Session store")]
+  J --> R[("Redis / BullMQ")]
+  J --> K["Kubernetes API<br/>(CronJobs, Jobs)"]

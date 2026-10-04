@@ -1,0 +1,3 @@
+flowchart TB
+  W["window"] -->|"1. capture"| D["document"] -->|capture| U["ul"] -->|capture| L["li"] -->|"2. target"| B["button (target)"]
+  B -->|"3. bubble"| L2["li"] -->|bubble| U2["ul"] -->|bubble| D2["document"] -->|bubble| W2["window"]

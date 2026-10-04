@@ -21,15 +21,8 @@ updated: 2026-09-27
 - **Release engineering**: small, frequent, reversible changes. Most outages are caused by changes (code, config, data, infrastructure). See [CI-CD Pipelines](/Software%20Engineering/DevOps/CI-CD%20Pipelines).
 - **Capacity planning and load testing**: know your limits before traffic finds them.
 
-```mermaid
-flowchart LR
-  SLO[Define SLOs] --> MON[Monitor SLIs + burn-rate alerts]
-  MON --> INC[Incident response]
-  INC --> PM[Blameless postmortem]
-  PM --> AI[Action items: fix, automate, test]
-  AI --> REL[Safer releases + less toil]
-  REL --> SLO
-```
+{/* diagram source: /diagrams/diagram-182.mmd */}
+![diagram](/diagrams/diagram-182.svg)
 
 ## 2. Incident response
 
@@ -54,22 +47,8 @@ flowchart LR
 
 ### The flow
 
-```mermaid
-sequenceDiagram
-  participant Alert as Alert / report
-  participant OC as On-call engineer
-  participant IC as Incident commander
-  participant Team as Responders
-  participant Comms as Comms lead
-  Alert->>OC: Page (SLO burn / customer report)
-  OC->>OC: Acknowledge, assess impact, declare severity
-  OC->>IC: Declare incident, open channel + call
-  IC->>Team: Assign investigation & mitigation
-  IC->>Comms: Status page + stakeholder updates on a cadence
-  Team->>IC: Mitigation applied (rollback, failover, flag off)
-  IC->>IC: Monitor recovery, declare resolved
-  IC->>Team: Schedule postmortem
-```
+{/* diagram source: /diagrams/diagram-183.mmd */}
+![diagram](/diagrams/diagram-183.svg)
 
 Priorities during an incident: **1) stop the bleeding (mitigate), 2) restore service, 3) preserve evidence, 4) find root cause later.** Rollback first, debug second. Most effective mitigations: roll back the last change, turn off a feature flag, fail over, scale up, shed load, block abusive traffic.
 

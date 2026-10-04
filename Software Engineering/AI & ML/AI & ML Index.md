@@ -12,33 +12,8 @@ updated: 2026-09-27
 The entry point to all AI and machine learning notes: from classic ML (the AWS DeepRacer and DeepLearning.AI course notes) through neural networks and transformers, to building LLM applications (prompting, context engineering, RAG, agents, MCP), running them safely in production (evals, observability, security), and working with AI coding agents. Every topic note has worked examples, a 🆕 2025–2026 box where things changed, and interview questions.
 </Note>
 
-```mermaid
-mindmap
-  root((AI & ML))
-    Foundations
-      Machine Learning course
-      ML Core Concepts
-      Neural Networks
-      Transformers & LLMs
-    Building with LLMs
-      Prompt & Context Engineering
-      Embeddings & Semantic Search
-      RAG
-      Fine-tuning vs RAG vs Prompting
-    Agents
-      Agents & Patterns
-      MCP
-      A2A
-    Production
-      Evaluation & Observability
-      Safety & Security
-    Engineering with AI
-      AI-Assisted Development
-      AI Workflow
-      AI in Frontend
-    Landscape
-      LLM Landscape 2025-2026
-```
+{/* diagram source: /diagrams/diagram-001.mmd */}
+![diagram](/diagrams/diagram-001.svg)
 
 ## 🧭 Quick links
 - 🆕 [LLM Landscape 2025-2026](/Software%20Engineering/AI%20%26%20ML/LLM%20Landscape%202025-2026): dated model releases, agent SDKs, MCP vs A2A

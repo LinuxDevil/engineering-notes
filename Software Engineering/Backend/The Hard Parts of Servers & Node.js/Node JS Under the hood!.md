@@ -63,17 +63,8 @@ Many people think libuv *is* the event loop. It implements a full-featured event
 - Signal handling
 - High-resolution clock
 
-```mermaid
-flowchart TB
-  subgraph Node["Node.js process"]
-    JS["Your JS + Node's JS core (lib/)"] --> B["C++ bindings"]
-    B --> V8["V8: call stack, heap, JIT, GC"]
-    B --> UV["libuv"]
-    UV --> EL["Event loop (main thread)"]
-    UV --> TP["Thread pool (4 default): fs, dns.lookup, crypto, zlib"]
-    UV --> OS["OS async I/O: epoll / kqueue / IOCP (sockets)"]
-  end
-```
+{/* diagram source: /diagrams/diagram-074.mmd */}
+![diagram](/diagrams/diagram-074.svg)
 
 ## The event loop
 

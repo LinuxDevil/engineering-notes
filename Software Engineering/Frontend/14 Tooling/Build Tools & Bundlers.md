@@ -14,15 +14,8 @@ A **bundler** takes your source (TS, JSX, CSS, images, npm packages) and produce
 
 ## What a bundler does
 
-```mermaid
-flowchart LR
-  E["Entry points (main.tsx)"] --> R["Resolve imports: build module graph (node_modules, aliases)"]
-  R --> T["Transform each module: TS/JSX to JS, CSS/PostCSS, assets"]
-  T --> TS["Tree shaking: drop unused exports"]
-  TS --> CS["Code splitting: chunks per dynamic import / route, shared vendor chunks"]
-  CS --> M["Minify + dead code elimination, scope hoisting"]
-  M --> O["Output: hashed files app.3f9a.js, CSS, assets, source maps, manifest"]
-```
+{/* diagram source: /diagrams/diagram-332.mmd */}
+![diagram](/diagrams/diagram-332.svg)
 
 Why bundle at all when browsers support ES modules?
 - Thousands of small module requests (a deep `node_modules` waterfall) are slow even over HTTP/2.
@@ -56,17 +49,8 @@ Because dev and build used different pipelines (esbuild + native ESM vs Rollup),
 ### HMR (Hot Module Replacement)
 When a file changes, the dev server sends the updated module over a WebSocket; the runtime swaps it in **without a full reload**, keeping app state. React Fast Refresh preserves component state across edits; editing a non-component module usually bubbles up to the nearest HMR boundary or causes a full reload.
 
-```mermaid
-sequenceDiagram
-  participant Ed as Editor
-  participant DS as Dev server
-  participant Br as Browser runtime
-  Ed->>DS: save Button.tsx
-  DS->>DS: re-transform only Button.tsx, find HMR boundary
-  DS->>Br: WebSocket: update Button.tsx?t=123
-  Br->>DS: import the new module
-  Br->>Br: swap module, re-render (state preserved via Fast Refresh)
-```
+{/* diagram source: /diagrams/diagram-333.mmd */}
+![diagram](/diagrams/diagram-333.svg)
 
 ## Tree shaking & dead code elimination
 

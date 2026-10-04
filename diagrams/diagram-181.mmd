@@ -1,0 +1,9 @@
+flowchart LR
+  B[Browser] --> P[Puma web server]
+  P --> R[Rack middleware stack]
+  R --> RT[config/routes.rb]
+  RT --> C[Controller action]
+  C --> M[Model / ActiveRecord]
+  M --> DB[(Database)]
+  C --> V[View template / JSON]
+  V --> B

@@ -1,0 +1,7 @@
+flowchart LR
+  REQ["Request"] --> SHELL["Static shell (cached): TTFB"]
+  SHELL --> HERO["Hero image + font: LCP"]
+  SHELL --> STREAM["Suspense holes stream in"]
+  HERO --> HYD["Hydrate Client Components: INP risk"]
+  STREAM --> HYD
+  HYD --> THIRD["Third-party scripts: INP risk"]

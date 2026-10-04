@@ -1,0 +1,11 @@
+flowchart LR
+  Dev[git push / PR<br/>acme/orders-api] -->|webhook| J[Jenkins multibranch job]
+  subgraph Pod["Ephemeral agent pod"]
+    J --> I[install] --> Q{{"lint ∥ test<br/>JUnit"}} --> B[build image<br/>BuildKit rootless] --> S[Trivy scan]
+  end
+  S -->|main only| R[(ghcr.io/acme/orders-api:&lt;sha&gt;)]
+  S -->|main only| G[commit to acme/platform-gitops<br/>apps/orders-api/overlays/dev]
+  G --> A[Argo CD sync<br/>shop-dev]
+  R -. image pull .-> A
+  G -. input gate .-> P[bump overlays/prod]
+  P --> A2[Argo CD + Argo Rollouts canary<br/>shop-prod]

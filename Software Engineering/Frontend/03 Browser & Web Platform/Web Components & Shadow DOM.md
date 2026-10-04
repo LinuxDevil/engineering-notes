@@ -14,13 +14,8 @@ updated: 2026-09-27
 
 ## 1. The building blocks
 
-```mermaid
-flowchart TB
-  CE["Custom Elements: customElements.define('flight-card', Class)"] --> WC["Web Component"]
-  SD["Shadow DOM: attachShadow() or template shadowrootmode"] --> WC
-  TS["template + slot: reusable markup and content projection"] --> WC
-  WC --> U["Usable in plain HTML, React, Angular, Vue, Svelte"]
-```
+{/* diagram source: /diagrams/diagram-246.mmd */}
+![diagram](/diagrams/diagram-246.svg)
 
 ## 2. Custom Elements
 

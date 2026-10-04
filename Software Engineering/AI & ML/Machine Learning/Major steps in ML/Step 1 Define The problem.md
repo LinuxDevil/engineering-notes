@@ -43,15 +43,8 @@ All models take data as input, but their outputs differ, and the type of output 
 
 ![Screenshot_2023-03-29_at_12.31.50_AM](/Attachments/Screenshot_2023-03-29_at_12.31.50_AM.png)
 
-```mermaid
-flowchart TD
-  Q{Do you have labels?} -->|yes| SUP[Supervised]
-  Q -->|no| UNS[Unsupervised]
-  SUP --> L{Label type?}
-  L -->|category| CLS[Classification<br/>cat / not cat, flower species]
-  L -->|number| REG[Regression<br/>snow cones sold]
-  UNS --> CLU[Clustering<br/>book micro-genres]
-```
+{/* diagram source: /diagrams/diagram-016.mmd */}
+![diagram](/diagrams/diagram-016.svg)
 
 ## Supervised learning
 A task is **supervised** if you use **labelled data**: data that already contains the solutions (labels).

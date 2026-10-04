@@ -1,0 +1,4 @@
+flowchart LR
+  E[Eden: new objects] -- minor GC: copy live --> S0[Survivor 0] <--> S1[Survivor 1]
+  S1 -- survived N times --> O[Old generation]
+  O -- major/mixed GC: mark, then compact/evacuate --> O

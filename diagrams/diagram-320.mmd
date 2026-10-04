@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph Normal["script (blocking)"]
+    A1["parse HTML"] --> A2["STOP: fetch + execute"] --> A3["continue parsing"]
+  end
+  subgraph Async["script async"]
+    B1["parse HTML + fetch in parallel"] --> B2["execute as soon as downloaded (pauses parser, order not guaranteed)"]
+  end
+  subgraph Defer["script defer / type=module"]
+    C1["parse HTML + fetch in parallel"] --> C2["execute after parsing, in document order, before DOMContentLoaded"]
+  end

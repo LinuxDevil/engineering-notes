@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant JS as Page JS (flights.example.com)
+  participant B as Browser
+  participant API as api.example.com
+  JS->>B: fetch PUT with JSON body
+  B->>API: OPTIONS /bookings/42 (Origin, Access-Control-Request-Method: PUT, Access-Control-Request-Headers: content-type)
+  API-->>B: 204 + Access-Control-Allow-Origin / -Methods / -Headers / -Max-Age
+  B->>API: PUT /bookings/42 (actual request)
+  API-->>B: 200 + Access-Control-Allow-Origin
+  B-->>JS: Response readable

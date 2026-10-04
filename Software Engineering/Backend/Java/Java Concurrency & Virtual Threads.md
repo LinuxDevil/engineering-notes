@@ -14,17 +14,8 @@ Java runs code on **threads** that share the heap, so you need **synchronization
 
 ## Platform threads vs virtual threads
 
-```mermaid
-flowchart TB
-  subgraph Platform["Platform threads (classic)"]
-    PT1[Java thread] --- OT1[OS thread ~1 MB stack]
-    PT2[Java thread] --- OT2[OS thread]
-  end
-  subgraph Virtual["Virtual threads (Java 21+)"]
-    VT1[virtual thread] & VT2[virtual thread] & VT3[virtual thread ... millions] --> CT["Carrier threads<br/>(ForkJoinPool ≈ #cores)"]
-    CT --> OS[OS threads]
-  end
-```
+{/* diagram source: /diagrams/diagram-041.mmd */}
+![diagram](/diagrams/diagram-041.svg)
 
 - A **platform thread** wraps an OS thread: expensive to create, ~1 MB stack by default, a few thousand per JVM. See [Reactive Spring - Ch 4 IO & Reactive Streams](/Software%20Engineering/Backend/Java/Reactive%20Spring%20Book/Reactive%20Spring%20-%20Ch%204%20IO%20%26%20Reactive%20Streams) for why that motivated reactive programming.
 - A **virtual thread** is scheduled by the JVM onto a small pool of **carrier** threads. When it blocks on I/O (socket read, `Thread.sleep`, `BlockingQueue.take`, JDBC), the JVM **unmounts** it and the carrier runs another virtual thread. Its stack lives on the heap and grows as needed.

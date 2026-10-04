@@ -1,0 +1,7 @@
+flowchart LR
+    C1["Component A: useQuery(['flights', params])"] --> QC["QueryClient cache"]
+    C2["Component B: same key"] --> QC
+    QC -->|"miss or stale"| F["queryFn: fetch"]
+    F --> QC
+    QC -->|"fresh"| C1
+    M["useMutation"] -->|"onSuccess: invalidateQueries"| QC

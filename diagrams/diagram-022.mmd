@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph Window[Context window: a finite attention budget]
+    SP[System prompt<br/>+ rules]
+    TD[Tool definitions]
+    MEM[Memory / notes<br/>AGENTS.md, preferences]
+    RAG[Retrieved docs]
+    H[Conversation + tool results]
+    Q[Current task]
+  end
+  Window --> LLM[Model]

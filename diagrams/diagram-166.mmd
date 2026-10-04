@@ -1,0 +1,9 @@
+flowchart LR
+  A[Dockerfile + lockfiles] --> B[Build with BuildKit]
+  B --> C[SBOM + provenance attestations]
+  B --> D[Scan: Trivy / Grype / Docker Scout]
+  D -->|critical CVEs| X[Fail build]
+  D --> E[Sign: cosign / Sigstore]
+  E --> F[Push to registry]
+  F --> G[Admission policy verifies signature + provenance]
+  G --> H[Run in cluster]

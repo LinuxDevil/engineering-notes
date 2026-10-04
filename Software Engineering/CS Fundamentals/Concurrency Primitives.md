@@ -86,13 +86,8 @@ Four **Coffman conditions**, all required:
 3. **No preemption**: resources can't be forcibly taken.
 4. **Circular wait**: T1 waits for T2, which waits for T1.
 
-```mermaid
-flowchart LR
-  T1["Thread 1<br/>holds A"] -->|"wants B"| B["Lock B"]
-  T2["Thread 2<br/>holds B"] -->|"wants A"| A["Lock A"]
-  B -.->|"held by"| T2
-  A -.->|"held by"| T1
-```
+{/* diagram source: /diagrams/diagram-095.mmd */}
+![diagram](/diagrams/diagram-095.svg)
 Break any one condition:
 - **Lock ordering** (always acquire A before B): breaks circular wait. The most common fix.
 - `tryLock` with **timeout** and back off: breaks hold-and-wait.

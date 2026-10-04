@@ -1,0 +1,13 @@
+flowchart LR
+  subgraph IOT["InnoDB: clustered (IOT)"]
+    PK["PK B+tree<br/>leaves = full rows"]
+    SI["Secondary index on email<br/>leaves = (email, PK)"]
+    SI -- "2nd lookup by PK" --> PK
+  end
+  subgraph HEAP["PostgreSQL: heap + secondary indexes"]
+    H[("Heap pages<br/>unordered rows")]
+    P["PK index<br/>(id → ctid)"]
+    E["Index on email<br/>(email → ctid)"]
+    P --> H
+    E --> H
+  end

@@ -51,15 +51,8 @@ Rules config:
 | Leaky bucket | queue | Smooths output rate | Good for shaping |
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  C["Clients"] --> GW["API gateway nodes<br/>(rate-limit middleware)"]
-  GW -->|"EVALSHA token_bucket(key)"| RL[("Redis / Valkey cluster<br/>sharded by key")]
-  GW -->|"allowed"| S["Backend services"]
-  GW -->|"429"| C
-  CFG["Rules service / config store"] -.->|"push rules"| GW
-  GW -.->|"metrics: allowed/blocked per rule"| M["Metrics"]
-```
+{/* diagram source: /diagrams/diagram-396.mmd */}
+![diagram](/diagrams/diagram-396.svg)
 
 ## 6. Deep dives
 ### Atomicity: why a Lua script

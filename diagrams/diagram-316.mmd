@@ -1,0 +1,8 @@
+flowchart TD
+  A{"Needs SEO or fast first paint for anonymous users?"} -->|No, app behind login| CSR["CSR (SPA), maybe prerender the shell"]
+  A -->|Yes| B{"Content the same for everyone?"}
+  B -->|Yes, rarely changes| SSG["SSG"]
+  B -->|Yes, changes often| ISR["ISR / cached SSR"]
+  B -->|No, personalized or real-time| C{"Mostly static with a few widgets?"}
+  C -->|Yes| ISL["Islands (Astro) or PPR"]
+  C -->|No, highly interactive| SSR["Streaming SSR + selective hydration / RSC"]

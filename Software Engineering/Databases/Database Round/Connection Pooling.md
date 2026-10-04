@@ -20,21 +20,8 @@ The old way: on every request, open a connection to the database, run the query,
 
 The better way: create a **pool** (not a single client) at startup, connected once, with a maximum size such as 20. When you run a query, the pool hands you one of its idle connections, and you give it back when done. If all 20 are busy, you wait in a queue.
 
-```mermaid
-sequenceDiagram
-  participant R1 as Request 1
-  participant R2 as Request 2
-  participant P as Pool (max 20)
-  participant DB as Database
-  Note over P,DB: connections opened once at startup / on demand
-  R1->>P: acquire
-  P-->>R1: conn #3
-  R1->>DB: query (on conn #3)
-  R2->>P: acquire
-  P-->>R2: conn #7
-  R1->>P: release conn #3
-  Note over P: conn #3 idle, reused by the next request
-```
+{/* diagram source: /diagrams/diagram-114.mmd */}
+![diagram](/diagrams/diagram-114.svg)
 
 ## Worked example: node-postgres
 

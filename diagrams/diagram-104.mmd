@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    participant M as Migration
+    participant App as App code
+    participant DB as users table
+    Note over M,DB: EXPAND
+    M->>DB: ADD COLUMN display_name text (nullable, instant)
+    App->>DB: Deploy v2: write BOTH fullname and display_name, read fullname
+    M->>DB: Backfill display_name = fullname in batches
+    Note over M,DB: MIGRATE
+    App->>DB: Deploy v3: read display_name, still write both
+    Note over App: verify metrics, compare values
+    App->>DB: Deploy v4: write only display_name
+    Note over M,DB: CONTRACT
+    M->>DB: (optional) SET NOT NULL via CHECK ... NOT VALID + VALIDATE
+    M->>DB: DROP COLUMN fullname (after v4 fully rolled out)

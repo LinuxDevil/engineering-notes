@@ -69,12 +69,8 @@ const routes = (req, res) => {
 http.createServer(compose([logger, jsonBody, auth, routes])).listen(3000);
 ```
 
-```mermaid
-flowchart LR
-  R[request] --> L[logger] --> B[jsonBody] --> A[auth] --> H[route handler] --> S[res.end]
-  A -- 401 --> S
-  B -- 400 --> S
-```
+{/* diagram source: /diagrams/diagram-075.mmd */}
+![diagram](/diagrams/diagram-075.svg)
 
 The same thing in Express:
 

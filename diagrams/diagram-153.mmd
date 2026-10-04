@@ -1,0 +1,5 @@
+flowchart LR
+  M[Latency panel spike] -- exemplar trace_id --> T[Tempo trace]
+  T -- tracesToLogs: trace_id + service --> L[Loki lines for that request]
+  L -- derived field trace_id --> T
+  T -- span profile --> P[Pyroscope flame graph]

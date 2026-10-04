@@ -1,0 +1,5 @@
+flowchart LR
+  C[Client] --> GW[API gateway<br/>authn, rate limit, coarse scopes]
+  GW --> S[Service<br/>fine-grained authz: object, field, business rules]
+  S --> PDP[(Policy decision point<br/>OPA / Cedar / OpenFGA)]
+  S --> DB[(Data layer<br/>tenant filters / RLS)]

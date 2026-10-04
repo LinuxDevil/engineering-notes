@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant C as Client
+  participant API
+  participant DB
+  C->>API: GET /news?limit=20
+  API->>DB: ... ORDER BY created_at DESC, id DESC LIMIT 21
+  DB-->>API: 21 rows (21st = "has more")
+  API-->>C: 20 items + next_cursor(last row)
+  C->>API: GET /news?cursor=...
+  API->>DB: WHERE (created_at,id) < (...) ORDER BY ... LIMIT 21

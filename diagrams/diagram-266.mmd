@@ -1,0 +1,6 @@
+flowchart TD
+  Root["/ (RootLayout + Outlet)"] --> Home["index → Home"]
+  Root --> Msg["messages (Messages + Outlet)"]
+  Msg --> Pick["index → PickAConversation"]
+  Msg --> Chat[":id → Chat"]
+  Root --> NF["* → NotFound"]

@@ -1,0 +1,7 @@
+flowchart LR
+  code[.tf files] --> init[init: download providers + modules, configure backend]
+  init --> plan[plan: refresh state, diff desired vs actual]
+  plan --> review[PR review of the plan]
+  review --> apply[apply: create/update/delete via provider APIs]
+  apply --> state[(Remote state + lock)]
+  state --> plan

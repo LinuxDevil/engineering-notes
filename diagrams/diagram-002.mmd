@@ -1,0 +1,8 @@
+flowchart TD
+  G[Goal + system prompt + tools] --> T[LLM thinks / decides]
+  T -->|tool call| X[Execute tool<br/>search, code, API, MCP]
+  X --> O[Observation added to context]
+  O --> T
+  T -->|final answer or stop condition| D[Done]
+  T -.risky action.-> H[Human approval]
+  H -.-> X

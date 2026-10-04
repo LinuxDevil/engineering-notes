@@ -34,19 +34,8 @@ RSC update (navigation or `router.refresh()` / revalidation: a new RSC payload i
 
 ![image 8](/Attachments/image%208.png)
 
-```mermaid
-sequenceDiagram
-    participant B as Browser
-    participant S as Next.js server
-    B->>S: GET /flights (first load)
-    S->>S: Render Server Components -> RSC payload
-    S->>S: RSC payload + Client Components -> HTML
-    S-->>B: HTML (streamed) + RSC payload + JS chunks
-    B->>B: Show HTML, then hydrate Client Components
-    B->>S: Click Link /flights/EK1 (client navigation)
-    S-->>B: RSC payload only
-    B->>B: Reconcile tree, keep layout and client state
-```
+{/* diagram source: /diagrams/diagram-292.mmd */}
+![diagram](/diagrams/diagram-292.svg)
 
 ## Static rendering (the pre-16 default)
 
@@ -107,14 +96,8 @@ export default function FlightPage() {
 
 Benefits: better TTFB and FCP, independent slow sections, and React can hydrate sections selectively (prioritizing ones the user interacts with). Metadata also streams since 15.2. React 19.2 batches Suspense reveals during SSR.
 
-```mermaid
-flowchart LR
-    R["Request"] --> Shell["Send shell + fallbacks"]
-    Shell --> A["Chunk: prices ready -> replace fallback"]
-    Shell --> B["Chunk: reviews ready -> replace fallback"]
-    A --> H["Selective hydration"]
-    B --> H
-```
+{/* diagram source: /diagrams/diagram-293.mmd */}
+![diagram](/diagrams/diagram-293.svg)
 
 ## Caching before Cache Components (Next 13 to 15)
 
@@ -244,16 +227,8 @@ export async function markRead(id: string) {
 }
 ```
 
-```mermaid
-flowchart TD
-    Req["Request /products"] --> Shell{"Static shell cached?"}
-    Shell -- Yes --> Send["Send shell instantly (cached 'use cache' parts)"]
-    Shell -- No --> Build["Prerender shell"] --> Send
-    Send --> Holes["Stream Suspense holes (cookies, per-user data)"]
-    Act["Server Action: updateTag('products')"] --> Inv["Expire entries tagged 'products'"]
-    Inv --> Req
-    Hook["Webhook: revalidateTag('products','max')"] --> SWR["Serve stale, refresh in background"]
-```
+{/* diagram source: /diagrams/diagram-294.mmd */}
+![diagram](/diagrams/diagram-294.svg)
 
 ### Old vs new mental model
 

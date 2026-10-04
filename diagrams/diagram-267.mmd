@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant U as User clicks Link
+  participant R as Router
+  participant L as Loaders (parallel)
+  participant C as Components
+  U->>R: navigate /trips/42
+  R->>L: run root, trips, trip loaders together
+  L-->>R: data
+  R->>C: render with useLoaderData()
+  Note over R: form submit → action → revalidate all loaders

@@ -14,17 +14,8 @@ A design system is the **shared source of truth for how a product looks and beha
 
 ## 1. What's in a design system
 
-```mermaid
-flowchart TD
-  P["Principles and brand"] --> T["Design tokens: color, spacing, type, radius, motion"]
-  T --> PR["Primitives: Box, Stack, Text, Icon, VisuallyHidden"]
-  PR --> C["Components: Button, Input, Select, Dialog, Tabs"]
-  C --> PT["Patterns: forms, search bar, date range picker, empty states"]
-  PT --> TP["Templates / page layouts"]
-  D["Docs + Storybook"] -.-> C
-  Q["Tests: unit, a11y, visual"] -.-> C
-  R["Release: versioning, changelog, codemods"] -.-> C
-```
+{/* diagram source: /diagrams/diagram-307.mmd */}
+![diagram](/diagrams/diagram-307.svg)
 
 | Layer | What | Example |
 |---|---|---|

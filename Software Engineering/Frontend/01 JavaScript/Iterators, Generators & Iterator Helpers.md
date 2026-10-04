@@ -14,13 +14,8 @@ The **iteration protocols** let any object define how it is looped over: an *ite
 
 ## The protocols
 
-```mermaid
-flowchart LR
-  A["Iterable: has [Symbol.iterator]()"] -- "calls" --> B["Iterator: has next()"]
-  B -- "returns" --> C["{ value, done }"]
-  C -- "done: false" --> B
-  C -- "done: true" --> D[stop]
-```
+{/* diagram source: /diagrams/diagram-216.mmd */}
+![diagram](/diagrams/diagram-216.svg)
 
 - **Iterable**: any object with a `[Symbol.iterator]` method. Built-in iterables: `Array`, `String`, `Map`, `Set`, `arguments`, `NodeList`, typed arrays, generator objects.
 - **Iterator**: an object with `next()` returning `{ value, done }`. Optional `return()` (called on early exit like `break`) and `throw()`.
@@ -70,17 +65,8 @@ ids.next().value; // 'booking-1'
 ids.next().value; // 'booking-2'
 ```
 
-```mermaid
-sequenceDiagram
-  participant C as Caller
-  participant G as Generator
-  C->>G: next()
-  G-->>C: {value: 'booking-1', done: false} (paused at yield)
-  C->>G: next()
-  G-->>C: {value: 'booking-2', done: false}
-  C->>G: return()
-  G-->>C: {value: undefined, done: true} (finally blocks run)
-```
+{/* diagram source: /diagrams/diagram-217.mmd */}
+![diagram](/diagrams/diagram-217.svg)
 
 ### Two-way communication
 

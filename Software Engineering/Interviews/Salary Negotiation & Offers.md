@@ -42,15 +42,8 @@ Startup options are worth something only if there is a liquidity event above the
 
 ## The process
 
-```mermaid
-flowchart LR
-  A[Recruiter asks expectations] --> B[Deflect politely / give researched range late]
-  B --> C[Verbal offer]
-  C --> D[Ask for written details<br/>thank, don't accept yet]
-  D --> E[Counter with data & alternatives]
-  E --> F[Revised offer]
-  F --> G[Decide · get final in writing]
-```
+{/* diagram source: /diagrams/diagram-357.mmd */}
+![diagram](/diagrams/diagram-357.svg)
 
 ### 1. Before the offer: research
 - Market data by company, level and location: Levels.fyi, Glassdoor, Blind, national salary surveys, the Stack Overflow Developer Survey salary section, and pay-transparency postings (many US states and the EU Pay Transparency Directive require ranges; EU member states must transpose it by June 2026).

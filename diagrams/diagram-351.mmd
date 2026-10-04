@@ -1,0 +1,7 @@
+flowchart TD
+  A["Run current macrotask<br/>(e.g. the whole script)"] --> B{"Microtask queue empty?"}
+  B -->|"No"| C["Run ONE microtask<br/>(promise reactions, await continuations, queueMicrotask)"]
+  C --> B
+  B -->|"Yes"| D["Browser may render<br/>(rAF callbacks, style, layout, paint)"]
+  D --> E["Take next macrotask<br/>(setTimeout, events, I/O)"]
+  E --> A

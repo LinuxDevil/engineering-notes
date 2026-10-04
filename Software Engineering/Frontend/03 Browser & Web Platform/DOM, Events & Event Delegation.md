@@ -91,11 +91,8 @@ el.dataset.flightId;            // reads data-flight-id
 
 When you click a button inside a `<li>` inside a `<ul>`, the event travels:
 
-```mermaid
-flowchart TB
-  W["window"] -->|"1. capture"| D["document"] -->|capture| U["ul"] -->|capture| L["li"] -->|"2. target"| B["button (target)"]
-  B -->|"3. bubble"| L2["li"] -->|bubble| U2["ul"] -->|bubble| D2["document"] -->|bubble| W2["window"]
-```
+{/* diagram source: /diagrams/diagram-237.mmd */}
+![diagram](/diagrams/diagram-237.svg)
 
 1. **Capture phase**: from `window` down to the target's parent. Listeners registered with `{ capture: true }` run here.
 2. **Target phase**: listeners on the target itself run.

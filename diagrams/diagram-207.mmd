@@ -1,0 +1,5 @@
+flowchart TD
+  T[try block] -->|no error| F[finally]
+  T -->|throws| C[catch block]
+  C -->|handled or rethrown| F
+  F --> N[continue, or propagate the pending throw/return]

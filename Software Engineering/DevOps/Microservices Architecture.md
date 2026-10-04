@@ -30,7 +30,7 @@ Approaches:
 - **By business capability / subdomain** using Domain-Driven Design: find **bounded contexts** where a model and its language are consistent (e.g. "Product" means different things in Catalog and Shipping).
 - **Strangler fig** migration: put a router in front of the monolith and move one capability at a time to new services until the old code can be removed.
 
-```mermaid
+```text
 flowchart LR
   U[Clients] --> R[Router / API gateway]
   R -->|/orders| O[Orders service]
@@ -71,21 +71,8 @@ Patterns:
 
 A saga is a sequence of local transactions; if a step fails, previously completed steps are undone by **compensating transactions**.
 
-```mermaid
-sequenceDiagram
-  participant O as Orders
-  participant P as Payments
-  participant I as Inventory
-  participant S as Shipping
-  O->>O: Create order (PENDING)
-  O->>P: ReserveCredit
-  P-->>O: CreditReserved
-  O->>I: ReserveStock
-  I-->>O: OutOfStock ❌
-  O->>P: ReleaseCredit (compensation)
-  O->>O: Mark order REJECTED
-  Note over S: Shipping never called
-```
+{/* diagram source: /diagrams/diagram-178.mmd */}
+![diagram](/diagrams/diagram-178.svg)
 
 | | Choreography | Orchestration |
 |---|---|---|

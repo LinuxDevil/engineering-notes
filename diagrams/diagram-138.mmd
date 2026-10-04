@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant C as Client
+  participant PG as PostgreSQL
+  C->>PG: UPDATE employee SET ... (3 rows)
+  PG->>PG: BEFORE STATEMENT triggers (once)
+  loop each row
+    PG->>PG: BEFORE ROW triggers (can modify NEW or skip the row)
+    PG->>PG: write the row, check constraints
+  end
+  PG->>PG: AFTER ROW triggers (queued, fired at end of statement)
+  PG->>PG: AFTER STATEMENT triggers (once, can read transition tables)
+  PG-->>C: UPDATE 3

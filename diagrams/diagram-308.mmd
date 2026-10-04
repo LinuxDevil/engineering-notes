@@ -1,0 +1,17 @@
+flowchart LR
+  subgraph Build["Build time"]
+    NPM["Micro apps as npm packages"]
+  end
+  subgraph Server["Server"]
+    SSI["SSI / server templates / Next.js multi-zones rewrites"]
+  end
+  subgraph Edge["Edge / CDN"]
+    ESI["ESI / edge workers stitching HTML"]
+  end
+  subgraph Client["Client (runtime)"]
+    MF["Module Federation"]
+    IM["Import maps + single-spa"]
+    WC["Web Components"]
+    IF["iframes"]
+  end
+  Build --> Server --> Edge --> Client

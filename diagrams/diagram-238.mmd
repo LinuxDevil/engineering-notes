@@ -1,0 +1,7 @@
+flowchart LR
+  A["User enters URL / clicks link"] --> B["DNS lookup"]
+  B --> C["TCP handshake (or QUIC for HTTP/3)"]
+  C --> D["TLS handshake"]
+  D --> E["HTTP request"]
+  E --> F["TTFB: first byte of HTML"]
+  F --> G["Parse & render (the CRP)"]

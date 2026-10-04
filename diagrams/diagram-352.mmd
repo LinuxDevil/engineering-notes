@@ -1,0 +1,5 @@
+flowchart LR
+  UI -->|"dispatch(action)"| MW["Middleware (thunk, listener)"]
+  MW --> R["Reducers (pure)"]
+  R --> S["Store (state)"]
+  S -->|"useSelector"| UI

@@ -55,24 +55,8 @@ A **migration** is a versioned, reviewed script that changes the schema (and som
 
 Example: rename `users.fullname` to `users.display_name` on a busy table. A direct `RENAME COLUMN` is instant in Postgres, but the old app version still queries `fullname` and breaks. So:
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant M as Migration
-    participant App as App code
-    participant DB as users table
-    Note over M,DB: EXPAND
-    M->>DB: ADD COLUMN display_name text (nullable, instant)
-    App->>DB: Deploy v2: write BOTH fullname and display_name, read fullname
-    M->>DB: Backfill display_name = fullname in batches
-    Note over M,DB: MIGRATE
-    App->>DB: Deploy v3: read display_name, still write both
-    Note over App: verify metrics, compare values
-    App->>DB: Deploy v4: write only display_name
-    Note over M,DB: CONTRACT
-    M->>DB: (optional) SET NOT NULL via CHECK ... NOT VALID + VALIDATE
-    M->>DB: DROP COLUMN fullname (after v4 fully rolled out)
-```
+{/* diagram source: /diagrams/diagram-104.mmd */}
+![diagram](/diagrams/diagram-104.svg)
 
 Each step is independently deployable and reversible up to the final `DROP`. The same pattern applies to splitting a table, changing a type, moving data to a new service, or changing an enum.
 
@@ -121,12 +105,8 @@ ALTER TABLE users ADD CONSTRAINT users_email_uq UNIQUE USING INDEX users_email_u
 
 Even an "instant" `ALTER TABLE` must **wait** for its ACCESS EXCLUSIVE lock. If a long-running query holds a conflicting lock, the ALTER waits in the queue, and **every new query on that table queues behind the ALTER**. A 1 ms migration can cause a multi-minute outage.
 
-```mermaid
-flowchart LR
-    Q1["Long SELECT (30 min report)<br/>holds ACCESS SHARE"] --> A["ALTER TABLE waits<br/>for ACCESS EXCLUSIVE"]
-    A --> B["All new SELECT/INSERT<br/>queue behind the ALTER"]
-    B --> O[Connection pool exhausted: outage]
-```
+{/* diagram source: /diagrams/diagram-105.mmd */}
+![diagram](/diagrams/diagram-105.svg)
 
 Fix: fail fast and retry.
 

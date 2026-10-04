@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph Ordering["Ordering context"]
+    O1["Order: cart, items, price, customer"]
+  end
+  subgraph Dispatch["Dispatch context"]
+    O2["Delivery: pickup, drop-off, courier, ETA"]
+  end
+  subgraph Billing["Billing context"]
+    O3["Invoice: amount, tax, payment status"]
+  end
+  Ordering -- "OrderPlaced event" --> Dispatch
+  Ordering -- "OrderPlaced event" --> Billing

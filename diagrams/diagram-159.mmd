@@ -1,0 +1,7 @@
+flowchart LR
+  Q[Scheduling queue<br/>ordered by priority] --> PF[PreFilter / Filter<br/>which nodes are feasible?]
+  PF -->|none feasible| PO[PostFilter: preemption<br/>evict lower-priority pods?]
+  PF --> SC[PreScore / Score<br/>rank feasible nodes 0-100]
+  SC --> R[Reserve / Permit]
+  R --> B[PreBind / Bind<br/>write spec.nodeName]
+  PO --> Q

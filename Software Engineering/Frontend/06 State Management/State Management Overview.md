@@ -44,22 +44,8 @@ The owner's checklist, extended:
 
 ## Decision flowchart
 
-```mermaid
-flowchart TD
-    A["New piece of state"] --> B{"Can it be derived from props or other state?"}
-    B -- Yes --> B1["Don't store it: compute during render (useMemo only if expensive)"]
-    B -- No --> C{"Does the server own it?"}
-    C -- Yes --> C1["Server state: TanStack Query / RTK Query / Server Components"]
-    C -- No --> D{"Should it survive refresh or be shareable by link?"}
-    D -- Yes --> D1["URL state: searchParams / route params / nuqs"]
-    D -- No --> E{"Is it form draft data?"}
-    E -- Yes --> E1["Form state: uncontrolled + FormData, useActionState, React Hook Form"]
-    E -- No --> F{"Used by one component or a close subtree?"}
-    F -- Yes --> F1["Local: useState / useReducer (lift state up if needed)"]
-    F -- No --> G{"Changes rarely? (theme, locale, user)"}
-    G -- Yes --> G1["Context API"]
-    G -- No --> H["Global store with selectors: Zustand / Redux Toolkit / Jotai / signals"]
-```
+{/* diagram source: /diagrams/diagram-278.mmd */}
+![diagram](/diagrams/diagram-278.svg)
 
 ## Local state
 
@@ -170,14 +156,8 @@ React 19 notes: `<Context value={...}>` can be rendered directly (the `.Provider
 
 ## Stores with selectors: why they scale better
 
-```mermaid
-flowchart LR
-    S["External store (Zustand / Redux)"] -->|"subscribe"| A["Component A: selects user.name"]
-    S -->|"subscribe"| B["Component B: selects cart.count"]
-    U["setState / dispatch"] --> S
-    S -. "only re-render if selected value changed" .-> A
-    S -. "only re-render if selected value changed" .-> B
-```
+{/* diagram source: /diagrams/diagram-279.mmd */}
+![diagram](/diagrams/diagram-279.svg)
 
 <Info>
 **The same counter in Zustand**

@@ -14,20 +14,8 @@ The JVM loads classes, interprets bytecode and **JIT-compiles** hot methods (C1 
 
 ## JVM architecture
 
-```mermaid
-flowchart TB
-  CF[".class / .jar"] --> CL["Class loader subsystem<br/>load → link (verify, prepare, resolve) → initialise"]
-  CL --> RDA
-  subgraph RDA["Runtime data areas"]
-    direction LR
-    H["Heap (shared)<br/>young + old generations"]
-    MS["Metaspace (native)<br/>class metadata"]
-    ST["Per-thread: JVM stack,<br/>PC register, native stack"]
-    CC["Code cache<br/>JIT-compiled code"]
-  end
-  RDA --> EE["Execution engine<br/>interpreter + JIT (C1, C2) + GC"]
-  EE --> JNI["JNI / FFM → native libraries"]
-```
+{/* diagram source: /diagrams/diagram-049.mmd */}
+![diagram](/diagrams/diagram-049.svg)
 
 ### Class loading
 - **Bootstrap** loader (core `java.*`), **platform** loader, **application** loader (your classpath), plus custom loaders (app servers, plugins).
@@ -69,12 +57,8 @@ An object has a **header** (mark word + class pointer; 12 bytes with compressed 
 - Live = reachable from **GC roots** (thread stacks, static fields, JNI refs). Unreachable cycles are collected too.
 - **Generational hypothesis**: most objects die young. The heap is split into a **young generation** (Eden + two Survivor spaces) and an **old generation**. Survivors are copied between survivor spaces and promoted after a few collections.
 
-```mermaid
-flowchart LR
-  E[Eden: new objects] -- minor GC: copy live --> S0[Survivor 0] <--> S1[Survivor 1]
-  S1 -- survived N times --> O[Old generation]
-  O -- major/mixed GC: mark, then compact/evacuate --> O
-```
+{/* diagram source: /diagrams/diagram-050.mmd */}
+![diagram](/diagrams/diagram-050.svg)
 
 ### Collectors
 

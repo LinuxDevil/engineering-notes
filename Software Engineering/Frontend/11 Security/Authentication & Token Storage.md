@@ -44,19 +44,8 @@ Full comparison: [Browser Storage - Cookies, Web Storage & IndexedDB](/Software%
 
 A session is created on the server for each user after they log in; the server sends a unique **session ID** (stored as a cookie) to the client.
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant S as Server
-  participant DB as Session store (Redis/DB)
-  B->>S: POST /login (email, password)
-  S->>DB: create session {userId, expiresAt}
-  S-->>B: Set-Cookie sid=abc123 (HttpOnly, Secure, SameSite=Lax)
-  B->>S: GET /bookings (Cookie: sid=abc123, sent automatically)
-  S->>DB: look up abc123
-  DB-->>S: {userId: 42}
-  S-->>B: 200 bookings for user 42
-```
+{/* diagram source: /diagrams/diagram-323.mmd */}
+![diagram](/diagrams/diagram-323.svg)
 
 **Workflow**
 - When a user logs in, the server generates a unique session ID and stores session data (user ID, expiration time, etc.) server-side.
@@ -128,23 +117,8 @@ Deep dive: [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%2
 #### Authorization Code flow with PKCE (the one to use for SPAs and mobile)
 Browsers and mobile apps are **public clients**: they can't keep a client secret. **PKCE** (Proof Key for Code Exchange) replaces the secret with a one-time random **code verifier**, so a stolen authorization code is useless. The old **Implicit flow** (token in the URL fragment) is deprecated — the OAuth 2.0 Security Best Current Practice (RFC 9700) and the OAuth 2.1 draft require PKCE for all clients.
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant App as SPA / Client
-  participant AS as Authorization Server
-  participant API as Resource API
-  App->>App: create code_verifier (random), code_challenge = BASE64URL(SHA256(verifier)), state
-  App->>AS: redirect to /authorize?response_type=code&client_id&redirect_uri&scope=openid profile&state&code_challenge&code_challenge_method=S256
-  U->>AS: logs in and consents
-  AS-->>App: redirect to redirect_uri?code=XYZ&state
-  App->>App: check state matches (CSRF protection)
-  App->>AS: POST /token {code=XYZ, code_verifier, redirect_uri, client_id}
-  AS->>AS: SHA256(code_verifier) equals stored code_challenge?
-  AS-->>App: access_token (+ refresh_token, id_token)
-  App->>API: GET /trips  Authorization: Bearer access_token
-  API-->>App: 200 data
-```
+{/* diagram source: /diagrams/diagram-324.mmd */}
+![diagram](/diagrams/diagram-324.svg)
 
 <Info>
 **Generating the PKCE pair in the browser**
@@ -198,13 +172,8 @@ async function apiFetch(url, opts = {}) {
 ### BFF (Backend for Frontend) pattern
 The current best practice for browser apps: **tokens never reach the browser**.
 
-```mermaid
-flowchart LR
-  B["Browser SPA"] -->|"HttpOnly Secure SameSite session cookie"| BFF["BFF (same site as the SPA)"]
-  BFF -->|"OAuth code + PKCE, confidential client"| AS["Authorization Server"]
-  BFF -->|"Bearer access token, server-to-server"| API["APIs / microservices"]
-  BFF --- ST["Token store: access + refresh tokens"]
-```
+{/* diagram source: /diagrams/diagram-325.mmd */}
+![diagram](/diagrams/diagram-325.svg)
 
 - The BFF is a confidential OAuth client, holds access/refresh tokens server-side, and gives the browser only an **HttpOnly session cookie**.
 - XSS can't exfiltrate tokens (it can still act as the user while the page is open — XSS is always bad).

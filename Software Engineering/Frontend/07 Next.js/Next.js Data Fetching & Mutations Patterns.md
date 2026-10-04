@@ -35,19 +35,8 @@ Facts to remember (Next 16):
 
 ### Sequential vs parallel (waterfalls)
 
-```mermaid
-gantt
-  dateFormat X
-  axisFormat %Lms
-  section Sequential (waterfall)
-  getArtist   :a1, 0, 300
-  getAlbums   :a2, after a1, 300
-  getTours    :a3, after a2, 300
-  section Parallel
-  getArtist   :b1, 0, 300
-  getAlbums   :b2, 0, 300
-  getTours    :b3, 0, 300
-```
+{/* diagram source: /diagrams/diagram-285.mmd */}
+![diagram](/diagrams/diagram-285.svg)
 
 ```tsx
 // BAD: 900 ms, each await waits for the previous one
@@ -378,24 +367,8 @@ Alternatives: prefetch on the server with a `QueryClient`, `dehydrate()` it and 
 
 Stack: Next 16 with `cacheComponents: true`, zod 4, a Prisma-style `db`, the session helpers from [Next.js Authentication & Authorization](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Authentication%20%26%20Authorization).
 
-```mermaid
-sequenceDiagram
-  participant U as Browser
-  participant P as page.tsx (RSC)
-  participant A as actions.ts ('use server')
-  participant D as server/tasks (DAL)
-  participant DB as Postgres
-  U->>P: GET /tasks
-  P->>D: listTasks(orgId) ('use cache', tag tasks:org)
-  D->>DB: SELECT ... WHERE org_id
-  P-->>U: HTML stream (list + forms)
-  U->>A: POST (createTask FormData)
-  A->>A: requireViewer + zod parse
-  A->>D: createTask(viewer, input)
-  D->>DB: INSERT
-  A->>A: updateTag('tasks:org')
-  A-->>U: { status: success } + fresh RSC payload
-```
+{/* diagram source: /diagrams/diagram-286.mmd */}
+![diagram](/diagrams/diagram-286.svg)
 
 **Schema**
 

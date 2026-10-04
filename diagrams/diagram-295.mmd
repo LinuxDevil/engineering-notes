@@ -1,0 +1,21 @@
+flowchart LR
+  subgraph Browser
+    UI["React UI<br/>(httpOnly session cookie only)"]
+  end
+  subgraph Next["Next.js (BFF)"]
+    RSC["Server Components (reads)"]
+    SA["Server Actions (mutations)"]
+    RH["Route Handlers<br/>(SSE, client reads, webhooks)"]
+    TOK["Session store<br/>access + refresh tokens"]
+  end
+  subgraph Backends
+    API1["jobs-api"]
+    API2["orders-api"]
+    IDP["IdP (OIDC)"]
+  end
+  UI -- "cookie" --> RSC
+  UI -- "cookie" --> SA
+  UI -- "cookie" --> RH
+  RSC & SA & RH -- "Bearer token (server-side)" --> API1
+  RSC & SA & RH --> API2
+  TOK <--> IDP

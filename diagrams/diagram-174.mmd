@@ -1,0 +1,7 @@
+flowchart TB
+  GC["GatewayClass (infra provider: e.g. Envoy Gateway, Cilium, Istio, GKE)"] --> GW["Gateway (platform team: listeners, ports, TLS)"]
+  GW --> R1["HTTPRoute (team A: shop.example.com /api)"]
+  GW --> R2["HTTPRoute (team B: shop.example.com /)"]
+  GW --> R3["GRPCRoute / TLSRoute ..."]
+  R1 --> S1[Service api]
+  R2 --> S2[Service web]

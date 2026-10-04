@@ -12,15 +12,8 @@ updated: 2026-09-27
 Hub note for Kubernetes. Learn the objects and the course walkthrough in [Kubernetes Basics](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Basics), then make workloads production-ready ([Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production)), understand traffic ([Kubernetes Networking - Services, Ingress & Gateway API](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Networking%20-%20Services%2C%20Ingress%20%26%20Gateway%20API)), package them ([Helm & Kustomize](/Software%20Engineering/DevOps/Kubernetes/Helm%20%26%20Kustomize)) and deliver them with [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux).
 </Note>
 
-```mermaid
-flowchart LR
-  A[Docker Basics] --> B[Kubernetes Basics]
-  B --> C[Kubernetes Workloads in Production]
-  B --> D[Kubernetes Networking - Services, Ingress & Gateway API]
-  C --> E[Helm & Kustomize]
-  D --> E
-  E --> F[GitOps - Argo CD & Flux]
-```
+{/* diagram source: /diagrams/diagram-176.mmd */}
+![diagram](/diagrams/diagram-176.svg)
 
 ## Notes in order
 | Level | Note | What you learn |

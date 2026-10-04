@@ -20,21 +20,8 @@ A **heap-organized table** has no index that orders it; rows go wherever there i
 
 Example with a clustered PK: insert 1, then 8; they sit next to each other. Insert 2 and it must go **between** 1 and 8, in the correct leaf page (splitting the page if it's full). The payoff: a range query like `WHERE id BETWEEN 1 AND 100` reads rows that are physically together, often a single IO.
 
-```mermaid
-flowchart LR
-  subgraph IOT["InnoDB: clustered (IOT)"]
-    PK["PK B+tree<br/>leaves = full rows"]
-    SI["Secondary index on email<br/>leaves = (email, PK)"]
-    SI -- "2nd lookup by PK" --> PK
-  end
-  subgraph HEAP["PostgreSQL: heap + secondary indexes"]
-    H[("Heap pages<br/>unordered rows")]
-    P["PK index<br/>(id → ctid)"]
-    E["Index on email<br/>(email → ctid)"]
-    P --> H
-    E --> H
-  end
-```
+{/* diagram source: /diagrams/diagram-120.mmd */}
+![diagram](/diagrams/diagram-120.svg)
 
 ## Secondary indexes
 

@@ -57,19 +57,8 @@ Communicate as a range: "**10–16 working days, most likely about 12**; the mig
 6. **Track** progress against milestones weekly; update the forecast, not just the status.
 7. **Cut scope** before cutting quality; have a "must/should/could" list ready.
 
-```mermaid
-gantt
-  title Example: payment idempotency project
-  dateFormat YYYY-MM-DD
-  section Risky first
-  Spike on backfill          :a1, 2026-10-01, 1d
-  DB migration + backfill    :a2, after a1, 4d
-  section Build
-  API middleware             :b1, after a1, 3d
-  Mobile client retry change :b2, after b1, 3d
-  section Ship
-  Staged rollout (flag)      :c1, after a2, 3d
-```
+{/* diagram source: /diagrams/diagram-088.mmd */}
+![diagram](/diagrams/diagram-088.svg)
 
 ## Communicating estimates and changes
 - Give ranges and the assumptions behind them ("assuming the partner sandbox works").

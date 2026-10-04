@@ -1,0 +1,11 @@
+flowchart LR
+  U["Browser"] --> CDN["CDN / edge<br/>(caches 301/302 for hot codes)"]
+  CDN --> LB["Load balancer"]
+  LB --> R["Redirect service<br/>(read path)"]
+  LB --> W["Write API<br/>(create)"]
+  R --> C[("Redis / Valkey<br/>code → url")]
+  R -->|"miss"| DB[("URL store<br/>sharded KV")]
+  W --> IDG["ID allocator<br/>(ranges)"]
+  W --> DB
+  R -->|"click event (async)"| K["Kafka"]
+  K --> A["Analytics consumers"] --> OLAP[("ClickHouse")]

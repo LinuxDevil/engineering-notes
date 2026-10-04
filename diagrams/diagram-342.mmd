@@ -1,0 +1,20 @@
+stateDiagram-v2
+  [*] --> Pricing
+  Pricing --> PriceChanged: price differs
+  PriceChanged --> PassengerDetails: user accepts
+  PriceChanged --> [*]: back to results
+  Pricing --> PassengerDetails: price confirmed
+  Pricing --> SoldOut: not available
+  PassengerDetails --> Extras: valid details
+  Extras --> Payment
+  Payment --> Authorizing: submit
+  Authorizing --> ThreeDS: requires action
+  ThreeDS --> Authorizing: returned from issuer
+  Authorizing --> Ticketing: authorized
+  Authorizing --> PaymentFailed: declined
+  PaymentFailed --> Payment: retry / change card
+  Ticketing --> Confirmed: tickets issued
+  Ticketing --> PendingConfirmation: slow supplier
+  PendingConfirmation --> Confirmed: poll / email
+  Ticketing --> BookingFailed: supplier error (refund/void)
+  Confirmed --> [*]

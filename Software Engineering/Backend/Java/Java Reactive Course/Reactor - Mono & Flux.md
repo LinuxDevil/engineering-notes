@@ -37,19 +37,8 @@ lazy.subscribe(
 
 ## Signals
 
-```mermaid
-sequenceDiagram
-  participant S as Subscriber
-  participant P as Publisher (Flux)
-  S->>P: subscribe()
-  P-->>S: onSubscribe(subscription)
-  S->>P: request(2)
-  P-->>S: onNext(a)
-  P-->>S: onNext(b)
-  S->>P: request(2)
-  P-->>S: onNext(c)
-  P-->>S: onComplete()
-```
+{/* diagram source: /diagrams/diagram-046.mmd */}
+![diagram](/diagrams/diagram-046.svg)
 
 Rule: `onNext*` then at most one terminal signal (`onComplete` **or** `onError`).
 

@@ -28,10 +28,8 @@ db.collection.aggregate([
 
 `aggregate()` can do everything `find()` can and much more (grouping, joins, computed fields).
 
-```mermaid
-flowchart LR
-  A[(accounts)] --> M["$match balance < 1000"] --> G["$group by account_type"] --> S["$sort total desc"] --> R[results]
-```
+{/* diagram source: /diagrams/diagram-131.mmd */}
+![diagram](/diagrams/diagram-131.svg)
 
 ## Common stages
 | Stage | What it does | `find()` equivalent |

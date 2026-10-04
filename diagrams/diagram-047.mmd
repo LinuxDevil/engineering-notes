@@ -1,0 +1,9 @@
+flowchart TB
+  APP[Your code] --> SDJ["Spring Data JPA<br/>repositories"]
+  APP --> JOOQ["jOOQ DSLContext<br/>type-safe SQL"]
+  APP --> JC["JdbcClient / JdbcTemplate"]
+  SDJ --> JPA["JPA API (Jakarta Persistence)"] --> HIB["Hibernate ORM<br/>(implementation)"]
+  HIB --> JDBC
+  JOOQ --> JDBC
+  JC --> JDBC
+  JDBC["JDBC driver + HikariCP pool"] --> DB[(PostgreSQL)]

@@ -87,20 +87,8 @@ server.listen(80);
 - **Ports** are entry points: the OS routes incoming TCP traffic for port 80 to our Node process.
 - When a request arrives, Node **auto-runs** the function you passed, filling in `req` and `res`. See [Using Node API’s](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Using%20Node%20API%E2%80%99s).
 
-```mermaid
-sequenceDiagram
-  participant JS as Your JS
-  participant Node as Node C++ bindings
-  participant UV as libuv
-  participant OS as OS / network card
-  JS->>Node: http.createServer(handler)
-  JS->>Node: server.listen(80)
-  Node->>UV: open TCP socket on :80
-  UV->>OS: bind + listen
-  OS-->>UV: incoming connection
-  UV-->>Node: readable data (llhttp parses it)
-  Node-->>JS: handler(req, res) queued and run
-```
+{/* diagram source: /diagrams/diagram-073.mmd */}
+![diagram](/diagrams/diagram-073.svg)
 
 <Tip>
 **Port 80 needs privileges**

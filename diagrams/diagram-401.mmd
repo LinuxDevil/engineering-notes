@@ -1,0 +1,5 @@
+flowchart LR
+  subgraph Ring["Hash ring 0 … 2^32-1 (clockwise)"]
+    direction LR
+    A["Node A @ 10"] --> K1(["key k1 @ 25"]) --> B["Node B @ 40"] --> K2(["key k2 @ 55"]) --> C["Node C @ 80"] --> K3(["key k3 @ 95"]) --> A
+  end

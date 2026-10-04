@@ -22,15 +22,8 @@ Interviewers are not looking for "the" architecture. They look for:
 
 ## The 7 steps (45–60 minute interview)
 
-```mermaid
-flowchart LR
-  R["1. Requirements<br/>(5 min)"] --> E["2. Estimates<br/>(3-5 min)"]
-  E --> A["3. API<br/>(5 min)"]
-  A --> D["4. Data model<br/>(5 min)"]
-  D --> H["5. High-level design<br/>(10 min)"]
-  H --> DD["6. Deep dives<br/>(15 min)"]
-  DD --> T["7. Trade-offs, failures,<br/>evolution (5 min)"]
-```
+{/* diagram source: /diagrams/diagram-412.mmd */}
+![diagram](/diagrams/diagram-412.svg)
 
 ### 1. Requirements
 - **Functional**: the 3–5 core use cases. Write them down. Explicitly park the rest ("out of scope: analytics, admin UI").
@@ -106,16 +99,8 @@ Entities, access patterns first, then storage choice. Ask: what are the queries?
 ### 5. High-level design
 Draw the boxes: clients → CDN → load balancer → stateless services → cache → databases / queues / blob storage. Walk one request through it end to end.
 
-```mermaid
-flowchart LR
-  C["Clients"] --> CDN["CDN"] --> LB["Load balancer"]
-  LB --> S1["API service"] & S2["API service"]
-  S1 & S2 --> Cache[("Cache")]
-  S1 & S2 --> DB[("Primary DB")]
-  DB --> RR[("Read replicas")]
-  S1 & S2 --> Q["Queue"] --> W["Workers"]
-  W --> Blob[("Object storage")]
-```
+{/* diagram source: /diagrams/diagram-413.mmd */}
+![diagram](/diagrams/diagram-413.svg)
 
 ### 6. Deep dives
 Pick the 2–3 hardest parts (the interviewer often chooses): hot keys, fan-out, consistency, ordering, exactly-once, scaling the write path, multi-region.

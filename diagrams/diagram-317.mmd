@@ -1,0 +1,7 @@
+flowchart LR
+  NAV["Navigation start"] --> TTFB["TTFB (first byte)"]
+  TTFB --> FCP["FCP (first paint of content)"]
+  FCP --> LCP["LCP (largest element painted)"]
+  LCP --> INT["User interacts"]
+  INT --> INP["INP (next paint after interaction)"]
+  NAV -.-> CLS["CLS accumulated over the whole page lifetime"]

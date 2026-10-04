@@ -1,0 +1,5 @@
+flowchart LR
+  B["Browser SPA"] -->|"HttpOnly Secure SameSite session cookie"| BFF["BFF (same site as the SPA)"]
+  BFF -->|"OAuth code + PKCE, confidential client"| AS["Authorization Server"]
+  BFF -->|"Bearer access token, server-to-server"| API["APIs / microservices"]
+  BFF --- ST["Token store: access + refresh tokens"]

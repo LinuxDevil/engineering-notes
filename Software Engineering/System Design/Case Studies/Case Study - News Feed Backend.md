@@ -39,23 +39,8 @@ Cursor-based pagination (by score/ID), not offsets, because the feed changes whi
 | Object storage + CDN | Media ([Blob Storage & File Uploads](/Software%20Engineering/System%20Design/Blob%20Storage%20%26%20File%20Uploads)) |
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  subgraph Write path
-    U1["Author"] --> PS["Post service"] --> PDB[("Posts DB")]
-    PS --> K["Kafka: post_created"]
-    K --> FO["Fan-out workers"]
-    FO --> G[("Social graph")]
-    FO -->|"ZADD feed:follower"| FC[("Feed cache<br/>Redis ZSETs")]
-  end
-  subgraph Read path
-    U2["Reader"] --> FS["Feed service"]
-    FS --> FC
-    FS -->|"celebrity posts (pull)"| CP[("Celebrity post cache")]
-    FS --> RK["Ranking service"]
-    FS --> HY["Hydration: post + user caches"]
-  end
-```
+{/* diagram source: /diagrams/diagram-394.mmd */}
+![diagram](/diagrams/diagram-394.svg)
 
 ## 6. Deep dives
 ### Fan-out strategies

@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant R1 as Request 1
+  participant R2 as Request 2
+  participant P as Pool (max 20)
+  participant DB as Database
+  Note over P,DB: connections opened once at startup / on demand
+  R1->>P: acquire
+  P-->>R1: conn #3
+  R1->>DB: query (on conn #3)
+  R2->>P: acquire
+  P-->>R2: conn #7
+  R1->>P: release conn #3
+  Note over P: conn #3 idle, reused by the next request

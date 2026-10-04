@@ -14,22 +14,8 @@ Frameworks differ mostly in their **reactivity model**: React re-runs components
 
 ## 1. Reactivity models
 
-```mermaid
-flowchart LR
-  subgraph VDOM["Re-render + diff"]
-    R["React: state change re-runs component, diff VDOM"]
-  end
-  subgraph Tracked["Dependency tracking"]
-    V["Vue: Proxy-tracked refs, re-render the component, compiler-optimized VDOM"]
-  end
-  subgraph Fine["Fine-grained signals"]
-    S["Svelte 5 runes (compiled)"]
-    SO["Solid: components run once"]
-    A["Angular signals"]
-    VV["Vue Vapor (RC)"]
-  end
-  VDOM --> Tracked --> Fine
-```
+{/* diagram source: /diagrams/diagram-309.mmd */}
+![diagram](/diagrams/diagram-309.svg)
 
 | | React | Vue 3 | Svelte 5 | Solid | Angular (v20+) |
 |---|---|---|---|---|---|

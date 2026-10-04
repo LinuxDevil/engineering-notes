@@ -76,11 +76,8 @@ for epoch in range(1000):
     w, b = w - lr * dw, b - lr * db            # step downhill
 ```
 
-```mermaid
-flowchart LR
-  D[Training batch] --> M[Model] --> P[Predictions] --> L[Loss vs true labels]
-  L --> G[Gradients] --> U[Update parameters] --> M
-```
+{/* diagram source: /diagrams/diagram-017.mmd */}
+![diagram](/diagrams/diagram-017.svg)
 
 ## Practical questions
 - **How do I implement training?** You can write it from scratch, but practitioners use frameworks with working implementations of models and training algorithms. Only build your own if you're researching new models or algorithms.

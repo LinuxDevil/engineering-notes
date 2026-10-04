@@ -1,0 +1,7 @@
+flowchart TD
+  App["App fiber"] -->|"child"| Header["Header"]
+  Header -->|"sibling"| Main["Main"]
+  Main -->|"sibling"| Footer["Footer"]
+  Main -->|"child"| List["List"]
+  List -->|"return"| Main
+  Header -->|"return"| App

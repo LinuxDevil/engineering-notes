@@ -1,0 +1,5 @@
+flowchart TD
+  A[Anchor query: rows for id = 1] --> W[Working table]
+  W --> R[Recursive query joins employees to the working table]
+  R -->|new rows found| W
+  R -->|no new rows| D[Done: UNION ALL of all iterations]

@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant U as User
+  participant API
+  participant Q as Queue (Redis/DB)
+  participant W as Worker
+  participant E as Email provider
+  U->>API: POST /signup
+  API->>API: create user (DB transaction)
+  API->>Q: enqueue SendWelcomeEmail(user_id)
+  API-->>U: 201 Created (fast)
+  W->>Q: fetch job
+  W->>E: send email
+  alt success
+    W->>Q: ack / delete
+  else failure
+    W->>Q: retry later (backoff)
+  end

@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph Stack
+    F["frame: outer() (popped after return)"]
+    V["myNewFunction (reference)"]
+  end
+  subgraph Heap
+    FN["function incrementCounter<br/>[[Environment]]"]
+    CTX["Context { counter }<br/>parent: Script/Global"]
+  end
+  V --> FN
+  FN --> CTX

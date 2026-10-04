@@ -36,19 +36,8 @@ OAuth 2.x delegates *access* (an app can call an API on your behalf). It does no
 
 ## How it fits in a request
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant G as API Gateway
-  participant S as Service
-  participant P as Policy engine
-  C->>G: GET /invoices/42 (Authorization: Bearer ...)
-  G->>G: AuthN: verify token signature, exp, aud, iss
-  G->>S: forward + identity (sub, roles, tenant)
-  S->>P: can user:7 "read" invoice:42 ?
-  P-->>S: allow / deny
-  S-->>C: 200 invoice  |  403 Forbidden  |  404 (hide existence)
-```
+{/* diagram source: /diagrams/diagram-029.mmd */}
+![diagram](/diagrams/diagram-029.svg)
 
 - Coarse checks (is the token valid, has it scope `invoices:read`?) can live at the [gateway](/Software%20Engineering/Backend/API%20Gateways%20%26%20Reverse%20Proxies).
 - **Fine-grained checks (does user 7 own invoice 42?) must live in the service**, next to the data. A gateway cannot know ownership.

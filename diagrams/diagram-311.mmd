@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant B as Browser
+  participant S as Server/CDN
+  participant API
+  B->>S: GET /flights
+  S-->>B: empty index.html
+  B->>S: GET app.js (large)
+  Note over B: parse + execute JS
+  B->>API: fetch data
+  API-->>B: JSON
+  Note over B: render: first meaningful paint and interactive

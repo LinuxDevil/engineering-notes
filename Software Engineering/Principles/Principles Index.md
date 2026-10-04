@@ -12,34 +12,8 @@ updated: 2026-09-27
 Entry point for **software design principles and architecture**: how to structure code so it stays easy to change, from OOP basics and SOLID through design patterns, clean code, testing practices (TDD/BDD), domain-driven design and architecture styles. Every note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions. Read top to bottom for a beginner → senior path.
 </Note>
 
-```mermaid
-mindmap
-  root((Principles))
-    Paradigms
-      OOP
-      Abstract classes and interfaces
-      Functional programming
-      Immutability
-    Design principles
-      SOLID
-      DRY KISS YAGNI
-      Coupling and cohesion
-      Dependency injection
-    Patterns
-      Creational
-      Structural
-      Behavioral
-      MVC
-    Code quality
-      Clean code and refactoring
-      TDD
-      BDD
-    Architecture
-      DDD
-      Architecture styles
-      ADRs and tech debt
-      Concurrency
-```
+{/* diagram source: /diagrams/diagram-372.mmd */}
+![diagram](/diagrams/diagram-372.svg)
 
 ## 🌱 Beginner: paradigms and building blocks
 | Note | What you'll learn |

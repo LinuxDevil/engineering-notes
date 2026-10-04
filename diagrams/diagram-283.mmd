@@ -1,0 +1,9 @@
+flowchart LR
+  B["Browser<br/>httpOnly session cookie"] --> PX["proxy.ts<br/>optimistic: cookie present?<br/>redirect / pass"]
+  PX --> R["Route: layout / page (RSC)"]
+  PX --> SA["Server Action (POST)"]
+  PX --> RH["Route Handler"]
+  R --> DAL
+  SA --> DAL
+  RH --> DAL
+  DAL["DAL (server-only)<br/>verifySession + authorize<br/>returns DTOs"] --> DB[("Sessions / users / data")]

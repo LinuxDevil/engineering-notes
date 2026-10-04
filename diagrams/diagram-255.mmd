@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant U as User
+  participant F as form action
+  participant R as React
+  participant S as Server / API
+  U->>F: submit
+  F->>R: start transition (isPending = true)
+  R->>R: useOptimistic shows expected result
+  F->>S: await save(formData)
+  S-->>F: result / error
+  F->>R: return new state (useActionState)
+  R->>R: isPending = false, optimistic state replaced, uncontrolled form reset

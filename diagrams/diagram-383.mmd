@@ -1,0 +1,7 @@
+flowchart TB
+  S((Secret)) --> G[Git history<br/>.env committed, test fixtures]
+  S --> I[Container images & build logs<br/>ARG/ENV in Dockerfile]
+  S --> L[Application logs<br/>request dumps, error messages]
+  S --> C[Client bundles<br/>NEXT_PUBLIC_*, VITE_*]
+  S --> T[Tickets, chat, wikis, AI prompts]
+  S --> E[Env vars exposed via /debug, crash reports, child processes]

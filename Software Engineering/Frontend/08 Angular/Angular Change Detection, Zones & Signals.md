@@ -16,15 +16,8 @@ updated: 2026-09-27
 
 Each component's template compiles into instructions with two modes: **create** (build DOM once) and **update** (re-evaluate bindings, patch only what differs). A CD pass walks the component tree **top-down** and runs the update block of each view it visits.
 
-```mermaid
-flowchart TD
-  T["Trigger: event, timer, HTTP response, signal write"] --> S["Scheduler: ApplicationRef.tick()"]
-  S --> R["Root view: evaluate bindings"]
-  R --> C1["Child A (Eager): always checked"]
-  R --> C2["Child B (OnPush): checked only if dirty"]
-  C2 -->|clean| Skip["skip whole subtree"]
-  C2 -->|dirty| C3["check B and its children"]
-```
+{/* diagram source: /diagrams/diagram-299.mmd */}
+![diagram](/diagrams/diagram-299.svg)
 
 In dev mode, Angular runs a second check pass. If a binding's value differs between the two passes you get **`ExpressionChangedAfterItHasBeenCheckedError`**, which usually means a child mutates parent state during CD (for example in `ngAfterViewInit`).
 
@@ -34,16 +27,8 @@ A **Zone** is an execution context that persists across async tasks. `zone.js` m
 
 **NgZone** is Angular's service wrapping a zone named `angular`. When a task (a click handler, a timer callback, an HTTP callback) finishes **and the microtask queue is empty**, NgZone emits `onMicrotaskEmpty`, and Angular calls `ApplicationRef.tick()` to run CD from the root.
 
-```mermaid
-sequenceDiagram
-  participant U as User / timer / network
-  participant Z as zone.js (NgZone)
-  participant A as ApplicationRef
-  U->>Z: async callback runs inside the angular zone
-  Z->>Z: run task, then drain microtasks
-  Z->>A: onMicrotaskEmpty
-  A->>A: tick(): check component tree top-down
-```
+{/* diagram source: /diagrams/diagram-300.mmd */}
+![diagram](/diagrams/diagram-300.svg)
 
 Pros: "it just works", you can mutate plain fields anywhere. Cons:
 - Angular does not know **what** changed, so it checks broadly.
@@ -132,12 +117,8 @@ selected = linkedSignal(() => this.options()[0]);
 ### How signals drive change detection
 Each component template is a reactive consumer. When a signal it read changes, Angular marks **that** view for refresh and marks its ancestors as "has a child to refresh" without re-checking them. For OnPush components this means a signal change refreshes **only the components that read it**, not the whole path from the root. This is often called local or targeted change detection.
 
-```mermaid
-flowchart TD
-  Root["AppComponent (not re-checked)"] --> List["ResultsList (not re-checked)"]
-  List --> Card1["FareCard #1 reads price(): refreshed"]
-  List --> Card2["FareCard #2: untouched"]
-```
+{/* diagram source: /diagrams/diagram-301.mmd */}
+![diagram](/diagrams/diagram-301.svg)
 
 ## 5. resource and httpResource (async data as signals)
 

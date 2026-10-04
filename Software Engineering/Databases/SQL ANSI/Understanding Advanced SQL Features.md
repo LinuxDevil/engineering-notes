@@ -299,13 +299,8 @@ WITH RECURSIVE reports AS (
 SELECT * FROM reports ORDER BY depth, name;
 ```
 
-```mermaid
-flowchart TD
-  A[Anchor query: rows for id = 1] --> W[Working table]
-  W --> R[Recursive query joins employees to the working table]
-  R -->|new rows found| W
-  R -->|no new rows| D[Done: UNION ALL of all iterations]
-```
+{/* diagram source: /diagrams/diagram-139.mmd */}
+![diagram](/diagrams/diagram-139.svg)
 
 Supported by PostgreSQL, SQL Server (without the `RECURSIVE` keyword), Oracle 11gR2+, MySQL 8.0+, SQLite 3.8.3+. PostgreSQL 14+ also has `SEARCH DEPTH/BREADTH FIRST` and `CYCLE` clauses instead of hand-written path arrays. Always guard against cycles and runaway recursion.
 

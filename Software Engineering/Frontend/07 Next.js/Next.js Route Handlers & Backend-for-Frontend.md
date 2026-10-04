@@ -245,29 +245,8 @@ Provider SDKs do the same checks for you (e.g. `stripe.webhooks.constructEvent(r
 
 A BFF is a server-side layer owned by the frontend team, shaped for one UI. In Next.js, Server Components, Server Actions and Route Handlers together **are** the BFF.
 
-```mermaid
-flowchart LR
-  subgraph Browser
-    UI["React UI<br/>(httpOnly session cookie only)"]
-  end
-  subgraph Next["Next.js (BFF)"]
-    RSC["Server Components (reads)"]
-    SA["Server Actions (mutations)"]
-    RH["Route Handlers<br/>(SSE, client reads, webhooks)"]
-    TOK["Session store<br/>access + refresh tokens"]
-  end
-  subgraph Backends
-    API1["jobs-api"]
-    API2["orders-api"]
-    IDP["IdP (OIDC)"]
-  end
-  UI -- "cookie" --> RSC
-  UI -- "cookie" --> SA
-  UI -- "cookie" --> RH
-  RSC & SA & RH -- "Bearer token (server-side)" --> API1
-  RSC & SA & RH --> API2
-  TOK <--> IDP
-```
+{/* diagram source: /diagrams/diagram-295.mmd */}
+![diagram](/diagrams/diagram-295.svg)
 
 What the BFF does:
 - **Token handling server-side.** OAuth/OIDC tokens live in the server session; the browser gets an httpOnly, `SameSite`, `__Host-` cookie. XSS can't steal tokens it can't read. This is the approach the IETF "OAuth 2.0 for Browser-Based Applications" draft describes as the most secure option. See [JWT vs Cookies](/Software%20Engineering/APIs%20%26%20Auth/JWT%20vs%20Cookies) and [Authentication & Token Storage](/Software%20Engineering/Frontend/11%20Security/Authentication%20%26%20Token%20Storage).

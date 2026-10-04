@@ -12,31 +12,8 @@ updated: 2026-09-27
 Notes from Hussein Nasser's *Fundamentals of Database Engineering* style course, mixed with textbook summaries (Silberschatz *Database System Concepts*, Kleppmann *DDIA*). Order: how data sits on disk → indexes → transactions and concurrency → scaling and distribution → operations. Concept notes created during the 2026 restructure live in `Databases/Core Concepts/` and are linked here where they belong in the sequence.
 </Note>
 
-```mermaid
-mindmap
-  root((Database Round))
-    Storage
-      Internals
-      Pages
-      Row vs Column
-    Indexing
-      B+tree, LSM
-      Clustered vs secondary
-      Keyset pagination
-    Transactions
-      ACID
-      Isolation
-      Locking
-      MVCC & Vacuum
-    Distribution
-      CAP & PACELC
-      Replication & 2PC
-      Sharding & Partitioning
-      Clustering & Scaling
-    Operations
-      Connection pooling
-      Backup & recovery
-```
+{/* diagram source: /diagrams/diagram-118.mmd */}
+![diagram](/diagrams/diagram-118.svg)
 
 ## 1. Storage: how a database holds data (beginner)
 1. [Database Internals](/Software%20Engineering/Databases/Database%20Round/Database%20Internals): heap, pages, IO, row ids, what happens when a query runs

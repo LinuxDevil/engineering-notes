@@ -23,11 +23,8 @@ It uses two pointers to determine some traits about a Linked List, Array, or Gra
 
 To implement the algorithm, the two pointers start at a location (the head, when detecting a loop), then with each iteration the two pointers advance to different locations. They can move at different rates, but 1 and 2 is the standard choice: a speed difference of 1 guarantees they meet within one lap (with other speeds, e.g. 1 and 3, they can skip over each other forever in an even-length cycle; see the interview questions).
 
-```mermaid
-flowchart LR
-  A((1)) --> B((2)) --> C((3)) --> D((4)) --> E((5)) --> F((6))
-  F --> C
-```
+{/* diagram source: /diagrams/diagram-200.mmd */}
+![diagram](/diagrams/diagram-200.svg)
 
 In the list above, both start at `1`. Slow enters the loop `3 → 4 → 5 → 6`; fast is already inside and gains **one node per step** on slow, so it must land exactly on slow within one lap. If the two pointers never meet (fast hits `null`), there is no cycle.
 

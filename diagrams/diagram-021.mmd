@@ -1,0 +1,6 @@
+flowchart LR
+  X[Input batch] --> F[Forward pass<br/>layer by layer] --> Y[Predictions]
+  Y --> L[Loss vs labels]
+  L --> B[Backward pass<br/>chain rule gives dLoss/dw for every weight]
+  B --> U[Optimizer step<br/>w = w - lr * grad]
+  U --> F

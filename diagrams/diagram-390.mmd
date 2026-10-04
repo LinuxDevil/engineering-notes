@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant C as Client
+  participant API as Upload API
+  participant DB as Metadata DB
+  participant S3 as Object storage
+  participant Q as Event queue
+  participant W as Worker
+  C->>API: POST /uploads {filename, size, type}
+  API->>API: authz, validate size/type, quota
+  API->>DB: insert file(id, key, status=PENDING)
+  API-->>C: presigned PUT URL (expires 15 min) + fileId
+  C->>S3: PUT bytes directly
+  S3-->>Q: ObjectCreated event
+  Q->>W: process (scan, thumbnails, EXIF strip)
+  W->>DB: status=READY, width, height, checksum
+  C->>API: GET /files/{id} → CDN URL when READY

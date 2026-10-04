@@ -1,0 +1,6 @@
+flowchart LR
+  A["Server renders HTML (@angular/ssr)"] --> B["Browser paints HTML"]
+  B --> C["Event replay records clicks"]
+  C --> D["Hydration: reuse DOM, attach listeners"]
+  D --> E["Incremental: @defer blocks hydrate on their own trigger"]
+  E --> F["Replay recorded events"]

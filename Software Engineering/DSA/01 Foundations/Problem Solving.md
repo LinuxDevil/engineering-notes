@@ -24,15 +24,8 @@ Most interview problems are variations of ~15 patterns. The hard part isn't know
 
 ## UMPIRE, step by step
 
-```mermaid
-flowchart LR
-  U[Understand<br/>clarify, examples] --> M[Match<br/>which pattern?]
-  M --> P[Plan<br/>brute force → optimize]
-  P --> I[Implement<br/>clean code, talk]
-  I --> R[Review<br/>trace an example]
-  R --> E[Evaluate<br/>Big-O, trade-offs]
-  R -- bug found --> I
-```
+{/* diagram source: /diagrams/diagram-185.mmd */}
+![diagram](/diagrams/diagram-185.svg)
 
 Rough time budget for a 45-minute round: 5 min understand, 5–10 min match and plan, 15–20 min implement, 5 min review, 2–3 min evaluate, rest for follow-ups.
 

@@ -1,0 +1,4 @@
+flowchart LR
+  A["[1 .. 100]<br/>guess 50: too low"] --> B["[51 .. 100]<br/>guess 75: too high"]
+  B --> C["[51 .. 74]<br/>guess 62"]
+  C --> D["... ≤ 7 guesses"]

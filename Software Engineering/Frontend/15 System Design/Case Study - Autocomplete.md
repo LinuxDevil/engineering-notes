@@ -32,19 +32,8 @@ A reusable autocomplete (typeahead) component: the user types, suggestions appea
 
 ## A: Architecture
 
-```mermaid
-flowchart LR
-  subgraph Autocomplete
-    Input["Input (role=combobox)"] -->|"query"| Ctrl["Controller<br/>debounce, keyboard, open state"]
-    Ctrl --> Cache["Cache<br/>query → results (LRU/TTL)"]
-    Cache -->|"miss"| Fetcher["Fetcher<br/>AbortController, latest-wins"]
-    Fetcher --> Cache
-    Ctrl --> List["Listbox (role=listbox)"]
-    List --> Opt["Option (role=option)<br/>custom renderItem + highlight"]
-  end
-  Fetcher <-->|"GET /suggest?q="| API["Suggestions API"]
-  Opt -->|"onSelect(item)"| Parent["Consumer app"]
-```
+{/* diagram source: /diagrams/diagram-337.mmd */}
+![diagram](/diagrams/diagram-337.svg)
 
 Pieces:
 - **Input**: owns the text; controlled or uncontrolled.
@@ -139,19 +128,8 @@ function debounce(fn, wait) {
 ### 2. Race conditions and cancellation
 User types "d", "du", "dub". Requests go out for each; the response for "du" might arrive **after** "dub" and overwrite the correct results.
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant C as Component
-  participant S as Server
-  U->>C: types "du"
-  C->>S: GET ?q=du
-  U->>C: types "dub"
-  C->>S: GET ?q=dub
-  S-->>C: results for "dub"
-  S-->>C: results for "du" (late)
-  Note over C: Without a guard the stale "du" results win
-```
+{/* diagram source: /diagrams/diagram-338.mmd */}
+![diagram](/diagrams/diagram-338.svg)
 
 Fixes (use both):
 1. **Abort** the previous request with `AbortController` when a new one starts (saves bandwidth, and `fetch` rejects with `AbortError`).

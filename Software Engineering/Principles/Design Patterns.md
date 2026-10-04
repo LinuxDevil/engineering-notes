@@ -29,36 +29,8 @@ Two principles from the GoF book underpin almost every pattern:
 
 ## The GoF catalogue
 
-```mermaid
-mindmap
-  root((GoF patterns))
-    Creational
-      Singleton
-      Factory Method
-      Abstract Factory
-      Builder
-      Prototype
-    Structural
-      Adapter
-      Bridge
-      Composite
-      Decorator
-      Facade
-      Flyweight
-      Proxy
-    Behavioral
-      Chain of Responsibility
-      Command
-      Interpreter
-      Iterator
-      Mediator
-      Memento
-      Observer
-      State
-      Strategy
-      Template Method
-      Visitor
-```
+{/* diagram source: /diagrams/diagram-364.mmd */}
+![diagram](/diagrams/diagram-364.svg)
 
 | Group | Pattern | Intent in one line | Everyday example |
 |---|---|---|---|

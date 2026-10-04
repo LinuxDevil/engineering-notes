@@ -24,17 +24,8 @@ This note uses the Acme Ops job `playwright-checkout-smoke` (every 10 minutes, K
 
 Synthetic checks complement, not replace, server-side monitoring: RED metrics tell you the API returns 200s; the browser check tells you the button still exists, the JS bundle loads from the CDN, the consent banner doesn't cover the "Pay" button, and the payment iframe renders.
 
-```mermaid
-flowchart LR
-  CJ["CronJob<br/>playwright-checkout-smoke<br/>*/10 * * * *"] --> P["Pod: Playwright image<br/>tini → run-check.mjs → playwright test"]
-  P -- "HTTPS like a user" --> SHOP["shop.acme.dev (prod)<br/>CDN → zones → APIs"]
-  P -- "HTML report, trace.zip" --> S3[("S3: acme-synthetics")]
-  P -- "success, duration,<br/>per-step durations" --> PG["Pushgateway"]
-  PG --> PROM["Prometheus"] --> AM["Alertmanager / Grafana alerting"]
-  AM -- "2 consecutive failures" --> SL["Slack #checkout-alerts<br/>+ on-call page"]
-  P -- "each failure: trace link" --> SL2["Slack #synthetics"]
-  JA["jobs-api (K8sCronJobBackend)"] -. "list, run now, stop,<br/>logs, report link" .-> CJ
-```
+{/* diagram source: /diagrams/diagram-068.mmd */}
+![diagram](/diagrams/diagram-068.svg)
 
 ## 2. Project setup
 

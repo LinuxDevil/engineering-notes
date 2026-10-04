@@ -1,0 +1,9 @@
+sequenceDiagram
+  participant C as Caller
+  participant G as Generator
+  C->>G: next()
+  G-->>C: {value: 'booking-1', done: false} (paused at yield)
+  C->>G: next()
+  G-->>C: {value: 'booking-2', done: false}
+  C->>G: return()
+  G-->>C: {value: undefined, done: true} (finally blocks run)

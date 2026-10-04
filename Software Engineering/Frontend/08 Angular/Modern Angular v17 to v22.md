@@ -12,14 +12,8 @@ updated: 2026-09-27
 Between v17 (Nov 2023) and v22 (June 2026) Angular was rebuilt around **standalone components, built-in control flow, deferrable views, signals and zoneless change detection**, with first-class **SSR and incremental hydration**. v22 flips the last big defaults: `OnPush` by default, stable Signal Forms and `httpResource`, fetch-based HttpClient and `strictTemplates`. This note is the "diff" to learn and a checklist to migrate a real app.
 </Note>
 
-```mermaid
-flowchart LR
-  v17["v17 (Nov 2023): @if/@for, @defer, esbuild builder"] --> v18["v18 (May 2024): zoneless experimental, event replay, @let"]
-  v18 --> v19["v19 (Nov 2024): standalone default, incremental hydration preview"]
-  v19 --> v20["v20 (May 2025): signals APIs stable, zoneless stable (20.2)"]
-  v20 --> v21["v21 (Nov 2025): zoneless + Vitest default, Signal Forms exp."]
-  v21 --> v22["v22 (Jun 2026): OnPush default, Signal Forms stable"]
-```
+{/* diagram source: /diagrams/diagram-305.mmd */}
+![diagram](/diagrams/diagram-305.svg)
 
 ## 1. Built-in control flow: `@if`, `@for`, `@switch` (v17)
 
@@ -100,14 +94,8 @@ Control flow moved from directives (`*ngIf`, `*ngFor`, `ngSwitch`) into the temp
 
 ## 3. SSR, hydration and incremental hydration
 
-```mermaid
-flowchart LR
-  A["Server renders HTML (@angular/ssr)"] --> B["Browser paints HTML"]
-  B --> C["Event replay records clicks"]
-  C --> D["Hydration: reuse DOM, attach listeners"]
-  D --> E["Incremental: @defer blocks hydrate on their own trigger"]
-  E --> F["Replay recorded events"]
-```
+{/* diagram source: /diagrams/diagram-306.mmd */}
+![diagram](/diagrams/diagram-306.svg)
 
 | Feature | Version | What it does |
 |---|---|---|

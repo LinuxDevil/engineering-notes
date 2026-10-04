@@ -41,10 +41,8 @@ held ↓        S         ✅     ❌
 1. **Growing phase**: the transaction may acquire locks but not release any.
 2. **Shrinking phase**: it may release locks but not acquire new ones.
 
-```mermaid
-flowchart LR
-  A[BEGIN] --> G[Growing: acquire S/X locks] --> P((lock point)) --> S[Shrinking: release locks] --> E[END]
-```
+{/* diagram source: /diagrams/diagram-106.mmd */}
+![diagram](/diagrams/diagram-106.svg)
 
 **Strict 2PL**: a transaction releases **exclusive** locks only at commit or abort (rigorous 2PL: all locks). This prevents other transactions from reading uncommitted data, which avoids **cascading aborts**. Practically every lock-based DBMS uses strict 2PL.
 

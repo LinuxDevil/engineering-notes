@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant Pod as App pod (service account)
+  participant IdP as Cloud IAM / K8s OIDC
+  participant SM as Secrets manager
+  participant DB as Database
+  Pod->>IdP: Present projected service-account token
+  IdP-->>Pod: Short-lived cloud credentials (role: orders-api)
+  Pod->>SM: GetSecret("orders/db") with those credentials
+  SM-->>Pod: Secret (or a dynamic DB user valid for 1h)
+  Pod->>DB: Connect
+  Note over SM: Access is logged and scoped by role

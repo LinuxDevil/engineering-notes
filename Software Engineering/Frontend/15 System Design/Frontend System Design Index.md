@@ -26,14 +26,8 @@ Two kinds of questions:
 - **Product design**: a page or app (news feed, flight search, chat, e-commerce PDP). Focus on pages, routing, data flow, rendering strategy.
 - **Component design**: a reusable widget (autocomplete, image carousel, data table, poll widget). Focus on the props/config API, states, keyboard + ARIA, and extensibility.
 
-```mermaid
-flowchart LR
-  Q["Interview question"] --> T{"Product or component?"}
-  T -->|"Product"| P["Pages, routing, rendering strategy,<br/>data fetching, real-time"]
-  T -->|"Component"| C["Props API, states, a11y,<br/>theming, performance"]
-  P --> RADIO["Answer with RADIO"]
-  C --> RADIO
-```
+{/* diagram source: /diagrams/diagram-345.mmd */}
+![diagram](/diagrams/diagram-345.svg)
 
 ## Recommended reading order
 1. [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework): the structure and time budget.

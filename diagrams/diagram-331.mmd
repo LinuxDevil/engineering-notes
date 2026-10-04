@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant T as Test
+  participant C as Component
+  participant F as fetch()
+  participant M as MSW handler
+  T->>C: render + user.click("Search")
+  C->>F: GET /api/flights?from=DXB
+  F->>M: intercepted (no real network)
+  M-->>F: HttpResponse.json([...])
+  F-->>C: data
+  C-->>T: results rendered, findByRole resolves

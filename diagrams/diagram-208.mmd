@@ -1,0 +1,7 @@
+flowchart LR
+  E[Error thrown] --> L{"Local try/catch?"}
+  L -- yes --> H[Handle / recover / wrap with cause]
+  L -- no --> B{"React Error Boundary? (render errors)"}
+  B -- yes --> FB[Fallback UI + log]
+  B -- no --> G["window 'error' / 'unhandledrejection'"]
+  G --> M["Monitoring (Sentry etc.)"]

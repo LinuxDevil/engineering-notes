@@ -48,11 +48,8 @@ In the browser: `<script type="module" src="app.js"></script>`. Module scripts a
 | Tree shaking | Yes (static structure) | Hard / limited |
 | File detection in Node | `.mjs`, or `.js` with `"type": "module"` | `.cjs`, or `.js` by default |
 
-```mermaid
-flowchart LR
-  A["Construction: find, fetch and parse every module (build graph)"] --> B["Instantiation / linking: allocate exports, wire imports to exports (live bindings)"]
-  B --> C["Evaluation: run module bodies, dependencies first (post-order)"]
-```
+{/* diagram source: /diagrams/diagram-222.mmd */}
+![diagram](/diagrams/diagram-222.svg)
 
 ## Live bindings
 

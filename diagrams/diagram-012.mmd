@@ -1,0 +1,7 @@
+flowchart LR
+  D[(Training data)] --> T[Training algorithm]
+  M0[Untrained model<br/>random parameters] --> T
+  T -->|repeat: predict, measure loss, adjust| T
+  T --> M1[Trained model]
+  N[New input] --> I[Inference] 
+  M1 --> I --> P[Prediction]

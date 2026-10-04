@@ -125,17 +125,8 @@ JOIN salaries s ON e.id = s.emp_id
 ORDER BY s.amount;
 ```
 
-```mermaid
-flowchart LR
-  A[SQL text] --> B[Parser<br/>syntax → parse tree]
-  B --> C[Analyzer<br/>tables, columns, types exist?]
-  C --> D[Rewriter<br/>views, rules]
-  D --> E[Planner / optimizer<br/>enumerate plans, estimate cost]
-  E --> F[Executor<br/>scans, joins, sort, aggregate]
-  F --> G[Rows to client]
-  S[(Statistics<br/>pg_statistic)] -.-> E
-  BP[(Buffer pool / disk)] -.-> F
-```
+{/* diagram source: /diagrams/diagram-116.mmd */}
+![diagram](/diagrams/diagram-116.svg)
 
 <Note>
 **1. Parsing**

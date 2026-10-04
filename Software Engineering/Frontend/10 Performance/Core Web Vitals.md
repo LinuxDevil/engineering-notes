@@ -34,15 +34,8 @@ Core Web Vitals are Google's three user-centric metrics for **loading (LCP)**, *
 
 TTFB and FCP are not Core Web Vitals, but they sit *inside* LCP: a slow TTFB makes a good LCP impossible.
 
-```mermaid
-flowchart LR
-  NAV["Navigation start"] --> TTFB["TTFB (first byte)"]
-  TTFB --> FCP["FCP (first paint of content)"]
-  FCP --> LCP["LCP (largest element painted)"]
-  LCP --> INT["User interacts"]
-  INT --> INP["INP (next paint after interaction)"]
-  NAV -.-> CLS["CLS accumulated over the whole page lifetime"]
-```
+{/* diagram source: /diagrams/diagram-317.mmd */}
+![diagram](/diagrams/diagram-317.svg)
 
 ## How each metric is measured
 
@@ -63,11 +56,8 @@ LCP breaks down into four **sub-parts** — this is how you debug it:
 ### INP
 Every click, tap and key press (not scroll or hover) is an interaction. Each has three phases:
 
-```mermaid
-flowchart LR
-  A["Input delay: main thread busy with other tasks"] --> B["Processing duration: your event handlers run"]
-  B --> C["Presentation delay: style, layout, paint, next frame"]
-```
+{/* diagram source: /diagrams/diagram-318.mmd */}
+![diagram](/diagrams/diagram-318.svg)
 
 - INP is the **longest** interaction on the page, except that with many interactions, one highest outlier is ignored per 50 interactions (so it approximates the 98th percentile for busy pages).
 - It is reported when the page is hidden/unloaded, so it covers the *full* visit — that is why lab tools cannot measure it directly (they use TBT as a proxy).

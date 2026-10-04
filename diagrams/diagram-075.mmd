@@ -1,0 +1,4 @@
+flowchart LR
+  R[request] --> L[logger] --> B[jsonBody] --> A[auth] --> H[route handler] --> S[res.end]
+  A -- 401 --> S
+  B -- 400 --> S

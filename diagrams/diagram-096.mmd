@@ -1,0 +1,4 @@
+flowchart TD
+  Root["Root CA (in OS/browser trust store)"] -->|"signs"| Int["Intermediate CA"]
+  Int -->|"signs"| Leaf["Leaf cert: CN/SAN = shop.example.com<br/>public key, validity dates"]
+  Leaf -->|"server proves it holds the private key<br/>(CertificateVerify signature)"| Client["Client validates chain,<br/>hostname, dates, revocation"]

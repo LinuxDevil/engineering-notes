@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant B as Browser
+  participant S as Server
+  participant DB as Session store (Redis/DB)
+  B->>S: POST /login (email, password)
+  S->>DB: create session {userId, expiresAt}
+  S-->>B: Set-Cookie sid=abc123 (HttpOnly, Secure, SameSite=Lax)
+  B->>S: GET /bookings (Cookie: sid=abc123, sent automatically)
+  S->>DB: look up abc123
+  DB-->>S: {userId: 42}
+  S-->>B: 200 bookings for user 42

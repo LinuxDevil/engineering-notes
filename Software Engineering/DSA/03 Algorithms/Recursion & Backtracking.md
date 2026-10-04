@@ -56,17 +56,8 @@ Max depth = max number of frames alive at once = the **space** cost of the recur
 
 When a function calls itself more than once, draw the calls as a tree. Naive Fibonacci:
 
-```mermaid
-graph TD
-  A["fib(4)"] --> B["fib(3)"]
-  A --> C["fib(2)"]
-  B --> D["fib(2)"]
-  B --> E["fib(1)"]
-  D --> F["fib(1)"]
-  D --> G["fib(0)"]
-  C --> H["fib(1)"]
-  C --> I["fib(0)"]
-```
+{/* diagram source: /diagrams/diagram-194.mmd */}
+![diagram](/diagrams/diagram-194.svg)
 
 - **Time** ≈ number of nodes × work per node. Branching factor `b`, depth `d` → `O(b^d)`. For fib that is `O(2^n)`.
 - **Space** = depth of the tree (only one root-to-leaf path is on the stack at a time) → `O(n)`.
@@ -236,16 +227,8 @@ function backtrack(state):
 
 Decision tree for `[1,2,3]`: at each node, the path so far is a subset; children add a larger index.
 
-```mermaid
-graph TD
-  R["[]"] --> A["[1]"]
-  R --> B["[2]"]
-  R --> C["[3]"]
-  A --> D["[1,2]"]
-  A --> E["[1,3]"]
-  B --> F["[2,3]"]
-  D --> G["[1,2,3]"]
-```
+{/* diagram source: /diagrams/diagram-195.mmd */}
+![diagram](/diagrams/diagram-195.svg)
 
 ```ts
 function subsets(nums: number[]): number[][] {

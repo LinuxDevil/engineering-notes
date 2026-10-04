@@ -118,15 +118,8 @@ Large orgs split one graph across teams:
 - **Apollo Federation** / the open **GraphQL Composite Schemas** work: each team owns a **subgraph**; a **router/gateway** composes them into a supergraph and plans queries across services.
 - Alternatives: schema stitching, a single "BFF" GraphQL layer over REST/gRPC microservices.
 
-```mermaid
-flowchart LR
-  C[Web / Mobile] --> R[GraphQL Router]
-  R --> U[Users subgraph]
-  R --> P[Posts subgraph]
-  R --> B[Billing subgraph]
-  U --> DB1[(Users DB)]
-  P --> DB2[(Posts DB)]
-```
+{/* diagram source: /diagrams/diagram-030.mmd */}
+![diagram](/diagrams/diagram-030.svg)
 
 ## Security checklist for GraphQL
 

@@ -14,19 +14,8 @@ A rendering pattern answers two questions: **where** HTML is produced (browser, 
 
 ## 1. The big picture
 
-```mermaid
-flowchart LR
-  subgraph When["When is HTML made?"]
-    B["Build time: SSG"] --> R["Build + revalidate: ISR"]
-    R --> Q["Per request: SSR / streaming"]
-    Q --> C["In the browser: CSR"]
-  end
-  subgraph JS["How much JS hydrates?"]
-    F["Full hydration"] --> P["Progressive / selective"]
-    P --> I["Islands / partial"]
-    I --> Z["Resumable / RSC (little or none)"]
-  end
-```
+{/* diagram source: /diagrams/diagram-310.mmd */}
+![diagram](/diagrams/diagram-310.svg)
 
 | Term | One-liner |
 |---|---|
@@ -48,19 +37,8 @@ Since Angular, Ember and Backbone, front-end devs have rendered everything clien
 
 ![image 12](/Attachments/image%2012.png)
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant S as Server/CDN
-  participant API
-  B->>S: GET /flights
-  S-->>B: empty index.html
-  B->>S: GET app.js (large)
-  Note over B: parse + execute JS
-  B->>API: fetch data
-  API-->>B: JSON
-  Note over B: render: first meaningful paint and interactive
-```
+{/* diagram source: /diagrams/diagram-311.mmd */}
+![diagram](/diagrams/diagram-311.svg)
 
 - **Pros:** simple hosting (static files), rich app-like navigation, cheap servers, great for apps behind login.
 - **Cons:** blank page until JS runs (poor LCP on slow devices), SEO relies on crawlers executing JS (Google does, many social crawlers don't), one `index.html` means one set of OpenGraph metadata for every route, so shared links lose their preview.
@@ -103,10 +81,8 @@ The original note said SSR "improves Time to First Byte". It's the reverse: rend
 
 Rendering normally starts from an empty DOM. With **hydration**, the DOM was pre-built by the server; the framework re-runs components on the client, matches their output to the existing DOM and attaches event handlers and state. Rendering components plus attaching handlers to existing HTML is hydration.
 
-```mermaid
-flowchart LR
-  H["Server HTML visible (looks ready)"] --> D["Download JS"] --> E["Execute components"] --> A["Attach listeners"] --> I["Interactive"]
-```
+{/* diagram source: /diagrams/diagram-312.mmd */}
+![diagram](/diagrams/diagram-312.svg)
 
 <Warning>
 **Hydration pitfalls**
@@ -132,19 +108,8 @@ The original Q&A framed pre-rendering as a trade-off between CSR and SSR: every 
 
 ISR (Next.js) = SSG plus a revalidation policy. Pages are served from cache; after the revalidate window, the next request still gets the stale page while a **background regeneration** runs (stale-while-revalidate). You can also revalidate **on demand** from a webhook or Server Action.
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant CDN as Cache
-  participant S as Server
-  U->>CDN: GET /deals (fresh)
-  CDN-->>U: cached HTML
-  Note over CDN: revalidate window passes
-  U->>CDN: GET /deals (stale)
-  CDN-->>U: stale HTML (fast)
-  CDN->>S: regenerate in background
-  S-->>CDN: new HTML
-```
+{/* diagram source: /diagrams/diagram-313.mmd */}
+![diagram](/diagrams/diagram-313.svg)
 
 Trade-off vs SSG: fresh-enough content without full rebuilds, at the price of serving stale pages for one request and needing a server/runtime that supports it. In Next.js 16 caching is opt-in with Cache Components (`"use cache"`, `cacheLife`, `cacheTag`, `revalidateTag`, `updateTag`); Next.js 16.3's instant navigations improve ISR by showing a loading shell first, then prerendering in the background. See [Next.js Rendering & Caching](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20Rendering%20%26%20Caching).
 
@@ -164,17 +129,8 @@ Classic `renderToString` is all-or-nothing: the slowest data fetch blocks the wh
 </Layout>
 ```
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant S as Server
-  B->>S: GET /search
-  S-->>B: shell HTML + skeletons (fast TTFB)
-  Note over B: paint shell
-  S-->>B: chunk: FlightResults HTML
-  S-->>B: chunk: Reviews HTML
-  Note over B: selective hydration, clicked boundary first
-```
+{/* diagram source: /diagrams/diagram-314.mmd */}
+![diagram](/diagrams/diagram-314.svg)
 
 **Selective hydration** (React 18): each Suspense boundary hydrates independently; if the user interacts with a not-yet-hydrated boundary, React prioritizes it. React 19.2 also batches Suspense reveals during SSR.
 
@@ -226,17 +182,8 @@ RSC moved code to the server, and with it server attack surface. CVE-2025-55182 
 
 **PPR** combines SSG and streaming in one route: a **static shell** is prerendered at build and served instantly from the CDN, while dynamic "holes" (wrapped in Suspense) are rendered per request and streamed into the same response.
 
-```mermaid
-flowchart LR
-  subgraph Page["/flight/EK202"]
-    S1["Static shell: layout, flight info (build time)"]
-    D1["Dynamic hole: live price (request time)"]
-    D2["Dynamic hole: user's saved trips (request time)"]
-  end
-  CDN["CDN: shell instantly"] --> S1
-  Server["Server: stream holes"] --> D1
-  Server --> D2
-```
+{/* diagram source: /diagrams/diagram-315.mmd */}
+![diagram](/diagrams/diagram-315.svg)
 
 <Info>
 **🆕 2025–2026**
@@ -263,16 +210,8 @@ flowchart LR
 
 ## 13. When to choose what
 
-```mermaid
-flowchart TD
-  A{"Needs SEO or fast first paint for anonymous users?"} -->|No, app behind login| CSR["CSR (SPA), maybe prerender the shell"]
-  A -->|Yes| B{"Content the same for everyone?"}
-  B -->|Yes, rarely changes| SSG["SSG"]
-  B -->|Yes, changes often| ISR["ISR / cached SSR"]
-  B -->|No, personalized or real-time| C{"Mostly static with a few widgets?"}
-  C -->|Yes| ISL["Islands (Astro) or PPR"]
-  C -->|No, highly interactive| SSR["Streaming SSR + selective hydration / RSC"]
-```
+{/* diagram source: /diagrams/diagram-316.mmd */}
+![diagram](/diagrams/diagram-316.svg)
 
 Rules of thumb:
 - **Mix per route.** Marketing pages SSG, search results streaming SSR, account area CSR. Next.js, Angular (`RenderMode` per route), Astro, SvelteKit and Nuxt all support this.

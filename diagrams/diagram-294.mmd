@@ -1,0 +1,8 @@
+flowchart TD
+    Req["Request /products"] --> Shell{"Static shell cached?"}
+    Shell -- Yes --> Send["Send shell instantly (cached 'use cache' parts)"]
+    Shell -- No --> Build["Prerender shell"] --> Send
+    Send --> Holes["Stream Suspense holes (cookies, per-user data)"]
+    Act["Server Action: updateTag('products')"] --> Inv["Expire entries tagged 'products'"]
+    Inv --> Req
+    Hook["Webhook: revalidateTag('products','max')"] --> SWR["Serve stale, refresh in background"]

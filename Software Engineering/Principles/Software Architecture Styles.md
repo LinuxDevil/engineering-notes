@@ -16,20 +16,8 @@ An **architecture style** is a named set of structural decisions about how a sys
 
 ## Two dimensions
 
-```mermaid
-flowchart LR
-  subgraph Inside["Code organisation (inside a unit)"]
-    L[Layered] --> H[Clean / Hexagonal / Onion]
-  end
-  subgraph Deploy["Deployment topology (across units)"]
-    M[Monolith] --> MM[Modular monolith] --> MS[Microservices]
-    MS --> SL[Serverless functions]
-  end
-  subgraph Comm["Communication & data"]
-    SY[Sync request/response] --- EV[Event-driven]
-    CR[CQRS] --- ES[Event sourcing]
-  end
-```
+{/* diagram source: /diagrams/diagram-373.mmd */}
+![diagram](/diagrams/diagram-373.svg)
 
 They combine: a modular monolith whose modules use hexagonal architecture and publish domain events is common and sensible.
 
@@ -56,15 +44,8 @@ Three names for the same core idea: **the domain is at the centre and depends on
 - **Onion** (Jeffrey Palermo, 2008): concentric rings: domain model → domain services → application services → infrastructure/UI.
 - **Clean Architecture** (Robert C. Martin, 2012/2017): entities → use cases → interface adapters → frameworks & drivers, governed by the **Dependency Rule**: source-code dependencies only point inward.
 
-```mermaid
-flowchart LR
-  HTTP[REST controller<br/>driving adapter] --> INP((Input port<br/>PlaceOrder use case))
-  CLI[CLI / tests] --> INP
-  INP --> CORE[Domain model]
-  CORE --> OUTP((Output ports<br/>OrderRepository, PaymentGateway))
-  PG[(Postgres adapter)] -. implements .-> OUTP
-  STRIPE[Stripe adapter] -. implements .-> OUTP
-```
+{/* diagram source: /diagrams/diagram-374.mmd */}
+![diagram](/diagrams/diagram-374.svg)
 
 ```text
 src/ordering/
@@ -145,14 +126,8 @@ Run code as managed functions (AWS Lambda, Azure Functions, Google Cloud Run fun
 
 **CQRS** (Command Query Responsibility Segregation, Greg Young, from Bertrand Meyer's command–query separation): use **different models for writes (commands) and reads (queries)**. Writes go through the domain model enforcing invariants; reads come from denormalised **read models/projections** shaped for each screen.
 
-```mermaid
-flowchart LR
-  C[Command: PlaceOrder] --> W[Write model<br/>aggregates, invariants]
-  W --> DB1[(Write store)]
-  W -- events --> P[Projector]
-  P --> DB2[(Read store<br/>denormalised views)]
-  Q[Query: MyOrdersPage] --> DB2
-```
+{/* diagram source: /diagrams/diagram-375.mmd */}
+![diagram](/diagrams/diagram-375.svg)
 
 **Event sourcing:** instead of storing current state, store the **sequence of events** that led to it; current state is derived by replaying (with snapshots for speed).
 

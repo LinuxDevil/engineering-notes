@@ -1,0 +1,8 @@
+flowchart LR
+  P[Problem & context<br/>talk to people first] --> D[Draft<br/>1–2 days]
+  D --> I[Informal review<br/>1–2 trusted peers]
+  I --> R[Wider review<br/>comments, meeting if needed]
+  R --> Dec{Decision}
+  Dec -->|approved| B[Build<br/>update doc on big changes]
+  Dec -->|rework| D
+  Dec -->|rejected| A[Archive with reason]

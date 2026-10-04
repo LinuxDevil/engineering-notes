@@ -14,16 +14,8 @@ A Node.js service is ready for Kubernetes when it reads config from env, exposes
 
 This note follows the `orders-api` service of the **Acme Shop** example (Fastify on Node.js 24 LTS, Postgres, route `/api/orders/*`, image `ghcr.io/acme/orders-api`) from source code to production. The general Kubernetes material (probe types, QoS, PDB semantics) lives in [Kubernetes Workloads in Production](/Software%20Engineering/DevOps/Kubernetes/Kubernetes%20Workloads%20in%20Production); this note applies it to Node and shows every file.
 
-```mermaid
-flowchart LR
-  dev[git push acme/orders-api] --> J[Jenkins: test, build, scan, push ghcr.io/acme/orders-api:SHA]
-  J --> G[commit new tag to platform-gitops/apps/orders-api/overlays/ENV]
-  G --> A[Argo CD sync]
-  A --> M[PreSync Job: DB migrations]
-  M --> R[Argo Rollouts canary in shop-prod]
-  R --> O[Grafana: Prometheus metrics, Loki logs, Tempo traces]
-  O -. analysis queries .-> R
-```
+{/* diagram source: /diagrams/diagram-150.mmd */}
+![diagram](/diagrams/diagram-150.svg)
 
 ## 1. Make the app cloud-ready (12-factor)
 
@@ -197,21 +189,8 @@ await app.listen({ port: config.PORT, host: config.HOST });
 
 When Kubernetes deletes a Pod, two things start **in parallel**: the kubelet runs `preStop` and then sends SIGTERM, while the endpoints controller removes the Pod from the Service's EndpointSlices, which then propagates to kube-proxy and to the Gateway's data plane (Envoy, Cilium...). Propagation takes from milliseconds to several seconds. If the app stops listening before every proxy has noticed, requests still routed to it fail with connection refused / 502.
 
-```mermaid
-sequenceDiagram
-  participant API as API server
-  participant K as kubelet
-  participant E as EndpointSlice + Gateway
-  participant P as orders-api Pod
-  API->>K: Pod marked Terminating
-  API->>E: remove Pod from endpoints (async)
-  K->>P: preStop: sleep 10s (keeps serving)
-  E-->>E: proxies update over the next seconds
-  K->>P: SIGTERM
-  P->>P: readyz=503, app.close() drains, pool.end()
-  P-->>K: exit 0
-  Note over K,P: SIGKILL if still running after terminationGracePeriodSeconds (counted from the start, preStop included)
-```
+{/* diagram source: /diagrams/diagram-151.mmd */}
+![diagram](/diagrams/diagram-151.svg)
 
 Budget: `terminationGracePeriodSeconds` (45) > `preStop` sleep (10) + `SHUTDOWN_TIMEOUT_MS` (25) + slack. The native `lifecycle.preStop.sleep` action (GA in Kubernetes v1.34) needs no `sleep` binary, so it works in distroless images.
 

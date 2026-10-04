@@ -30,18 +30,8 @@ Rendering 10,000 rows × 10 nodes = 100,000 DOM nodes:
 
 ## How windowing works
 
-```mermaid
-flowchart TB
-  subgraph Scroller["Scroll container (height 600px, overflow auto)"]
-    direction TB
-    TOP["Top spacer / offset: startIndex x rowHeight (not rendered)"]
-    OS1["Overscan rows above (rendered, off-screen)"]
-    VIS["Visible rows (rendered, in viewport)"]
-    OS2["Overscan rows below (rendered, off-screen)"]
-    BOT["Bottom spacer: remaining rows x rowHeight (not rendered)"]
-    TOP --> OS1 --> VIS --> OS2 --> BOT
-  end
-```
+{/* diagram source: /diagrams/diagram-321.mmd */}
+![diagram](/diagrams/diagram-321.svg)
 
 On every scroll event:
 1. Read `scrollTop` and the viewport height.
@@ -49,18 +39,8 @@ On every scroll event:
 3. `endIndex = ceil((scrollTop + viewportHeight) / rowHeight) + overscan`
 4. Render items `start..end`, positioned at `index × rowHeight` inside an inner element whose height is `count × rowHeight` (so the scrollbar is the right size).
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant S as Scroll container
-  participant V as Virtualizer
-  participant D as DOM
-  U->>S: scrolls
-  S->>V: scroll event (scrollTop)
-  V->>V: compute start/end index (+ overscan)
-  V->>D: render only rows start..end at translateY(index x size)
-  D-->>U: same scrollbar, ~30 nodes instead of 10,000
-```
+{/* diagram source: /diagrams/diagram-322.mmd */}
+![diagram](/diagrams/diagram-322.svg)
 
 <Info>
 **Fixed-height windowing from scratch (React)**

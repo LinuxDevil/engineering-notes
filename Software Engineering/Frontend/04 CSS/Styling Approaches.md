@@ -18,16 +18,8 @@ There are four ways to keep CSS maintainable at scale:
 The big shift in 2023–2026: with React Server Components and streaming SSR, **runtime CSS-in-JS became a poor fit**. New projects mostly pick CSS Modules, Tailwind, or a zero-runtime library, on top of native CSS features (`@layer`, `@scope`, nesting, custom properties).
 </Note>
 
-```mermaid
-flowchart TD
-  A["New React/Next.js project"] --> B{"Team prefers writing CSS or classes in markup?"}
-  B -->|"classes in markup, speed, design tokens"| T["Tailwind (utility-first)"]
-  B -->|"real CSS files"| C{"Need typed tokens/variants in TS?"}
-  C -->|no| M["CSS Modules (+ native nesting, @layer)"]
-  C -->|yes| Z["Zero-runtime CSS-in-JS: vanilla-extract, Panda, StyleX"]
-  A --> X{"Existing styled-components/Emotion app?"}
-  X -->|"yes, uses RSC/App Router"| Y["Keep it in client components with a style registry, migrate gradually"]
-```
+{/* diagram source: /diagrams/diagram-254.mmd */}
+![diagram](/diagrams/diagram-254.svg)
 
 ---
 

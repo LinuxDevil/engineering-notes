@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant U as User
+  participant UI as PostActions
+  participant S as Store
+  participant API
+  U->>UI: click Like
+  UI->>S: likeCount+1, viewerHasLiked=true (optimistic)
+  UI->>API: POST /posts/p1/like
+  alt success
+    API-->>S: authoritative likeCount
+  else failure
+    API-->>S: rollback to previous values
+    S-->>UI: toast "Couldn't like, try again"
+  end

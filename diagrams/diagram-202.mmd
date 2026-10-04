@@ -1,0 +1,5 @@
+flowchart LR
+  P["Problem"] --> Q{"Does a locally best choice<br/>always extend to an optimal solution?"}
+  Q -->|"yes: prove with exchange argument"| G["Greedy<br/>O(n) or O(n log n)"]
+  Q -->|"no / counterexample found"| D["Dynamic Programming<br/>explore all choices, reuse subproblems"]
+  Q -->|"not sure"| T["try small counterexamples<br/>brute force vs greedy on random inputs"]

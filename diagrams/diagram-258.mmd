@@ -1,0 +1,5 @@
+flowchart LR
+  T["1. Trigger<br/>createRoot().render() or setState"] --> R["2. Render<br/>call components, build new element tree, diff"]
+  R --> C["3. Commit<br/>mutate DOM, attach refs, layout effects"]
+  C --> P["Browser paint"]
+  P --> E["Passive effects<br/>useEffect"]

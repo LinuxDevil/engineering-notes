@@ -1,0 +1,5 @@
+flowchart LR
+  U[Clients] --> F[Facade / router<br/>API gateway, proxy]
+  F -->|"/orders (migrated)"| N[New service]
+  F -->|everything else| L[Legacy system]
+  N -. sync / events .- L

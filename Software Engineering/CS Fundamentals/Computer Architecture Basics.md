@@ -29,10 +29,8 @@ A core fetches instructions, decodes them, and executes them in a **pipeline** (
 
 A DRAM miss costs ~100× an L1 hit; that's hundreds of instructions the core could have run. Full latency table: [System Design Interview Framework](/Software%20Engineering/System%20Design/System%20Design%20Interview%20Framework).
 
-```mermaid
-flowchart LR
-  R["Registers"] --> L1["L1 ~1 ns"] --> L2["L2 ~4 ns"] --> L3["L3 ~15 ns"] --> RAM["DRAM ~100 ns"] --> SSD["SSD ~50 µs"] --> NET["Network ~0.5 ms+"]
-```
+{/* diagram source: /diagrams/diagram-094.mmd */}
+![diagram](/diagrams/diagram-094.svg)
 
 ## Cache lines and locality
 - Memory moves between RAM and caches in **cache lines** (64 bytes on x86 and most ARM; 128 B on Apple M-series L2). Reading one byte fetches its whole line.

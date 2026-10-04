@@ -157,17 +157,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
 
 ## 7. Image security scanning and the supply chain
 
-```mermaid
-flowchart LR
-  A[Dockerfile + lockfiles] --> B[Build with BuildKit]
-  B --> C[SBOM + provenance attestations]
-  B --> D[Scan: Trivy / Grype / Docker Scout]
-  D -->|critical CVEs| X[Fail build]
-  D --> E[Sign: cosign / Sigstore]
-  E --> F[Push to registry]
-  F --> G[Admission policy verifies signature + provenance]
-  G --> H[Run in cluster]
-```
+{/* diagram source: /diagrams/diagram-166.mmd */}
+![diagram](/diagrams/diagram-166.svg)
 
 - **Scanners**: Trivy, Grype, Docker Scout, Snyk, registry-native scanners (ECR, Artifact Registry, ACR, Harbor). Scan in CI **and** continuously in the registry, because new CVEs are published for old images.
 - **SBOM** (Software Bill of Materials, SPDX or CycloneDX): `docker buildx build --sbom=true --provenance=mode=max ...` attaches attestations to the image.

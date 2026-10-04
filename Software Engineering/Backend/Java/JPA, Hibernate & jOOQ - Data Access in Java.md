@@ -14,17 +14,8 @@ Java talks to SQL databases through **JDBC**. On top of it you choose a style: *
 
 ## The layers
 
-```mermaid
-flowchart TB
-  APP[Your code] --> SDJ["Spring Data JPA<br/>repositories"]
-  APP --> JOOQ["jOOQ DSLContext<br/>type-safe SQL"]
-  APP --> JC["JdbcClient / JdbcTemplate"]
-  SDJ --> JPA["JPA API (Jakarta Persistence)"] --> HIB["Hibernate ORM<br/>(implementation)"]
-  HIB --> JDBC
-  JOOQ --> JDBC
-  JC --> JDBC
-  JDBC["JDBC driver + HikariCP pool"] --> DB[(PostgreSQL)]
-```
+{/* diagram source: /diagrams/diagram-047.mmd */}
+![diagram](/diagrams/diagram-047.svg)
 
 ## Plain JDBC with `JdbcClient` (baseline)
 
@@ -66,16 +57,8 @@ class Order {
 
 ### The persistence context (why JPA feels "magic")
 
-```mermaid
-stateDiagram-v2
-  [*] --> Transient: new Order()
-  Transient --> Managed: persist()
-  Managed --> Managed: change fields (dirty checking)
-  Managed --> Detached: tx/session ends, detach()
-  Detached --> Managed: merge()
-  Managed --> Removed: remove()
-  Removed --> [*]: flush/commit → DELETE
-```
+{/* diagram source: /diagrams/diagram-048.mmd */}
+![diagram](/diagrams/diagram-048.svg)
 
 - Inside a transaction, loaded entities are **managed**: Hibernate keeps a snapshot and, at **flush**, compares and issues `UPDATE`s for changed fields (**dirty checking**). You don't call `save()` for updates.
 - The persistence context is a **first-level cache**: loading the same id twice returns the same object without a second query.

@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant O as Order svc
+  participant P as Payment svc
+  participant I as Inventory svc
+  participant S as Shipping svc
+  O->>P: charge card
+  P-->>O: charged
+  O->>I: reserve items
+  I-->>O: out of stock ❌
+  O->>P: refund (compensation)
+  O->>O: mark order cancelled

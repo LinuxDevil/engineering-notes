@@ -23,11 +23,8 @@ Backup is the process of creating copies of your database that can be restored i
 | **RPO** (Recovery Point Objective) | How much data (time) can we lose? | 5 minutes | Backup/WAL archiving frequency, sync replication |
 | **RTO** (Recovery Time Objective) | How long can we be down? | 1 hour | Restore speed, standby replicas, automation |
 
-```mermaid
-flowchart LR
-  B[Last good recovery point] -- "RPO: data lost" --> X((Disaster))
-  X -- "RTO: downtime" --> R[Service restored]
-```
+{/* diagram source: /diagrams/diagram-115.mmd */}
+![diagram](/diagrams/diagram-115.svg)
 
 A nightly `pg_dump` gives RPO ≈ 24 h and RTO = hours for a big database. WAL archiving gives RPO ≈ seconds to minutes. A hot standby gives RTO ≈ minutes, but still needs backups for logical errors.
 

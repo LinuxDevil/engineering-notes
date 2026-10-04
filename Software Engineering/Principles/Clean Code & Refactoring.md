@@ -134,15 +134,8 @@ Smells (Fowler & Beck) are surface signs of a deeper design problem. Common ones
 
 ### The safe refactoring loop
 
-```mermaid
-flowchart LR
-  A[Tests green] --> B[One small structural change]
-  B --> C[Run tests]
-  C -->|green| D[Commit]
-  D --> B
-  C -->|red| E[Revert, take a smaller step]
-  E --> B
-```
+{/* diagram source: /diagrams/diagram-362.mmd */}
+![diagram](/diagrams/diagram-362.svg)
 
 - **Never mix refactoring and behaviour change** in the same step (or ideally the same commit/PR). Kent Beck's *Tidy First?* (2023) suggests separating "tidyings" into their own small PRs, done just before the behaviour change they enable.
 - Lean on **IDE automated refactorings** (rename, extract, inline, move, change signature); they're behaviour-preserving by construction.

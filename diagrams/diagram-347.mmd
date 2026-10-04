@@ -1,0 +1,13 @@
+flowchart TB
+  subgraph Client["Browser"]
+    V["View / Components"] -->|"user events"| C["Controller / Hooks<br/>(actions, event handlers)"]
+    C -->|"dispatch / mutate"| S["Client Store<br/>(UI state + normalized entities)"]
+    S -->|"subscribe / select"| V
+    C --> DL["Data layer<br/>(fetch wrapper, cache, retries)"]
+    DL --> S
+    SW["Service Worker<br/>(offline cache)"] -.-> DL
+  end
+  DL <-->|"HTTP (REST/GraphQL)"| API["API / BFF"]
+  RT["Real-time channel<br/>(SSE / WebSocket)"] --> S
+  API --> RT
+  CDN["CDN<br/>(static assets, images)"] --> V

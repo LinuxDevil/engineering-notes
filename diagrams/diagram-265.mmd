@@ -1,0 +1,12 @@
+flowchart LR
+  A["Feels slow / INP bad"] --> B["Reproduce with prod build + CPU throttling"]
+  B --> C["Profile: React DevTools Profiler / Performance panel + React tracks"]
+  C --> D{"Where is the time?"}
+  D -- "Many / slow renders" --> E["Structure → memo / Compiler → transitions"]
+  D -- "Huge DOM / layout" --> F["Virtualize, CSS containment"]
+  D -- "Big JS / slow load" --> G["Code split, RSC, lazy"]
+  D -- "Network waterfall" --> H["Loaders, parallel fetch, cache"]
+  E --> I["Re-measure"]
+  F --> I
+  G --> I
+  H --> I

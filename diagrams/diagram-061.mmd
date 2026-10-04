@@ -1,0 +1,7 @@
+flowchart LR
+  P["publisher / failed consumer"] -- "routing key sync-inventory" --> DX["exchange: jobs.delay"]
+  DX --> D30["queue: delay.30s<br/>x-message-ttl=30000<br/>x-dead-letter-exchange=jobs"]
+  D30 -- "expires → dead-lettered" --> JX["exchange: jobs"]
+  JX --> WQ["queue: jobs.sync-inventory<br/>(quorum, x-delivery-limit=5)"]
+  WQ --> C["consumer"]
+  WQ -- "delivery limit exceeded" --> DLQ["jobs.dlq"]

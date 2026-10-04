@@ -73,18 +73,8 @@ Return an opaque **cursor** instead of page numbers:
 
 The cursor is base64 of `{"created_at": "...", "id": 421}` (sign it or validate it server-side). This is the style of the GitHub, Stripe and Slack APIs and of GraphQL Relay connections.
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant API
-  participant DB
-  C->>API: GET /news?limit=20
-  API->>DB: ... ORDER BY created_at DESC, id DESC LIMIT 21
-  DB-->>API: 21 rows (21st = "has more")
-  API-->>C: 20 items + next_cursor(last row)
-  C->>API: GET /news?cursor=...
-  API->>DB: WHERE (created_at,id) < (...) ORDER BY ... LIMIT 21
-```
+{/* diagram source: /diagrams/diagram-121.mmd */}
+![diagram](/diagrams/diagram-121.svg)
 
 Fetching `limit + 1` rows tells you whether there's a next page without a `COUNT(*)`.
 

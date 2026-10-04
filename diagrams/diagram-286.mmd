@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant U as Browser
+  participant P as page.tsx (RSC)
+  participant A as actions.ts ('use server')
+  participant D as server/tasks (DAL)
+  participant DB as Postgres
+  U->>P: GET /tasks
+  P->>D: listTasks(orgId) ('use cache', tag tasks:org)
+  D->>DB: SELECT ... WHERE org_id
+  P-->>U: HTML stream (list + forms)
+  U->>A: POST (createTask FormData)
+  A->>A: requireViewer + zod parse
+  A->>D: createTask(viewer, input)
+  D->>DB: INSERT
+  A->>A: updateTag('tasks:org')
+  A-->>U: { status: success } + fresh RSC payload

@@ -1,0 +1,15 @@
+flowchart LR
+  subgraph Write path
+    U1["Author"] --> PS["Post service"] --> PDB[("Posts DB")]
+    PS --> K["Kafka: post_created"]
+    K --> FO["Fan-out workers"]
+    FO --> G[("Social graph")]
+    FO -->|"ZADD feed:follower"| FC[("Feed cache<br/>Redis ZSETs")]
+  end
+  subgraph Read path
+    U2["Reader"] --> FS["Feed service"]
+    FS --> FC
+    FS -->|"celebrity posts (pull)"| CP[("Celebrity post cache")]
+    FS --> RK["Ranking service"]
+    FS --> HY["Hydration: post + user caches"]
+  end

@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> Active: BEGIN
+  Active --> PartiallyCommitted: last statement executed
+  Active --> Failed: error / conflict
+  PartiallyCommitted --> Committed: log flushed
+  PartiallyCommitted --> Failed: commit-time check fails
+  Failed --> Aborted: rollback done
+  Committed --> Terminated: cleanup
+  Aborted --> Terminated: cleanup
+  Terminated --> [*]

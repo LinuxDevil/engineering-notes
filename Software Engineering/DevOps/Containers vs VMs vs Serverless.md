@@ -14,15 +14,8 @@ updated: 2026-09-27
 
 ## The spectrum
 
-```mermaid
-flowchart LR
-  BM[Bare metal] --> VM[Virtual machines]
-  VM --> MVM[MicroVMs: Firecracker, Kata]
-  MVM --> C[Containers: Docker, containerd]
-  C --> SC[Serverless containers: Cloud Run, Fargate, Container Apps]
-  SC --> F[Functions: Lambda, Azure Functions]
-  style F fill:#eef
-```
+{/* diagram source: /diagrams/diagram-144.mmd */}
+![diagram](/diagrams/diagram-144.svg)
 
 ```text
 Virtual machines                    Containers

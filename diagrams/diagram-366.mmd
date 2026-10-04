@@ -1,0 +1,4 @@
+flowchart TB
+  UI["Interface / adapters<br/>(controllers, consumers)"] --> APP["Application<br/>(use cases, transactions)"]
+  APP --> DOM["Domain<br/>(aggregates, value objects, events, domain services, repository interfaces)"]
+  INF["Infrastructure<br/>(ORM, broker, HTTP clients, repository impls)"] --> DOM

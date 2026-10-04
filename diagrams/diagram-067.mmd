@@ -1,0 +1,14 @@
+stateDiagram-v2
+  [*] --> Tick: scheduled time reached
+  Tick --> Skip_suspended: spec.suspend = true
+  Tick --> Skip_deadline: now - scheduledTime > startingDeadlineSeconds
+  Tick --> Skip_forbid: concurrencyPolicy Forbid<br/>and a Job is active
+  Tick --> Replace: concurrencyPolicy Replace<br/>and a Job is active
+  Replace --> CreateJob: delete the active Job first
+  Tick --> CreateJob: otherwise
+  CreateJob --> Running
+  Running --> Complete: success criteria met
+  Running --> Failed: backoffLimit / activeDeadlineSeconds /<br/>podFailurePolicy FailJob
+  Skip_suspended --> [*]: counts as missed
+  Skip_deadline --> [*]: missed
+  Skip_forbid --> [*]: missed

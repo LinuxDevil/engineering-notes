@@ -12,28 +12,8 @@ updated: 2026-09-27
 The hub for all Next.js notes, ordered from first App Router page to running Next.js 16 in production. Target versions: **Next.js 16.3.x** (16.3 is Active LTS, 15.5 Maintenance LTS as of Sept 2026) and **React 19.2+**. Each note has worked examples, a senior perspective, a 🆕 2025–2026 box and interview questions. Framework-agnostic theory (rendering patterns, auth, HTTP) lives in other Frontend and APIs notes and is linked, not repeated.
 </Note>
 
-```mermaid
-mindmap
-  root((Next.js 16))
-    Foundations
-      App Router Fundamentals
-      Project Structure & Architecture
-      Error Handling, Loading & Not-Found
-    Data
-      Data Fetching & Mutations
-      Rendering & Caching
-      Route Handlers & BFF
-    Production
-      Authentication & Authorization
-      i18n, Metadata & SEO
-      Performance Optimization
-      Testing
-      Self-Hosting & Deployment
-      Micro-frontends on Kubernetes
-    Staying current
-      15 to 16.3
-      Interview Questions
-```
+{/* diagram source: /diagrams/diagram-288.mmd */}
+![diagram](/diagrams/diagram-288.svg)
 
 ## 🟢 Beginner: build your first real app
 

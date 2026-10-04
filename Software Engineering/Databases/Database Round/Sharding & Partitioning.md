@@ -40,12 +40,8 @@ Benefits: storing a large database across multiple machines, and **parallel proc
 
 With `hash(key) mod N`, adding one server remaps almost every key. **Consistent hashing** places both servers and keys on a **hash ring**; each key belongs to the next server clockwise. Adding or removing a server only moves the keys in one arc (about 1/N of them). **Virtual nodes** (many ring positions per server) smooth out the distribution. It works for any key type, including strings. Cassandra, DynamoDB and many caches use this ring.
 
-```mermaid
-flowchart LR
-  K1["key 'alice' → hash 17"] --> N2["node B (owns 11–40)"]
-  K2["key 'bob' → hash 52"] --> N3["node C (owns 41–80)"]
-  K3["key 'carol' → hash 95"] --> N1["node A (owns 81–10, wraps)"]
-```
+{/* diagram source: /diagrams/diagram-123.mmd */}
+![diagram](/diagrams/diagram-123.svg)
 
 ### Pros and cons
 

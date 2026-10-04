@@ -1,0 +1,3 @@
+flowchart LR
+  IN["Shell: read request, load data from DB, get current time"] --> CORE["Pure core: decide (validate, compute, choose actions)"]
+  CORE --> OUT["Shell: save, send emails, respond"]

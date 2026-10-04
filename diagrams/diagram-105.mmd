@@ -1,0 +1,4 @@
+flowchart LR
+    Q1["Long SELECT (30 min report)<br/>holds ACCESS SHARE"] --> A["ALTER TABLE waits<br/>for ACCESS EXCLUSIVE"]
+    A --> B["All new SELECT/INSERT<br/>queue behind the ALTER"]
+    B --> O[Connection pool exhausted: outage]

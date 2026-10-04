@@ -12,32 +12,8 @@ updated: 2026-09-27
 Application security for engineers, from the common vulnerability classes (OWASP Top 10) to backend and API defences, secrets, and building security into the development process. Browser-side security (XSS, CSRF, CSP, token storage, npm supply chain) lives in the Frontend notes and is linked here rather than repeated. Identity notes (OAuth/OIDC, passkeys) and cryptography are linked from their own notes.
 </Note>
 
-```mermaid
-mindmap
-  root((Security))
-    Risks
-      OWASP Top 10 2025
-      API Security Top 10
-    Build it in
-      Threat modeling
-      SAST DAST SCA
-      SBOM & SLSA
-      Cyber Resilience Act
-    Backend
-      Injection
-      Access control
-      SSRF
-      Secrets
-    Identity
-      OAuth & OIDC
-      Passkeys & MFA
-      Token storage
-    Frontend
-      XSS CSRF CSP
-      Supply chain
-    Foundations
-      Cryptography
-```
+{/* diagram source: /diagrams/diagram-387.mmd */}
+![diagram](/diagrams/diagram-387.svg)
 
 ## 1. Beginner: know the risks
 - [OWASP Top 10](/Software%20Engineering/Security/OWASP%20Top%2010): the 2025 list, examples, fixes, and the 2021 → 2025 mapping

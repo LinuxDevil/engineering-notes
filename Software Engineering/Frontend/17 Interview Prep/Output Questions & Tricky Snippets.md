@@ -14,15 +14,8 @@ updated: 2026-09-27
 
 ## The rules you need
 
-```mermaid
-flowchart TD
-  A["Run current macrotask<br/>(e.g. the whole script)"] --> B{"Microtask queue empty?"}
-  B -->|"No"| C["Run ONE microtask<br/>(promise reactions, await continuations, queueMicrotask)"]
-  C --> B
-  B -->|"Yes"| D["Browser may render<br/>(rAF callbacks, style, layout, paint)"]
-  D --> E["Take next macrotask<br/>(setTimeout, events, I/O)"]
-  E --> A
-```
+{/* diagram source: /diagrams/diagram-351.mmd */}
+![diagram](/diagrams/diagram-351.svg)
 
 1. Synchronous code runs first, to completion.
 2. Then **all** microtasks, including ones queued by other microtasks.

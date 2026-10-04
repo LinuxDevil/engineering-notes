@@ -12,13 +12,8 @@ updated: 2026-09-27
 One path through the whole vault, in four stages. Each stage lists what to learn, the note that teaches it, and a **"you're ready to move on when…"** check. Tick an item when you can explain it out loud and write its example from memory. The stages roughly match the expectations in [Engineering Levels - Junior to Staff](/Software%20Engineering/Career/Engineering%20Levels%20-%20Junior%20to%20Staff): *Foundations* (pre-job), *Junior*, *Mid-level*, *Senior*.
 </Note>
 
-```mermaid
-flowchart LR
-  A["Stage 1<br/>Foundations<br/>(0–6 months)"] --> B["Stage 2<br/>Junior<br/>(ship features)"]
-  B --> C["Stage 3<br/>Mid-level<br/>(own services)"]
-  C --> D["Stage 4<br/>Senior<br/>(own systems & outcomes)"]
-  D -.-> E["Staff+<br/>(own direction)"]
-```
+{/* diagram source: /diagrams/diagram-388.mmd */}
+![diagram](/diagrams/diagram-388.svg)
 
 <Info>
 **How the levels differ**

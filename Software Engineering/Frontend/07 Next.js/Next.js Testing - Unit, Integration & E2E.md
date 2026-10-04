@@ -14,15 +14,8 @@ Test a Next.js App Router app in three layers. **Vitest + React Testing Library*
 
 ## 1. What to test where
 
-```mermaid
-flowchart TB
-  E2E["Playwright E2E against next build + next start: journeys, async RSC, streaming, auth, caching, visual"]
-  INT["Vitest integration: Server Actions, Route Handlers, proxy, DAL with MSW"]
-  COMP["Vitest + RTL: Client Components, hooks, forms"]
-  UNIT["Vitest unit: pure functions, schemas (Zod), formatters"]
-  STATIC["TypeScript (typed routes, PageProps), ESLint/Biome"]
-  E2E --- INT --- COMP --- UNIT --- STATIC
-```
+{/* diagram source: /diagrams/diagram-298.mmd */}
+![diagram](/diagrams/diagram-298.svg)
 
 | Code | Best test | Why |
 |---|---|---|

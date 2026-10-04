@@ -1,0 +1,7 @@
+flowchart TD
+  A[Find node to delete] --> B{How many children?}
+  B -->|0: leaf| C[Just remove it]
+  B -->|1| D[Replace node with its only child]
+  B -->|2| E[Find in-order successor:<br/>smallest key in right subtree]
+  E --> F[Copy successor's key into node]
+  F --> G[Delete successor from right subtree<br/>it has at most one child]

@@ -12,16 +12,8 @@ updated: 2026-09-27
 My skill-based workflow for building software with a coding agent. A new idea goes `/scope → /architect → /develop (scaffold) → /audit`; each new feature goes `/develop → /check verify → /test → /check review → /document → /sync`, with `/debug` whenever something breaks. `/scope` makes two decisions explicit: the **build approach** (Tracer Bullet, Skateboard, Facade, Journey) and the **workflow tier** (Prototype, Alpha, Beta, GA), which sets how much proof a feature needs before it counts as done.
 </Note>
 
-```mermaid
-flowchart LR
-  subgraph New project
-    I[Idea] --> SC[/scope/] --> AR[/architect/] --> DV[/develop scaffold/] --> AU[/audit/]
-  end
-  subgraph Each feature
-    F[Feature] --> D2[/develop/] --> CV[/check verify/] --> TE[/test/] --> CR[/check review/] --> DO[/document/] --> SY[/sync/]
-  end
-  X[Something broke] --> DB[/debug/]
-```
+{/* diagram source: /diagrams/diagram-005.mmd */}
+![diagram](/diagrams/diagram-005.svg)
 
 - **New project**: Idea → `/scope` → `/architect` → `/develop` (scaffold) → `/audit`
 - **New feature**: `/develop` → `/check verify` → `/test` → `/check review` → `/document` → `/sync`

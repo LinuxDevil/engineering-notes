@@ -1,0 +1,17 @@
+flowchart LR
+  subgraph Server["Server graph (never shipped)"]
+    DAL["data/ (server-only)<br/>db, auth, DTOs"]
+    RSC["Server Components"]
+    SA["Server Actions ('use server')"]
+    RH["Route Handlers"]
+  end
+  subgraph Client["Client graph (shipped to browser)"]
+    CC["'use client' components"]
+    HOOKS["hooks, browser utils (client-only)"]
+  end
+  RSC -->|"serializable props, JSX children"| CC
+  CC -->|"calls by reference (POST)"| SA
+  RSC --> DAL
+  SA --> DAL
+  RH --> DAL
+  CC -. "import = build error" .-x DAL

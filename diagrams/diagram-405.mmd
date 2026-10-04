@@ -1,0 +1,6 @@
+flowchart LR
+  C["Commands"] --> W["Write model<br/>(Postgres, normalized)"]
+  W -->|"events / CDC"| B["Event bus"]
+  B --> R1["Read model: search<br/>(Elasticsearch)"]
+  B --> R2["Read model: dashboard<br/>(ClickHouse)"]
+  Q["Queries"] --> R1 & R2

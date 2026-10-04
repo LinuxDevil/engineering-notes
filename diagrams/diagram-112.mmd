@@ -1,0 +1,7 @@
+flowchart TD
+  P{Network partition?}
+  P -- yes --> PA[Choose: Availability<br/>answer with possibly stale data]
+  P -- yes --> PC[Choose: Consistency<br/>reject/timeout minority side]
+  P -- no --> E{Else}
+  E --> EL[Low Latency<br/>reply from nearest replica]
+  E --> EC[Consistency<br/>wait for quorum / leader]

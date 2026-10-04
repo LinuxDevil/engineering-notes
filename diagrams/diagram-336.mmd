@@ -1,0 +1,5 @@
+flowchart LR
+  T["Task: ui#build"] --> H["Hash inputs: files, lockfile deps, env, config"]
+  H --> C{"Hash in local or remote cache?"}
+  C -->|yes| R["Restore outputs + logs (seconds)"]
+  C -->|no| X["Run task"] --> S["Store outputs under hash"]

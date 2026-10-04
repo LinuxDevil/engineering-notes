@@ -216,13 +216,8 @@ user = {};             // TypeError: Assignment to constant variable.
 
 ### Which one to use
 
-```mermaid
-flowchart TD
-  A["Declaring a variable"] --> B{"Will it be reassigned?"}
-  B -- No --> C["const (default)"]
-  B -- Yes --> D["let"]
-  A --> E["var: only in legacy code"]
-```
+{/* diagram source: /diagrams/diagram-215.mmd */}
+![diagram](/diagrams/diagram-215.svg)
 
 <Info>
 **Classic loop + closure bug**

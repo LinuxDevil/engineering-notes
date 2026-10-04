@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant JS as Your JS
+  participant Node as Node C++ bindings
+  participant UV as libuv
+  participant OS as OS / network card
+  JS->>Node: http.createServer(handler)
+  JS->>Node: server.listen(80)
+  Node->>UV: open TCP socket on :80
+  UV->>OS: bind + listen
+  OS-->>UV: incoming connection
+  UV-->>Node: readable data (llhttp parses it)
+  Node-->>JS: handler(req, res) queued and run

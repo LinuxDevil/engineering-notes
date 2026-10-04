@@ -1,0 +1,10 @@
+flowchart LR
+  subgraph Pull
+    P1[Client] -- "GET /jobs/1 every 5s" --> S1[API]
+  end
+  subgraph Push to servers
+    S2[Provider] -- "POST /webhooks (signed)" --> R2[Your backend]
+  end
+  subgraph Push to clients
+    S3[API] -- "SSE / WebSocket stream" --> C3[Browser / app]
+  end

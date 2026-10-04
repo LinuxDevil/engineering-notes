@@ -38,21 +38,8 @@ CAS key expected_version value   → OK | CONFLICT
 - **Concurrency**: single-threaded event loop per core/shard (Redis-style, no locks, [Operating Systems Essentials](/Software%20Engineering/CS%20Fundamentals/Operating%20Systems%20Essentials) epoll) or multithreaded with striped locks (Memcached). I/O threads for network parsing.
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  subgraph Clients
-    A1["App + smart client<br/>(slot map cached)"]
-    A2["App + smart client"]
-  end
-  A1 & A2 -->|"key → slot → node"| N1["Node 1 primary<br/>slots 0-5460"]
-  A1 & A2 --> N2["Node 2 primary<br/>slots 5461-10922"]
-  A1 & A2 --> N3["Node 3 primary<br/>slots 10923-16383"]
-  N1 -->|"async replication"| R1["Replica 1"]
-  N2 --> R2["Replica 2"]
-  N3 --> R3["Replica 3"]
-  N1 <-.->|"gossip / heartbeats"| N2 <-.-> N3
-  CFG["Config / coordinator (optional)"] -.-> A1 & A2
-```
+{/* diagram source: /diagrams/diagram-393.mmd */}
+![diagram](/diagrams/diagram-393.svg)
 
 ## 6. Deep dives
 ### Partitioning

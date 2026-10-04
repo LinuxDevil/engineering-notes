@@ -1,0 +1,4 @@
+flowchart LR
+  R["rabbit { name }"] -->|"[[Prototype]]"| A["animal { eats, walk }"]
+  A -->|"[[Prototype]]"| O["Object.prototype { toString, hasOwnProperty, ... }"]
+  O -->|"[[Prototype]]"| N["null"]

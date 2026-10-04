@@ -1,0 +1,11 @@
+gantt
+  title Example: payment idempotency project
+  dateFormat YYYY-MM-DD
+  section Risky first
+  Spike on backfill          :a1, 2026-10-01, 1d
+  DB migration + backfill    :a2, after a1, 4d
+  section Build
+  API middleware             :b1, after a1, 3d
+  Mobile client retry change :b2, after b1, 3d
+  section Ship
+  Staged rollout (flag)      :c1, after a2, 3d

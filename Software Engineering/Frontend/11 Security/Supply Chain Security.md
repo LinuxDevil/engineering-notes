@@ -14,17 +14,8 @@ A typical frontend app runs code from **hundreds of npm maintainers** — at ins
 
 ## Where the attack surface is
 
-```mermaid
-flowchart LR
-  M["Maintainer account (phishing, stolen token)"] --> R["npm registry"]
-  CI["Package's CI/CD (poisoned workflow)"] --> R
-  T["Typosquats / dependency confusion"] --> R
-  R -->|"npm install"| L["Your laptop / CI: postinstall scripts run with your secrets"]
-  R -->|"bundled"| B["Your production bundle: runs in users' browsers"]
-  CDN["Third-party script/CDN"] --> B
-  L --> X1["Steal env vars, npm/GitHub tokens, cloud keys; republish your packages"]
-  B --> X2["Steal user data, swap crypto addresses, inject ads"]
-```
+{/* diagram source: /diagrams/diagram-328.mmd */}
+![diagram](/diagrams/diagram-328.svg)
 
 Attack types:
 - **Account takeover** of a maintainer (phishing, reused passwords, leaked long-lived tokens) → malicious version of a popular package.

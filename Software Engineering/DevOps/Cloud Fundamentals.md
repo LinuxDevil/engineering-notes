@@ -14,7 +14,7 @@ Cloud computing rents compute, storage, networking and managed services on deman
 
 ## 1. Service models
 
-```mermaid
+```text
 flowchart LR
   subgraph You manage less →
     OnPrem[On-prem: everything] --> IaaS[IaaS: OS, runtime, app, data]
@@ -84,22 +84,8 @@ Also note **global services** that have a home region (e.g. parts of AWS IAM, Ro
 
 ## 5. Identity and the shared responsibility model
 
-```mermaid
-flowchart TB
-  subgraph Customer["Customer: security IN the cloud"]
-    D[Data + classification]
-    I[Identities, IAM policies, MFA]
-    A[Application code, dependencies]
-    O[OS patches, firewall config - IaaS]
-    E[Encryption settings, network config]
-  end
-  subgraph Provider["Provider: security OF the cloud"]
-    H[Hardware, data centres]
-    V[Virtualisation, host OS]
-    N[Global network]
-    M[Managed service internals]
-  end
-```
+{/* diagram source: /diagrams/diagram-143.mmd */}
+![diagram](/diagrams/diagram-143.svg)
 
 The line moves with the service model: with IaaS you patch the OS; with Lambda or S3 you do not, but **you always own data, identities and configuration**. Most cloud breaches are misconfigurations: public buckets, over-privileged IAM, leaked long-lived keys.
 

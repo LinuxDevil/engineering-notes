@@ -1,0 +1,5 @@
+flowchart LR
+  DB[(Database: bank)] --> C1[Collection: accounts]
+  DB --> C2[Collection: transfers]
+  C1 --> D1["{ _id, account_id, balance }"]
+  C1 --> D2["{ _id, account_id, balance, owner: {...} }"]

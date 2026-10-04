@@ -30,14 +30,8 @@ When **not** to partition: tables under tens of GB that are well indexed, or wor
 
 The parent table holds no data; rows are routed to partitions by the partition key.
 
-```mermaid
-flowchart TD
-  P["measurements (partitioned table)<br/>PARTITION BY RANGE (logdate)"] --> A["measurements_2026_07<br/>FROM ('2026-07-01') TO ('2026-08-01')"]
-  P --> B["measurements_2026_08"]
-  P --> C["measurements_2026_09"]
-  P --> D["measurements_default<br/>(anything else)"]
-  Q["SELECT ... WHERE logdate >= '2026-09-01'"] -.pruned to.-> C
-```
+{/* diagram source: /diagrams/diagram-137.mmd */}
+![diagram](/diagrams/diagram-137.svg)
 
 ### RANGE partitioning (time series)
 

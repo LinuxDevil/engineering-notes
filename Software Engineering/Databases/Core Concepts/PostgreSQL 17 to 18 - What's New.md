@@ -16,23 +16,8 @@ Every claim below has a dated official source. Topic notes hold the details; thi
 
 ## Timeline
 
-```mermaid
-timeline
-  title Databases 2024-2026
-  2024-09 : PostgreSQL 17
-  2024-10 : MongoDB 8.0 GA : pgvector 0.8.0
-  2025-02 : MongoDB acquires Voyage AI : Atlas Flex clusters replace Serverless/M2/M5
-  2025-05 : Redis 8 adds AGPLv3 : Databricks to acquire Neon
-  2025-06 : Snowflake to acquire Crunchy Data
-  2025-09 : PostgreSQL 18 : MongoDB 8.2 : DuckDB 1.4 LTS : Atlas Device Sync EOL
-  2025-10 : Valkey 9.0
-  2025-11 : PgBouncer 1.25 : PostgreSQL 13 EOL : MongoDB Node driver 7.0
-  2026-03 : DuckDB 1.5
-  2026-04 : MySQL 8.0 EOL : MySQL 9.7 LTS : pgBackRest archived then revived (May)
-  2026-05 : MongoDB 8.3
-  2026-06 : PostgreSQL 19 Beta 1
-  2026-09 : PostgreSQL 19 Beta 4
-```
+{/* diagram source: /diagrams/diagram-108.mmd */}
+![diagram](/diagrams/diagram-108.svg)
 
 ## PostgreSQL 17 (released 2024-09-26)
 

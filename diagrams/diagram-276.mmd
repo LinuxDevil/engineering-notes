@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> Fetching: first mount
+    Fetching --> Fresh: success
+    Fresh --> Stale: staleTime elapsed
+    Stale --> Fetching: mount / focus / reconnect / invalidate
+    Fresh --> Inactive: all observers unmount
+    Stale --> Inactive: all observers unmount
+    Inactive --> [*]: gcTime elapsed (garbage collected)
+    Inactive --> Stale: remounted within gcTime (shown instantly, then refetched)

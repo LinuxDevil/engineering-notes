@@ -14,14 +14,8 @@ Angular is a batteries-included framework: components, dependency injection, rou
 
 ## Map of the Angular notes
 
-```mermaid
-flowchart LR
-  A["Angular Fundamentals"] --> B["Change Detection, Zones & Signals"]
-  B --> C["Modern Angular v17 to v22"]
-  A --> D["Angular Interview Q&A"]
-  B --> D
-  C --> D
-```
+{/* diagram source: /diagrams/diagram-304.mmd */}
+![diagram](/diagrams/diagram-304.svg)
 
 | Note | What it covers |
 |---|---|

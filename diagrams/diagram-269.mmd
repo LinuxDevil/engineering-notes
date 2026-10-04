@@ -1,0 +1,7 @@
+flowchart TD
+  Page["page.tsx (Server)"] --> Header["Header (Server)"]
+  Page --> Results["FlightResults (Server, async: queries DB)"]
+  Results --> Card["FlightCard (Server)"]
+  Card --> Fav["FavoriteButton ('use client')"]
+  Page --> Filters["Filters ('use client')"]
+  Filters -->|"children prop"| Legend["FareLegend (Server, passed as children)"]

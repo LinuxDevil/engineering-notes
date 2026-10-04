@@ -1,0 +1,14 @@
+flowchart LR
+    subgraph Ingest[Ingestion, offline]
+      D[Documents] --> C[Chunk<br/>300-800 tokens, overlap]
+      C --> E1[Embed chunks]
+      E1 --> S[(Vector store<br/>+ metadata + text)]
+    end
+    subgraph Query[Query time]
+      U[User question] --> E2[Embed query]
+      E2 --> R[Retrieve top-k<br/>ANN + filters + BM25]
+      S --> R
+      R --> RR[Rerank]
+      RR --> P[Build prompt with<br/>top chunks + citations]
+      P --> L[LLM generates answer]
+    end

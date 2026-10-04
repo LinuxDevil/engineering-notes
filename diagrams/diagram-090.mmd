@@ -1,0 +1,6 @@
+flowchart LR
+  S[Specify<br/>goal, constraints, tests] --> G[Generate<br/>small steps]
+  G --> V[Verify<br/>read, run, test]
+  V -->|wrong| S
+  V --> I[Integrate<br/>review, CI, observability]
+  I --> O[Own<br/>you are accountable]

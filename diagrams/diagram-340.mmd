@@ -1,0 +1,21 @@
+flowchart TB
+  RP["ResultsPage"] --> SS["SearchSummary (edit search)"]
+  RP --> FP["FiltersPanel"]
+  FP --> F1["StopsFilter"] & F2["AirlinesFilter"] & F3["PriceRangeSlider"] & F4["TimeWindows"]
+  RP --> SB["SortBar"]
+  RP --> PB["ProgressBar (suppliers done / total)"]
+  RP --> RL["ResultsList (virtualized)"]
+  RL --> IC["ItineraryCard"]
+  IC --> Seg["SegmentRow x n"]
+  IC --> Price["PriceTag (currency formatted)"]
+  RP --> Mat["PriceMatrix / DateStrip (±3 days)"]
+
+  subgraph Data
+    URL["URL state<br/>search + filters + sort"]
+    RS["Results store<br/>normalized itineraries, facets"]
+    PL["Search poller<br/>(searchId, AbortController)"]
+  end
+  URL --> RP
+  PL --> RS --> RL
+  FP --> URL
+  SB --> URL

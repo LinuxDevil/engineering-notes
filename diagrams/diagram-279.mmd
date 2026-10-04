@@ -1,0 +1,6 @@
+flowchart LR
+    S["External store (Zustand / Redux)"] -->|"subscribe"| A["Component A: selects user.name"]
+    S -->|"subscribe"| B["Component B: selects cart.count"]
+    U["setState / dispatch"] --> S
+    S -. "only re-render if selected value changed" .-> A
+    S -. "only re-render if selected value changed" .-> B

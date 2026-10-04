@@ -66,15 +66,8 @@ Search for the key. The place where the search falls off the tree (a `null` chil
 
 ### Delete (three cases)
 
-```mermaid
-flowchart TD
-  A[Find node to delete] --> B{How many children?}
-  B -->|0: leaf| C[Just remove it]
-  B -->|1| D[Replace node with its only child]
-  B -->|2| E[Find in-order successor:<br/>smallest key in right subtree]
-  E --> F[Copy successor's key into node]
-  F --> G[Delete successor from right subtree<br/>it has at most one child]
-```
+{/* diagram source: /diagrams/diagram-191.mmd */}
+![diagram](/diagrams/diagram-191.svg)
 
 Deleting `3` from the tree above: it has two children, its successor is `4` (leftmost in the right subtree `6 -> 4`). Copy `4` into the node, then delete the old `4` leaf. The in-order predecessor (largest on the left) works equally well.
 

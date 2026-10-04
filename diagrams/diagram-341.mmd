@@ -1,0 +1,5 @@
+flowchart LR
+  A["Landing page 'from' price<br/>(cached hours/days)"] --> B["Search results price<br/>(cached minutes, offer TTL)"]
+  B --> C["Re-price on select<br/>(live supplier call)"]
+  C --> D["Price at booking creation"]
+  D --> E["Final price at payment<br/>(must match what user saw)"]

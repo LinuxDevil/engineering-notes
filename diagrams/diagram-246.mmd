@@ -1,0 +1,5 @@
+flowchart TB
+  CE["Custom Elements: customElements.define('flight-card', Class)"] --> WC["Web Component"]
+  SD["Shadow DOM: attachShadow() or template shadowrootmode"] --> WC
+  TS["template + slot: reusable markup and content projection"] --> WC
+  WC --> U["Usable in plain HTML, React, Angular, Vue, Svelte"]

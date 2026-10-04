@@ -69,12 +69,8 @@ pt = AESGCM(key).decrypt(nonce, ct, b"header")
 - Asymmetric ops are ~1000× slower than symmetric, so protocols use them to agree on a symmetric key (hybrid encryption).
 
 ## TLS and certificates (PKI)
-```mermaid
-flowchart TD
-  Root["Root CA (in OS/browser trust store)"] -->|"signs"| Int["Intermediate CA"]
-  Int -->|"signs"| Leaf["Leaf cert: CN/SAN = shop.example.com<br/>public key, validity dates"]
-  Leaf -->|"server proves it holds the private key<br/>(CertificateVerify signature)"| Client["Client validates chain,<br/>hostname, dates, revocation"]
-```
+{/* diagram source: /diagrams/diagram-096.mmd */}
+![diagram](/diagrams/diagram-096.svg)
 - A certificate binds a **public key** to **domain names** (SAN), signed by a Certificate Authority. The browser validates the chain up to a trusted root, the hostname and validity.
 - **Certificate Transparency** logs make mis-issuance publicly detectable.
 - **ACME** (Let's Encrypt, cert-manager in Kubernetes) automates issuance and renewal; automation is now mandatory given shrinking lifetimes.

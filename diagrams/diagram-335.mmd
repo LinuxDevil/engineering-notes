@@ -1,0 +1,8 @@
+flowchart TB
+  FW["apps/flights-web"] --> UI["packages/ui"]
+  FW --> API["packages/api-client"]
+  HW["apps/hotels-web"] --> UI
+  HW --> API
+  AD["apps/admin"] --> API
+  UI --> TS["packages/tsconfig"]
+  API --> TS

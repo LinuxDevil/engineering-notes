@@ -21,16 +21,8 @@ LLMs don't know your private documents, have a knowledge cutoff, and hallucinate
 
 ## The basic pipeline
 
-```mermaid
-flowchart LR
-  subgraph Ingest[Ingestion, offline]
-    S[Sources<br/>PDFs, wiki, tickets, DB] --> P[Parse & clean] --> C[Chunk + metadata] --> E[Embed] --> I[(Vector + keyword index)]
-  end
-  subgraph Query[Query time]
-    U[Question] --> QR[Query rewrite<br/>optional] --> H[Hybrid retrieve top 50] --> RR[Rerank → top 5-10] --> PR[Prompt: instructions + chunks + question] --> L[LLM] --> A[Answer + citations]
-  end
-  I --> H
-```
+{/* diagram source: /diagrams/diagram-023.mmd */}
+![diagram](/diagrams/diagram-023.svg)
 
 ```python
 def answer(question, user):
@@ -92,17 +84,8 @@ An LLM can also act as the reranker (score or filter candidates), at higher cost
 ## 5. Agentic RAG
 Classic RAG retrieves once, before generation. **Agentic RAG** gives the model **search tools** and lets it decide what to look up, inspect results, refine queries and search again across multiple sources (vector index, SQL, web, APIs) before answering.
 
-```mermaid
-flowchart TD
-  Q[Question] --> A[Agent LLM]
-  A -->|search_docs query| T1[(Docs index)]
-  A -->|run_sql| T2[(Warehouse)]
-  A -->|web_search| T3[Web]
-  T1 --> A
-  T2 --> A
-  T3 --> A
-  A -->|enough evidence| Ans[Answer + citations]
-```
+{/* diagram source: /diagrams/diagram-024.mmd */}
+![diagram](/diagrams/diagram-024.svg)
 
 | | Classic RAG | Agentic RAG |
 |---|---|---|

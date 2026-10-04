@@ -1,0 +1,8 @@
+stateDiagram-v2
+    [*] --> Created: docker create
+    Created --> Running: docker start
+    Running --> Paused: docker pause
+    Paused --> Running: docker unpause
+    Running --> Exited: process ends / docker stop (SIGTERM) / docker kill (SIGKILL)
+    Exited --> Running: docker start / docker restart
+    Exited --> [*]: docker rm

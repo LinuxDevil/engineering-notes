@@ -61,25 +61,8 @@ A single page is composed of several independent micro apps owned by different t
 
 ## 4. Where composition happens
 
-```mermaid
-flowchart LR
-  subgraph Build["Build time"]
-    NPM["Micro apps as npm packages"]
-  end
-  subgraph Server["Server"]
-    SSI["SSI / server templates / Next.js multi-zones rewrites"]
-  end
-  subgraph Edge["Edge / CDN"]
-    ESI["ESI / edge workers stitching HTML"]
-  end
-  subgraph Client["Client (runtime)"]
-    MF["Module Federation"]
-    IM["Import maps + single-spa"]
-    WC["Web Components"]
-    IF["iframes"]
-  end
-  Build --> Server --> Edge --> Client
-```
+{/* diagram source: /diagrams/diagram-308.mmd */}
+![diagram](/diagrams/diagram-308.svg)
 
 | Where | How | Pros | Cons |
 |---|---|---|---|

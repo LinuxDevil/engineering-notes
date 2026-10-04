@@ -12,15 +12,8 @@ updated: 2026-09-27
 Every CSS bug is one of three things: the **cascade** picked a different declaration than you expected (origin, `@layer`, specificity, order), the **box** is sized or positioned against something you didn't expect (box model, containing block, formatting context, margin collapsing), or the **paint order** is not what you think (stacking contexts). Learn the rules behind those three and CSS stops being "magic".
 </Note>
 
-```mermaid
-flowchart LR
-  A["Selectors match elements"] --> B["Cascade picks a winning value per property"]
-  B --> C["Inheritance and defaults fill the gaps"]
-  C --> D["Computed values"]
-  D --> E["Layout: box model, formatting contexts, containing blocks"]
-  E --> F["Paint: stacking contexts, z-index"]
-  F --> G["Composite: GPU layers"]
-```
+{/* diagram source: /diagrams/diagram-249.mmd */}
+![diagram](/diagrams/diagram-249.svg)
 
 See [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path) for how the CSSOM is built and where layout, paint and composite happen in the pipeline.
 
@@ -91,15 +84,8 @@ nav .link:hover   { color: orange; } /* (0,2,1) */
 
 When several declarations set the same property on the same element, the cascade sorts them by these criteria **in order**. It moves to the next step only on a tie:
 
-```mermaid
-flowchart TD
-  S["Competing declarations"] --> O["1. Origin and importance"]
-  O --> C["2. Context (shadow DOM: outer vs inner)"]
-  C --> E["3. Element-attached (style attribute)"]
-  E --> L["4. Cascade layers (@layer order)"]
-  L --> SP["5. Specificity"]
-  SP --> OR["6. Order of appearance (last wins)"]
-```
+{/* diagram source: /diagrams/diagram-250.mmd */}
+![diagram](/diagrams/diagram-250.svg)
 
 **Step 1, origin and importance**, from weakest to strongest:
 1. User-agent (browser defaults), normal
@@ -367,14 +353,8 @@ The page is painted in layers along the z-axis. A **stacking context** is a grou
 - `view-transition-name` other than none
 - elements in the **top layer** (modal `<dialog>`, popovers, fullscreen), which sit above everything regardless of z-index
 
-```mermaid
-flowchart TD
-  R["root context"] --> H["header: position sticky, z-index 10"]
-  R --> M["main: transform (new context, z-index auto means level 0)"]
-  M --> D["dropdown: z-index 9999"]
-  H --> HM["header menu"]
-  D -.->|"9999 only competes inside main"| X["still painted BELOW the header"]
-```
+{/* diagram source: /diagrams/diagram-251.mmd */}
+![diagram](/diagrams/diagram-251.svg)
 
 <Info>
 **z-index debugging checklist**

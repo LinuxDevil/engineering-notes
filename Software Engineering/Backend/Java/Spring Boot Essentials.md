@@ -44,14 +44,8 @@ class ClientsConfig {
 - Scopes: `singleton` (default, one per context), `prototype`, `request`, `session`.
 - Lifecycle: constructor → dependency injection → `@PostConstruct` → `BeanPostProcessor`s (how proxies for `@Transactional`, `@Async`, `@Cacheable` are created) → ready → `@PreDestroy`.
 
-```mermaid
-flowchart LR
-  S["@SpringBootApplication<br/>= @Configuration + @EnableAutoConfiguration + @ComponentScan"] --> CS[Component scan your packages]
-  S --> AC["Auto-configuration candidates<br/>(@ConditionalOnClass, @ConditionalOnMissingBean, @ConditionalOnProperty)"]
-  CS --> BD[Bean definitions]
-  AC --> BD
-  BD --> BPP["Instantiate + inject + BeanPostProcessors (proxies)"] --> CTX[ApplicationContext ready → embedded server starts]
-```
+{/* diagram source: /diagrams/diagram-056.mmd */}
+![diagram](/diagrams/diagram-056.svg)
 
 ## Auto-configuration and starters
 

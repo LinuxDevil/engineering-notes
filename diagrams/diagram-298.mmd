@@ -1,0 +1,7 @@
+flowchart TB
+  E2E["Playwright E2E against next build + next start: journeys, async RSC, streaming, auth, caching, visual"]
+  INT["Vitest integration: Server Actions, Route Handlers, proxy, DAL with MSW"]
+  COMP["Vitest + RTL: Client Components, hooks, forms"]
+  UNIT["Vitest unit: pure functions, schemas (Zod), formatters"]
+  STATIC["TypeScript (typed routes, PageProps), ESLint/Biome"]
+  E2E --- INT --- COMP --- UNIT --- STATIC

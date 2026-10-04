@@ -45,15 +45,8 @@ New → Ready → Running → (Blocked on I/O) → Ready → … → Terminated.
 - Container CPU limits use cgroups quotas; hitting the quota causes **throttling** (latency spikes) even when the node is idle.
 
 ## Virtual memory and paging
-```mermaid
-flowchart LR
-  VA["Virtual address<br/>(process view)"] --> TLB{"TLB hit?"}
-  TLB -->|"yes"| PA["Physical address"]
-  TLB -->|"no"| PT["Page table walk<br/>(multi-level)"]
-  PT -->|"present"| PA
-  PT -->|"not present"| PF["Page fault → kernel<br/>load from disk / allocate zeroed page / swap in"]
-  PF --> PA
-```
+{/* diagram source: /diagrams/diagram-102.mmd */}
+![diagram](/diagrams/diagram-102.svg)
 - Memory is split into **pages** (typically 4 KiB; huge pages 2 MiB/1 GiB). The **page table** maps virtual pages → physical frames; the **TLB** caches translations.
 - Benefits: isolation, each process sees a large contiguous space, **lazy allocation** (memory committed on first touch), **copy-on-write** after `fork`, **memory-mapped files** (`mmap`), shared libraries loaded once.
 - **Page fault**: minor (page in RAM, just not mapped) vs major (read from disk: ms).

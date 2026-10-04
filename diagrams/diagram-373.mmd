@@ -1,0 +1,12 @@
+flowchart LR
+  subgraph Inside["Code organisation (inside a unit)"]
+    L[Layered] --> H[Clean / Hexagonal / Onion]
+  end
+  subgraph Deploy["Deployment topology (across units)"]
+    M[Monolith] --> MM[Modular monolith] --> MS[Microservices]
+    MS --> SL[Serverless functions]
+  end
+  subgraph Comm["Communication & data"]
+    SY[Sync request/response] --- EV[Event-driven]
+    CR[CQRS] --- ES[Event sourcing]
+  end

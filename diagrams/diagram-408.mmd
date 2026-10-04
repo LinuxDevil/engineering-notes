@@ -1,0 +1,5 @@
+flowchart LR
+  U["Clients"] --> DNS["DNS / GeoDNS / Anycast"]
+  DNS --> L4["L4 LB (TCP/UDP)"]
+  L4 --> L7a["L7 proxy (HTTP)"] & L7b["L7 proxy (HTTP)"]
+  L7a & L7b --> A1["svc A"] & A2["svc A"] & B1["svc B"]

@@ -12,40 +12,8 @@ updated: 2026-09-27
 The entry point to every database note: fundamentals (how storage, indexes and transactions work), the SQL course, MongoDB, and senior topics (distribution, operations, modeling, performance, vectors). Each topic note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions at the end. Originals replaced during the September 2026 restructure are kept in `Databases/_Archive`.
 </Note>
 
-```mermaid
-mindmap
-  root((Databases))
-    Foundations
-      Internals & Pages
-      Row vs Column
-      Indexes
-    SQL
-      SQL ANSI course
-      Indexes deep dive
-      Partitioning
-      Triggers & procedures
-    Transactions
-      ACID
-      Isolation
-      Locking
-      MVCC & Vacuum
-    Design
-      Data modeling
-      NoSQL types
-      Vector DBs
-    Distribution
-      CAP & PACELC
-      Replication & 2PC
-      Sharding
-      Clustering
-    Operations
-      Query optimization
-      Connection pooling
-      Backups
-      Migrations
-    MongoDB
-      University units 1-13
-```
+{/* diagram source: /diagrams/diagram-126.mmd */}
+![diagram](/diagrams/diagram-126.svg)
 
 ## 🧭 Quick links
 - 🆕 [PostgreSQL 17 to 18 - What's New](/Software%20Engineering/Databases/Core%20Concepts/PostgreSQL%2017%20to%2018%20-%20What's%20New): Postgres 17/18/19 and the wider 2025–2026 database timeline

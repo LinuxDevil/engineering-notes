@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph Scroller["Scroll container (height 600px, overflow auto)"]
+    direction TB
+    TOP["Top spacer / offset: startIndex x rowHeight (not rendered)"]
+    OS1["Overscan rows above (rendered, off-screen)"]
+    VIS["Visible rows (rendered, in viewport)"]
+    OS2["Overscan rows below (rendered, off-screen)"]
+    BOT["Bottom spacer: remaining rows x rowHeight (not rendered)"]
+    TOP --> OS1 --> VIS --> OS2 --> BOT
+  end

@@ -1,0 +1,6 @@
+flowchart LR
+  B["Browser cache<br/>(HTTP headers)"] --> CDN["CDN / edge cache"]
+  CDN --> RP["Reverse proxy cache<br/>(Nginx, Varnish)"]
+  RP --> APP["App: in-process cache<br/>(LRU map, Caffeine)"]
+  APP --> DC["Distributed cache<br/>(Redis / Valkey / Memcached)"]
+  DC --> DB[("DB: buffer pool,<br/>materialized views")]

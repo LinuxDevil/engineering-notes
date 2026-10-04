@@ -70,13 +70,8 @@ Other techniques: extract interface, extract method and override in a test subcl
 
 ## Strangler fig pattern (replacing systems incrementally)
 
-```mermaid
-flowchart LR
-  U[Clients] --> F[Facade / router<br/>API gateway, proxy]
-  F -->|"/orders (migrated)"| N[New service]
-  F -->|everything else| L[Legacy system]
-  N -. sync / events .- L
-```
+{/* diagram source: /diagrams/diagram-092.mmd */}
+![diagram](/diagrams/diagram-092.svg)
 1. Put a facade in front of the legacy system.
 2. Route one capability at a time to the new implementation.
 3. Keep data in sync (change data capture, events, dual writes with care).

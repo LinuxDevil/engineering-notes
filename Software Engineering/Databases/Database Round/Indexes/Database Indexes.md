@@ -50,16 +50,8 @@ Most databases use a **B+tree**, not a plain B-tree:
 
 ![Screenshot_2023-07-27_at_4.01.27_PM](/Attachments/Screenshot_2023-07-27_at_4.01.27_PM.png)
 
-```mermaid
-flowchart TB
-  R["root: 40 | 80"] --> I1["10 | 25"]
-  R --> I2["55 | 70"]
-  R --> I3["90 | 120"]
-  I1 --> L1["leaf: 1..9"] 
-  I1 --> L2["leaf: 10..24"]
-  I1 --> L3["leaf: 25..39"]
-  L1 -.next.-> L2 -.next.-> L3 -.next.-> L4["leaf: 40..54 ..."]
-```
+{/* diagram source: /diagrams/diagram-119.mmd */}
+![diagram](/diagrams/diagram-119.svg)
 
 Costs: a lookup is O(log n) page reads (with the upper levels usually cached, often just 1–2 real IOs). Inserts may **split** pages; deletes may leave half-empty pages (Postgres B-trees do bottom-up deletion and deduplication since v13/v14 to limit bloat).
 

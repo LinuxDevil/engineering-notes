@@ -13,29 +13,8 @@ A **CDN** is a global network of cache servers (points of presence, PoPs) that s
 </Note>
 
 ## How a CDN request flows
-```mermaid
-sequenceDiagram
-  participant U as User (Paris)
-  participant DNS as DNS / Anycast
-  participant E as Edge PoP (Paris)
-  participant S as Shield / regional tier
-  participant O as Origin (us-east-1)
-  U->>DNS: resolve cdn.example.com
-  DNS-->>U: anycast IP (nearest PoP)
-  U->>E: GET /img/logo.png
-  alt edge HIT
-    E-->>U: 200 (from cache, ~10 ms)
-  else edge MISS
-    E->>S: fetch
-    alt shield HIT
-      S-->>E: 200
-    else shield MISS
-      S->>O: fetch (~90 ms RTT)
-      O-->>S: 200 Cache-Control: public, max-age=86400
-    end
-    E-->>U: 200 (and stores it)
-  end
-```
+{/* diagram source: /diagrams/diagram-399.mmd */}
+![diagram](/diagrams/diagram-399.svg)
 
 - **Routing to the nearest PoP**: Anycast (one IP announced from every PoP, BGP picks the closest) or GeoDNS.
 - **Tiered caching / origin shield**: a middle tier collapses misses from many PoPs into one origin request.

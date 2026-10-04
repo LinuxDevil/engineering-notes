@@ -20,13 +20,8 @@ N = 5:  hash("user:42") % 5 = 0  → node 0   (moved!)
 Going from 4 to 5 nodes moves ~80% of keys. For a cache that's a near-total miss storm; for a database it's a massive migration.
 
 ## The ring
-```mermaid
-flowchart LR
-  subgraph Ring["Hash ring 0 … 2^32-1 (clockwise)"]
-    direction LR
-    A["Node A @ 10"] --> K1(["key k1 @ 25"]) --> B["Node B @ 40"] --> K2(["key k2 @ 55"]) --> C["Node C @ 80"] --> K3(["key k3 @ 95"]) --> A
-  end
-```
+{/* diagram source: /diagrams/diagram-401.mmd */}
+![diagram](/diagrams/diagram-401.svg)
 - Hash each **node** (e.g. its ID) to positions on the ring.
 - Hash each **key**; walk clockwise to the first node. k1 → B, k2 → C, k3 → A (wraps around).
 - **Add node D @ 50**: only keys in (40, 50] move from C to D.

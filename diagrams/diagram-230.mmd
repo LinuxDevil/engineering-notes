@@ -1,0 +1,5 @@
+flowchart LR
+  L["Local (inner call)"] -->|"not found → outer"| C["Closure (outer function)"]
+  C -->|"not found → outer"| S["Script (top-level let/const)"]
+  S -->|"not found → outer"| G["Global object (window / globalThis)"]
+  G -->|"not found"| E["ReferenceError"]

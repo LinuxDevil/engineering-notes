@@ -1,0 +1,9 @@
+flowchart LR
+  S[Symptom: slow p99, high CPU, OOM] --> M[Measure: metrics + load test]
+  M --> Q{CPU-bound or waiting?}
+  Q -- CPU / loop delay high --> CP[CPU profile / flame graph]
+  Q -- waiting on I/O --> TR[Tracing: DB, HTTP spans]
+  Q -- memory grows --> HS[Heap snapshots, compare]
+  CP --> F[Fix hotspot] --> V[Re-measure under same load]
+  TR --> F
+  HS --> F

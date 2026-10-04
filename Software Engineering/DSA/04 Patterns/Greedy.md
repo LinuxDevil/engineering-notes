@@ -22,13 +22,8 @@ Greedy = "take the best-looking option now". Examples:
 
 The hard part is not coding; it is knowing **when the local choice is safe**.
 
-```mermaid
-flowchart LR
-  P["Problem"] --> Q{"Does a locally best choice<br/>always extend to an optimal solution?"}
-  Q -->|"yes: prove with exchange argument"| G["Greedy<br/>O(n) or O(n log n)"]
-  Q -->|"no / counterexample found"| D["Dynamic Programming<br/>explore all choices, reuse subproblems"]
-  Q -->|"not sure"| T["try small counterexamples<br/>brute force vs greedy on random inputs"]
-```
+{/* diagram source: /diagrams/diagram-202.mmd */}
+![diagram](/diagrams/diagram-202.svg)
 
 ### When greedy fails: coin change
 

@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant User
+  participant Host as Host (AI app + model)
+  participant Client as MCP client
+  participant Server as MCP server
+  Host->>Client: start
+  Client->>Server: initialize (capabilities)
+  Server-->>Client: capabilities (tools, resources, prompts)
+  Client->>Server: tools/list
+  Server-->>Client: [ { name, description, inputSchema } ]
+  User->>Host: "Why is LCP slow on /flights?"
+  Host->>Client: model decides to call tool
+  Client->>Server: tools/call { name: "performance_trace", arguments }
+  Server-->>Client: result (text / structured content)
+  Client-->>Host: result goes back into model context
+  Host-->>User: answer

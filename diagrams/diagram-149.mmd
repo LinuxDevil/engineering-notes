@@ -1,0 +1,16 @@
+flowchart LR
+  subgraph repos[Team repos]
+    s[acme/shell] --> JS[Jenkins]
+    c[acme/catalog] --> JC[Jenkins]
+    k[acme/checkout] --> JK[Jenkins]
+  end
+  JS -->|ghcr.io/acme/shell:SHA + tag bump| G[(acme/platform-gitops)]
+  JC -->|ghcr.io/acme/catalog:SHA + tag bump| G
+  JK -->|ghcr.io/acme/checkout:SHA + tag bump| G
+  JC -.->|upload .next/static| OBJ[(Object storage + CDN)]
+  G --> AS[ApplicationSet shop]
+  AS --> A1[shell-prod]
+  AS --> A2[catalog-prod]
+  AS --> A3[checkout-prod]
+  A1 & A2 & A3 --> K8s[shop-prod namespace]
+  K8s --> GR[Grafana: per-zone dashboards, Faro, Loki]

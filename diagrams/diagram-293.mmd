@@ -1,0 +1,6 @@
+flowchart LR
+    R["Request"] --> Shell["Send shell + fallbacks"]
+    Shell --> A["Chunk: prices ready -> replace fallback"]
+    Shell --> B["Chunk: reviews ready -> replace fallback"]
+    A --> H["Selective hydration"]
+    B --> H

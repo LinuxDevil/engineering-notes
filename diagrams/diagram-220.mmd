@@ -1,0 +1,7 @@
+flowchart LR
+  A["Snapshot 1 (baseline)"] --> B["Repeat action N times"]
+  B --> C["Force GC (trash icon)"]
+  C --> D["Snapshot 2"]
+  D --> E["Comparison view: # New - # Deleted"]
+  E --> F["Retainers: who holds it?"]
+  F --> G["Fix cleanup, repeat"]

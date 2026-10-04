@@ -12,29 +12,8 @@ updated: 2026-09-27
 The domain home for everything server-side: runtimes (**Node.js**, **Java & Spring**), the infrastructure in front of your app (**Nginx**, **API gateways**, BFFs), the work that happens outside the request (**background jobs**, **cron**), and application architecture (**Rails Clean Architecture**). API design and authentication have their own home in [APIs & Auth Index](/Software%20Engineering/APIs%20%26%20Auth/APIs%20%26%20Auth%20Index). Every topic note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions.
 </Note>
 
-```mermaid
-mindmap
-  root((Backend))
-    Runtimes
-      Node.js
-      Java & Spring
-      Ruby on Rails
-    APIs & Auth
-      REST, GraphQL, gRPC
-      Sessions, JWT, OAuth
-      Rate limiting
-    Edge & traffic
-      Nginx
-      API gateways & BFF
-      Service mesh
-    Async work
-      Background jobs
-      Cron & schedulers
-      Webhooks
-    Architecture
-      Clean Architecture
-      Microservices
-```
+{/* diagram source: /diagrams/diagram-038.mmd */}
+![diagram](/diagrams/diagram-038.svg)
 
 ## 🧭 Areas
 | Area | Home note |

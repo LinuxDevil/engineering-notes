@@ -1,0 +1,15 @@
+flowchart TD
+  S[Something is wrong with orders-api] --> P{Pod status?}
+  P -->|Pending| PE[Scheduling problem:<br/>describe pod, FailedScheduling event]
+  P -->|ContainerCreating for minutes| CC[Volume, secret, CNI or image pull:<br/>events on the pod]
+  P -->|ImagePullBackOff / ErrImagePull| IP[Image name/tag, registry auth, network]
+  P -->|CrashLoopBackOff| CL{lastState.terminated.reason}
+  CL -->|OOMKilled, exit 137| OOM[Memory limit too low or leak]
+  CL -->|Error, exit 1| APPERR[App crash: logs --previous]
+  CL -->|Completed, exit 0| EXIT[Process exits: wrong command, no server loop]
+  P -->|Running but 0/1 READY| RD[Readiness probe failing:<br/>events Unhealthy, probe path/port/deps]
+  P -->|Evicted / Failed| EV[Node pressure: memory, disk, ephemeral-storage]
+  P -->|Terminating forever| TE[Finalizers, dead node, preStop hanging]
+  P -->|Running 1/1, still no traffic| SV{EndpointSlices empty?}
+  SV -->|yes| SEL[Service selector / targetPort / readiness]
+  SV -->|no| NET[Gateway/HTTPRoute, NetworkPolicy, DNS]

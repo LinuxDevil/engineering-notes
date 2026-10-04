@@ -39,17 +39,8 @@ A **set** is a hash table with keys only. It answers "have I seen this?" in O(1)
 
 ### Collision resolution
 
-```mermaid
-flowchart LR
-  subgraph Chaining
-    S0[slot 0] --> A["'ant':1"] --> B["'bee':2"]
-    S1[slot 1] --> N1[empty]
-    S2[slot 2] --> C["'cat':7"]
-  end
-  subgraph "Open addressing (linear probing)"
-    O0["0: 'ant'"] --- O1["1: 'bee' (wanted 0, probed to 1)"] --- O2["2: 'cat'"] --- O3["3: empty"]
-  end
-```
+{/* diagram source: /diagrams/diagram-187.mmd */}
+![diagram](/diagrams/diagram-187.svg)
 
 | | Separate chaining | Open addressing |
 |---|---|---|

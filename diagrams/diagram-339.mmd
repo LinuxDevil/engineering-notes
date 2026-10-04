@@ -1,0 +1,9 @@
+flowchart LR
+  LP["Route landing pages<br/>/flights/dubai-cairo<br/>SSG/ISR + CDN"] --> Home
+  Home["Home / Search form<br/>SSR shell"] --> Results["Results /flights/search?...<br/>SSR skeleton + CSR polling"]
+  Results --> Details["Fare details / upsell<br/>(drawer or page)"]
+  Details --> Pax["Passenger details<br/>CSR, auth-aware"]
+  Pax --> Extras["Seats & extras<br/>CSR, lazy seat map"]
+  Extras --> Pay["Payment<br/>CSR, PCI-scoped iframe"]
+  Pay -->|"3DS redirect/challenge"| Bank["Issuer ACS"]
+  Bank --> Confirm["Confirmation<br/>/booking/:id"]

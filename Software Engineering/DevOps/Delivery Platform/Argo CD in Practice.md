@@ -41,32 +41,8 @@ State lives in Kubernetes itself: `Application`/`AppProject`/`ApplicationSet` CR
 
 ### The reconciliation loop
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Dev as Developer / Jenkins
-    participant Git as acme/platform-gitops
-    participant Srv as argocd-server
-    participant Repo as repo-server
-    participant Ctl as application-controller
-    participant K8s as Kubernetes API (shop-prod)
-    Dev->>Git: merge PR (bump orders-api image tag)
-    Git-->>Srv: webhook POST /api/webhook (optional)
-    Srv->>Ctl: refresh orders-api-prod now
-    Note over Ctl: without a webhook: poll every 120s + up to 60s jitter
-    Ctl->>Repo: render apps/orders-api/overlays/prod @ HEAD
-    Repo->>Git: fetch (cached by commit SHA)
-    Repo-->>Ctl: rendered manifests
-    Ctl->>K8s: watch/list live objects (informer cache)
-    Ctl->>Ctl: diff desired vs live, apply ignoreDifferences, compute health
-    alt OutOfSync and automated sync
-        Ctl->>K8s: PreSync hooks, then apply by wave, then PostSync hooks
-    else OutOfSync and manual sync
-        Ctl-->>Srv: show OutOfSync, wait for "Sync" click / argocd app sync
-    end
-    K8s-->>Ctl: watch events (pods ready, rollout progress)
-    Ctl-->>Srv: sync + health status, events, notifications
-```
+{/* diagram source: /diagrams/diagram-145.mmd */}
+![diagram](/diagrams/diagram-145.svg)
 
 Key facts:
 - **Polling**: by default Argo CD checks Git every ~3 minutes (`timeout.reconciliation: 120s` + `timeout.reconciliation.jitter: 60s` in `argocd-cm`).
@@ -369,20 +345,8 @@ We run automated sync in all three environments: the PR review and branch protec
 
 A sync runs **phases** (`PreSync` → `Sync` → `PostSync`, plus `SyncFail` on failure and `PreDelete` on app deletion since 3.3). Inside each phase, resources apply in ascending **sync-wave** order (default `0`, can be negative). Argo CD waits for each wave to be healthy before the next.
 
-```mermaid
-flowchart LR
-  subgraph PreSync
-    M["Job orders-api-migrate<br/>hook: PreSync"]
-  end
-  subgraph Sync
-    W1["wave -1<br/>ExternalSecret, ConfigMap, ServiceAccount"] --> W0["wave 0<br/>Deployment / Rollout, Service"] --> W1b["wave 1<br/>HTTPRoute, HPA, PDB"]
-  end
-  subgraph PostSync
-    S["Job orders-api-smoke<br/>hook: PostSync"]
-  end
-  PreSync --> Sync --> PostSync
-  Sync -. failure .-> F["SyncFail hooks<br/>(e.g. Slack, cleanup)"]
-```
+{/* diagram source: /diagrams/diagram-146.mmd */}
+![diagram](/diagrams/diagram-146.svg)
 
 The DB migration for `orders-api` as a PreSync hook, in `apps/orders-api/base/migrate-job.yaml`:
 

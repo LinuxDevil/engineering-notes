@@ -1,0 +1,8 @@
+flowchart LR
+  R((Roots)) --> A[window.app]
+  A --> B[store]
+  B --> C[user object]
+  R --> D["active listener closure"]
+  D --> E["big data array"]
+  X["old modal (no refs)"]:::garbage --> Y["its DOM subtree"]:::garbage
+  classDef garbage fill:#fdd,stroke:#c33

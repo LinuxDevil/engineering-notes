@@ -89,13 +89,8 @@ Candidate keys that were **not** chosen as the primary key. They are usually enf
 - **Composite key**: a candidate key with more than one attribute.
 - **Foreign key**: references a key in a parent table; may be non-unique and (unless declared `NOT NULL`) nullable.
 
-```mermaid
-flowchart TD
-  S[Super keys: any unique column set] --> C[Candidate keys: minimal super keys]
-  C --> P[Primary key: the one you choose]
-  C --> A[Alternate keys: the rest, enforced with UNIQUE]
-  P -. referenced by .-> F[Foreign key in a child table]
-```
+{/* diagram source: /diagrams/diagram-134.mmd */}
+![diagram](/diagrams/diagram-134.svg)
 
 ## A tiny schema you can run
 

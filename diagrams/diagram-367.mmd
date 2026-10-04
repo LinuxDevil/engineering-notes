@@ -1,0 +1,5 @@
+flowchart LR
+  DRY -- "too much" --> WA[Wrong abstraction<br/>flag-driven shared code]
+  YAGNI -- "prevents" --> SG[Speculative generality]
+  KISS -- "prevents" --> CC[Clever code]
+  WA -. "fix: inline, re-extract" .-> KISS

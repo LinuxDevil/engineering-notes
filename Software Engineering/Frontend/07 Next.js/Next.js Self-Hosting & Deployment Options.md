@@ -14,17 +14,8 @@ A Next.js app needs **one thing to run every feature: a Node.js server** (`next 
 
 ## 1. The options at a glance
 
-```mermaid
-flowchart TD
-  Q1{"Need server features? (SSR, ISR, Server Actions, proxy, image optimization)"}
-  Q1 -- No --> SE["Static export: output 'export' → S3/CDN/nginx/GitHub Pages"]
-  Q1 -- Yes --> Q2{"Want a managed platform?"}
-  Q2 -- "Yes, Vercel" --> V["Vercel (reference platform)"]
-  Q2 -- "Yes, other" --> A["Platform adapter: Bun (verified), Netlify, Cloudflare/OpenNext, AWS/OpenNext (SST), Amplify, Firebase"]
-  Q2 -- "No, our infra" --> Q3{"Single instance?"}
-  Q3 -- Yes --> N["VM/PaaS: next start (+ reverse proxy)"]
-  Q3 -- No --> K["Docker standalone on Kubernetes/ECS/Cloud Run + shared cache, deploymentId, CDN"]
-```
+{/* diagram source: /diagrams/diagram-296.mmd */}
+![diagram](/diagrams/diagram-296.svg)
 
 | Option | Feature support (official) | You operate | Good for |
 |---|---|---|---|
@@ -182,15 +173,8 @@ OpenNext is the community project that packages Next.js for non-Vercel platforms
 
 ## 7. What you must handle yourself when self-hosting
 
-```mermaid
-flowchart LR
-  U["Browser"] --> CDN["CDN: cache /_next/static forever; respect Vary + _rsc"]
-  CDN --> LB["LB / reverse proxy: TLS, no buffering"]
-  LB --> P1["Next pod A"]
-  LB --> P2["Next pod B"]
-  P1 & P2 --> R[("Redis: cacheHandler + cacheHandlers + tag state")]
-  P1 & P2 --> IMG["Image cache (disk per pod, or external loader)"]
-```
+{/* diagram source: /diagrams/diagram-297.mmd */}
+![diagram](/diagrams/diagram-297.svg)
 
 ### 7.1 Shared cache for multiple instances
 

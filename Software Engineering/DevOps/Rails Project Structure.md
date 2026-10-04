@@ -61,17 +61,8 @@ myapp/
 
 ## How a request flows
 
-```mermaid
-flowchart LR
-  B[Browser] --> P[Puma web server]
-  P --> R[Rack middleware stack]
-  R --> RT[config/routes.rb]
-  RT --> C[Controller action]
-  C --> M[Model / ActiveRecord]
-  M --> DB[(Database)]
-  C --> V[View template / JSON]
-  V --> B
-```
+{/* diagram source: /diagrams/diagram-181.mmd */}
+![diagram](/diagrams/diagram-181.svg)
 
 ## Everyday commands
 

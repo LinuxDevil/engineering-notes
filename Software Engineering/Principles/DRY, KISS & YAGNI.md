@@ -129,13 +129,8 @@ YAGNI **does not** mean skipping things that make code easy to change: tests, re
 
 ## How they interact
 
-```mermaid
-flowchart LR
-  DRY -- "too much" --> WA[Wrong abstraction<br/>flag-driven shared code]
-  YAGNI -- "prevents" --> SG[Speculative generality]
-  KISS -- "prevents" --> CC[Clever code]
-  WA -. "fix: inline, re-extract" .-> KISS
-```
+{/* diagram source: /diagrams/diagram-367.mmd */}
+![diagram](/diagrams/diagram-367.svg)
 
 | Situation | Guidance |
 |---|---|

@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph When["When is HTML made?"]
+    B["Build time: SSG"] --> R["Build + revalidate: ISR"]
+    R --> Q["Per request: SSR / streaming"]
+    Q --> C["In the browser: CSR"]
+  end
+  subgraph JS["How much JS hydrates?"]
+    F["Full hydration"] --> P["Progressive / selective"]
+    P --> I["Islands / partial"]
+    I --> Z["Resumable / RSC (little or none)"]
+  end

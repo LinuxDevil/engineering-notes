@@ -55,17 +55,8 @@ JavaScript runs on **one call stack** per thread. Async work (timers, network, e
 
 ## One turn of the browser event loop
 
-```mermaid
-flowchart TD
-  A["Pick the oldest runnable TASK (macrotask)"] --> B["Run it to completion on the call stack"]
-  B --> C["Microtask checkpoint: drain ALL microtasks (including ones added meanwhile)"]
-  C --> D{"Rendering opportunity? (about once per frame, e.g. every ~16.7 ms at 60 Hz, and only if something changed)"}
-  D -- no --> A
-  D -- yes --> E["Run requestAnimationFrame callbacks (microtasks drained after each)"]
-  E --> F["Style recalc, Layout, Paint, Composite"]
-  F --> G["requestIdleCallback if there is spare time"]
-  G --> A
-```
+{/* diagram source: /diagrams/diagram-209.mmd */}
+![diagram](/diagrams/diagram-209.svg)
 
 **Corrected priority order** (the original note said "the rendering happens here" in the microtask step, which is wrong):
 
@@ -127,22 +118,8 @@ How the script gets fired:
 6. (A render may happen here if a frame is due.)
 7. The event loop picks the next **task**: the timer callback (`setTimeout callback`).
 
-```mermaid
-sequenceDiagram
-  participant S as Call stack
-  participant W as Web APIs (timer)
-  participant M as Microtask queue
-  participant T as Task queue
-  S->>S: log "Script Start"
-  S->>W: setTimeout(cb, 0)
-  S->>M: Promise.then(cb2)
-  S->>S: log "Script End"
-  W-->>T: timer done, enqueue cb
-  Note over S: stack empty, microtask checkpoint
-  M->>S: run cb2, log "Promise resolved"
-  Note over S: maybe render
-  T->>S: run cb, log "setTimeout callback"
-```
+{/* diagram source: /diagrams/diagram-210.mmd */}
+![diagram](/diagrams/diagram-210.svg)
 
 <Info>
 **Harder ordering puzzle**
@@ -226,15 +203,8 @@ window.addEventListener('scroll', () => {
 
 Node uses libuv; its loop runs in **phases**, and between each callback it drains two queues: the `process.nextTick` queue first, then the promise microtask queue.
 
-```mermaid
-flowchart LR
-  T[timers: setTimeout/setInterval] --> P[pending callbacks]
-  P --> I[idle/prepare]
-  I --> O["poll: I/O callbacks (waits here)"]
-  O --> C["check: setImmediate"]
-  C --> X[close callbacks]
-  X --> T
-```
+{/* diagram source: /diagrams/diagram-211.mmd */}
+![diagram](/diagrams/diagram-211.svg)
 
 | | Browser | Node.js |
 |---|---|---|

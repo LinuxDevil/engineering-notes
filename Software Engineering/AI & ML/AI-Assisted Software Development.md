@@ -25,17 +25,8 @@ In 2025 AI coding moved from autocomplete to **agents** that read the codebase, 
 ## How a coding agent works
 It's the agent loop from [AI Agents & Agentic Patterns](/Software%20Engineering/AI%20%26%20ML/AI%20Agents%20%26%20Agentic%20Patterns) with developer tools:
 
-```mermaid
-flowchart LR
-  T[Task / issue / spec] --> A[Agent]
-  A -->|read| FS[Files: grep, glob, read]
-  A -->|edit| ED[Write/patch files]
-  A -->|run| SH[Shell: build, test, lint]
-  A -->|browse| BR[Docs, browser, MCP servers]
-  SH -->|errors, test output| A
-  A --> PR[Diff / commit / PR] --> H[Human review]
-  H -->|comments| A
-```
+{/* diagram source: /diagrams/diagram-006.mmd */}
+![diagram](/diagrams/diagram-006.svg)
 
 What makes it work well: tests and type checks give the agent **ground truth**, so it can iterate until green. Code is one of the few domains where an agent's output is cheaply **verifiable**, which is why coding agents took off first.
 

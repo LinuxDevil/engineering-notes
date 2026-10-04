@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant B as Browser
+  participant D as DNS
+  participant S as Server / CDN
+  B->>D: Resolve api.example.com
+  D-->>B: IP address
+  B->>S: TCP handshake (SYN, SYN-ACK, ACK)
+  B->>S: TLS handshake (ClientHello ... Finished)
+  B->>S: GET /flights?from=DXB
+  S-->>B: 200 OK + headers + body (streamed)

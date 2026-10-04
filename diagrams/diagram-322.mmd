@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant U as User
+  participant S as Scroll container
+  participant V as Virtualizer
+  participant D as DOM
+  U->>S: scrolls
+  S->>V: scroll event (scrollTop)
+  V->>V: compute start/end index (+ overscan)
+  V->>D: render only rows start..end at translateY(index x size)
+  D-->>U: same scrollbar, ~30 nodes instead of 10,000

@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph Chaining
+    S0[slot 0] --> A["'ant':1"] --> B["'bee':2"]
+    S1[slot 1] --> N1[empty]
+    S2[slot 2] --> C["'cat':7"]
+  end
+  subgraph "Open addressing (linear probing)"
+    O0["0: 'ant'"] --- O1["1: 'bee' (wanted 0, probed to 1)"] --- O2["2: 'cat'"] --- O3["3: empty"]
+  end

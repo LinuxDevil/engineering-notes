@@ -14,20 +14,8 @@ Java ships a feature release every **six months** (March and September), with an
 
 ## Release cadence
 
-```mermaid
-timeline
-  title JDK releases (LTS in bold names)
-  2021-09 : JDK 17 LTS
-  2022 : JDK 18 : JDK 19
-  2023-03 : JDK 20
-  2023-09 : JDK 21 LTS (virtual threads)
-  2024-03 : JDK 22 (FFM API, unnamed vars)
-  2024-09 : JDK 23 (Markdown javadoc, gen ZGC default)
-  2025-03 : JDK 24 (gatherers, no-pinning VTs)
-  2025-09 : JDK 25 LTS (scoped values, compact headers)
-  2026-03 : JDK 26 (HTTP/3 client)
-  2026-09 : JDK 27 (G1 default everywhere)
-```
+{/* diagram source: /diagrams/diagram-051.mmd */}
+![diagram](/diagrams/diagram-051.svg)
 
 - **Preview** features need `--enable-preview` and can change; **incubator** modules (Vector API) are APIs under `jdk.incubator.*`.
 - Vendors (Oracle, Eclipse Temurin, Amazon Corretto, Azul, Microsoft) provide builds and LTS support. Spring Boot 4 still supports **Java 17+** but is tuned for 25.

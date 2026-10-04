@@ -43,19 +43,8 @@ const config = fs.readFileSync('config.json', 'utf8');
 
 ## What happens under the hood
 
-```mermaid
-sequenceDiagram
-  participant JS as JS (main thread)
-  participant UV as libuv
-  participant TP as Thread pool
-  participant OS as Disk / OS
-  JS->>UV: fs.readFile(path, cb)
-  UV->>TP: queue open/read/close work
-  TP->>OS: blocking read()
-  OS-->>TP: bytes
-  TP-->>UV: done
-  UV-->>JS: cb(err, data) queued, runs when call stack is empty
-```
+{/* diagram source: /diagrams/diagram-080.mmd */}
+![diagram](/diagrams/diagram-080.svg)
 
 - `readFile` loads the **whole file into memory**. For large files use `fs.createReadStream` (see [Node.js Hard Parts - Streams & Event Loop Queues](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/Node.js%20Hard%20Parts%20-%20Streams%20%26%20Event%20Loop%20Queues)).
 - With 4 default pool threads, many concurrent file reads (plus `crypto.pbkdf2`, `zlib`, `dns.lookup`) queue behind each other. Tune `UV_THREADPOOL_SIZE` if profiling shows pool saturation.

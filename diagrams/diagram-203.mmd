@@ -1,0 +1,5 @@
+flowchart TD
+  Q{"Interval problem"} -->|"merge / insert / union"| M["sort by start<br/>extend last kept end"]
+  Q -->|"max non-overlapping / min removals / arrows"| G["sort by END<br/>greedy keep earliest finish"]
+  Q -->|"how many overlap at the same time"| H["min-heap of ends<br/>or sweep line"]
+  Q -->|"intersect two sorted lists"| T["two pointers<br/>advance the one that ends first"]

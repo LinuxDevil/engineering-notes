@@ -23,19 +23,8 @@ Reactive programming embraces **asynchronous I/O**: instead of a thread waiting 
 - The JVM, .NET and others take a middle-of-the-road approach to concurrency: delegating to the OS is a safe bet with predictable results and asks little of the programmer. But it means one blocked request = one idle, expensive thread.
 - If the work is **CPU-bound** (Fibonacci, bitcoin mining, cryptography), reactive programming buys nothing: the CPU is busy, not waiting.
 
-```mermaid
-flowchart LR
-  subgraph Blocking["Thread-per-request"]
-    R1[req 1] --> T1["thread 1 (waits on DB)"]
-    R2[req 2] --> T2["thread 2 (waits on DB)"]
-    R3[req N] --> TN["thread N ... pool exhausted"]
-  end
-  subgraph Reactive["Event loop"]
-    Q[req 1..N] --> EL["few event-loop threads"]
-    EL -- register callback --> IO[(DB / network)]
-    IO -- data ready → notify --> EL
-  end
-```
+{/* diagram source: /diagrams/diagram-053.mmd */}
+![diagram](/diagrams/diagram-053.svg)
 
 <Info>
 **🆕 Since the book: virtual threads**

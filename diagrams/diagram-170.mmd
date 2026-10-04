@@ -1,0 +1,7 @@
+flowchart LR
+  Dev[Developer] -->|PR| AppRepo[App repo]
+  AppRepo --> CI[CI: test, build, scan, push image]
+  CI -->|PR: bump image tag| EnvRepo[Config repo: Helm values / Kustomize overlays]
+  EnvRepo -->|pull every few min or webhook| Agent[Argo CD / Flux in cluster]
+  Agent -->|apply + watch| K8s[(Kubernetes API)]
+  Agent -->|drift? health?| UI[Status / alerts]

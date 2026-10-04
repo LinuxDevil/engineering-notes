@@ -1,0 +1,3 @@
+flowchart TB
+  T["tick 02:00<br/>nightly-sales-report<br/>repeat:nightly-sales-report:1790467200000"] --> C1["report-part DE"] & C2["report-part AT"] & C3["report-part CH"]
+  C1 & C2 & C3 --> P["parent resumes:<br/>merge CSV → S3 → email"]

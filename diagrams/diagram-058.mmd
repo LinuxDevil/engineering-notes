@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph A["❌ Cron does the work"]
+    C1["crontab on app-1<br/>0 2 * * * node report.js"] --> W1["report.js<br/>(no retries, no metrics,<br/>dies with the host)"]
+  end
+  subgraph B["✅ Cron enqueues"]
+    S["Scheduler<br/>(one trigger per tick)"] -- "enqueue {job, scheduledTime}" --> Q[("Queue<br/>durable")]
+    Q --> W2["worker 1"] & W3["worker 2"] & W4["worker N"]
+    W2 & W3 & W4 -- "ack / retry / DLQ" --> Q
+  end

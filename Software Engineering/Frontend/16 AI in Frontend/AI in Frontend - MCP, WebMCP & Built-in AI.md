@@ -12,21 +12,8 @@ updated: 2026-09-27
 AI touches front end work in three ways: (1) **agents use your tools** through the **Model Context Protocol (MCP)**: DevTools, framework dev servers, and now websites themselves via **WebMCP**; (2) **the browser ships models**: Chrome's built-in AI APIs (Translator, Summarizer, Prompt API...) run on-device; (3) **you build AI features** (chat, streaming answers, generative UI) with libraries like the Vercel AI SDK. The FE skills that matter are streaming UI, cancellation, error/latency UX, and security (prompt injection, never shipping API keys to the browser).
 </Note>
 
-```mermaid
-flowchart LR
-  subgraph Dev["1. Agents in your dev loop"]
-    Agent["Coding agent<br/>(MCP host)"] --> DT["Chrome DevTools for agents"]
-    Agent --> FW["Next.js / Angular MCP servers"]
-    Agent --> PW["Playwright MCP"]
-  end
-  subgraph Web["2. Agents on your website"]
-    BrowserAgent["Browser agent"] --> WMCP["WebMCP tools<br/>document.modelContext"]
-  end
-  subgraph Prod["3. AI features you ship"]
-    UI["Chat / streaming UI"] --> Server["Your server route<br/>(holds API keys)"] --> LLM["Cloud LLM"]
-    UI --> OnDevice["Chrome built-in AI<br/>(on-device models)"]
-  end
-```
+{/* diagram source: /diagrams/diagram-348.mmd */}
+![diagram](/diagrams/diagram-348.svg)
 
 ## 1. MCP: Model Context Protocol
 
@@ -40,24 +27,8 @@ MCP is an open protocol (originally from Anthropic, Nov 2024) that standardizes 
 | **Client** | A connector inside the host with a 1:1 connection to one server | The host's connection to the "chrome-devtools" server |
 | **Server** | A program that exposes capabilities | Chrome DevTools for agents, a GitHub server, your own internal API server |
 
-```mermaid
-sequenceDiagram
-  participant User
-  participant Host as Host (AI app + model)
-  participant Client as MCP client
-  participant Server as MCP server
-  Host->>Client: start
-  Client->>Server: initialize (capabilities)
-  Server-->>Client: capabilities (tools, resources, prompts)
-  Client->>Server: tools/list
-  Server-->>Client: [ { name, description, inputSchema } ]
-  User->>Host: "Why is LCP slow on /flights?"
-  Host->>Client: model decides to call tool
-  Client->>Server: tools/call { name: "performance_trace", arguments }
-  Server-->>Client: result (text / structured content)
-  Client-->>Host: result goes back into model context
-  Host-->>User: answer
-```
+{/* diagram source: /diagrams/diagram-349.mmd */}
+![diagram](/diagrams/diagram-349.svg)
 
 ### Primitives
 **Server-side** (what a server offers):
@@ -171,18 +142,8 @@ Good FE use cases: translating user reviews in place, summarizing long content, 
 ## 4. Building AI features: streaming UI
 
 ### The architecture
-```mermaid
-sequenceDiagram
-  participant UI as Browser UI
-  participant API as Your server route (/api/chat)
-  participant LLM as Model provider
-  UI->>API: POST messages (no API key in browser)
-  API->>LLM: request with secret key + system prompt + tools
-  LLM-->>API: token stream
-  API-->>UI: stream (SSE / chunked response)
-  UI->>UI: render tokens as they arrive
-  UI->>API: abort (user clicks Stop) via AbortController
-```
+{/* diagram source: /diagrams/diagram-350.mmd */}
+![diagram](/diagrams/diagram-350.svg)
 
 **Never call a model provider directly from the browser with your API key.** Anything in client JS is public. Proxy through your server (which also lets you add auth, rate limiting, logging and guardrails).
 

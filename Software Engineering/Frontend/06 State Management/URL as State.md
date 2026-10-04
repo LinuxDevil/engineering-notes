@@ -284,16 +284,8 @@ Other patterns:
 - **Modals as routes**: in Next.js, intercepting + parallel routes make "open photo/login modal" a URL ([Next.js App Router Fundamentals](/Software%20Engineering/Frontend/07%20Next.js/Next.js%20App%20Router%20Fundamentals)).
 - **Validate** with a schema (Zod/Valibot or nuqs parsers) and fall back to defaults on garbage.
 
-```mermaid
-flowchart LR
-    U["User changes filter"] --> W["Write URL (router.replace / setQueryState)"]
-    W --> R["URL is source of truth"]
-    R --> S["Server Component reads searchParams"]
-    R --> C["Client hooks read useSearchParams"]
-    S --> V["Rendered results"]
-    C --> V
-    B["Back / refresh / shared link"] --> R
-```
+{/* diagram source: /diagrams/diagram-280.mmd */}
+![diagram](/diagrams/diagram-280.svg)
 
 ## What NOT to put in the URL
 

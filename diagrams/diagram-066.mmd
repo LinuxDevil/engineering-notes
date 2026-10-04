@@ -1,0 +1,6 @@
+flowchart LR
+  CJ["CronJob<br/>cleanup-expired-carts<br/>schedule 0 * * * *"] -- "every tick<br/>(controller checks ~every 10 s)" --> J["Job<br/>cleanup-expired-carts-29315040"]
+  J -- "creates, retries per backoffLimit /<br/>podFailurePolicy" --> P1["Pod (attempt 1)"]
+  J --> P2["Pod (attempt 2)"]
+  CJ -. "keeps N finished Jobs<br/>(history limits)" .-> H[("Job history")]
+  J -. "ttlSecondsAfterFinished" .-> GC["garbage collected"]

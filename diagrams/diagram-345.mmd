@@ -1,0 +1,6 @@
+flowchart LR
+  Q["Interview question"] --> T{"Product or component?"}
+  T -->|"Product"| P["Pages, routing, rendering strategy,<br/>data fetching, real-time"]
+  T -->|"Component"| C["Props API, states, a11y,<br/>theming, performance"]
+  P --> RADIO["Answer with RADIO"]
+  C --> RADIO

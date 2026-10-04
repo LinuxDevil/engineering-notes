@@ -267,13 +267,8 @@ A **virtualized list** renders only the items visible in the viewport (plus a sm
 
 <Accordion title="What is Redux and how does it work?">
 A predictable state container: one **store** holds the state tree; the UI **dispatches actions** (`{ type, payload }`); **reducers** (pure functions) compute the next state; subscribers (via `useSelector`) re-render when their selected slice changes. Middleware sits between dispatch and reducer for async/logging.
-```mermaid
-flowchart LR
-  UI -->|"dispatch(action)"| MW["Middleware (thunk, listener)"]
-  MW --> R["Reducers (pure)"]
-  R --> S["Store (state)"]
-  S -->|"useSelector"| UI
-```
+{/* diagram source: /diagrams/diagram-352.mmd */}
+![diagram](/diagrams/diagram-352.svg)
 See [Redux & Redux Toolkit](/Software%20Engineering/Frontend/06%20State%20Management/Redux%20%26%20Redux%20Toolkit).
 </Accordion>
 

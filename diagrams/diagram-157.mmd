@@ -1,0 +1,6 @@
+flowchart LR
+  APP[orders-api writes JSON to stdout/stderr] --> RT[containerd captures the streams]
+  RT --> F["/var/log/pods/shop-prod_orders-api-7c9d..._uid/api/0.log"]
+  F -. symlink .-> C["/var/log/containers/orders-api-..._shop-prod_api-containerid.log"]
+  F --> K[kubelet serves kubectl logs]
+  F --> AL[Alloy DaemonSet tails and ships to Loki]

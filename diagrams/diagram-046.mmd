@@ -1,0 +1,11 @@
+sequenceDiagram
+  participant S as Subscriber
+  participant P as Publisher (Flux)
+  S->>P: subscribe()
+  P-->>S: onSubscribe(subscription)
+  S->>P: request(2)
+  P-->>S: onNext(a)
+  P-->>S: onNext(b)
+  S->>P: request(2)
+  P-->>S: onNext(c)
+  P-->>S: onComplete()

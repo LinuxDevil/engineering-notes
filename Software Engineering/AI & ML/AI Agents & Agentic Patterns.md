@@ -28,16 +28,8 @@ Commonly cited agent features, with a reality check:
 
 ## The agent loop
 
-```mermaid
-flowchart TD
-  G[Goal + system prompt + tools] --> T[LLM thinks / decides]
-  T -->|tool call| X[Execute tool<br/>search, code, API, MCP]
-  X --> O[Observation added to context]
-  O --> T
-  T -->|final answer or stop condition| D[Done]
-  T -.risky action.-> H[Human approval]
-  H -.-> X
-```
+{/* diagram source: /diagrams/diagram-002.mmd */}
+![diagram](/diagrams/diagram-002.svg)
 
 The same loop in code (provider-agnostic pseudocode):
 
@@ -98,25 +90,8 @@ Anthropic's post (2024-12-19) is the standard reference. Its core advice: find t
 
 ### Workflow patterns (predefined code paths)
 
-```mermaid
-flowchart LR
-  subgraph Chain[Prompt chaining]
-    A1[LLM 1] --> Gt{gate} --> A2[LLM 2] --> A3[LLM 3]
-  end
-  subgraph Route[Routing]
-    R[Classifier LLM] --> R1[Handler A]
-    R --> R2[Handler B]
-  end
-  subgraph Par[Parallelization]
-    P0[Input] --> P1[LLM] & P2[LLM] & P3[LLM] --> PA[Aggregate]
-  end
-  subgraph OW[Orchestrator-workers]
-    O[Orchestrator LLM] --> W1[Worker] & W2[Worker] --> S[Synthesize]
-  end
-  subgraph EO[Evaluator-optimizer]
-    Gen[Generator] --> Ev[Evaluator] -->|feedback| Gen
-  end
-```
+{/* diagram source: /diagrams/diagram-003.mmd */}
+![diagram](/diagrams/diagram-003.svg)
 
 | Pattern | How it works | Use when | Example |
 |---|---|---|---|

@@ -33,14 +33,8 @@ Databases use fixed-size pages to store data: the data ends up as bytes in the p
 2. It appends a journal entry of the change to the **write-ahead log** and flushes the log on commit.
 3. The dirty page stays in memory and may absorb more writes before the checkpointer/background writer flushes it to disk. Inserts and deletes work the same way, with different bookkeeping.
 
-```mermaid
-flowchart LR
-  Q[Query] --> BP{Page in<br/>buffer pool?}
-  BP -- hit --> R[Read row from page]
-  BP -- miss --> OS{In OS<br/>page cache?}
-  OS -- yes --> L[Copy page into buffer pool] --> R
-  OS -- no --> D[(Disk read 8 KB)] --> L
-```
+{/* diagram source: /diagrams/diagram-117.mmd */}
+![diagram](/diagrams/diagram-117.svg)
 
 ## What goes in a page
 

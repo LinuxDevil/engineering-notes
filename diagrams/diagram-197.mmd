@@ -1,0 +1,5 @@
+flowchart LR
+  Q{What do you need?} -->|copy / serialize / path from root| Pre[Preorder]
+  Q -->|sorted order in a BST| In[Inorder]
+  Q -->|answer depends on children: height, delete, sizes| Post[Postorder]
+  Q -->|per level, min depth, nearest| BFS[Level order BFS]

@@ -30,13 +30,8 @@ Level order (BFS):       [1] [2 3] [4 5 6]
 - The three DFS orders differ only in **when** you "visit" the node relative to its children. Picture walking around the outline of the tree: preorder records a node the first time you pass it, inorder when you pass under it, postorder the last time.
 - **BFS** spreads out like ripples: all nodes at depth 0, then depth 1, and so on.
 
-```mermaid
-flowchart LR
-  Q{What do you need?} -->|copy / serialize / path from root| Pre[Preorder]
-  Q -->|sorted order in a BST| In[Inorder]
-  Q -->|answer depends on children: height, delete, sizes| Post[Postorder]
-  Q -->|per level, min depth, nearest| BFS[Level order BFS]
-```
+{/* diagram source: /diagrams/diagram-197.mmd */}
+![diagram](/diagrams/diagram-197.svg)
 
 ## How it works
 

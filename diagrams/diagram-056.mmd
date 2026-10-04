@@ -1,0 +1,6 @@
+flowchart LR
+  S["@SpringBootApplication<br/>= @Configuration + @EnableAutoConfiguration + @ComponentScan"] --> CS[Component scan your packages]
+  S --> AC["Auto-configuration candidates<br/>(@ConditionalOnClass, @ConditionalOnMissingBean, @ConditionalOnProperty)"]
+  CS --> BD[Bean definitions]
+  AC --> BD
+  BD --> BPP["Instantiate + inject + BeanPostProcessors (proxies)"] --> CTX[ApplicationContext ready → embedded server starts]

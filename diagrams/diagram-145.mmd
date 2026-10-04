@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    participant Dev as Developer / Jenkins
+    participant Git as acme/platform-gitops
+    participant Srv as argocd-server
+    participant Repo as repo-server
+    participant Ctl as application-controller
+    participant K8s as Kubernetes API (shop-prod)
+    Dev->>Git: merge PR (bump orders-api image tag)
+    Git-->>Srv: webhook POST /api/webhook (optional)
+    Srv->>Ctl: refresh orders-api-prod now
+    Note over Ctl: without a webhook: poll every 120s + up to 60s jitter
+    Ctl->>Repo: render apps/orders-api/overlays/prod @ HEAD
+    Repo->>Git: fetch (cached by commit SHA)
+    Repo-->>Ctl: rendered manifests
+    Ctl->>K8s: watch/list live objects (informer cache)
+    Ctl->>Ctl: diff desired vs live, apply ignoreDifferences, compute health
+    alt OutOfSync and automated sync
+        Ctl->>K8s: PreSync hooks, then apply by wave, then PostSync hooks
+    else OutOfSync and manual sync
+        Ctl-->>Srv: show OutOfSync, wait for "Sync" click / argocd app sync
+    end
+    K8s-->>Ctl: watch events (pods ready, rollout progress)
+    Ctl-->>Srv: sync + health status, events, notifications

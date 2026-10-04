@@ -1,0 +1,7 @@
+flowchart LR
+  C[Web / Mobile] --> R[GraphQL Router]
+  R --> U[Users subgraph]
+  R --> P[Posts subgraph]
+  R --> B[Billing subgraph]
+  U --> DB1[(Users DB)]
+  P --> DB2[(Posts DB)]

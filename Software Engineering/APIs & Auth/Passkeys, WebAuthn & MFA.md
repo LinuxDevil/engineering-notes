@@ -30,24 +30,8 @@ A passkey with user verification (Face ID, fingerprint, device PIN) is **multi-f
 
 Two ceremonies, both challenge-response with public-key crypto:
 
-```mermaid
-sequenceDiagram
-  participant U as User + Authenticator
-  participant B as Browser (navigator.credentials)
-  participant S as Server (Relying Party)
-  Note over U,S: Registration
-  S->>B: options: challenge, rp.id=example.com, user.id, pubKeyCredParams, residentKey=required
-  B->>U: create key pair for rp.id (biometric/PIN)
-  U-->>B: public key + credential ID + attestation (signed)
-  B-->>S: attestationResponse (includes origin + challenge in clientDataJSON)
-  S->>S: verify challenge, origin, rpIdHash, flags → store {credentialId, publicKey, signCount, transports, backupEligible}
-  Note over U,S: Authentication
-  S->>B: challenge, rpId (allowCredentials optional for discoverable passkeys)
-  B->>U: sign challenge with private key for this rpId
-  U-->>B: assertion signature
-  B-->>S: assertion
-  S->>S: verify signature with stored public key, challenge, origin, UV flag → session
-```
+{/* diagram source: /diagrams/diagram-033.mmd */}
+![diagram](/diagrams/diagram-033.svg)
 
 **Why it's phishing-proof**: the browser puts the real **origin** into `clientDataJSON`, and keys are scoped to the `rp.id` domain. A look-alike site `examp1e.com` simply can't get a signature for `example.com`, and there's no code for the user to type into the wrong site.
 

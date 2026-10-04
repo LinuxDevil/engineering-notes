@@ -1,0 +1,4 @@
+flowchart LR
+  Q[JOIN condition] -->|equality, big inputs| H[Hash join]
+  Q -->|equality, sorted inputs| M[Merge join]
+  Q -->|small outer, indexed inner or non-equi| N[Nested loop]

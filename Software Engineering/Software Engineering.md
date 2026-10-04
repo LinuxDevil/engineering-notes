@@ -20,28 +20,8 @@ This is the home of the vault. It is organised into **12 domains**, each with it
 If you're learning from scratch, follow [Software Engineering Roadmap - Beginner to Senior](/Software%20Engineering/Software%20Engineering%20Roadmap%20-%20Beginner%20to%20Senior). If you're catching up, read [What's New in Software Engineering 2025-2026](/Software%20Engineering/What's%20New%20in%20Software%20Engineering%202025-2026).
 </Note>
 
-```mermaid
-mindmap
-  root((Software<br/>Engineering))
-    Foundations
-      CS Fundamentals
-      DSA
-      Principles & Design
-    Building
-      Frontend
-      Backend
-      APIs & Auth
-      Databases
-    Running
-      DevOps & Cloud
-      Security
-    Scaling
-      System Design
-      AI & ML
-    Growing
-      Career
-      Interviews
-```
+{/* diagram source: /diagrams/diagram-389.mmd */}
+![diagram](/diagrams/diagram-389.svg)
 
 ## 🧭 Quick links
 - 🗺️ [Software Engineering Roadmap - Beginner to Senior](/Software%20Engineering/Software%20Engineering%20Roadmap%20-%20Beginner%20to%20Senior): the learning path, stage by stage

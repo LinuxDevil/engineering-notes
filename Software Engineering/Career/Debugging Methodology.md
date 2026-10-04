@@ -14,16 +14,8 @@ Debugging is the **scientific method** applied to code: observe, form a hypothes
 
 ## The loop
 
-```mermaid
-flowchart LR
-  O[Observe<br/>exact symptom, evidence] --> R[Reproduce<br/>reliably, minimally]
-  R --> H[Hypothesise<br/>one specific cause]
-  H --> P["Predict<br/>if H is true, then X"]
-  P --> E[Experiment<br/>change ONE thing]
-  E -->|refuted| H
-  E -->|confirmed| F[Fix root cause]
-  F --> V[Verify + regression test]
-```
+{/* diagram source: /diagrams/diagram-086.mmd */}
+![diagram](/diagrams/diagram-086.svg)
 
 Write hypotheses down (a debugging log). It stops you going in circles and helps whoever continues after you.
 

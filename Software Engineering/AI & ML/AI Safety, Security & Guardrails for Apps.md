@@ -14,19 +14,8 @@ The core LLM security problem: models **can't reliably tell instructions from da
 
 ## The threat model in one diagram
 
-```mermaid
-flowchart LR
-  U[User input] --> APP
-  EXT[Untrusted content<br/>web, email, docs, tool results, MCP servers] -->|may contain instructions| APP
-  subgraph APP[LLM application]
-    SP[System prompt] --> LLM[Model]
-    LLM --> OUT[Output]
-    LLM --> TOOLS[Tool calls]
-  end
-  DATA[(Private data)] --> APP
-  OUT -->|rendered / executed| SINK[Browser, shell, SQL, other systems]
-  TOOLS -->|side effects| WORLD[Emails, payments, files, APIs]
-```
+{/* diagram source: /diagrams/diagram-004.mmd */}
+![diagram](/diagrams/diagram-004.svg)
 
 Every arrow into the model is an injection path; every arrow out is an impact path.
 

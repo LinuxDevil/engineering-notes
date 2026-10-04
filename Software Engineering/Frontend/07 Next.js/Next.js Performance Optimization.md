@@ -23,15 +23,8 @@ Map each Core Web Vital to the Next.js lever that moves it (thresholds and debug
 | **INP** | Big hydration cost, heavy Client Components, third-party scripts on the main thread | Less client JS, `next/dynamic`, `next/script` strategies, React Compiler, `startTransition` |
 | **CLS** | Images without dimensions, font swap, late banners, skeletons that don't match | `next/image` width/height or `fill` + sized parent, `next/font` fallback metrics, reserved space |
 
-```mermaid
-flowchart LR
-  REQ["Request"] --> SHELL["Static shell (cached): TTFB"]
-  SHELL --> HERO["Hero image + font: LCP"]
-  SHELL --> STREAM["Suspense holes stream in"]
-  HERO --> HYD["Hydrate Client Components: INP risk"]
-  STREAM --> HYD
-  HYD --> THIRD["Third-party scripts: INP risk"]
-```
+{/* diagram source: /diagrams/diagram-290.mmd */}
+![diagram](/diagrams/diagram-290.svg)
 
 ## 2. `next/image`
 

@@ -1,0 +1,8 @@
+stateDiagram-v2
+  [*] --> Pending
+  Pending --> Paid: pay
+  Pending --> Cancelled: cancel
+  Paid --> Shipped: ship
+  Paid --> Cancelled: cancel / refund
+  Shipped --> [*]
+  Cancelled --> [*]

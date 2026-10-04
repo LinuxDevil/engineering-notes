@@ -1,0 +1,7 @@
+flowchart LR
+  SLO[Define SLOs] --> MON[Monitor SLIs + burn-rate alerts]
+  MON --> INC[Incident response]
+  INC --> PM[Blameless postmortem]
+  PM --> AI[Action items: fix, automate, test]
+  AI --> REL[Safer releases + less toil]
+  REL --> SLO

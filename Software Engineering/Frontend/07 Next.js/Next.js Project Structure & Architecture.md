@@ -76,25 +76,8 @@ app/orders/
 
 Every module ends up in one or both of two module graphs: the **server graph** (Server Components, Server Actions, Route Handlers, `proxy.ts`) and the **client graph** (anything imported from a `'use client'` file). The boundary is where bugs and leaks happen.
 
-```mermaid
-flowchart LR
-  subgraph Server["Server graph (never shipped)"]
-    DAL["data/ (server-only)<br/>db, auth, DTOs"]
-    RSC["Server Components"]
-    SA["Server Actions ('use server')"]
-    RH["Route Handlers"]
-  end
-  subgraph Client["Client graph (shipped to browser)"]
-    CC["'use client' components"]
-    HOOKS["hooks, browser utils (client-only)"]
-  end
-  RSC -->|"serializable props, JSX children"| CC
-  CC -->|"calls by reference (POST)"| SA
-  RSC --> DAL
-  SA --> DAL
-  RH --> DAL
-  CC -. "import = build error" .-x DAL
-```
+{/* diagram source: /diagrams/diagram-291.mmd */}
+![diagram](/diagrams/diagram-291.svg)
 
 Tools to make the boundary explicit:
 

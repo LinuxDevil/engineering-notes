@@ -20,15 +20,8 @@ Every Pod gets its own IP and can reach every other Pod (flat network, implement
 - **CoreDNS** resolves `<svc>.<ns>.svc.cluster.local`.
 - **kube-proxy** (iptables or nftables mode) or an eBPF replacement (Cilium) translates Service IPs to Pod IPs.
 
-```mermaid
-flowchart LR
-  C[Client Pod] -->|DNS: orders.shop.svc.cluster.local| DNS[CoreDNS]
-  DNS -->|ClusterIP 10.96.12.7| C
-  C -->|10.96.12.7:80| KP[kube-proxy rules / eBPF]
-  KP --> P1[Pod 10.1.2.3:8080]
-  KP --> P2[Pod 10.1.4.5:8080]
-  ES[EndpointSlice: ready Pod IPs] -.programs.-> KP
-```
+{/* diagram source: /diagrams/diagram-173.mmd */}
+![diagram](/diagrams/diagram-173.svg)
 
 ## 2. Services recap
 
@@ -77,15 +70,8 @@ The Ingress API itself is **frozen but not deprecated**: it keeps working with m
 
 ## 4. Gateway API
 
-```mermaid
-flowchart TB
-  GC["GatewayClass (infra provider: e.g. Envoy Gateway, Cilium, Istio, GKE)"] --> GW["Gateway (platform team: listeners, ports, TLS)"]
-  GW --> R1["HTTPRoute (team A: shop.example.com /api)"]
-  GW --> R2["HTTPRoute (team B: shop.example.com /)"]
-  GW --> R3["GRPCRoute / TLSRoute ..."]
-  R1 --> S1[Service api]
-  R2 --> S2[Service web]
-```
+{/* diagram source: /diagrams/diagram-174.mmd */}
+![diagram](/diagrams/diagram-174.svg)
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1

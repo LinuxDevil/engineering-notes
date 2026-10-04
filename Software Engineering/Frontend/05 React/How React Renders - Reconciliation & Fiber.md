@@ -26,13 +26,8 @@ React models the UI as a **tree**, like the browser does:
 
 ## 2. Trigger → Render → Commit
 
-```mermaid
-flowchart LR
-  T["1. Trigger<br/>createRoot().render() or setState"] --> R["2. Render<br/>call components, build new element tree, diff"]
-  R --> C["3. Commit<br/>mutate DOM, attach refs, layout effects"]
-  C --> P["Browser paint"]
-  P --> E["Passive effects<br/>useEffect"]
-```
+{/* diagram source: /diagrams/diagram-258.mmd */}
+![diagram](/diagrams/diagram-258.svg)
 
 ### Step 1: triggering a render
 There are only two reasons a component renders:
@@ -103,21 +98,8 @@ This comes from the React Performance course. The cycle is **Render phase ⇒ Co
 
 **Cleanup on unmount:** effect cleanups run, refs are set to `null` (or a ref-callback cleanup runs, React 19), and the DOM nodes are removed.
 
-```mermaid
-sequenceDiagram
-  participant S as setState
-  participant R as Render phase
-  participant C as Commit phase
-  participant B as Browser
-  participant E as Passive effects
-  S->>R: schedule update (lane/priority)
-  R->>R: call components, reconcile, build workInProgress
-  R->>C: finished tree + effect list
-  C->>C: mutate DOM, attach refs, useLayoutEffect
-  C->>B: yield
-  B->>B: paint
-  B->>E: useEffect cleanups then effects
-```
+{/* diagram source: /diagrams/diagram-259.mmd */}
+![diagram](/diagrams/diagram-259.svg)
 
 ## 4. Virtual DOM: a pattern, not a technology
 
@@ -208,17 +190,8 @@ Diffing two arbitrary trees perfectly costs O(n³). React uses an **O(n) heurist
 2. **Same type → keep the node and update it.** For a DOM element, React updates only the changed attributes and styles. For a component, it keeps the instance and its state and re-renders it with the new props. Then it recurses into the children.
 3. **Children lists are matched by `key`** (or by position when there is no key).
 
-```mermaid
-flowchart TD
-  A["Compare old vs new element at same position"] --> B{"Same type?"}
-  B -- "No" --> C["Unmount old subtree (state lost), mount new"]
-  B -- "Yes, DOM element" --> D["Patch changed attributes, recurse children"]
-  B -- "Yes, component" --> E["Keep instance and state, re-render with new props, recurse"]
-  D --> F{"Children list?"}
-  E --> F
-  F -- "keyed" --> G["Match by key: move / insert / delete"]
-  F -- "unkeyed" --> H["Match by index"]
-```
+{/* diagram source: /diagrams/diagram-260.mmd */}
+![diagram](/diagrams/diagram-260.svg)
 
 <Warning>
 **Two classic bugs that follow from rule 1**
@@ -271,15 +244,8 @@ The key tells React **which item is which** between renders, so it can work out 
 
 This lets React walk the tree **iteratively**, with no recursion on the JS call stack. It can then stop after any fiber and resume later.
 
-```mermaid
-flowchart TD
-  App["App fiber"] -->|"child"| Header["Header"]
-  Header -->|"sibling"| Main["Main"]
-  Main -->|"sibling"| Footer["Footer"]
-  Main -->|"child"| List["List"]
-  List -->|"return"| Main
-  Header -->|"return"| App
-```
+{/* diagram source: /diagrams/diagram-261.mmd */}
+![diagram](/diagrams/diagram-261.svg)
 
 ![Screenshot_2023-08-03_at_8.42.54_PM](/Attachments/Screenshot_2023-08-03_at_8.42.54_PM.png)
 

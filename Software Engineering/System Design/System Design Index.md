@@ -12,38 +12,8 @@ updated: 2026-09-27
 Backend and distributed systems design: how to scale services, cache, queue, replicate, partition, and stay up when things fail, plus worked interview case studies that follow one framework. Each note has examples, a 🆕 2025–2026 box where something changed, and interview questions. For UI-focused design interviews go to [Frontend System Design Index](/Software%20Engineering/Frontend/15%20System%20Design/Frontend%20System%20Design%20Index) and [RADIO Framework](/Software%20Engineering/Frontend/15%20System%20Design/RADIO%20Framework).
 </Note>
 
-```mermaid
-mindmap
-  root((System Design))
-    Method
-      Interview framework
-      Estimates & latency numbers
-    Building blocks
-      Scalability & load balancing
-      Caching
-      CDN & edge
-      Queues & streams
-      Blob storage
-      Search
-      Unique IDs
-    Distributed systems
-      Consistency & consensus
-      Consistent hashing
-      Resilience patterns
-    Data
-      CAP
-      Sharding
-      Replication
-    Case studies
-      URL shortener
-      Rate limiter
-      Chat
-      News feed
-      Notifications
-      Video streaming
-      Distributed cache
-      LLM systems
-```
+{/* diagram source: /diagrams/diagram-411.mmd */}
+![diagram](/diagrams/diagram-411.svg)
 
 ## 🟢 Beginner: the method and the building blocks
 | Note | What you learn |

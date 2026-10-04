@@ -1,0 +1,7 @@
+flowchart TD
+  T["Trigger: event, timer, HTTP response, signal write"] --> S["Scheduler: ApplicationRef.tick()"]
+  S --> R["Root view: evaluate bindings"]
+  R --> C1["Child A (Eager): always checked"]
+  R --> C2["Child B (OnPush): checked only if dirty"]
+  C2 -->|clean| Skip["skip whole subtree"]
+  C2 -->|dirty| C3["check B and its children"]

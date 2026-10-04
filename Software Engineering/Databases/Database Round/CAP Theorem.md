@@ -25,15 +25,8 @@ In practice networks do partition (switch failures, GC pauses, cross-region link
 - **Favor consistency (CP)**: all nodes must agree, so the side that can't reach a quorum **refuses** requests (errors/timeouts) rather than return stale data.
 - **Favor availability (AP)**: every node keeps accepting reads and writes, so nodes **won't see the same data** until the partition heals; conflicts must be resolved later.
 
-```mermaid
-flowchart TD
-  P{Network partition?}
-  P -- yes --> PA[Choose: Availability<br/>answer with possibly stale data]
-  P -- yes --> PC[Choose: Consistency<br/>reject/timeout minority side]
-  P -- no --> E{Else}
-  E --> EL[Low Latency<br/>reply from nearest replica]
-  E --> EC[Consistency<br/>wait for quorum / leader]
-```
+{/* diagram source: /diagrams/diagram-112.mmd */}
+![diagram](/diagrams/diagram-112.svg)
 
 The user's original note says CAP is "mostly about writes, and mostly in NoSQL". It applies to any replicated system (a Postgres primary with async replicas is effectively AP for reads from replicas), and to reads as much as writes, but it became famous through the NoSQL wave.
 

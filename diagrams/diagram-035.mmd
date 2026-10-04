@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant App as Your service
+  participant DB as DB (outbox)
+  participant W as Webhook worker
+  participant C as Customer endpoint
+  App->>DB: write order + outbox event (same transaction)
+  W->>DB: poll outbox
+  W->>C: POST event (signed, with event id)
+  alt 2xx
+    W->>DB: mark delivered
+  else timeout / 5xx
+    W->>W: retry with exponential backoff + jitter (hours/days)
+    W->>DB: after N failures → dead-letter, alert customer, maybe disable endpoint
+  end

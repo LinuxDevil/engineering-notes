@@ -33,14 +33,8 @@ top = 5 = 2nd largest
 
 The heap is a "bouncer" with k spots: the weakest member is always at the door.
 
-```mermaid
-flowchart LR
-  Q{"What does the problem ask?"} -->|"k largest / smallest / closest"| A["size-k heap<br/>O(n log k)"]
-  Q -->|"merge k sorted lists / arrays"| B["k-way merge<br/>heap of list heads"]
-  Q -->|"running median / balance two halves"| C["two heaps<br/>max-heap + min-heap"]
-  Q -->|"k-th element once, can mutate array"| D["quickselect<br/>O(n) average"]
-  Q -->|"top k by frequency"| E["bucket sort by count<br/>O(n)"]
-```
+{/* diagram source: /diagrams/diagram-204.mmd */}
+![diagram](/diagrams/diagram-204.svg)
 
 ## How it works
 

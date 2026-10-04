@@ -1,0 +1,13 @@
+stateDiagram-v2
+  [*] --> queued: tick or POST runs
+  queued --> running: worker picks it up / pod starts
+  queued --> cancelling: POST stop (flag set)
+  running --> succeeded: processor resolves / Job Complete
+  running --> failed: attempts exhausted / Job Failed / timeout
+  running --> queued: retryable error (backoff) / pod retry
+  running --> cancelling: POST stop
+  cancelling --> cancelled: signal observed (BullMQ) / Job deleted (K8s)
+  cancelling --> succeeded: finished before it saw the signal
+  succeeded --> [*]
+  failed --> [*]
+  cancelled --> [*]

@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph New project
+    I[Idea] --> SC[/scope/] --> AR[/architect/] --> DV[/develop scaffold/] --> AU[/audit/]
+  end
+  subgraph Each feature
+    F[Feature] --> D2[/develop/] --> CV[/check verify/] --> TE[/test/] --> CR[/check review/] --> DO[/document/] --> SY[/sync/]
+  end
+  X[Something broke] --> DB[/debug/]

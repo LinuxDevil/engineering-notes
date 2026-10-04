@@ -1,0 +1,9 @@
+flowchart TB
+  subgraph Node["Node.js process"]
+    JS["Your JS + Node's JS core (lib/)"] --> B["C++ bindings"]
+    B --> V8["V8: call stack, heap, JIT, GC"]
+    B --> UV["libuv"]
+    UV --> EL["Event loop (main thread)"]
+    UV --> TP["Thread pool (4 default): fs, dns.lookup, crypto, zlib"]
+    UV --> OS["OS async I/O: epoll / kqueue / IOCP (sockets)"]
+  end

@@ -1,0 +1,8 @@
+flowchart TB
+  In[Token embeddings + positions] --> B1
+  subgraph B1[Transformer block × N  e.g. 32-120 layers]
+    N1[LayerNorm] --> A[Masked multi-head self-attention] --> R1((+ residual))
+    R1 --> N2[LayerNorm] --> F[Feed-forward MLP<br/>or Mixture-of-Experts] --> R2((+ residual))
+  end
+  B1 --> H[Final LayerNorm → linear → softmax over vocabulary]
+  H --> Out[Next-token probabilities]

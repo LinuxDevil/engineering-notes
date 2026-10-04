@@ -16,25 +16,8 @@ Kubernetes (K8s) runs containers across a cluster of machines and keeps them in 
 
 Kubernetes is a system for running many different containers. We give it configuration describing how our containers should run and interact, and it makes it happen across one or more nodes.
 
-```mermaid
-flowchart TB
-  subgraph CP[Control plane]
-    API[kube-apiserver] --- ETCD[(etcd)]
-    API --- SCH[scheduler]
-    API --- CM[controller-manager]
-  end
-  subgraph N1[Worker node]
-    KL1[kubelet] --> CR1[containerd] --> P1[Pods]
-    KP1[kube-proxy]
-  end
-  subgraph N2[Worker node]
-    KL2[kubelet] --> CR2[containerd] --> P2[Pods]
-    KP2[kube-proxy]
-  end
-  YOU[kubectl] --> API
-  API --> KL1
-  API --> KL2
-```
+{/* diagram source: /diagrams/diagram-172.mmd */}
+![diagram](/diagrams/diagram-172.svg)
 
 | Component | Role |
 |---|---|

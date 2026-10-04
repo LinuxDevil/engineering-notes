@@ -12,23 +12,8 @@ updated: 2026-09-27
 The computer science underneath everything else in this vault: how the internet and network protocols work, what the operating system does for your program, how CPUs and memory really behave, how concurrency goes wrong, how text and data are encoded, the cryptography you use every day, and how code gets compiled or interpreted. Each note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions. Algorithms and data structures live in the DSA folder.
 </Note>
 
-```mermaid
-mindmap
-  root((CS Fundamentals))
-    Networks
-      How the Internet Works
-      OSI & TCP/IP
-      TLS & HTTP/3
-    Systems
-      Operating Systems
-      Computer Architecture
-      Concurrency Primitives
-    Data
-      Encoding & Serialization
-      Cryptography
-    Languages
-      Compilers & Interpreters
-```
+{/* diagram source: /diagrams/diagram-097.mmd */}
+![diagram](/diagrams/diagram-097.svg)
 
 ## 🟢 Beginner
 | Note | What you learn |

@@ -1,0 +1,7 @@
+flowchart LR
+  C[AbortController] -- ".signal" --> S[AbortSignal]
+  S --> F["fetch(url, {signal})"]
+  S --> L["addEventListener(type, fn, {signal})"]
+  S --> Y["your async function"]
+  C -- ".abort(reason)" --> S
+  S -- "'abort' event, signal.aborted = true" --> F

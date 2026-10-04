@@ -1,0 +1,11 @@
+gitGraph
+  commit id: "a"
+  branch feat-x
+  commit id: "x1"
+  checkout main
+  merge feat-x id: "PR #12 (squash)"
+  branch feat-y
+  commit id: "y1"
+  checkout main
+  merge feat-y id: "PR #13"
+  commit id: "tag v1.4.0" tag: "v1.4.0"

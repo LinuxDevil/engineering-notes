@@ -1,0 +1,6 @@
+flowchart TD
+    L["layout.tsx"] --> T["template.tsx"]
+    T --> E["error.tsx (ErrorBoundary)"]
+    E --> LO["loading.tsx (Suspense)"]
+    LO --> NF["not-found.tsx (NotFound boundary)"]
+    NF --> P["page.tsx"]

@@ -1,0 +1,6 @@
+flowchart LR
+  C[Command: PlaceOrder] --> W[Write model<br/>aggregates, invariants]
+  W --> DB1[(Write store)]
+  W -- events --> P[Projector]
+  P --> DB2[(Read store<br/>denormalised views)]
+  Q[Query: MyOrdersPage] --> DB2

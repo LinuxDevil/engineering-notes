@@ -31,23 +31,8 @@ Environments are namespaces: `shop-dev`, `shop-staging` and `shop-prod`. Platfor
 
 ## The whole flow
 
-```mermaid
-flowchart LR
-  dev[Developer<br/>git push] --> src[(App repo<br/>acme/orders-api)]
-  src -- webhook --> J[Jenkins<br/>build · test · scan]
-  J -- push image:sha --> reg[(ghcr.io/acme)]
-  J -- bump tag commit --> gitops[(acme/platform-gitops)]
-  gitops -- watched by --> A[Argo CD]
-  A -- sync --> K8s[Kubernetes<br/>shop-dev / staging / prod]
-  K8s --> R[Argo Rollouts<br/>canary]
-  R -- analysis PromQL --> P[(Prometheus / Mimir)]
-  K8s -- stdout JSON logs --> Al[Grafana Alloy]
-  K8s -- OTLP traces --> Al
-  Al --> L[(Loki)]
-  Al --> T[(Tempo)]
-  P & L & T --> G[Grafana<br/>dashboards · Explore · alerts]
-  G -- alert --> oncall[On-call]
-```
+{/* diagram source: /diagrams/diagram-156.mmd */}
+![diagram](/diagrams/diagram-156.svg)
 
 **Two principles hold the design together:**
 1. **CI and CD are separate.** Jenkins never runs `kubectl apply` against production. Its last step is a Git commit. Argo CD is the only thing with write access to the cluster, so Git is the audit log and `git revert` is the rollback. This is called *pull-based deployment*; see [GitOps - Argo CD & Flux](/Software%20Engineering/DevOps/GitOps%20-%20Argo%20CD%20%26%20Flux).

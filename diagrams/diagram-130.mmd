@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant App
+  participant Driver
+  participant DB as Replica set primary
+  App->>Driver: session = client.startSession()
+  App->>Driver: session.withTransaction(callback)
+  Driver->>DB: startTransaction + ops (with lsid, txnNumber)
+  DB-->>Driver: results
+  Driver->>DB: commitTransaction
+  alt TransientTransactionError / UnknownTransactionCommitResult
+    Driver->>DB: retry callback or commit
+  end
+  App->>Driver: session.endSession()

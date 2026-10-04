@@ -37,10 +37,8 @@ After analysis (lowercase, stop words removed, stemming dogs→dog):
 - Lucene writes immutable **segments** and merges them in the background; deletes are tombstones until merge. New docs become searchable after a **refresh** (~1 s by default in Elasticsearch): **near real-time**, not immediate.
 
 ## Analysis pipeline
-```mermaid
-flowchart LR
-  T["Raw text"] --> CF["Char filters<br/>(strip HTML)"] --> TK["Tokenizer<br/>(standard, whitespace, n-gram)"] --> TF["Token filters<br/>(lowercase, stop, stemmer, synonyms, ascii-fold)"] --> I["Index terms"]
-```
+{/* diagram source: /diagrams/diagram-409.mmd */}
+![diagram](/diagrams/diagram-409.svg)
 The same analyzer (or a compatible one) must run on queries. Language-specific stemming, synonyms (`tv, television`), edge n-grams for **autocomplete**, and fuzzy matching (Levenshtein automata) for typos.
 
 ## Ranking: TF-IDF → BM25
@@ -51,15 +49,8 @@ The same analyzer (or a compatible one) must run on queries. Language-specific s
 - Real ranking adds **business signals**: recency, popularity, personalization, field boosts (`title^3`), then optionally a **learning-to-rank** or cross-encoder **re-ranker** on the top-k.
 
 ## Architecture
-```mermaid
-flowchart LR
-  App["App writes"] --> DB[("Primary DB<br/>(source of truth)")]
-  DB -->|"CDC (Debezium) / outbox events"| K["Kafka"]
-  K --> IX["Indexer workers<br/>(transform, enrich)"]
-  IX --> ES[("Search cluster<br/>shards + replicas")]
-  U["Search API"] --> ES
-  U --> RR["Re-ranker / personalization"]
-```
+{/* diagram source: /diagrams/diagram-410.mmd */}
+![diagram](/diagrams/diagram-410.svg)
 - The search index is a **derived, eventually consistent** read model (CQRS, see [Distributed Systems Patterns](/Software%20Engineering/System%20Design/Distributed%20Systems%20Patterns)). Keep the ability to **rebuild it from scratch** (reindex into a new index, switch an alias).
 - **Sharding**: documents are split across shards (document partitioning); a query fans out to all shards (scatter-gather) and merges top-k. Replicas add read throughput and HA.
 - Term-partitioned indexes (each shard holds some terms) are rare: they make multi-term queries cross shards.

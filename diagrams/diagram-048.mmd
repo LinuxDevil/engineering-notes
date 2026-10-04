@@ -1,0 +1,8 @@
+stateDiagram-v2
+  [*] --> Transient: new Order()
+  Transient --> Managed: persist()
+  Managed --> Managed: change fields (dirty checking)
+  Managed --> Detached: tx/session ends, detach()
+  Detached --> Managed: merge()
+  Managed --> Removed: remove()
+  Removed --> [*]: flush/commit → DELETE

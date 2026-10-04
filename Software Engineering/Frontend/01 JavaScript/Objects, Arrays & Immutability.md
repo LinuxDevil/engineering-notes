@@ -67,11 +67,8 @@ let obj3 = {
 
 If you mutate `obj3.artwork.city`, it affects `obj2.artwork.city` **and** `obj1.city`, because `obj3.artwork`, `obj2.artwork` and `obj1` are the *same object*. Think of objects as separate boxes connected by arrows (properties), not as boxes inside boxes.
 
-```mermaid
-flowchart LR
-  obj2["obj2 { name: 'Niki...' }"] -- artwork --> obj1["obj1 { title, city, image }"]
-  obj3["obj3 { name: 'Copycat' }"] -- artwork --> obj1
-```
+{/* diagram source: /diagrams/diagram-223.mmd */}
+![diagram](/diagrams/diagram-223.svg)
 
 ## Shallow copy vs deep copy
 
@@ -129,17 +126,8 @@ next.address === user.address; // false (new along the changed path)
 // any other nested objects of user are shared as-is (structural sharing)
 ```
 
-```mermaid
-flowchart TB
-  subgraph Before
-    U1[user] --> A1[address]
-    U1 --> P1[prefs]
-  end
-  subgraph After
-    U2["next (new)"] --> A2["address (new)"]
-    U2 --> P1
-  end
-```
+{/* diagram source: /diagrams/diagram-224.mmd */}
+![diagram](/diagrams/diagram-224.svg)
 
 ### Why React/Redux care
 

@@ -1,0 +1,6 @@
+flowchart LR
+  R["R: Requirements<br/>scope, users, NFRs"] --> A["A: Architecture<br/>components + data flow"]
+  A --> D["D: Data model<br/>server entities + client state"]
+  D --> I["I: Interface<br/>API + component props"]
+  I --> O["O: Optimizations<br/>perf, a11y, network, i18n, security"]
+  O -. "revisit if scope changes" .-> R

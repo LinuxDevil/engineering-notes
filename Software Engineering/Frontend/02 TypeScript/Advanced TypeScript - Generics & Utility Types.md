@@ -24,12 +24,8 @@ const n = first([1, 2, 3]);        // number | undefined (T inferred as number)
 const s = first<string>(['a']);    // explicit type argument
 ```
 
-```mermaid
-flowchart LR
-  A["call first([1,2,3])"] --> B["infer T = number"]
-  B --> C["substitute: first(arr: number[]): number | undefined"]
-  C --> D["result typed number | undefined"]
-```
+{/* diagram source: /diagrams/diagram-234.mmd */}
+![diagram](/diagrams/diagram-234.svg)
 
 ### Generic interfaces, types, classes
 

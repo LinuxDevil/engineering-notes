@@ -36,24 +36,8 @@ POST /v1/videos/{id}/views (batched, sampled)
 - View counts: event stream + aggregated counters (approximate, eventually consistent).
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  subgraph Upload & processing
-    C1["Creator"] -->|"multipart presigned PUT"| RAW[("Object storage: originals")]
-    RAW -->|"ObjectCreated"| Q["Job queue"]
-    Q --> SPLIT["Splitter<br/>(chunk by GOP)"]
-    SPLIT --> TX["Transcode workers (DAG)<br/>H.264 / HEVC / AV1 × 240p…4K"]
-    TX --> PKG["Packager<br/>HLS/DASH (CMAF segments)"]
-    PKG --> SEG[("Object storage: segments + manifests")]
-    TX --> TH["Thumbnails, captions,<br/>content moderation"]
-    PKG --> META[("Metadata DB")]
-  end
-  subgraph Playback
-    V["Viewer player"] --> API["Video API"] --> META
-    V -->|"manifest + segments"| CDN["CDN edge / ISP caches"]
-    CDN -->|"miss"| SEG
-  end
-```
+{/* diagram source: /diagrams/diagram-398.mmd */}
+![diagram](/diagrams/diagram-398.svg)
 
 ## 6. Deep dives
 ### Transcoding pipeline

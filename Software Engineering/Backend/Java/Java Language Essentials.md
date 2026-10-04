@@ -14,11 +14,8 @@ Java is a statically typed, object-oriented language compiled to **bytecode** th
 
 ## How Java runs
 
-```mermaid
-flowchart LR
-  SRC["Hello.java"] -- javac --> BC["Hello.class (bytecode)"]
-  BC -- "java (JVM)" --> CL[Class loader] --> INT[Interpreter] --> JIT["JIT (C1/C2) hot code"]
-```
+{/* diagram source: /diagrams/diagram-042.mmd */}
+![diagram](/diagrams/diagram-042.svg)
 
 ```java
 // Java 25: compact source file, run with `java Hello.java`
@@ -109,16 +106,8 @@ static String describe(Payment p) {
 
 ## Collections
 
-```mermaid
-flowchart TB
-  C[Collection] --> L[List: ordered, duplicates]
-  C --> S[Set: unique]
-  C --> Q[Queue / Deque]
-  L --> AL[ArrayList] & LL[LinkedList]
-  S --> HS[HashSet] & LHS[LinkedHashSet] & TS[TreeSet: sorted]
-  Q --> AD[ArrayDeque] & PQ[PriorityQueue]
-  M[Map: key → value] --> HM[HashMap] & LHM[LinkedHashMap] & TM[TreeMap: sorted]
-```
+{/* diagram source: /diagrams/diagram-043.mmd */}
+![diagram](/diagrams/diagram-043.svg)
 
 | Need | Use | Big-O (typical) |
 |---|---|---|
@@ -158,13 +147,8 @@ static void fill(List<? super Integer> out) { out.add(1); }
 
 ## Exceptions
 
-```mermaid
-flowchart TB
-  T[Throwable] --> E[Exception]
-  T --> ER["Error (OutOfMemoryError, StackOverflowError): don't catch"]
-  E --> CE["Checked: IOException, SQLException (must declare/handle)"]
-  E --> RE["RuntimeException (unchecked): NPE, IllegalArgumentException"]
-```
+{/* diagram source: /diagrams/diagram-044.mmd */}
+![diagram](/diagrams/diagram-044.svg)
 
 ```java
 try (var in = Files.newBufferedReader(path)) {        // try-with-resources closes automatically

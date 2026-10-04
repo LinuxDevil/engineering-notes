@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph Autocomplete
+    Input["Input (role=combobox)"] -->|"query"| Ctrl["Controller<br/>debounce, keyboard, open state"]
+    Ctrl --> Cache["Cache<br/>query → results (LRU/TTL)"]
+    Cache -->|"miss"| Fetcher["Fetcher<br/>AbortController, latest-wins"]
+    Fetcher --> Cache
+    Ctrl --> List["Listbox (role=listbox)"]
+    List --> Opt["Option (role=option)<br/>custom renderItem + highlight"]
+  end
+  Fetcher <-->|"GET /suggest?q="| API["Suggestions API"]
+  Opt -->|"onSelect(item)"| Parent["Consumer app"]

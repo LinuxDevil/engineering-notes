@@ -40,32 +40,16 @@ updated: 2026-09-27
 | Can read DB/filesystem directly? | Only in framework data functions | **Yes**, directly in the component (`async`) |
 | Used together? | Yes. RSC payload → SSR turns it (plus client components) into HTML for the first load | |
 
-```mermaid
-flowchart LR
-  subgraph Server
-    RSC["Server Components<br/>(async, DB access)"] -->|"serialize"| P["RSC payload"]
-    P --> SSR["SSR: render payload + Client Components to HTML"]
-  end
-  SSR -->|"HTML stream"| B["Browser: fast first paint"]
-  P -->|"payload"| H["Browser: hydrate Client Components only"]
-  B --> H
-  H -->|"navigation"| RSC
-```
+{/* diagram source: /diagrams/diagram-268.mmd */}
+![diagram](/diagrams/diagram-268.svg)
 
 ## 2. The boundaries: `'use client'` and `'use server'`
 - **Server Components are the default** in an RSC framework (Next.js App Router, React Router framework mode (unstable), Waku, Parcel/Vite RSC).
 - **`'use client'`** at the top of a file marks a **client boundary**. That module and **everything it imports** become part of the client bundle. Put it as **low in the tree** as you can: leaf interactive components, not whole pages.
 - **`'use server'`** marks **Server Functions**, either at the top of a file (every export) or at the top of an async function body. It **does not** mean "server component". Server Components need no directive.
 
-```mermaid
-flowchart TD
-  Page["page.tsx (Server)"] --> Header["Header (Server)"]
-  Page --> Results["FlightResults (Server, async: queries DB)"]
-  Results --> Card["FlightCard (Server)"]
-  Card --> Fav["FavoriteButton ('use client')"]
-  Page --> Filters["Filters ('use client')"]
-  Filters -->|"children prop"| Legend["FareLegend (Server, passed as children)"]
-```
+{/* diagram source: /diagrams/diagram-269.mmd */}
+![diagram](/diagrams/diagram-269.svg)
 
 **Composition rules:**
 - Server → Client: ✅. A Server Component can render Client Components and pass them props.
@@ -175,16 +159,8 @@ export default function TripPage({ params }) {
 }
 ```
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant S as Server
-  B->>S: GET /trip/42
-  S-->>B: HTML shell + header + fallbacks (flush 1)
-  S-->>B: Itinerary chunk (flush 2)
-  S-->>B: Recommendations chunk (flush 3)
-  B->>B: hydrate client islands selectively
-```
+{/* diagram source: /diagrams/diagram-270.mmd */}
+![diagram](/diagrams/diagram-270.svg)
 
 **Related 19.2 APIs:**
 - **Suspense boundaries batch their reveals during SSR**, which avoids popcorn-style content shifts.

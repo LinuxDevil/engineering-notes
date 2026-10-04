@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant B as Browser / OS stub resolver
+  participant R as Recursive resolver (ISP, 1.1.1.1, 8.8.8.8)
+  participant Root as Root server
+  participant TLD as .com TLD server
+  participant NS as example.com authoritative NS
+  B->>B: check browser cache, OS cache, /etc/hosts
+  B->>R: A/AAAA? www.example.com
+  R->>R: cache hit? return
+  R->>Root: www.example.com?
+  Root-->>R: ask .com servers (referral)
+  R->>TLD: www.example.com?
+  TLD-->>R: ask ns1.example.com (referral)
+  R->>NS: www.example.com?
+  NS-->>R: CNAME / A 93.184.215.14 (TTL 300)
+  R-->>B: 93.184.215.14 (cached for TTL)

@@ -14,13 +14,8 @@ updated: 2026-09-27
 
 ## Mental model
 
-```mermaid
-flowchart LR
-    UI["UI (React component)"] -->|"dispatch(action)"| MW["Middleware chain (thunk, logger...)"]
-    MW --> R["Root reducer (combineReducers)"]
-    R -->|"new state"| S["Store"]
-    S -->|"subscribe / useSelector"| UI
-```
+{/* diagram source: /diagrams/diagram-272.mmd */}
+![diagram](/diagrams/diagram-272.svg)
 
 Three principles:
 1. **Single source of truth**: one store per app (having multiple stores is an anti-pattern).
@@ -296,10 +291,8 @@ store.dispatch({ type: ACTION_ADD_TASK, payload: { title: "New Task" } });
 
 Middleware is a way to **intercept actions as they pass through `dispatch`** (logging, analytics reports, async, crash reporting). `applyMiddleware(...mws)` is itself an enhancer that composes the whole chain. A middleware has the curried signature `store => next => action => result`, where `next` calls the next middleware (or the real `dispatch` at the end of the chain).
 
-```mermaid
-flowchart LR
-    D["dispatch(action)"] --> L["logMiddleware"] --> M["monitorMiddleware"] --> T["thunk"] --> RD["reducer"]
-```
+{/* diagram source: /diagrams/diagram-273.mmd */}
+![diagram](/diagrams/diagram-273.svg)
 
 <Info>
 **Log + performance middleware (owner's example)**
@@ -532,19 +525,8 @@ const counterReducer = createReducer({ value: 0, lastAction: "" }, (builder) => 
 1. `pending` when the request starts,
 2. then `fulfilled` (payload = the returned value) **or** `rejected` (error / `rejectWithValue`).
 
-```mermaid
-sequenceDiagram
-    participant C as Component
-    participant T as createAsyncThunk
-    participant API
-    participant R as Slice reducer
-    C->>T: dispatch(fetchCharacters("luke"))
-    T->>R: characters/fetchCharacters/pending
-    T->>API: fetch(...)
-    API-->>T: JSON
-    T->>R: characters/fetchCharacters/fulfilled (payload)
-    Note over T,R: or .../rejected on error
-```
+{/* diagram source: /diagrams/diagram-274.mmd */}
+![diagram](/diagrams/diagram-274.svg)
 
 <Info>
 **createAsyncThunk (owner's example, updated for RTK 2)**

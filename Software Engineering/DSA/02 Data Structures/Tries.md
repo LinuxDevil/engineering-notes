@@ -16,12 +16,8 @@ A **trie** (prefix tree) stores strings character by character along paths from 
 
 Store the words `car`, `cat`, `cart`, `dog`:
 
-```mermaid
-flowchart TD
-  R((root)) --> C[c] --> A[a] --> R2["r (end)"] --> T2["t (end)"]
-  A --> T1["t (end)"]
-  R --> D[d] --> O[o] --> G["g (end)"]
-```
+{/* diagram source: /diagrams/diagram-192.mmd */}
+![diagram](/diagrams/diagram-192.svg)
 
 - Each **edge** is a character. Each **node** is a prefix (the path from the root).
 - An **end-of-word flag** marks nodes where a full word finishes. Without it, you couldn't tell that `car` is a word but `ca` is not.

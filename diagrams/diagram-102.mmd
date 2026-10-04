@@ -1,0 +1,7 @@
+flowchart LR
+  VA["Virtual address<br/>(process view)"] --> TLB{"TLB hit?"}
+  TLB -->|"yes"| PA["Physical address"]
+  TLB -->|"no"| PT["Page table walk<br/>(multi-level)"]
+  PT -->|"present"| PA
+  PT -->|"not present"| PF["Page fault → kernel<br/>load from disk / allocate zeroed page / swap in"]
+  PF --> PA

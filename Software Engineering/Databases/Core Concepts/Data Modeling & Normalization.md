@@ -29,44 +29,8 @@ updated: 2026-09-27
 | **Optionality** | Whether the relationship is required | an Order must have a Customer; a Customer may have zero Orders |
 | **Weak entity** | Identity depends on a parent | OrderItem only exists inside an Order |
 
-```mermaid
-erDiagram
-    CUSTOMER ||--o{ ORDER : places
-    ORDER ||--|{ ORDER_ITEM : contains
-    PRODUCT ||--o{ ORDER_ITEM : "appears in"
-    CUSTOMER ||--o{ ADDRESS : has
-    ORDER }o--|| ADDRESS : "ships to"
-
-    CUSTOMER {
-        bigint id PK
-        text email UK
-        text name
-    }
-    ORDER {
-        bigint id PK
-        bigint customer_id FK
-        bigint shipping_address_id FK
-        timestamptz placed_at
-        text status
-    }
-    ORDER_ITEM {
-        bigint order_id PK, FK
-        bigint product_id PK, FK
-        int quantity
-        numeric unit_price
-    }
-    PRODUCT {
-        bigint id PK
-        text sku UK
-        numeric price
-    }
-    ADDRESS {
-        bigint id PK
-        bigint customer_id FK
-        text line1
-        text city
-    }
-```
+{/* diagram source: /diagrams/diagram-103.mmd */}
+![diagram](/diagrams/diagram-103.svg)
 
 Mapping rules:
 - **1:N** → foreign key on the "many" side (`order.customer_id`).

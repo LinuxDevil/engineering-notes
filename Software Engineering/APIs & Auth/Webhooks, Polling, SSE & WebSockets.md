@@ -26,18 +26,8 @@ Four ways for a server to tell someone "something happened": **polling** (client
 
 Rule of thumb: **server-to-server → webhooks**; **server-to-browser, one-way → SSE**; **interactive, bidirectional → WebSockets**; **simple or firewall-hostile → polling**.
 
-```mermaid
-flowchart LR
-  subgraph Pull
-    P1[Client] -- "GET /jobs/1 every 5s" --> S1[API]
-  end
-  subgraph Push to servers
-    S2[Provider] -- "POST /webhooks (signed)" --> R2[Your backend]
-  end
-  subgraph Push to clients
-    S3[API] -- "SSE / WebSocket stream" --> C3[Browser / app]
-  end
-```
+{/* diagram source: /diagrams/diagram-034.mmd */}
+![diagram](/diagrams/diagram-034.svg)
 
 ## Polling (and the async request pattern)
 
@@ -54,22 +44,8 @@ GET  /exports/exp_1    → 200 {"status":"done","url":"https://…"}
 
 ### Sending webhooks reliably
 
-```mermaid
-sequenceDiagram
-  participant App as Your service
-  participant DB as DB (outbox)
-  participant W as Webhook worker
-  participant C as Customer endpoint
-  App->>DB: write order + outbox event (same transaction)
-  W->>DB: poll outbox
-  W->>C: POST event (signed, with event id)
-  alt 2xx
-    W->>DB: mark delivered
-  else timeout / 5xx
-    W->>W: retry with exponential backoff + jitter (hours/days)
-    W->>DB: after N failures → dead-letter, alert customer, maybe disable endpoint
-  end
-```
+{/* diagram source: /diagrams/diagram-035.mmd */}
+![diagram](/diagrams/diagram-035.svg)
 
 - Use the **transactional outbox** so an event is never lost or sent for a rolled-back change.
 - Deliver from **background workers** ([Background Jobs & Task Queues](/Software%20Engineering/Backend/Background%20Jobs%20%26%20Task%20Queues)) with short timeouts (5–10 s), exponential backoff over hours/days, and a dead-letter queue.
@@ -175,14 +151,8 @@ location /events {
 
 ### Scaling persistent connections
 
-```mermaid
-flowchart LR
-  C1[Client A] --> N1[WS node 1]
-  C2[Client B] --> N2[WS node 2]
-  N1 <--> PS[(Redis pub/sub / NATS / Kafka)]
-  N2 <--> PS
-  API[API / workers] --> PS
-```
+{/* diagram source: /diagrams/diagram-036.mmd */}
+![diagram](/diagrams/diagram-036.svg)
 
 - Each node only knows its own sockets; a **pub/sub backplane** (Redis, NATS, Kafka) fans messages out to the node holding the recipient.
 - **Connection count** is the capacity metric (memory per socket, file descriptors, `ulimit`), not RPS.

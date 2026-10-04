@@ -1,0 +1,10 @@
+sequenceDiagram
+  participant B as Browser
+  participant P as proxy.ts
+  participant L as app/[locale]/layout
+  B->>P: GET /products/42 (Accept-Language: de-DE)
+  P->>P: no locale in path, cookie? no -> negotiate -> "de"
+  P-->>B: 307 Location: /de/products/42
+  B->>P: GET /de/products/42
+  P->>L: pass through
+  L-->>B: <html lang="de"> + German content + hreflang links

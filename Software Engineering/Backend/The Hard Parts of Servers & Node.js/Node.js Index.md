@@ -12,35 +12,8 @@ updated: 2026-09-27
 Entry point for all Node.js notes: the course notes from Will Sentance's *The Hard Parts of Servers & Node.js* (kept in course order in [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js)) plus topic notes that take you from "what is Node" to running Node services in production. Every topic note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions.
 </Note>
 
-```mermaid
-mindmap
-  root((Node.js))
-    Foundations
-      What Node is
-      V8
-      libuv
-      Event loop
-    I/O
-      HTTP
-      File system
-      Streams
-    Building services
-      Express
-      Fastify
-      Hono
-      NestJS
-    Scaling
-      Worker threads
-      Cluster
-      Child processes
-    Production
-      Performance
-      Debugging
-      Security
-    Releases
-      Node 22 to 27
-      Deno and Bun
-```
+{/* diagram source: /diagrams/diagram-081.mmd */}
+![diagram](/diagrams/diagram-081.svg)
 
 ## 🧭 Quick links
 - 📚 Course: [The Hard Parts of Servers & Node.js](/Software%20Engineering/Backend/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js/The%20Hard%20Parts%20of%20Servers%20%26%20Node.js)

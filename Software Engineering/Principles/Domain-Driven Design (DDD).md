@@ -37,20 +37,8 @@ A shared, precise vocabulary used by domain experts **and** in code, tests, APIs
 
 A **bounded context** is an explicit boundary inside which a model and its language are consistent. The same word can mean different things in different contexts, and that's fine.
 
-```mermaid
-flowchart LR
-  subgraph Ordering["Ordering context"]
-    O1["Order: cart, items, price, customer"]
-  end
-  subgraph Dispatch["Dispatch context"]
-    O2["Delivery: pickup, drop-off, courier, ETA"]
-  end
-  subgraph Billing["Billing context"]
-    O3["Invoice: amount, tax, payment status"]
-  end
-  Ordering -- "OrderPlaced event" --> Dispatch
-  Ordering -- "OrderPlaced event" --> Billing
-```
+{/* diagram source: /diagrams/diagram-365.mmd */}
+![diagram](/diagrams/diagram-365.svg)
 
 "Order" in Ordering is a cart with prices; in Dispatch the relevant concept is a *Delivery* with locations; in Billing it's an *Invoice*. Forcing one shared `Order` class across all three creates a bloated model everyone is afraid to touch.
 
@@ -209,12 +197,8 @@ export class PlaceOrder {                                 // application service
 
 ### Layering inside a bounded context
 
-```mermaid
-flowchart TB
-  UI["Interface / adapters<br/>(controllers, consumers)"] --> APP["Application<br/>(use cases, transactions)"]
-  APP --> DOM["Domain<br/>(aggregates, value objects, events, domain services, repository interfaces)"]
-  INF["Infrastructure<br/>(ORM, broker, HTTP clients, repository impls)"] --> DOM
-```
+{/* diagram source: /diagrams/diagram-366.mmd */}
+![diagram](/diagrams/diagram-366.svg)
 
 The domain depends on nothing; infrastructure depends on the domain. This is the core of clean/hexagonal/onion architecture ([Software Architecture Styles](/Software%20Engineering/Principles/Software%20Architecture%20Styles), [Rails Clean Architecture](/Software%20Engineering/Backend/Rails%20Clean%20Architecture)).
 

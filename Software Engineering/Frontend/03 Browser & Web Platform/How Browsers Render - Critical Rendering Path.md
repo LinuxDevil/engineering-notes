@@ -16,15 +16,8 @@ The **Critical Rendering Path (CRP)** is the sequence of steps the browser takes
 
 Before rendering can start, the browser must get the HTML:
 
-```mermaid
-flowchart LR
-  A["User enters URL / clicks link"] --> B["DNS lookup"]
-  B --> C["TCP handshake (or QUIC for HTTP/3)"]
-  C --> D["TLS handshake"]
-  D --> E["HTTP request"]
-  E --> F["TTFB: first byte of HTML"]
-  F --> G["Parse & render (the CRP)"]
-```
+{/* diagram source: /diagrams/diagram-238.mmd */}
+![diagram](/diagrams/diagram-238.svg)
 
 - Each arrow is network latency. On mobile, DNS + TCP + TLS can cost several hundred ms before a single byte arrives.
 - Reduce it with a CDN, HTTP/2 or HTTP/3 (see [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time)), `preconnect` / `dns-prefetch` for third-party origins, and caching.
@@ -32,19 +25,8 @@ flowchart LR
 
 ## 2. The rendering pipeline
 
-```mermaid
-flowchart LR
-  H["HTML bytes"] --> T["Tokenize & parse"] --> DOM["DOM tree"]
-  C["CSS bytes"] --> CP["Parse"] --> CSSOM["CSSOM tree"]
-  DOM --> RT["Render tree (visible nodes + computed styles)"]
-  CSSOM --> RT
-  RT --> L["Layout / Reflow (geometry)"]
-  L --> P["Paint (draw records per layer)"]
-  P --> CO["Composite (GPU combines layers)"]
-  CO --> S["Pixels on screen"]
-  JS["JavaScript"] -.->|"can modify"| DOM
-  JS -.->|"can modify"| CSSOM
-```
+{/* diagram source: /diagrams/diagram-239.mmd */}
+![diagram](/diagrams/diagram-239.svg)
 
 | Step | What happens | Notes |
 |---|---|---|
@@ -174,15 +156,8 @@ Result: critical path length drops from ~4 round trips to ~2, and the LCP image 
 
 After first render, every visual change goes through part of the pipeline again. The cheaper the entry point, the smoother the UI.
 
-```mermaid
-flowchart LR
-  JS["JS / CSS change"] --> St["Style"]
-  St --> La["Layout (reflow)"]
-  La --> Pa["Paint (repaint)"]
-  Pa --> Co["Composite"]
-  St -.->|"paint-only props: color, background, box-shadow"| Pa
-  St -.->|"compositor-only props: transform, opacity"| Co
-```
+{/* diagram source: /diagrams/diagram-240.mmd */}
+![diagram](/diagrams/diagram-240.svg)
 
 | Change | Triggers | Examples |
 |---|---|---|
@@ -253,10 +228,8 @@ Other ways to reduce reflow cost:
 
 ## 7. The frame lifecycle (one frame at 60 Hz ≈ 16.7 ms)
 
-```mermaid
-flowchart LR
-  I["Input events"] --> J["JS (tasks, rAF callbacks)"] --> S["Style"] --> L["Layout"] --> P["Paint"] --> C["Composite"]
-```
+{/* diagram source: /diagrams/diagram-241.mmd */}
+![diagram](/diagrams/diagram-241.svg)
 
 - `requestAnimationFrame` callbacks run **just before style/layout of the next frame**: the right place for visual updates.
 - Rendering is a separate step of the event loop that happens **between tasks**, at most once per frame, and only when needed. It does **not** run inside the microtask checkpoint (a long chain of microtasks actually blocks rendering). See [Event Loop - Microtasks & Macrotasks](/Software%20Engineering/Frontend/01%20JavaScript/Event%20Loop%20-%20Microtasks%20%26%20Macrotasks).

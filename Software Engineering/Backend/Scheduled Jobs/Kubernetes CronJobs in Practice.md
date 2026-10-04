@@ -16,36 +16,16 @@ This note is the Kubernetes backend of Acme Ops. Cron syntax and the general ide
 
 ## 1. How it works
 
-```mermaid
-flowchart LR
-  CJ["CronJob<br/>cleanup-expired-carts<br/>schedule 0 * * * *"] -- "every tick<br/>(controller checks ~every 10 s)" --> J["Job<br/>cleanup-expired-carts-29315040"]
-  J -- "creates, retries per backoffLimit /<br/>podFailurePolicy" --> P1["Pod (attempt 1)"]
-  J --> P2["Pod (attempt 2)"]
-  CJ -. "keeps N finished Jobs<br/>(history limits)" .-> H[("Job history")]
-  J -. "ttlSecondsAfterFinished" .-> GC["garbage collected"]
-```
+{/* diagram source: /diagrams/diagram-066.mmd */}
+![diagram](/diagrams/diagram-066.svg)
 
 - The **CronJob controller** (in kube-controller-manager) wakes up, computes the most recent scheduled time that hasn't been handled, and creates a Job named `<cronjob>-<scheduled time in minutes since epoch>`. The deterministic name means the same tick can't create two Jobs with the same name, but it is not a full exactly-once guarantee (see pitfalls).
 - It stamps the Job with the annotation `batch.kubernetes.io/cronjob-scheduled-timestamp` (RFC 3339) and an owner reference to the CronJob.
 - The **Job controller** creates Pods until the success criteria are met or the failure limits are hit.
 - One CronJob is like one crontab line. Because of the name suffix (11 characters), the CronJob name should be at most **52 characters**.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Tick: scheduled time reached
-  Tick --> Skip_suspended: spec.suspend = true
-  Tick --> Skip_deadline: now - scheduledTime > startingDeadlineSeconds
-  Tick --> Skip_forbid: concurrencyPolicy Forbid<br/>and a Job is active
-  Tick --> Replace: concurrencyPolicy Replace<br/>and a Job is active
-  Replace --> CreateJob: delete the active Job first
-  Tick --> CreateJob: otherwise
-  CreateJob --> Running
-  Running --> Complete: success criteria met
-  Running --> Failed: backoffLimit / activeDeadlineSeconds /<br/>podFailurePolicy FailJob
-  Skip_suspended --> [*]: counts as missed
-  Skip_deadline --> [*]: missed
-  Skip_forbid --> [*]: missed
-```
+{/* diagram source: /diagrams/diagram-067.mmd */}
+![diagram](/diagrams/diagram-067.svg)
 
 ## 2. The full spec, field by field
 

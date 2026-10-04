@@ -14,15 +14,8 @@ Find the queries that cost the most in total (`pg_stat_statements`), read their 
 
 ## The workflow
 
-```mermaid
-flowchart LR
-  A[Find: pg_stat_statements,<br/>slow query log, APM] --> B[Reproduce with<br/>real parameters]
-  B --> C["EXPLAIN (ANALYZE, BUFFERS)"]
-  C --> D{Where is the time?<br/>estimates vs actual?}
-  D --> E[Fix: index / rewrite /<br/>stats / batching / schema]
-  E --> F[Measure again,<br/>check write cost]
-  F --> A
-```
+{/* diagram source: /diagrams/diagram-109.mmd */}
+![diagram](/diagrams/diagram-109.svg)
 
 ```sql
 -- top queries by total time (needs shared_preload_libraries = 'pg_stat_statements')

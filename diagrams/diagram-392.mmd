@@ -1,0 +1,11 @@
+flowchart LR
+  A["Client A"] <-->|"WebSocket"| G1["Gateway 1"]
+  B["Client B"] <-->|"WebSocket"| G2["Gateway 2"]
+  G1 --> CS["Chat service"]
+  CS --> SEQ["Sequencer<br/>(per conv)"]
+  CS --> MS[("Message store<br/>Cassandra")]
+  CS --> K["Kafka<br/>(partition by conv_id)"]
+  K --> FO["Fan-out / delivery workers"]
+  FO --> PR[("Presence & session registry<br/>Redis: user → gateway")]
+  FO --> G2
+  FO -->|"offline"| PN["Push service<br/>(APNs / FCM)"]

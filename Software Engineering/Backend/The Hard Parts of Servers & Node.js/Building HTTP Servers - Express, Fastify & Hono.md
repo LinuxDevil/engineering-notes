@@ -120,13 +120,8 @@ serve({ fetch: app.fetch, port: 3000 });   // on Bun/Deno/Workers: export defaul
 | TypeScript | Types via `@types/express` | First-class | First-class, typed RPC client (`hc`) | First-class |
 | Best for | Simple APIs, legacy, learning | High-throughput JSON APIs | Edge/serverless, multi-runtime | Large teams wanting structure (Spring-like) |
 
-```mermaid
-flowchart LR
-  Q{What do you need?} -->|runs on edge / Bun / Workers| H[Hono]
-  Q -->|max throughput, schemas, plugins| F[Fastify]
-  Q -->|big team, DI, conventions| N[NestJS on Fastify]
-  Q -->|simple, huge ecosystem| E[Express 5]
-```
+{/* diagram source: /diagrams/diagram-072.mmd */}
+![diagram](/diagrams/diagram-072.svg)
 
 ## Cross-cutting concerns every server needs
 - **Validation** at the edge of the system (never trust `req.body`).

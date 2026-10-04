@@ -34,24 +34,8 @@ The internet is a network of networks that move **packets** using **IP** address
 Ports identify applications on a host (443 HTTPS, 53 DNS, 5432 Postgres). A connection is a 4-tuple: (src IP, src port, dst IP, dst port). Details of the handshake and congestion control: [Networking - OSI, TCP-IP & Protocols](/Software%20Engineering/CS%20Fundamentals/Networking%20-%20OSI%2C%20TCP-IP%20%26%20Protocols).
 
 ## DNS resolution
-```mermaid
-sequenceDiagram
-  participant B as Browser / OS stub resolver
-  participant R as Recursive resolver (ISP, 1.1.1.1, 8.8.8.8)
-  participant Root as Root server
-  participant TLD as .com TLD server
-  participant NS as example.com authoritative NS
-  B->>B: check browser cache, OS cache, /etc/hosts
-  B->>R: A/AAAA? www.example.com
-  R->>R: cache hit? return
-  R->>Root: www.example.com?
-  Root-->>R: ask .com servers (referral)
-  R->>TLD: www.example.com?
-  TLD-->>R: ask ns1.example.com (referral)
-  R->>NS: www.example.com?
-  NS-->>R: CNAME / A 93.184.215.14 (TTL 300)
-  R-->>B: 93.184.215.14 (cached for TTL)
-```
+{/* diagram source: /diagrams/diagram-098.mmd */}
+![diagram](/diagrams/diagram-098.svg)
 | Record | Purpose |
 |---|---|
 | A / AAAA | Name → IPv4 / IPv6 |
@@ -71,17 +55,8 @@ nslookup example.com
 ```
 
 ## What happens when you type a URL
-```mermaid
-flowchart TD
-  A["1. Parse URL: https://shop.example.com/cart"] --> B["2. HSTS check → force HTTPS"]
-  B --> C["3. DNS lookup (caches → recursive resolver)"]
-  C --> D["4. Connect: TCP 3-way handshake<br/>(or QUIC over UDP for HTTP/3)"]
-  D --> E["5. TLS 1.3 handshake: cert validation, keys"]
-  E --> F["6. HTTP request: GET /cart + cookies"]
-  F --> G["7. CDN edge → load balancer → app server → DB/cache"]
-  G --> H["8. HTTP response: status, headers, HTML"]
-  H --> I["9. Browser: parse HTML, fetch CSS/JS/images (more requests),<br/>build DOM/CSSOM, layout, paint"]
-```
+{/* diagram source: /diagrams/diagram-099.mmd */}
+![diagram](/diagrams/diagram-099.svg)
 1. The browser parses the URL; checks HSTS preload list to upgrade to HTTPS.
 2. **DNS**: browser cache → OS cache → recursive resolver → root/TLD/authoritative.
 3. **Transport**: TCP handshake (1 RTT), or QUIC which combines transport + TLS (1 RTT, 0-RTT on resumption).

@@ -47,24 +47,8 @@ Messages are **JSON-RPC 2.0**. A tool call looks like this on the wire:
   "params": { "name": "create-user", "arguments": { "name": "Ada", "email": "ada@example.com" } } }
 ```
 
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant H as Host + LLM
-  participant C as MCP client
-  participant S as MCP server
-  C->>S: server/discover (2026-07-28) or initialize (older revisions)
-  S-->>C: versions, capabilities, identity
-  C->>S: tools/list
-  S-->>C: [{name, description, inputSchema, annotations}]
-  U->>H: "Add Ada as a user"
-  H->>H: model chooses tool create-user
-  H->>U: approve? (host policy)
-  C->>S: tools/call create-user {...}
-  S-->>C: content + structuredContent
-  C-->>H: result goes into the model context
-  H-->>U: "Created user 42"
-```
+{/* diagram source: /diagrams/diagram-019.mmd */}
+![diagram](/diagrams/diagram-019.svg)
 
 ## The building blocks (primitives)
 
@@ -236,14 +220,8 @@ Exact file and keys differ per host (Claude Desktop, Claude Code `claude mcp add
 
 ## Spec history
 
-```mermaid
-timeline
-  2024-11-05 : Initial release : stdio + HTTP/SSE
-  2025-03-26 : Streamable HTTP : OAuth 2.1 : tool annotations
-  2025-06-18 : Structured output : Elicitation : Resource servers + RFC 8707
-  2025-11-25 : Tasks (experimental) : URL elicitation : CIMD, icons
-  2026-07-28 : Stateless core : server/discover : Tasks as extension
-```
+{/* diagram source: /diagrams/diagram-020.mmd */}
+![diagram](/diagrams/diagram-020.svg)
 
 <Info>
 **🆕 2025–2026**

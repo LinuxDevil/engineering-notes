@@ -12,32 +12,8 @@ updated: 2026-09-27
 This is the entry point to all Front End notes. Every topic has its own note with explanations, worked examples, a 🆕 2025–2026 box where something changed, and interview questions at the end. The original big "Front End" note is kept unchanged in `_Archive` for reference.
 </Note>
 
-```mermaid
-mindmap
-  root((Frontend))
-    Language
-      JavaScript
-      TypeScript
-    Platform
-      Browser & Web APIs
-      CSS
-      Accessibility
-    Frameworks
-      React
-      State Management
-      Next.js
-      Angular
-    Engineering
-      Architecture
-      Performance
-      Security
-      Testing
-      Tooling
-    Career
-      System Design
-      AI in Frontend
-      Interview Prep
-```
+{/* diagram source: /diagrams/diagram-353.mmd */}
+![diagram](/diagrams/diagram-353.svg)
 
 ## 🧭 Quick links
 - 🆕 [What's New in Frontend 2025-2026](/Software%20Engineering/Frontend/What's%20New%20in%20Frontend%202025-2026): everything that changed, by area, with dates

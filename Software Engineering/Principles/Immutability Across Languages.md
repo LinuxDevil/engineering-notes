@@ -20,13 +20,8 @@ Almost every language separates two ideas: an **immutable binding** (the name ca
 | Can the **object** it points to be mutated? | `const a = []; a.push(1)` works | `Object.freeze(a); a.push(1)` → TypeError |
 | Is the value known at **compile time**? | Dart `const pi = 3.14` | Dart `final now = DateTime.now()` |
 
-```mermaid
-flowchart TD
-  A[Want to prevent change?] --> B{Of what?}
-  B -->|the name/binding| C["const (JS) · final (Java/Dart) · val (Kotlin) · readonly field (TS/C#)"]
-  B -->|the object's contents| D["records/data classes with final fields · Object.freeze · immutable collections · Dart const"]
-  B -->|and fixed at compile time| E["Dart const · Kotlin const val · Java static final primitive/String · C# const"]
-```
+{/* diagram source: /diagrams/diagram-369.mmd */}
+![diagram](/diagrams/diagram-369.svg)
 
 ## Dart: `final` vs `const` (the original note)
 

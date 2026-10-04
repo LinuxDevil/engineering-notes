@@ -85,10 +85,8 @@ return prev (3) as new head
 
 Many operations have a special case: "what if we remove or insert at the head?". Put a fake node in front: `dummy.next = head`. Now every real node has a predecessor, the special case disappears, and you return `dummy.next`.
 
-```mermaid
-flowchart LR
-  D["dummy (0)"] --> A[1] --> B[2] --> C[3] --> N[null]
-```
+{/* diagram source: /diagrams/diagram-188.mmd */}
+![diagram](/diagrams/diagram-188.svg)
 
 ## Complexity
 
@@ -467,15 +465,8 @@ Goal: `get` and `put` in O(1), evicting the **least recently used** key when ove
 - The **doubly linked list** keeps recency order: most recent right after `head`, least recent right before `tail`. Because each node knows its `prev`, unlinking is O(1).
 - Two sentinels (`head`, `tail`) remove all null checks.
 
-```mermaid
-flowchart LR
-  subgraph Map
-    K1["key 1"] --> N1
-    K2["key 2"] --> N2
-    K3["key 3"] --> N3
-  end
-  H[head sentinel] <--> N1["1 (most recent)"] <--> N2[2] <--> N3["3 (evict next)"] <--> T[tail sentinel]
-```
+{/* diagram source: /diagrams/diagram-189.mmd */}
+![diagram](/diagrams/diagram-189.svg)
 
 ```ts
 class LRUNode {

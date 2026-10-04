@@ -1,0 +1,9 @@
+flowchart LR
+  subgraph Page["Page (main thread)"]
+    UI["DOM, rendering, input, your app"]
+  end
+  UI <-->|"postMessage"| DW["Dedicated Worker (CPU work)"]
+  UI <-->|"port.postMessage"| SH["Shared Worker (one per origin, many tabs)"]
+  UI -->|"fetch"| SW["Service Worker (network proxy)"]
+  SW <--> C[("Cache API / IndexedDB")]
+  SW <--> N["Network"]

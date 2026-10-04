@@ -14,17 +14,8 @@ Measure before optimising. For **latency/CPU** problems take a CPU profile (`--c
 
 ## A performance workflow
 
-```mermaid
-flowchart LR
-  S[Symptom: slow p99, high CPU, OOM] --> M[Measure: metrics + load test]
-  M --> Q{CPU-bound or waiting?}
-  Q -- CPU / loop delay high --> CP[CPU profile / flame graph]
-  Q -- waiting on I/O --> TR[Tracing: DB, HTTP spans]
-  Q -- memory grows --> HS[Heap snapshots, compare]
-  CP --> F[Fix hotspot] --> V[Re-measure under same load]
-  TR --> F
-  HS --> F
-```
+{/* diagram source: /diagrams/diagram-082.mmd */}
+![diagram](/diagrams/diagram-082.svg)
 
 Load-test locally with `autocannon` (HTTP benchmarking in Node) or k6:
 

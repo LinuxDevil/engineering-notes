@@ -1,0 +1,5 @@
+flowchart LR
+  A["Iterable: has [Symbol.iterator]()"] -- "calls" --> B["Iterator: has next()"]
+  B -- "returns" --> C["{ value, done }"]
+  C -- "done: false" --> B
+  C -- "done: true" --> D[stop]

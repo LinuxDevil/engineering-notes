@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph Before
+    A1[OrderService] --> B1[MySqlOrderDao]
+  end
+  subgraph After
+    A2[OrderService] --> P[OrderRepository interface<br/>owned by the domain]
+    B2[MySqlOrderRepository] -. implements .-> P
+  end

@@ -23,22 +23,8 @@ Building features on large language models is ordinary system design with unusua
 | Prompt injection | Treat all retrieved/user content as untrusted data; least-privilege tools |
 
 ## Reference architecture
-```mermaid
-flowchart LR
-  U["Client"] -->|"SSE stream"| API["App API"]
-  API --> GR1["Input guardrails<br/>(PII, abuse, injection heuristics)"]
-  GR1 --> ORCH["Orchestrator / agent loop"]
-  ORCH --> RET["Retriever"]
-  RET --> VEC[("Vector + keyword index")]
-  RET --> RR["Re-ranker"]
-  ORCH --> TOOLS["Tools / MCP servers<br/>(scoped permissions)"]
-  ORCH --> GW["LLM gateway<br/>routing, quotas, retries,<br/>fallback, caching, logging"]
-  GW --> P1["Provider A"] & P2["Provider B"] & SH["Self-hosted model<br/>(vLLM)"]
-  GW --> SC[("Semantic / exact cache")]
-  ORCH --> GR2["Output guardrails<br/>(schema, grounding, safety)"]
-  GR2 --> API
-  GW -.-> OBS["Traces, token + cost metrics,<br/>eval sampling"]
-```
+{/* diagram source: /diagrams/diagram-402.mmd */}
+![diagram](/diagrams/diagram-402.svg)
 
 ## RAG pipeline
 **Ingestion (offline / streaming)**

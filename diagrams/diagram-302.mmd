@@ -1,0 +1,7 @@
+flowchart BT
+  E1["ElementInjector: app-seat"] --> E2["ElementInjector: app-cabin"]
+  E2 --> E3["ElementInjector: app-root"]
+  E3 --> R["Environment: lazy route injector"]
+  R --> Root["Environment: root injector"]
+  Root --> P["Platform injector"]
+  P --> N["NullInjector (throws)"]

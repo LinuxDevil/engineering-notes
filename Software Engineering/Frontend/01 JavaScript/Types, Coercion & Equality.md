@@ -129,14 +129,8 @@ Coercion is converting a value from one type to another. **Explicit**: `Number('
 
 The engine only ever converts to three types:
 
-```mermaid
-flowchart LR
-  V["any value"] --> S["ToString"]
-  V --> N["ToNumber"]
-  V --> B["ToBoolean"]
-  O["object"] --> P["ToPrimitive: Symbol.toPrimitive, then valueOf / toString"] --> S
-  P --> N
-```
+{/* diagram source: /diagrams/diagram-232.mmd */}
+![diagram](/diagrams/diagram-232.svg)
 
 ### ToBoolean: truthy and falsy
 
@@ -222,20 +216,8 @@ React uses `Object.is` to decide whether state changed and whether effect/memo d
 
 ### How `==` coerces (simplified algorithm)
 
-```mermaid
-flowchart TD
-  A["x == y"] --> B{"Same type?"}
-  B -- Yes --> C["Compare like ==="]
-  B -- No --> D{"One is null and the other undefined?"}
-  D -- Yes --> T["true"]
-  D -- No --> E{"null/undefined vs anything else?"}
-  E -- Yes --> F["false"]
-  E -- No --> G{"Boolean involved?"}
-  G -- Yes --> H["Convert the boolean to a number, retry"]
-  G -- No --> I{"Object vs primitive?"}
-  I -- Yes --> J["ToPrimitive(object), retry"]
-  I -- No --> K["string/number/bigint: convert to numbers and compare"]
-```
+{/* diagram source: /diagrams/diagram-233.mmd */}
+![diagram](/diagrams/diagram-233.svg)
 
 ```js
 '1' == 1;            // true   ('1' → 1)

@@ -89,16 +89,8 @@ When Spring finds such a class it inspects the constructor(s):
 - A constructor whose arguments can be satisfied by other beans → Spring provides those collaborators (just like parameters of `@Bean` methods).
 - Several ambiguous constructors → mark the one to use with `@Autowired`.
 
-```mermaid
-flowchart LR
-  A["@SpringBootApplication"] --> B["@ComponentScan: find @Component/@Service/..."]
-  A --> C["@EnableAutoConfiguration: conditional library beans"]
-  B --> D[Bean definitions]
-  C --> D
-  D --> E["Create beans in dependency order<br/>constructor injection"]
-  E --> F["BeanPostProcessors (proxies, init)"]
-  F --> G[ApplicationContext ready]
-```
+{/* diagram source: /diagrams/diagram-052.mmd */}
+![diagram](/diagrams/diagram-052.svg)
 
 ## Interview questions
 

@@ -1,0 +1,8 @@
+flowchart LR
+  O[Observe<br/>exact symptom, evidence] --> R[Reproduce<br/>reliably, minimally]
+  R --> H[Hypothesise<br/>one specific cause]
+  H --> P["Predict<br/>if H is true, then X"]
+  P --> E[Experiment<br/>change ONE thing]
+  E -->|refuted| H
+  E -->|confirmed| F[Fix root cause]
+  F --> V[Verify + regression test]

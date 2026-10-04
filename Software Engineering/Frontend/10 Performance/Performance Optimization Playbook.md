@@ -14,14 +14,8 @@ Web performance is about **sending less, sending it sooner, and doing less work 
 
 ## The mental model
 
-```mermaid
-flowchart LR
-  M["Measure (RUM + lab)"] --> F["Find the bottleneck: network, JS, render, images"]
-  F --> X["Fix (this playbook)"]
-  X --> B["Budget in CI"]
-  B --> MON["Monitor in production"]
-  MON --> M
-```
+{/* diagram source: /diagrams/diagram-319.mmd */}
+![diagram](/diagrams/diagram-319.svg)
 
 Where time goes on a typical load:
 1. **Latency** – DNS → TCP → TLS → request → TTFB. Each new origin costs these round trips again. On mobile, round-trip time (RTT) dominates, so *fewer requests to fewer origins* matters more than raw bandwidth.
@@ -98,18 +92,8 @@ Cross-origin resources only expose detailed timings when the server sends `Timin
 
 ### Script loading: `async`, `defer`, `type="module"`
 
-```mermaid
-flowchart TB
-  subgraph Normal["script (blocking)"]
-    A1["parse HTML"] --> A2["STOP: fetch + execute"] --> A3["continue parsing"]
-  end
-  subgraph Async["script async"]
-    B1["parse HTML + fetch in parallel"] --> B2["execute as soon as downloaded (pauses parser, order not guaranteed)"]
-  end
-  subgraph Defer["script defer / type=module"]
-    C1["parse HTML + fetch in parallel"] --> C2["execute after parsing, in document order, before DOMContentLoaded"]
-  end
-```
+{/* diagram source: /diagrams/diagram-320.mmd */}
+![diagram](/diagrams/diagram-320.svg)
 
 - `defer` for your app code; `async` for independent third-party scripts (analytics); modules are deferred by default.
 - Put third-party tags behind consent/interaction, or load them with a facade (e.g. show a static YouTube thumbnail, load the iframe on click).

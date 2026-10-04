@@ -33,15 +33,8 @@ A secret is anything that grants access: API keys, DB passwords, private keys, t
 Configuration (feature flags, URLs) is **not** a secret; keep it separate so you don't over-protect config or under-protect secrets.
 
 ## Where secrets leak
-```mermaid
-flowchart TB
-  S((Secret)) --> G[Git history<br/>.env committed, test fixtures]
-  S --> I[Container images & build logs<br/>ARG/ENV in Dockerfile]
-  S --> L[Application logs<br/>request dumps, error messages]
-  S --> C[Client bundles<br/>NEXT_PUBLIC_*, VITE_*]
-  S --> T[Tickets, chat, wikis, AI prompts]
-  S --> E[Env vars exposed via /debug, crash reports, child processes]
-```
+{/* diagram source: /diagrams/diagram-383.mmd */}
+![diagram](/diagrams/diagram-383.svg)
 
 ## Levels of maturity
 | Level | Practice | Problems |
@@ -54,19 +47,8 @@ flowchart TB
 
 ## How it works: runtime delivery with workload identity
 
-```mermaid
-sequenceDiagram
-  participant Pod as App pod (service account)
-  participant IdP as Cloud IAM / K8s OIDC
-  participant SM as Secrets manager
-  participant DB as Database
-  Pod->>IdP: Present projected service-account token
-  IdP-->>Pod: Short-lived cloud credentials (role: orders-api)
-  Pod->>SM: GetSecret("orders/db") with those credentials
-  SM-->>Pod: Secret (or a dynamic DB user valid for 1h)
-  Pod->>DB: Connect
-  Note over SM: Access is logged and scoped by role
-```
+{/* diagram source: /diagrams/diagram-384.mmd */}
+![diagram](/diagrams/diagram-384.svg)
 The app never holds a bootstrap secret: identity comes from the platform.
 
 ### Examples

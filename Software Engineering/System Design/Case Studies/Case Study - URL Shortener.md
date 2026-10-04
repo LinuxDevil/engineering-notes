@@ -46,19 +46,8 @@ CREATE UNIQUE INDEX ON urls (owner_id, md5(long_url));
 Access pattern is a pure key lookup → any KV store (DynamoDB, Cassandra) or Postgres partitioned by hash of `code`.
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  U["Browser"] --> CDN["CDN / edge<br/>(caches 301/302 for hot codes)"]
-  CDN --> LB["Load balancer"]
-  LB --> R["Redirect service<br/>(read path)"]
-  LB --> W["Write API<br/>(create)"]
-  R --> C[("Redis / Valkey<br/>code → url")]
-  R -->|"miss"| DB[("URL store<br/>sharded KV")]
-  W --> IDG["ID allocator<br/>(ranges)"]
-  W --> DB
-  R -->|"click event (async)"| K["Kafka"]
-  K --> A["Analytics consumers"] --> OLAP[("ClickHouse")]
-```
+{/* diagram source: /diagrams/diagram-397.mmd */}
+![diagram](/diagrams/diagram-397.svg)
 
 ## 6. Deep dives
 ### Generating the short code

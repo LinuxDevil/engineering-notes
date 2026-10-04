@@ -14,13 +14,8 @@ Between February 2025 and July 2026 TypeScript went through its biggest change e
 
 ## Timeline
 
-```mermaid
-flowchart LR
-  A["5.8 (2025-02-28): erasableSyntaxOnly, require(esm) in nodenext"] --> B["5.9 (2025-08-01): import defer, node20, minimal tsc --init"]
-  B --> C["6.0 (2026-03-23): last JS-based release, new defaults, removals"]
-  C --> D["7.0 (2026-07-08): native Go compiler, 8-12x faster"]
-  D --> E["7.1 (expected): programmatic API"]
-```
+{/* diagram source: /diagrams/diagram-235.mmd */}
+![diagram](/diagrams/diagram-235.svg)
 
 | Version | Released | Key items |
 |---|---|---|
@@ -113,13 +108,8 @@ With the new default, globals from `@types/node`, `@types/jest` etc. are no long
 - Vue, Svelte, Astro, MDX and **Angular template tooling** still need TS 6 until the API lands.
 - **Next.js 16.3** can use TS 7 for `next build` type checking.
 
-```mermaid
-flowchart TD
-  A["Your project"] --> B{"Uses tools that need the TS API? (Angular templates, Vue/Svelte/Astro/MDX tooling, some lint rules)"}
-  B -- no --> C["Upgrade to TS 7 for tsc and the editor"]
-  B -- yes --> D["Stay on TS 6 for those tools (or @typescript/typescript6) until 7.1"]
-  D --> E["You can still use TS 7 for fast type checks (tsc --noEmit) in CI"]
-```
+{/* diagram source: /diagrams/diagram-236.mmd */}
+![diagram](/diagrams/diagram-236.svg)
 
 ## Node.js native type stripping
 

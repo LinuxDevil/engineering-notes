@@ -1,0 +1,9 @@
+flowchart TD
+  Q1{"Need server features? (SSR, ISR, Server Actions, proxy, image optimization)"}
+  Q1 -- No --> SE["Static export: output 'export' → S3/CDN/nginx/GitHub Pages"]
+  Q1 -- Yes --> Q2{"Want a managed platform?"}
+  Q2 -- "Yes, Vercel" --> V["Vercel (reference platform)"]
+  Q2 -- "Yes, other" --> A["Platform adapter: Bun (verified), Netlify, Cloudflare/OpenNext, AWS/OpenNext (SST), Amplify, Firebase"]
+  Q2 -- "No, our infra" --> Q3{"Single instance?"}
+  Q3 -- Yes --> N["VM/PaaS: next start (+ reverse proxy)"]
+  Q3 -- No --> K["Docker standalone on Kubernetes/ECS/Cloud Run + shared cache, deploymentId, CDN"]

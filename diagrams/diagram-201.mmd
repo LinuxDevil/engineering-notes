@@ -1,0 +1,8 @@
+flowchart TD
+  Q{"What is asked?"} -->|"count groups / fill regions"| CC["DFS or BFS flood fill<br/>(or Union-Find)"]
+  Q -->|"fewest steps, unweighted"| BFS["BFS, level by level"]
+  Q -->|"spread from many starts at once"| MS["multi-source BFS<br/>seed queue with all sources"]
+  Q -->|"order with prerequisites"| TOPO["topological sort<br/>Kahn BFS or DFS postorder"]
+  Q -->|"is there a cycle?"| CY["directed: 3 colors / Kahn<br/>undirected: parent check or Union-Find"]
+  Q -->|"edge weights 0 or 1"| ZO["0-1 BFS with a deque"]
+  Q -->|"positive weights"| DJ["Dijkstra with a heap"]

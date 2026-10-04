@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph Good["High cohesion, low coupling"]
+    A1[Billing: invoice + tax + payment status] -- small API --> B1[Notifications]
+  end
+  subgraph Bad["Low cohesion, high coupling"]
+    U[Utils: tax, email, dates, pdf] <--> S[OrderService] <--> R[ReportService]
+    U <--> R
+  end

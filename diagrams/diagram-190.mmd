@@ -1,0 +1,4 @@
+flowchart LR
+  E[enqueue] --> IN["inStack: 1 2 3 (top=3)"]
+  IN -- "only when out is empty: pop all, push all" --> OUT["outStack: 3 2 1 (top=1)"]
+  OUT --> D["dequeue returns 1"]

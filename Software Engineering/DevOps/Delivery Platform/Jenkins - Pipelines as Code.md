@@ -40,26 +40,8 @@ Jenkins is an open-source (MIT) automation server written in Java. Out of the bo
 
 ## 2. Architecture
 
-```mermaid
-flowchart LR
-  subgraph K8s["Kubernetes cluster, namespace jenkins"]
-    C["Controller pod<br/>UI, scheduler, queue, plugins<br/>JENKINS_HOME on a PVC<br/>0 executors"]
-    subgraph P1["Agent pod: orders-api #42"]
-      J1[jnlp container<br/>agent.jar]
-      N1[node]
-      B1[buildkit]
-    end
-    subgraph P2["Agent pod: catalog #17"]
-      J2[jnlp]
-      N2[node]
-    end
-  end
-  GH[GitHub webhook] --> C
-  C -- "creates pod via K8s API" --> P1
-  J1 -- "WebSocket / TCP 50000" --> C
-  C -- "creates pod" --> P2
-  J2 --> C
-```
+{/* diagram source: /diagrams/diagram-154.mmd */}
+![diagram](/diagrams/diagram-154.svg)
 
 | Concept | What it is |
 |---|---|
@@ -223,19 +205,8 @@ Useful knobs: `podRetention onFailure()` keeps a failed pod around for debugging
 
 ### 4.1 Flow
 
-```mermaid
-flowchart LR
-  Dev[git push / PR<br/>acme/orders-api] -->|webhook| J[Jenkins multibranch job]
-  subgraph Pod["Ephemeral agent pod"]
-    J --> I[install] --> Q{{"lint ∥ test<br/>JUnit"}} --> B[build image<br/>BuildKit rootless] --> S[Trivy scan]
-  end
-  S -->|main only| R[(ghcr.io/acme/orders-api:&lt;sha&gt;)]
-  S -->|main only| G[commit to acme/platform-gitops<br/>apps/orders-api/overlays/dev]
-  G --> A[Argo CD sync<br/>shop-dev]
-  R -. image pull .-> A
-  G -. input gate .-> P[bump overlays/prod]
-  P --> A2[Argo CD + Argo Rollouts canary<br/>shop-prod]
-```
+{/* diagram source: /diagrams/diagram-155.mmd */}
+![diagram](/diagrams/diagram-155.svg)
 
 Jenkins' job ends at "commit to the GitOps repo". It never runs `kubectl apply` against the cluster and holds no cluster credentials; Argo CD pulls. That is the core security win of GitOps (see [Argo CD in Practice](/Software%20Engineering/DevOps/Delivery%20Platform/Argo%20CD%20in%20Practice)).
 

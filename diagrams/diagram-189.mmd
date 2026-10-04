@@ -1,0 +1,7 @@
+flowchart LR
+  subgraph Map
+    K1["key 1"] --> N1
+    K2["key 2"] --> N2
+    K3["key 3"] --> N3
+  end
+  H[head sentinel] <--> N1["1 (most recent)"] <--> N2[2] <--> N3["3 (evict next)"] <--> T[tail sentinel]

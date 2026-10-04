@@ -26,35 +26,8 @@ updated: 2026-09-27
 
 Loki, Tempo, Mimir and Pyroscope share an architecture: stateless-ish Go services, a hash ring, **object storage as the source of truth**, and the same "monolithic or microservices" deployment choice. Learn one and the others feel familiar.
 
-```mermaid
-flowchart LR
-  subgraph shop-prod
-    OA[orders-api<br/>pino JSON + prom-client + OTel SDK]
-    NX[shell / catalog / checkout<br/>Next.js + OTel]
-  end
-  subgraph monitoring
-    AL[Alloy DaemonSet]
-    PR[Prometheus<br/>kube-prometheus-stack]
-    LK[(Loki)]
-    TP[(Tempo)]
-    MI[(Mimir, optional)]
-    PY[(Pyroscope, optional)]
-    AM[Alertmanager]
-    GF[Grafana]
-  end
-  OA -- stdout --> NODE[/var/log/pods on node/] --> AL
-  NX -- stdout --> NODE
-  OA -- OTLP traces :4318 --> AL
-  NX -- OTLP traces --> AL
-  AL -- push logs --> LK
-  AL -- OTLP --> TP
-  PR -- scrape /metrics via ServiceMonitor --> OA
-  PR -- scrape --> KSM[kube-state-metrics / kubelet cAdvisor / node-exporter]
-  TP -- span metrics remote_write --> PR
-  PR -. remote_write .-> MI
-  PR -- alerts --> AM
-  GF --> PR & LK & TP & MI & PY
-```
+{/* diagram source: /diagrams/diagram-152.mmd */}
+![diagram](/diagrams/diagram-152.svg)
 
 <Info>
 **🆕 2025–2026: the collector consolidation**
@@ -555,13 +528,8 @@ datasources:
 
 **Exemplars** are sample trace IDs attached to histogram buckets. prom-client emits them when the histogram has `enableExemplars: true` and the registry serves OpenMetrics; Prometheus stores them with `exemplar-storage` enabled. In a latency panel, toggle "Exemplars" and click a dot to jump straight to a slow trace.
 
-```mermaid
-flowchart LR
-  M[Latency panel spike] -- exemplar trace_id --> T[Tempo trace]
-  T -- tracesToLogs: trace_id + service --> L[Loki lines for that request]
-  L -- derived field trace_id --> T
-  T -- span profile --> P[Pyroscope flame graph]
-```
+{/* diagram source: /diagrams/diagram-153.mmd */}
+![diagram](/diagrams/diagram-153.svg)
 
 ## 6. Dashboards
 

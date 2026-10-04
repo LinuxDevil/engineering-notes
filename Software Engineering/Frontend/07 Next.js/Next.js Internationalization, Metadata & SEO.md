@@ -38,18 +38,8 @@ Decisions to make up front:
 | Negotiation | `Accept-Language`, cookie (`NEXT_LOCALE`), geo | Cookie (explicit choice) > `Accept-Language` > default. **Never** redirect bots by geo |
 | Translated slugs | `/de/produkte/...` vs `/de/products/...` | Only if SEO in that market needs it (next-intl `pathnames`) |
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant P as proxy.ts
-  participant L as app/[locale]/layout
-  B->>P: GET /products/42 (Accept-Language: de-DE)
-  P->>P: no locale in path, cookie? no -> negotiate -> "de"
-  P-->>B: 307 Location: /de/products/42
-  B->>P: GET /de/products/42
-  P->>L: pass through
-  L-->>B: <html lang="de"> + German content + hreflang links
-```
+{/* diagram source: /diagrams/diagram-289.mmd */}
+![diagram](/diagrams/diagram-289.svg)
 
 ## 2. Without a library: the official pattern
 

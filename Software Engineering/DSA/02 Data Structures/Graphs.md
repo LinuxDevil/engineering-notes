@@ -16,14 +16,8 @@ A **graph** is a set of vertices connected by edges. Edges can be directed or un
 
 Graphs model relationships: people and friendships, cities and roads, packages and dependencies, services and network calls, web pages and links. Trees ([Trees & Binary Search Trees](/Software%20Engineering/DSA/02%20Data%20Structures/Trees%20%26%20Binary%20Search%20Trees)) and linked lists are special cases: a tree is a connected graph with no cycles.
 
-```mermaid
-flowchart LR
-  A((A)) -- 4 --> B((B))
-  A -- 1 --> C((C))
-  C -- 2 --> B
-  B -- 1 --> D((D))
-  C -- 5 --> D
-```
+{/* diagram source: /diagrams/diagram-186.mmd */}
+![diagram](/diagrams/diagram-186.svg)
 
 This is a **directed, weighted** graph. The shortest path from A to D is `A -> C -> B -> D` with cost 1 + 2 + 1 = 4, even though `A -> B -> D` uses fewer edges.
 

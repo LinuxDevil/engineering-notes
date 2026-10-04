@@ -1,0 +1,5 @@
+flowchart LR
+  T[Train] --> R[Register model + version] --> D[Deploy] --> S[Serve predictions]
+  S --> M[Monitor: drift, metrics, latency]
+  M -->|degraded| T
+  S --> F[(Log inputs, outputs, outcomes)] --> T

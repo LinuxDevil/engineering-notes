@@ -1,0 +1,6 @@
+stateDiagram-v2
+  [*] --> Proposed
+  Proposed --> Accepted: review
+  Proposed --> Rejected
+  Accepted --> Deprecated: no longer relevant
+  Accepted --> Superseded: replaced by newer ADR

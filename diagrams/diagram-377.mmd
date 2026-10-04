@@ -1,0 +1,5 @@
+flowchart TD
+  SRP[SRP: small focused modules] --> ISP[ISP: small focused interfaces]
+  ISP --> DIP[DIP: depend on those abstractions]
+  DIP --> OCP[OCP: plug in new implementations without editing]
+  LSP[LSP: implementations are safely substitutable] --> OCP

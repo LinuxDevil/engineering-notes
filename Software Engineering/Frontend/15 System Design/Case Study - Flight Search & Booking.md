@@ -39,17 +39,8 @@ Design the flights part of an online travel agency (OTA): a search form, a resul
 ## A: Architecture
 
 ### Page map and rendering strategy
-```mermaid
-flowchart LR
-  LP["Route landing pages<br/>/flights/dubai-cairo<br/>SSG/ISR + CDN"] --> Home
-  Home["Home / Search form<br/>SSR shell"] --> Results["Results /flights/search?...<br/>SSR skeleton + CSR polling"]
-  Results --> Details["Fare details / upsell<br/>(drawer or page)"]
-  Details --> Pax["Passenger details<br/>CSR, auth-aware"]
-  Pax --> Extras["Seats & extras<br/>CSR, lazy seat map"]
-  Extras --> Pay["Payment<br/>CSR, PCI-scoped iframe"]
-  Pay -->|"3DS redirect/challenge"| Bank["Issuer ACS"]
-  Bank --> Confirm["Confirmation<br/>/booking/:id"]
-```
+{/* diagram source: /diagrams/diagram-339.mmd */}
+![diagram](/diagrams/diagram-339.svg)
 
 | Page | Strategy | Why |
 |---|---|---|
@@ -60,29 +51,8 @@ flowchart LR
 | Confirmation | SSR or CSR with a refetch by booking id | Must survive refresh and the 3DS redirect |
 
 ### Component architecture (results page)
-```mermaid
-flowchart TB
-  RP["ResultsPage"] --> SS["SearchSummary (edit search)"]
-  RP --> FP["FiltersPanel"]
-  FP --> F1["StopsFilter"] & F2["AirlinesFilter"] & F3["PriceRangeSlider"] & F4["TimeWindows"]
-  RP --> SB["SortBar"]
-  RP --> PB["ProgressBar (suppliers done / total)"]
-  RP --> RL["ResultsList (virtualized)"]
-  RL --> IC["ItineraryCard"]
-  IC --> Seg["SegmentRow x n"]
-  IC --> Price["PriceTag (currency formatted)"]
-  RP --> Mat["PriceMatrix / DateStrip (±3 days)"]
-
-  subgraph Data
-    URL["URL state<br/>search + filters + sort"]
-    RS["Results store<br/>normalized itineraries, facets"]
-    PL["Search poller<br/>(searchId, AbortController)"]
-  end
-  URL --> RP
-  PL --> RS --> RL
-  FP --> URL
-  SB --> URL
-```
+{/* diagram source: /diagrams/diagram-340.mmd */}
+![diagram](/diagrams/diagram-340.svg)
 
 ### Micro-frontends (if the org is large)
 Search, booking and post-booking are often owned by different teams:
@@ -243,13 +213,8 @@ GET  /api/bookings/:id                  -> { state: "CONFIRMED" | "TICKETING" | 
 ### 3. Fare caching and price-change handling
 Airfare is volatile and supplier look-to-book costs are real, so prices are cached at several layers and **re-confirmed** before money moves.
 
-```mermaid
-flowchart LR
-  A["Landing page 'from' price<br/>(cached hours/days)"] --> B["Search results price<br/>(cached minutes, offer TTL)"]
-  B --> C["Re-price on select<br/>(live supplier call)"]
-  C --> D["Price at booking creation"]
-  D --> E["Final price at payment<br/>(must match what user saw)"]
-```
+{/* diagram source: /diagrams/diagram-341.mmd */}
+![diagram](/diagrams/diagram-341.svg)
 
 UX rules:
 - Label cached prices honestly ("from", "prices may change").
@@ -268,28 +233,8 @@ UX rules:
 ### 5. Checkout as a state machine
 Booking has many states and failure paths; boolean flags (`isLoading`, `isPaid`, `hasError`) lead to impossible combinations. Model it explicitly (XState or a reducer) and mirror the server's state.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Pricing
-  Pricing --> PriceChanged: price differs
-  PriceChanged --> PassengerDetails: user accepts
-  PriceChanged --> [*]: back to results
-  Pricing --> PassengerDetails: price confirmed
-  Pricing --> SoldOut: not available
-  PassengerDetails --> Extras: valid details
-  Extras --> Payment
-  Payment --> Authorizing: submit
-  Authorizing --> ThreeDS: requires action
-  ThreeDS --> Authorizing: returned from issuer
-  Authorizing --> Ticketing: authorized
-  Authorizing --> PaymentFailed: declined
-  PaymentFailed --> Payment: retry / change card
-  Ticketing --> Confirmed: tickets issued
-  Ticketing --> PendingConfirmation: slow supplier
-  PendingConfirmation --> Confirmed: poll / email
-  Ticketing --> BookingFailed: supplier error (refund/void)
-  Confirmed --> [*]
-```
+{/* diagram source: /diagrams/diagram-342.mmd */}
+![diagram](/diagrams/diagram-342.svg)
 
 <Info>
 **Reducer sketch**

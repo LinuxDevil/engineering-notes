@@ -176,16 +176,8 @@ function greet(p: Pick<User, "firstName">) { return `Hi ${p.firstName}`; }
 
 "Inversion" refers to the direction of the **source-code dependency**: normally policy (business rules) calls detail (database), so it imports it. With DIP, the policy **owns an interface** and the detail implements it; the arrow now points from detail to policy.
 
-```mermaid
-flowchart LR
-  subgraph Before
-    A1[OrderService] --> B1[MySqlOrderDao]
-  end
-  subgraph After
-    A2[OrderService] --> P[OrderRepository interface<br/>owned by the domain]
-    B2[MySqlOrderRepository] -. implements .-> P
-  end
-```
+{/* diagram source: /diagrams/diagram-376.mmd */}
+![diagram](/diagrams/diagram-376.svg)
 
 ```java
 // ❌ Car is welded to one concrete engine
@@ -213,13 +205,8 @@ Note that passing the dependency through the constructor is **dependency injecti
 
 ## How the principles relate
 
-```mermaid
-flowchart TD
-  SRP[SRP: small focused modules] --> ISP[ISP: small focused interfaces]
-  ISP --> DIP[DIP: depend on those abstractions]
-  DIP --> OCP[OCP: plug in new implementations without editing]
-  LSP[LSP: implementations are safely substitutable] --> OCP
-```
+{/* diagram source: /diagrams/diagram-377.mmd */}
+![diagram](/diagrams/diagram-377.svg)
 
 ## Pitfalls
 

@@ -124,10 +124,8 @@ Written order:
 
 **Logical processing order** (why aliases work in some clauses and not others):
 
-```mermaid
-flowchart LR
-  F[FROM / JOIN] --> W[WHERE] --> G[GROUP BY] --> H[HAVING] --> S[SELECT<br/>+ window functions] --> D[DISTINCT] --> O[ORDER BY] --> L[LIMIT / FETCH]
-```
+{/* diagram source: /diagrams/diagram-133.mmd */}
+![diagram](/diagrams/diagram-133.svg)
 
 ## Subtotals: `ROLLUP`, `CUBE`, `GROUPING SETS`
 

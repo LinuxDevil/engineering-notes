@@ -45,21 +45,8 @@ Idempotency-Key: order-981-shipped
 | `templates` | type, channel, locale, version, body |
 
 ## 5. High-level design
-```mermaid
-flowchart LR
-  S1["Order service"] & S2["Auth service"] & S3["Marketing tool"] --> API["Notification API<br/>(validate, idempotency)"]
-  API --> DB[("Notification DB")]
-  API --> Q0["Kafka: notifications<br/>(priority topics)"]
-  Q0 --> P["Processor:<br/>prefs, dedupe, rate limit,<br/>render template"]
-  P --> PREF[("Prefs & devices cache")]
-  P --> QP["push queue"] & QE["email queue"] & QS["sms queue"] & QI["in-app queue"]
-  QP --> WP["Push workers"] --> APNS["APNs / FCM"]
-  QE --> WE["Email workers"] --> SES["SES / SendGrid"]
-  QS --> WS["SMS workers"] --> TW["SMS provider"]
-  QI --> WI["In-app: store + WebSocket"]
-  APNS & SES & TW -.->|"callbacks/webhooks"| TR["Tracking service"] --> DB
-  WP & WE & WS -->|"after N failures"| DLQ["DLQ"]
-```
+{/* diagram source: /diagrams/diagram-395.mmd */}
+![diagram](/diagrams/diagram-395.svg)
 
 ## 6. Deep dives
 ### Priorities and isolation

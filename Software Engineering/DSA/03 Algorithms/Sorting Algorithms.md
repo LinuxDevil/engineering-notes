@@ -19,14 +19,8 @@ Sorting puts items in order by a key. Two properties matter as much as speed:
 - **Stable**: equal keys keep their original relative order. Sort users by name, then stable-sort by country, and names stay alphabetical within each country.
 - **In-place**: uses `O(1)` (or `O(log n)` stack) extra memory instead of a copy.
 
-```mermaid
-flowchart TD
-  S[Sorting] --> C[Comparison based<br/>lower bound Omega n log n]
-  S --> N[Non-comparison<br/>uses key structure]
-  C --> Q["O(n^2): bubble, selection, insertion"]
-  C --> F["O(n log n): merge, quick, heap, TimSort"]
-  N --> K["counting, radix, bucket: O(n + k)"]
-```
+{/* diagram source: /diagrams/diagram-196.mmd */}
+![diagram](/diagrams/diagram-196.svg)
 
 **Why `n log n` is a floor for comparison sorts**: there are `n!` possible orderings, each comparison has two outcomes, so a decision tree needs height at least `log2(n!) ≈ n log2 n` to tell them apart.
 

@@ -143,17 +143,8 @@ for i in range(n):          # i moves n times
 ### Recursion: the recursion tree
 Fibonacci without memoization branches twice per call, depth `n` → about **O(2ⁿ)** calls. With memoization each value is computed once → **O(n)**. See [Dynamic Programming](/Software%20Engineering/DSA/03%20Algorithms/Dynamic%20Programming).
 
-```mermaid
-graph TD
-  f5["fib(5)"] --> f4["fib(4)"]
-  f5 --> f3a["fib(3)"]
-  f4 --> f3b["fib(3)"]
-  f4 --> f2a["fib(2)"]
-  f3a --> f2b["fib(2)"]
-  f3a --> f1a["fib(1)"]
-  f3b --> f2c["fib(2)"]
-  f3b --> f1b["fib(1)"]
-```
+{/* diagram source: /diagrams/diagram-184.mmd */}
+![diagram](/diagrams/diagram-184.svg)
 
 **Space of recursion** = maximum call stack depth × frame size. A recursive DFS on a 10⁵-node linked-list-shaped tree needs 10⁵ frames, which overflows the default limit in CPython (1000) and can overflow V8's stack. See [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking).
 

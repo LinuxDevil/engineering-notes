@@ -23,20 +23,8 @@ updated: 2026-09-27
 
 They are most powerful **correlated**: a metric spike → exemplar trace ID → the trace → the logs with that `trace_id` → the profile of the slow function.
 
-```mermaid
-flowchart LR
-  subgraph Services
-    A[Service A + OTel SDK] -->|traceparent header| B[Service B + OTel SDK]
-  end
-  A -- OTLP --> COL[OTel Collector: receive, process, sample, export]
-  B -- OTLP --> COL
-  NODE[Node / K8s receivers, eBPF] --> COL
-  COL --> M[(Metrics: Prometheus / Mimir)]
-  COL --> L[(Logs: Loki / OpenSearch)]
-  COL --> T[(Traces: Tempo / Jaeger)]
-  COL --> P[(Profiles: Pyroscope)]
-  M & L & T & P --> G[Grafana / vendor UI + alerting]
-```
+{/* diagram source: /diagrams/diagram-179.mmd */}
+![diagram](/diagrams/diagram-179.svg)
 
 ## 2. Structured logging
 

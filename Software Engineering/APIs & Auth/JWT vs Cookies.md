@@ -121,22 +121,8 @@ A common production answer is **both**: a session cookie between browser and you
 
 Short-lived access tokens limit damage if stolen, but users should not log in every 10 minutes.
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant A as Auth server
-  participant R as API
-  C->>A: login
-  A-->>C: access token (5–15 min) + refresh token (days, rotating)
-  C->>R: request + access token
-  R-->>C: 200
-  Note over C,R: ...access token expires...
-  C->>R: request + expired token
-  R-->>C: 401 (WWW-Authenticate: Bearer error="invalid_token")
-  C->>A: POST /token grant_type=refresh_token (RT1)
-  A-->>C: new access token + RT2 (RT1 now invalid)
-  Note over A: If RT1 is ever presented again → reuse detected → revoke the whole token family
-```
+{/* diagram source: /diagrams/diagram-031.mmd */}
+![diagram](/diagrams/diagram-031.svg)
 
 - **Refresh token rotation**: each use returns a new refresh token and invalidates the old one. If an old one is reused, someone stole it; revoke the whole family (session).
 - Refresh tokens are **stateful by design**: store them (hashed) server-side so you can revoke them.

@@ -1,0 +1,10 @@
+flowchart TD
+  Q["What am I laying out?"] --> A{"Items in one row OR one column?"}
+  A -->|yes| F["Flexbox: nav bars, button groups, toolbars, chips that wrap"]
+  A -->|no, rows AND columns must align| G["Grid: page shells, card galleries, forms, dashboards"]
+  G --> SG{"Nested items must align to the parent's tracks?"}
+  SG -->|yes| SUB["subgrid"]
+  F --> R{"Should it adapt to its own width, not the screen?"}
+  G --> R
+  R -->|yes| CQ["@container size query"]
+  R -->|"page-level or user preference"| MQ["@media"]

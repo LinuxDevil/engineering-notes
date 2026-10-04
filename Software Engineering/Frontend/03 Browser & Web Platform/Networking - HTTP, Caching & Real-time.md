@@ -14,18 +14,8 @@ Front end performance is mostly network performance. Know how **HTTP/1.1, HTTP/2
 
 ## 1. Browser networking in one picture
 
-```mermaid
-sequenceDiagram
-  participant B as Browser
-  participant D as DNS
-  participant S as Server / CDN
-  B->>D: Resolve api.example.com
-  D-->>B: IP address
-  B->>S: TCP handshake (SYN, SYN-ACK, ACK)
-  B->>S: TLS handshake (ClientHello ... Finished)
-  B->>S: GET /flights?from=DXB
-  S-->>B: 200 OK + headers + body (streamed)
-```
+{/* diagram source: /diagrams/diagram-242.mmd */}
+![diagram](/diagrams/diagram-242.svg)
 
 - **Latency** (round trips) usually matters more than bandwidth for web pages. A new HTTPS connection over TCP costs ~2–3 round trips before the first request (TCP + TLS 1.2; TLS 1.3 saves one). HTTP/3 over QUIC combines transport and TLS handshakes (1 RTT, 0-RTT on resumption).
 - Reuse connections (keep-alive, HTTP/2 multiplexing), move content closer (CDN edge), and warm up origins early (`preconnect`, see [How Browsers Render - Critical Rendering Path](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/How%20Browsers%20Render%20-%20Critical%20Rendering%20Path)).
@@ -56,17 +46,8 @@ To cache responses on the client, the browser looks mainly at four response head
 1. **Freshness**: can I reuse the stored response *without asking the server*? (`Cache-Control: max-age`, `Expires`)
 2. **Validation**: once stale, is my copy still OK? Ask with a **conditional request** (`ETag` → `If-None-Match`, `Last-Modified` → `If-Modified-Since`); a `304 Not Modified` with an empty body means "yes, reuse it".
 
-```mermaid
-flowchart TD
-  R["Request for /app.js"] --> H{"In HTTP cache?"}
-  H -->|No| N["Fetch from network, store if cacheable"]
-  H -->|Yes| F{"Fresh? (age < max-age and no 'no-cache')"}
-  F -->|Yes| U["Use cached copy: no network at all"]
-  F -->|No| V["Conditional request: If-None-Match / If-Modified-Since"]
-  V --> S{"Server: changed?"}
-  S -->|"No → 304 Not Modified (empty body)"| U2["Reuse cached body, refresh its freshness"]
-  S -->|"Yes → 200 + new body"| N2["Replace cached copy"]
-```
+{/* diagram source: /diagrams/diagram-243.mmd */}
+![diagram](/diagrams/diagram-243.svg)
 
 ### ETag (entity tag)
 A validator string (often a hash or version) that identifies a specific version of the resource.
@@ -145,18 +126,8 @@ The **same-origin policy** stops scripts on `https://flights.example.com` from r
 
 Anything else (PUT/PATCH/DELETE, `Content-Type: application/json`, custom headers like `Authorization`) triggers a **preflight**:
 
-```mermaid
-sequenceDiagram
-  participant JS as Page JS (flights.example.com)
-  participant B as Browser
-  participant API as api.example.com
-  JS->>B: fetch PUT with JSON body
-  B->>API: OPTIONS /bookings/42 (Origin, Access-Control-Request-Method: PUT, Access-Control-Request-Headers: content-type)
-  API-->>B: 204 + Access-Control-Allow-Origin / -Methods / -Headers / -Max-Age
-  B->>API: PUT /bookings/42 (actual request)
-  API-->>B: 200 + Access-Control-Allow-Origin
-  B-->>JS: Response readable
-```
+{/* diagram source: /diagrams/diagram-244.mmd */}
+![diagram](/diagrams/diagram-244.svg)
 
 ```http
 Access-Control-Allow-Origin: https://flights.example.com
@@ -223,29 +194,8 @@ See [Case Study - Autocomplete](/Software%20Engineering/Frontend/15%20System%20D
 
 How do we get updates from server to client ("talking to the server")?
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant S as Server
-  Note over C,S: Short polling
-  C->>S: Any updates?
-  S-->>C: No
-  C->>S: Any updates? (every N s)
-  S-->>C: Yes, data
-  Note over C,S: Long polling
-  C->>S: Any updates?
-  S-->>C: (holds request open until data or timeout) data
-  C->>S: Immediately re-request
-  Note over C,S: SSE
-  C->>S: GET /stream (Accept: text/event-stream)
-  S-->>C: event 1
-  S-->>C: event 2 (same response, kept open)
-  Note over C,S: WebSocket
-  C->>S: HTTP Upgrade: websocket
-  S-->>C: 101 Switching Protocols
-  C->>S: message
-  S-->>C: message (full duplex)
-```
+{/* diagram source: /diagrams/diagram-245.mmd */}
+![diagram](/diagrams/diagram-245.svg)
 
 | | Short polling | Long polling | SSE (EventSource) | WebSockets | WebTransport |
 |---|---|---|---|---|---|

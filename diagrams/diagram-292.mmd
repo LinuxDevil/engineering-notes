@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant B as Browser
+    participant S as Next.js server
+    B->>S: GET /flights (first load)
+    S->>S: Render Server Components -> RSC payload
+    S->>S: RSC payload + Client Components -> HTML
+    S-->>B: HTML (streamed) + RSC payload + JS chunks
+    B->>B: Show HTML, then hydrate Client Components
+    B->>S: Click Link /flights/EK1 (client navigation)
+    S-->>B: RSC payload only
+    B->>B: Reconcile tree, keep layout and client state

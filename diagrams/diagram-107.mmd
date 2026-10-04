@@ -1,0 +1,15 @@
+flowchart TD
+    A[New workload] --> B{Needs multi-entity ACID transactions<br/>and ad hoc queries?}
+    B -- yes --> C{Fits on one primary<br/>with replicas?}
+    C -- yes --> PG[Postgres / MySQL]
+    C -- no --> DS[Distributed SQL:<br/>CockroachDB, Spanner, Yugabyte, TiDB]
+    B -- no --> D{Main access shape?}
+    D -- "lookup by key, low latency" --> KV[Key-value:<br/>Redis/Valkey, DynamoDB]
+    D -- "self-contained aggregates" --> DOC[Document: MongoDB]
+    D -- "huge write volume, partitioned" --> WC[Wide-column:<br/>Cassandra, ScyllaDB]
+    D -- "multi-hop relationships" --> G[Graph: Neo4j, Neptune]
+    D -- "time-stamped measurements" --> TS[Time-series:<br/>TimescaleDB, Prometheus]
+    D -- "full-text relevance" --> S[Search: Elasticsearch/OpenSearch]
+    D -- "aggregations over billions of rows" --> OLAP[Columnar: ClickHouse, DuckDB]
+    D -- "semantic similarity" --> V[Vector: pgvector, Qdrant]
+    KV & DOC & TS & S & V -.->|"first ask: can Postgres do it?"| PG

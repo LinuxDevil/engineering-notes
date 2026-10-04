@@ -1,0 +1,15 @@
+stateDiagram-v2
+  [*] --> Registered: navigator.serviceWorker.register()
+  Registered --> Installing: browser downloads & parses sw.js
+  Installing --> Installed: install event done (precache OK)
+  Installing --> Redundant: install failed
+  Installed --> Waiting: an older SW still controls open tabs
+  Waiting --> Activating: all old tabs closed, or skipWaiting()
+  Installed --> Activating: no older SW
+  Activating --> Activated: activate event (clean old caches)
+  Activated --> Idle
+  Idle --> Handling: fetch / message / push / sync event
+  Handling --> Idle
+  Idle --> Terminated: to save memory
+  Terminated --> Handling: woken by next event
+  Activated --> Redundant: replaced by a newer SW

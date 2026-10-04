@@ -44,14 +44,8 @@ By 2025 AI coding tools were nearly universal (DORA 2025: 90% of respondents use
 
 ## Using AI tools well
 
-```mermaid
-flowchart LR
-  S[Specify<br/>goal, constraints, tests] --> G[Generate<br/>small steps]
-  G --> V[Verify<br/>read, run, test]
-  V -->|wrong| S
-  V --> I[Integrate<br/>review, CI, observability]
-  I --> O[Own<br/>you are accountable]
-```
+{/* diagram source: /diagrams/diagram-090.mmd */}
+![diagram](/diagrams/diagram-090.svg)
 
 - Work in **small steps** with a clear goal; big generated diffs are hard to verify (DORA's small-batches finding).
 - Give **context**: relevant files, conventions, constraints; many teams keep agent instruction files (e.g. `AGENTS.md`/`CLAUDE.md`) in the repo.

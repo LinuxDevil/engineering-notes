@@ -63,31 +63,11 @@ type Page<T> = { items: T[]; nextCursor: string | null };
 
 ## 2. State machines
 
-```mermaid
-stateDiagram-v2
-  direction LR
-  [*] --> active: deployed (registry / manifest)
-  active --> paused: POST pause<br/>BullMQ removeJobScheduler · K8s suspend=true
-  paused --> active: POST resume<br/>no backfill of missed ticks
-  active --> active: POST runs (manual run)
-  paused --> paused: POST runs (manual runs still allowed)
-```
+{/* diagram source: /diagrams/diagram-062.mmd */}
+![diagram](/diagrams/diagram-062.svg)
 
-```mermaid
-stateDiagram-v2
-  [*] --> queued: tick or POST runs
-  queued --> running: worker picks it up / pod starts
-  queued --> cancelling: POST stop (flag set)
-  running --> succeeded: processor resolves / Job Complete
-  running --> failed: attempts exhausted / Job Failed / timeout
-  running --> queued: retryable error (backoff) / pod retry
-  running --> cancelling: POST stop
-  cancelling --> cancelled: signal observed (BullMQ) / Job deleted (K8s)
-  cancelling --> succeeded: finished before it saw the signal
-  succeeded --> [*]
-  failed --> [*]
-  cancelled --> [*]
-```
+{/* diagram source: /diagrams/diagram-063.mmd */}
+![diagram](/diagrams/diagram-063.svg)
 
 Rules that every note and the dashboard rely on:
 

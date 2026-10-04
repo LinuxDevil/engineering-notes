@@ -1,0 +1,8 @@
+sequenceDiagram
+  participant C as Client
+  participant S as Payment API
+  C->>S: POST /payments (amount 50)
+  S->>S: charge card ✅
+  S--xC: response lost (timeout)
+  C->>S: retry POST /payments (amount 50)
+  S->>S: charge card again ❌ double charge

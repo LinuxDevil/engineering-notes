@@ -1,0 +1,7 @@
+flowchart LR
+  A[Tests green] --> B[One small structural change]
+  B --> C[Run tests]
+  C -->|green| D[Commit]
+  D --> B
+  C -->|red| E[Revert, take a smaller step]
+  E --> B

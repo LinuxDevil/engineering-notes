@@ -12,36 +12,8 @@ updated: 2026-09-27
 Notes from the MongoDB University learning path **"Introduction to MongoDB"** (13 units), tidied into course notes with examples, a senior perspective and interview questions in each unit. Read them in order: Atlas and the document model first, then data modeling, connecting, CRUD, aggregation, indexes and Atlas Search. The original index note (with the lab cluster credentials) is kept in `_Archive/MongoDB (original).md`.
 </Note>
 
-```mermaid
-mindmap
-  root((MongoDB))
-    Getting started
-      Atlas
-      Document model
-      BSON and ObjectId
-    Modeling
-      Embed vs reference
-      Schema patterns
-      Anti-patterns
-    Connecting
-      Connection strings
-      mongosh and Compass
-      Node.js driver
-    CRUD
-      Insert and find
-      Update, replace, delete
-      Cursors and projection
-      Transactions
-    Aggregation
-      Pipeline stages
-    Indexes
-      Single, compound, multikey
-      ESR rule
-      explain
-    Search
-      Atlas Search
-      Vector Search
-```
+{/* diagram source: /diagrams/diagram-127.mmd */}
+![diagram](/diagrams/diagram-127.svg)
 
 ## 🧭 Quick links
 - Course: [MongoDB University, Introduction to MongoDB](https://learn.mongodb.com/)

@@ -16,15 +16,8 @@ updated: 2026-09-27
 
 The OpenGitOps principles: the system is **declarative**, desired state is **versioned and immutable** (Git), it is **pulled automatically** by agents, and **continuously reconciled**.
 
-```mermaid
-flowchart LR
-  Dev[Developer] -->|PR| AppRepo[App repo]
-  AppRepo --> CI[CI: test, build, scan, push image]
-  CI -->|PR: bump image tag| EnvRepo[Config repo: Helm values / Kustomize overlays]
-  EnvRepo -->|pull every few min or webhook| Agent[Argo CD / Flux in cluster]
-  Agent -->|apply + watch| K8s[(Kubernetes API)]
-  Agent -->|drift? health?| UI[Status / alerts]
-```
+{/* diagram source: /diagrams/diagram-170.mmd */}
+![diagram](/diagrams/diagram-170.svg)
 
 ### Push vs pull deployment
 

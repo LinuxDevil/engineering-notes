@@ -12,30 +12,8 @@ updated: 2026-09-27
 Entry point for all Java and Spring notes: the language and JVM, concurrency and virtual threads, Spring Boot and data access, and reactive programming (course notes from a Java Reactive course and Josh Long's *Reactive Spring* book). Every topic note has worked examples, a 🆕 2025–2026 box where something changed, and interview questions. Use the [Java Backend Preparation Checklist](/Software%20Engineering/Backend/Java/Java%20Backend%20Preparation%20Checklist) to track progress.
 </Note>
 
-```mermaid
-mindmap
-  root((Java & Spring))
-    Language
-      Essentials
-      Modern Java 17 to 27
-    Runtime
-      JVM memory
-      Garbage collection
-      JIT
-    Concurrency
-      Executors
-      CompletableFuture
-      Virtual threads
-      Structured concurrency
-    Spring
-      Boot essentials
-      Boot 3 to 4
-      Data access
-    Reactive
-      Reactor Mono and Flux
-      Reactive Streams
-      Backpressure
-```
+{/* diagram source: /diagrams/diagram-040.mmd */}
+![diagram](/diagrams/diagram-040.svg)
 
 ## 🧭 Quick links
 - ✅ [Java Backend Preparation Checklist](/Software%20Engineering/Backend/Java/Java%20Backend%20Preparation%20Checklist): the topic checklist, every item linked

@@ -163,15 +163,8 @@ Angular has **two** injector hierarchies that are searched in order:
 
 ![hierarchy diagram](/Attachments/hierarchy%20diagram.png)
 
-```mermaid
-flowchart BT
-  E1["ElementInjector: app-seat"] --> E2["ElementInjector: app-cabin"]
-  E2 --> E3["ElementInjector: app-root"]
-  E3 --> R["Environment: lazy route injector"]
-  R --> Root["Environment: root injector"]
-  Root --> P["Platform injector"]
-  P --> N["NullInjector (throws)"]
-```
+{/* diagram source: /diagrams/diagram-302.mmd */}
+![diagram](/diagrams/diagram-302.svg)
 
 **Resolution rules:** start at the requesting element's injector, walk up the element tree, then jump to the environment injector of that component and walk up to `NullInjector`. The first match wins.
 
@@ -265,17 +258,8 @@ export const authGuard: CanActivateFn = () =>
 
 ### Router events (one navigation)
 
-```mermaid
-flowchart LR
-  A[NavigationStart] --> B["RouteConfigLoadStart/End (lazy)"] --> C[RoutesRecognized]
-  C --> D[GuardsCheckStart] --> E["ChildActivationStart / ActivationStart"] --> F[GuardsCheckEnd]
-  F --> G[ResolveStart] --> H[ResolveEnd] --> I["ActivationEnd / ChildActivationEnd"]
-  I --> J{outcome}
-  J --> K[NavigationEnd]
-  J --> L[NavigationCancel]
-  J --> M[NavigationError]
-  K --> N[Scroll]
-```
+{/* diagram source: /diagrams/diagram-303.mmd */}
+![diagram](/diagrams/diagram-303.svg)
 
 `NavigationEnd`, `NavigationCancel` and `NavigationError` are alternative outcomes, not a sequence. There is also `NavigationSkipped` when the navigation is ignored (e.g. same URL).
 

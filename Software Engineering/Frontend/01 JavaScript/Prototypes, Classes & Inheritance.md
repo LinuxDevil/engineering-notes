@@ -31,12 +31,8 @@ Object.getPrototypeOf(animal) === Object.prototype; // true
 Object.getPrototypeOf(Object.prototype);            // null (end of chain)
 ```
 
-```mermaid
-flowchart LR
-  R["rabbit { name }"] -->|"[[Prototype]]"| A["animal { eats, walk }"]
-  A -->|"[[Prototype]]"| O["Object.prototype { toString, hasOwnProperty, ... }"]
-  O -->|"[[Prototype]]"| N["null"]
-```
+{/* diagram source: /diagrams/diagram-227.mmd */}
+![diagram](/diagrams/diagram-227.svg)
 
 Built-ins work the same way: `[1, 2].map` is found on `Array.prototype`; `[].__proto__.__proto__ === Object.prototype`; functions delegate to `Function.prototype` (that's where `call`/`apply`/`bind` live).
 
@@ -60,14 +56,8 @@ u.constructor === User;                       // true (via User.prototype.constr
 
 What `new User('Ali')` does:
 
-```mermaid
-flowchart TD
-  A["1. Create a new empty object"] --> B["2. Set its [[Prototype]] to User.prototype"]
-  B --> C["3. Call User with this = the new object"]
-  C --> D{"4. Did User return an object?"}
-  D -- Yes --> E["Return that object"]
-  D -- No --> F["Return the new object"]
-```
+{/* diagram source: /diagrams/diagram-228.mmd */}
+![diagram](/diagrams/diagram-228.svg)
 
 <Info>
 **Implement `new` yourself (interview)**
@@ -137,11 +127,8 @@ d instanceof Dog && d instanceof Animal; // true
 
 `extends` sets up **two** chains:
 
-```mermaid
-flowchart LR
-  d["d (instance)"] --> DP["Dog.prototype"] --> AP["Animal.prototype"] --> OP["Object.prototype"]
-  Dog["Dog (constructor)"] --> Animal["Animal (constructor)"] --> FP["Function.prototype"]
-```
+{/* diagram source: /diagrams/diagram-229.mmd */}
+![diagram](/diagrams/diagram-229.svg)
 
 The second chain is why **static** methods are inherited too (`Dog.create` finds `Animal.create`).
 

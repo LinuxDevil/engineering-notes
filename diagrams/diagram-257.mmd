@@ -1,0 +1,8 @@
+flowchart LR
+  M["Mount / update"] --> R["Render: run component body, useState, useMemo..."]
+  R --> DOM["Commit: DOM mutated"]
+  DOM --> L["useLayoutEffect cleanup(prev) → useLayoutEffect"]
+  L --> P["Browser paints"]
+  P --> E["useEffect cleanup(prev) → useEffect"]
+  E -->|"setState"| R
+  U["Unmount"] --> C["all cleanups run"]

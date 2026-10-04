@@ -16,14 +16,8 @@ Split failures into **expected errors** (validation, "not found", upstream 4xx),
 
 Within one segment, special files nest like this (outer to inner):
 
-```mermaid
-flowchart TD
-  L["layout.tsx"] --> T["template.tsx"]
-  T --> E["error.tsx (error boundary)"]
-  E --> LO["loading.tsx (Suspense)"]
-  LO --> NF["not-found.tsx (not-found boundary)"]
-  NF --> P["page.tsx or nested layout"]
-```
+{/* diagram source: /diagrams/diagram-287.mmd */}
+![diagram](/diagrams/diagram-287.svg)
 
 Consequences:
 - `error.tsx` catches errors from `loading`, `not-found`, `page` and **child** segments, but **not** from the `layout.tsx`/`template.tsx` of the same segment. The parent segment's `error.tsx` catches those.

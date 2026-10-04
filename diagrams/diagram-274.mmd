@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant C as Component
+    participant T as createAsyncThunk
+    participant API
+    participant R as Slice reducer
+    C->>T: dispatch(fetchCharacters("luke"))
+    T->>R: characters/fetchCharacters/pending
+    T->>API: fetch(...)
+    API-->>T: JSON
+    T->>R: characters/fetchCharacters/fulfilled (payload)
+    Note over T,R: or .../rejected on error

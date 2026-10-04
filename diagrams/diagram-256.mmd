@@ -1,0 +1,8 @@
+flowchart TD
+  A["New form"] --> B{"Server-first app (RSC / Next / RR framework)?"}
+  B -- "Yes, simple" --> C["form action + Server Function + useActionState + zod"]
+  B -- "No / rich client form" --> D{"Many fields, arrays, conditional logic?"}
+  D -- "Yes" --> E["React Hook Form + zodResolver"]
+  D -- "No" --> F{"UI depends on value while typing?"}
+  F -- "Yes" --> G["Controlled inputs (useState)"]
+  F -- "No" --> H["Uncontrolled + FormData"]

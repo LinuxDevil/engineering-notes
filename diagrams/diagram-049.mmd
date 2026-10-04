@@ -1,0 +1,12 @@
+flowchart TB
+  CF[".class / .jar"] --> CL["Class loader subsystem<br/>load → link (verify, prepare, resolve) → initialise"]
+  CL --> RDA
+  subgraph RDA["Runtime data areas"]
+    direction LR
+    H["Heap (shared)<br/>young + old generations"]
+    MS["Metaspace (native)<br/>class metadata"]
+    ST["Per-thread: JVM stack,<br/>PC register, native stack"]
+    CC["Code cache<br/>JIT-compiled code"]
+  end
+  RDA --> EE["Execution engine<br/>interpreter + JIT (C1, C2) + GC"]
+  EE --> JNI["JNI / FFM → native libraries"]

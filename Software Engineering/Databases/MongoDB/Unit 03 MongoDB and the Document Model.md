@@ -23,13 +23,8 @@ How MongoDB stores data and fits into Atlas, common use cases, supported value t
 - **Collection**: a group of documents. They don't have to follow the same schema.
 - **Database**: a container of collections.
 
-```mermaid
-flowchart LR
-  DB[(Database: bank)] --> C1[Collection: accounts]
-  DB --> C2[Collection: transfers]
-  C1 --> D1["{ _id, account_id, balance }"]
-  C1 --> D2["{ _id, account_id, balance, owner: {...} }"]
-```
+{/* diagram source: /diagrams/diagram-129.mmd */}
+![diagram](/diagrams/diagram-129.svg)
 
 ## Document structure
 ```json

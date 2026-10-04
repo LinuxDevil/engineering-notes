@@ -1,0 +1,7 @@
+flowchart LR
+  A["Selectors match elements"] --> B["Cascade picks a winning value per property"]
+  B --> C["Inheritance and defaults fill the gaps"]
+  C --> D["Computed values"]
+  D --> E["Layout: box model, formatting contexts, containing blocks"]
+  E --> F["Paint: stacking contexts, z-index"]
+  F --> G["Composite: GPU layers"]

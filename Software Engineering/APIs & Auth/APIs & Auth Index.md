@@ -12,31 +12,8 @@ updated: 2026-09-27
 Everything about designing, securing and operating APIs: REST, GraphQL and gRPC styles, HTTP semantics, versioning and idempotency, rate limiting, real-time delivery, and the whole identity stack (sessions, JWTs, OAuth/OIDC, passkeys, authorization models). Notes go beginner → senior, each with worked examples, a 🆕 2025–2026 box and interview questions. Infrastructure around APIs (Nginx, gateways, background jobs) lives in [Backend Index](/Software%20Engineering/Backend/Backend%20Index).
 </Note>
 
-```mermaid
-mindmap
-  root((APIs & Auth))
-    API styles
-      REST
-      GraphQL
-      gRPC & Connect
-      Webhooks, SSE, WebSockets
-    HTTP craft
-      Headers vs body
-      Status codes & errors
-      Pagination
-      Versioning & idempotency
-      Rate limiting
-    Identity
-      AuthN vs AuthZ
-      Sessions & JWT
-      OAuth 2.x & OIDC
-      Passkeys & MFA
-    Security
-      OWASP API Top 10
-      Gateways & BFF
-    AI era
-      MCP as an API surface
-```
+{/* diagram source: /diagrams/diagram-028.mmd */}
+![diagram](/diagrams/diagram-028.svg)
 
 ## 🟢 Beginner: the fundamentals
 | Note | What you'll learn |

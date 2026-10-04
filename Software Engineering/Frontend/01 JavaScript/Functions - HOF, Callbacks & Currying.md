@@ -285,10 +285,8 @@ const slugify = pipe(
 slugify('  Hello World '); // 'hello-world'
 ```
 
-```mermaid
-flowchart LR
-  I["'  Hello World '"] --> T["trim"] --> L["toLowerCase"] --> R["replace spaces"] --> O["'hello-world'"]
-```
+{/* diagram source: /diagrams/diagram-214.mmd */}
+![diagram](/diagrams/diagram-214.svg)
 
 Other functional-programming ideas from the JS Concepts checklist ([Frontend Roadmap & Checklist](/Software%20Engineering/Frontend/Frontend%20Roadmap%20%26%20Checklist)): first-class functions, pure functions, currying, composing, recursion, referential transparency (an expression can be replaced by its value). Functors/monads: `Array` (`map`) and `Promise` (`then`) behave much like them; that's enough for FE interviews.
 

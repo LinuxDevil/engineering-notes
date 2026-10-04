@@ -1,0 +1,6 @@
+flowchart TD
+  Org[Organization: billing, teams] --> P1[Project: dev]
+  Org --> P2[Project: prod]
+  P2 --> C1[Cluster: replica set]
+  P2 --> U[Database users]
+  P2 --> N[IP access list / private endpoints]

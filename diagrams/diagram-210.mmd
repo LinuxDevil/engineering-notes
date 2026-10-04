@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant S as Call stack
+  participant W as Web APIs (timer)
+  participant M as Microtask queue
+  participant T as Task queue
+  S->>S: log "Script Start"
+  S->>W: setTimeout(cb, 0)
+  S->>M: Promise.then(cb2)
+  S->>S: log "Script End"
+  W-->>T: timer done, enqueue cb
+  Note over S: stack empty, microtask checkpoint
+  M->>S: run cb2, log "Promise resolved"
+  Note over S: maybe render
+  T->>S: run cb, log "setTimeout callback"

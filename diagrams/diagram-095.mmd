@@ -1,0 +1,5 @@
+flowchart LR
+  T1["Thread 1<br/>holds A"] -->|"wants B"| B["Lock B"]
+  T2["Thread 2<br/>holds B"] -->|"wants A"| A["Lock A"]
+  B -.->|"held by"| T2
+  A -.->|"held by"| T1

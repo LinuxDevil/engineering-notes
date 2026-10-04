@@ -15,16 +15,8 @@ Most backend breaches come from a short list: **injection** (fixed with paramete
 ## Mental model: trust boundaries
 Every time data crosses a boundary (browser → API, API → DB, service → service, user file → parser), validate it on the receiving side and encode it for the next interpreter.
 
-```mermaid
-flowchart LR
-  U[Client / attacker] -->|untrusted input| API
-  subgraph Server
-    API[API layer<br/>authn · validation · authz] --> SVC[Business logic]
-    SVC --> DB[(Database<br/>parameterised SQL)]
-    SVC --> EXT[Outbound HTTP<br/>SSRF controls]
-    SVC --> LOG[Logs<br/>no secrets]
-  end
-```
+{/* diagram source: /diagrams/diagram-381.mmd */}
+![diagram](/diagrams/diagram-381.svg)
 
 ## 1. Injection
 

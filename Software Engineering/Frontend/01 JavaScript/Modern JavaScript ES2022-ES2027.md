@@ -14,14 +14,8 @@ A year-by-year catalogue of what landed in ECMAScript since 2022, with a one-lin
 
 ## How features get in (TC39 stages)
 
-```mermaid
-flowchart LR
-  S0["Stage 0: idea"] --> S1["Stage 1: proposal"]
-  S1 --> S2["Stage 2: draft"]
-  S2 --> S27["Stage 2.7: approved in principle, tests being written"]
-  S27 --> S3["Stage 3: recommended for implementation"]
-  S3 --> S4["Stage 4: finished, goes in next yearly spec"]
-```
+{/* diagram source: /diagrams/diagram-221.mmd */}
+![diagram](/diagrams/diagram-221.svg)
 
 - "Stage 4" ≠ "works everywhere". Check **Baseline** status: *Newly available* (all core browsers support it as of a date), *Widely available* (30+ months in all core browsers), *Limited* (at least one core browser is missing it).
 - Browsers often ship features before the spec year (e.g. `RegExp.escape` was Baseline in 2025 but is in ES2026).

@@ -14,18 +14,8 @@ updated: 2026-09-27
 
 ## Timeline
 
-```mermaid
-timeline
-  title Spring Boot generations
-  2022-11 : Boot 3.0 / Framework 6.0 (Java 17, Jakarta EE 9/10, AOT/native)
-  2023-05 : Boot 3.1 (Testcontainers @ServiceConnection, Docker Compose)
-  2023-11 : Boot 3.2 (virtual threads, RestClient, JdbcClient)
-  2024 : Boot 3.3 (CDS) : Boot 3.4 (structured logging, MockMvcTester, graceful shutdown default)
-  2025-05-22 : Boot 3.5 (last 3.x feature release)
-  2025-11-13 : Framework 7.0 GA
-  2025-11-20 : Boot 4.0 GA
-  2026-06-10 : Boot 4.1 (Spring gRPC, SSRF mitigation)
-```
+{/* diagram source: /diagrams/diagram-055.mmd */}
+![diagram](/diagrams/diagram-055.svg)
 
 ## Spring Boot 3.x recap (what you should already be using)
 

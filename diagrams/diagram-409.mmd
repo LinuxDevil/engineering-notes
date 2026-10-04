@@ -1,0 +1,2 @@
+flowchart LR
+  T["Raw text"] --> CF["Char filters<br/>(strip HTML)"] --> TK["Tokenizer<br/>(standard, whitespace, n-gram)"] --> TF["Token filters<br/>(lowercase, stop, stemmer, synonyms, ascii-fold)"] --> I["Index terms"]

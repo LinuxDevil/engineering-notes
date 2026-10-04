@@ -1,0 +1,7 @@
+stateDiagram-v2
+  direction LR
+  [*] --> active: deployed (registry / manifest)
+  active --> paused: POST pause<br/>BullMQ removeJobScheduler · K8s suspend=true
+  paused --> active: POST resume<br/>no backfill of missed ticks
+  active --> active: POST runs (manual run)
+  paused --> paused: POST runs (manual runs still allowed)

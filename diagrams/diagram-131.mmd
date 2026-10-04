@@ -1,0 +1,2 @@
+flowchart LR
+  A[(accounts)] --> M["$match balance < 1000"] --> G["$group by account_type"] --> S["$sort total desc"] --> R[results]

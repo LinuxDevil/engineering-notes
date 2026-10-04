@@ -13,14 +13,8 @@ A cache stores the result of expensive work closer to where it's needed. Pick a 
 </Note>
 
 ## Where caches live
-```mermaid
-flowchart LR
-  B["Browser cache<br/>(HTTP headers)"] --> CDN["CDN / edge cache"]
-  CDN --> RP["Reverse proxy cache<br/>(Nginx, Varnish)"]
-  RP --> APP["App: in-process cache<br/>(LRU map, Caffeine)"]
-  APP --> DC["Distributed cache<br/>(Redis / Valkey / Memcached)"]
-  DC --> DB[("DB: buffer pool,<br/>materialized views")]
-```
+{/* diagram source: /diagrams/diagram-391.mmd */}
+![diagram](/diagrams/diagram-391.svg)
 Browser and HTTP caching are covered in [Networking - HTTP, Caching & Real-time](/Software%20Engineering/Frontend/03%20Browser%20%26%20Web%20Platform/Networking%20-%20HTTP%2C%20Caching%20%26%20Real-time); CDN in [CDN & Edge Computing](/Software%20Engineering/System%20Design/CDN%20%26%20Edge%20Computing).
 
 ## Read patterns

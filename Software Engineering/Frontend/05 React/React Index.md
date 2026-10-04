@@ -14,14 +14,8 @@ The map of all React notes, plus state management and Next.js notes. Start with 
 
 ## Mental model in one picture
 
-```mermaid
-flowchart LR
-  A["State / props / context change"] --> B["Render phase: call components, diff (Fiber)"]
-  B --> C["Commit phase: apply DOM changes"]
-  C --> D["Browser paints"]
-  D --> E["Effects run (useEffect)"]
-  E -->|"setState"| A
-```
+{/* diagram source: /diagrams/diagram-263.mmd */}
+![diagram](/diagrams/diagram-263.svg)
 
 ## Core React notes (05 React)
 
@@ -50,20 +44,8 @@ flowchart LR
 
 ## Recommended reading order
 
-```mermaid
-flowchart TD
-  R1["1. How React Renders"] --> R2["2. State, Props & Data Flow"]
-  R2 --> R3["3. Hooks Reference"]
-  R3 --> R4["4. Component Patterns"]
-  R4 --> R5["5. Forms & Actions"]
-  R4 --> R6["6. React Router"]
-  R3 --> R7["7. React Performance"]
-  R5 --> R8["8. Server Components"]
-  R7 --> R9["9. React 19 to 19.3 & Compiler"]
-  R8 --> R9
-  R9 --> S["State Management Overview"]
-  R8 --> N["Next.js App Router Fundamentals"]
-```
+{/* diagram source: /diagrams/diagram-264.mmd */}
+![diagram](/diagrams/diagram-264.svg)
 
 1. **Foundations:** rendering, then state/props, then hooks. Most interview questions are about these three.
 2. **Building apps:** patterns, forms, routing.

@@ -1,0 +1,16 @@
+flowchart TD
+  RL["app/layout.tsx (root)"] --> CL["(console)/layout.tsx<br/>nav + Suspense(UserMenu)"]
+  CL --> LP["jobs/page.tsx (Server)<br/>requireViewer, listJobs"]
+  CL --> DP["jobs/[id]/page.tsx (Server)<br/>getJob + listRuns in parallel"]
+  LP --> JT["LiveJobsTable (Client)<br/>useEventSource, live region"]
+  JT --> SB1["StatusBadge"]
+  JT --> JA1["JobActions (Client)<br/>useActionState + useOptimistic"]
+  JA1 --> SD1["StopRunDialog (Client)<br/>&lt;dialog&gt;"]
+  DP --> JH["header (inline)<br/>badges, facts"]
+  JH --> JA2["JobActions"]
+  DP --> RH["RunHistory (Server)<br/>cursor pagination links"]
+  DP --> LR["LiveRefresh (Client)<br/>router.refresh on events"]
+  DP --> LV["LogViewer (Client)<br/>EventSource, autoscroll, ANSI strip"]
+  LV --> UES["useEventSource hook"]
+  JT --> UES
+  LR --> UES

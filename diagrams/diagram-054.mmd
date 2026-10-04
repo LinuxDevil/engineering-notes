@@ -1,0 +1,9 @@
+sequenceDiagram
+  participant Sub as Subscriber (slow DB writer)
+  participant Pub as Publisher (Kafka topic)
+  Sub->>Pub: request(50)
+  Pub-->>Sub: onNext × 50
+  Note over Sub: writes batch
+  Sub->>Pub: request(50)
+  Pub-->>Sub: onNext × 50
+  Note over Pub: producer is faster → buffers upstream,<br/>or drops/latest per strategy

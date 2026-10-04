@@ -1,0 +1,7 @@
+flowchart LR
+  U["Browser"] --> CDN["CDN: cache /_next/static forever; respect Vary + _rsc"]
+  CDN --> LB["LB / reverse proxy: TLS, no buffering"]
+  LB --> P1["Next pod A"]
+  LB --> P2["Next pod B"]
+  P1 & P2 --> R[("Redis: cacheHandler + cacheHandlers + tag state")]
+  P1 & P2 --> IMG["Image cache (disk per pod, or external loader)"]

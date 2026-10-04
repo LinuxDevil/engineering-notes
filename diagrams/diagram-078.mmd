@@ -1,0 +1,10 @@
+flowchart TB
+  S([start: run main module, drain microtasks]) --> T
+  T["timers<br/>expired setTimeout / setInterval"] --> P["pending callbacks<br/>some deferred system I/O errors"]
+  P --> I["idle, prepare<br/>(internal)"]
+  I --> O["poll<br/>compute timeout, wait for I/O,<br/>run I/O callbacks"]
+  O --> C["check<br/>setImmediate callbacks"]
+  C --> X["close callbacks<br/>socket.on('close')"]
+  X --> A{"alive handles<br/>or requests?"}
+  A -- yes --> T
+  A -- no --> E([process exits])

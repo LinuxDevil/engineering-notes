@@ -1,0 +1,9 @@
+sequenceDiagram
+  participant Ed as Editor
+  participant DS as Dev server
+  participant Br as Browser runtime
+  Ed->>DS: save Button.tsx
+  DS->>DS: re-transform only Button.tsx, find HMR boundary
+  DS->>Br: WebSocket: update Button.tsx?t=123
+  Br->>DS: import the new module
+  Br->>Br: swap module, re-render (state preserved via Fast Refresh)

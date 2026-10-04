@@ -1,0 +1,9 @@
+flowchart LR
+  A["Call / start script"] --> B["Creation phase"]
+  B --> B1["Create environment record(s)"]
+  B1 --> B2["Function declarations: bound to full function"]
+  B2 --> B3["var: bound to undefined"]
+  B3 --> B4["let / const / class: bound but uninitialized (TDZ)"]
+  B4 --> B5["Decide this binding + outer reference"]
+  B5 --> C["Execution phase: run lines top to bottom, assign values"]
+  C --> D["return / end: context popped off the call stack"]

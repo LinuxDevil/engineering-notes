@@ -26,16 +26,8 @@ A secure SDLC builds security into every phase instead of testing it in at the e
 
 ## The secure SDLC at a glance
 
-```mermaid
-flowchart LR
-  R[Requirements<br/>security & privacy reqs<br/>ASVS level] --> D[Design<br/>threat model<br/>security review]
-  D --> C[Code<br/>secure defaults<br/>code review · SAST · secrets scan]
-  C --> B[Build<br/>SCA · SBOM · signed provenance]
-  B --> T[Test<br/>DAST · authz tests · pentest]
-  T --> Rel[Release<br/>config checks · signing]
-  Rel --> O[Operate<br/>monitoring · vuln mgmt · incident response]
-  O -->|lessons| R
-```
+{/* diagram source: /diagrams/diagram-385.mmd */}
+![diagram](/diagrams/diagram-385.svg)
 
 Frameworks that describe this: NIST **SSDF** (SP 800-218), OWASP **SAMM** (maturity model), Microsoft **SDL**, BSIMM.
 
@@ -58,17 +50,8 @@ Threat modeling answers four questions (Shostack's framework):
 
 ### Worked example: "upload profile picture" feature
 
-```mermaid
-flowchart LR
-  B[Browser] -- "HTTPS upload" --> API[API service]
-  API -- "store object" --> S3[(Object storage)]
-  API -- "enqueue" --> Q[Queue]
-  Q --> W[Image resizer worker]
-  W -- "fetch/store" --> S3
-  CDN[CDN] -- "serve" --> B
-  S3 --> CDN
-  classDef tb stroke-dasharray: 5 5;
-```
+{/* diagram source: /diagrams/diagram-386.mmd */}
+![diagram](/diagrams/diagram-386.svg)
 Trust boundaries: browser → API, API → storage, queue → worker (worker parses untrusted files).
 
 | STRIDE | Threat | Mitigation |

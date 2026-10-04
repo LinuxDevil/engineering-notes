@@ -57,14 +57,8 @@ There’s two types of database deployments:
 - **Organizations**: the top level. Group and define users and teams, grant them access to projects, hold billing.
 - **Projects**: inside an organization. Define and organize resources (clusters, database users, network access lists). A common setup is one project per environment (dev, staging, prod).
 
-```mermaid
-flowchart TD
-  Org[Organization: billing, teams] --> P1[Project: dev]
-  Org --> P2[Project: prod]
-  P2 --> C1[Cluster: replica set]
-  P2 --> U[Database users]
-  P2 --> N[IP access list / private endpoints]
-```
+{/* diagram source: /diagrams/diagram-128.mmd */}
+![diagram](/diagrams/diagram-128.svg)
 
 ## Atlas CLI
 Register (or log in) from the terminal. The course note had a typo (`altlas`):

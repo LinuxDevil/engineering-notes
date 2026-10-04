@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph shop-prod
+    SCH["BullMQ Job Schedulers<br/>(state in Redis)"] -- "delayed job per tick" --> R[("Redis<br/>noeviction + AOF")]
+    R --> JW["jobs-worker<br/>Deployment (KEDA)"]
+    CJ["K8s CronJobs<br/>cleanup-expired-carts<br/>playwright-checkout-smoke"] -- "Job per tick" --> P["Pods"]
+    API["jobs-api (Fastify)<br/>JobBackend adapters"] -- "BullMqBackend" --> R
+    API -- "K8sCronJobBackend" --> K["kube-apiserver"]
+    K --- CJ
+  end
+  UI["ops-console (Next.js 16)<br/>ops.acme.dev"] -- "REST + SSE" --> API
+  JW & P & API -- "metrics / JSON logs" --> G["Prometheus · Loki · Grafana<br/>alerts: failures, missed schedule"]

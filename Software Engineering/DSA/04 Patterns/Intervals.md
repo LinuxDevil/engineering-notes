@@ -41,13 +41,8 @@ overlap(a, b)  <=>  a.start < b.end  AND  b.start < a.end
 
 The intersection, if non-empty, is `[max(a.start, b.start), min(a.end, b.end)]`.
 
-```mermaid
-flowchart TD
-  Q{"Interval problem"} -->|"merge / insert / union"| M["sort by start<br/>extend last kept end"]
-  Q -->|"max non-overlapping / min removals / arrows"| G["sort by END<br/>greedy keep earliest finish"]
-  Q -->|"how many overlap at the same time"| H["min-heap of ends<br/>or sweep line"]
-  Q -->|"intersect two sorted lists"| T["two pointers<br/>advance the one that ends first"]
-```
+{/* diagram source: /diagrams/diagram-203.mmd */}
+![diagram](/diagrams/diagram-203.svg)
 
 ## How it works
 

@@ -30,18 +30,8 @@ subsets of [1, 2, 3]  (each node is recorded)
 
 The general recipe is in [Recursion & Backtracking](/Software%20Engineering/DSA/03%20Algorithms/Recursion%20%26%20Backtracking). This note is the interview pattern: a reusable template plus the four families (subsets, combinations, permutations, constraint boards) and how to prune.
 
-```mermaid
-flowchart TD
-  S["backtrack(state)"] --> G{"goal reached?"}
-  G -->|yes| R["record a copy of path"]
-  G -->|no| L["for each candidate choice"]
-  L --> V{"valid? (prune)"}
-  V -->|no| L
-  V -->|yes| C["choose: path.push(x)"]
-  C --> E["explore: backtrack(next state)"]
-  E --> U["unchoose: path.pop()"]
-  U --> L
-```
+{/* diagram source: /diagrams/diagram-198.mmd */}
+![diagram](/diagrams/diagram-198.svg)
 
 ## How it works
 

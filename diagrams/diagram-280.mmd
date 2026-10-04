@@ -1,0 +1,8 @@
+flowchart LR
+    U["User changes filter"] --> W["Write URL (router.replace / setQueryState)"]
+    W --> R["URL is source of truth"]
+    R --> S["Server Component reads searchParams"]
+    R --> C["Client hooks read useSearchParams"]
+    S --> V["Rendered results"]
+    C --> V
+    B["Back / refresh / shared link"] --> R

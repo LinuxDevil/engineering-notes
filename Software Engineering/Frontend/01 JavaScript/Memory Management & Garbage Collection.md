@@ -46,16 +46,8 @@ The ECMAScript spec doesn't define stack/heap; engines decide. V8 stores small i
 
 **Roots**: the global object, variables in the current call stack, active closures' scopes, DOM tree attached to the document, pending callbacks (timers, listeners, promises held by the host).
 
-```mermaid
-flowchart LR
-  R((Roots)) --> A[window.app]
-  A --> B[store]
-  B --> C[user object]
-  R --> D["active listener closure"]
-  D --> E["big data array"]
-  X["old modal (no refs)"]:::garbage --> Y["its DOM subtree"]:::garbage
-  classDef garbage fill:#fdd,stroke:#c33
-```
+{/* diagram source: /diagrams/diagram-219.mmd */}
+![diagram](/diagrams/diagram-219.svg)
 
 1. **Mark**: starting from the roots, traverse all references and mark every reachable object.
 2. **Sweep**: everything not marked is garbage; free it (and optionally **compact** to reduce fragmentation).
@@ -112,15 +104,8 @@ React StrictMode mounts, unmounts and re-mounts in development precisely to surf
 4. **Allocation instrumentation on timeline** / **Allocation sampling**: find which functions allocate the most.
 5. `performance.measureUserAgentSpecificMemory()` (cross-origin isolated pages only) for RUM memory measurement.
 
-```mermaid
-flowchart LR
-  A["Snapshot 1 (baseline)"] --> B["Repeat action N times"]
-  B --> C["Force GC (trash icon)"]
-  C --> D["Snapshot 2"]
-  D --> E["Comparison view: # New - # Deleted"]
-  E --> F["Retainers: who holds it?"]
-  F --> G["Fix cleanup, repeat"]
-```
+{/* diagram source: /diagrams/diagram-220.mmd */}
+![diagram](/diagrams/diagram-220.svg)
 
 ## Weak references
 

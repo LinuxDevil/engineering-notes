@@ -34,20 +34,8 @@ From the React Performance course, there are three big levers:
 
 ## 2. Measure first
 
-```mermaid
-flowchart LR
-  A["Feels slow / INP bad"] --> B["Reproduce with prod build + CPU throttling"]
-  B --> C["Profile: React DevTools Profiler / Performance panel + React tracks"]
-  C --> D{"Where is the time?"}
-  D -- "Many / slow renders" --> E["Structure → memo / Compiler → transitions"]
-  D -- "Huge DOM / layout" --> F["Virtualize, CSS containment"]
-  D -- "Big JS / slow load" --> G["Code split, RSC, lazy"]
-  D -- "Network waterfall" --> H["Loaders, parallel fetch, cache"]
-  E --> I["Re-measure"]
-  F --> I
-  G --> I
-  H --> I
-```
+{/* diagram source: /diagrams/diagram-265.mmd */}
+![diagram](/diagrams/diagram-265.svg)
 
 - **React DevTools Profiler:** commits, "why did this render?", flame graph. Turn on "Highlight updates when components render".
 - **`<Profiler onRender>`:** programmatic timings (`actualDuration` vs `baseDuration`). See [Component Patterns](/Software%20Engineering/Frontend/05%20React/Component%20Patterns).

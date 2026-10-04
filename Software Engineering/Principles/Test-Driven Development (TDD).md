@@ -14,12 +14,8 @@ updated: 2026-09-27
 
 ## The cycle
 
-```mermaid
-flowchart LR
-  R["🔴 Red<br/>write a small failing test"] --> G["🟢 Green<br/>simplest code that passes"]
-  G --> F["🔵 Refactor<br/>clean up, tests stay green"]
-  F --> R
-```
+{/* diagram source: /diagrams/diagram-378.mmd */}
+![diagram](/diagrams/diagram-378.svg)
 
 Kent Beck's rules (from *Test-Driven Development: By Example*, 2002):
 1. Write a test for the next small bit of behaviour. Run it; see it **fail** (proves the test can fail).
@@ -124,12 +120,8 @@ Guidelines:
 
 ## The test pyramid, trophy and honeycomb
 
-```mermaid
-flowchart TB
-  subgraph Pyramid["Test pyramid (Cohn)"]
-    E2E["E2E / UI: few"] --- INT["Integration / service: some"] --- UNIT["Unit: many"]
-  end
-```
+{/* diagram source: /diagrams/diagram-379.mmd */}
+![diagram](/diagrams/diagram-379.svg)
 
 | Model | Shape | Emphasis | Best fit |
 |---|---|---|---|

@@ -20,16 +20,8 @@ Machine learning is a way of building software where, instead of hand-writing th
 
 ![Screenshot_2023-03-28_at_8.25.39_PM](/Attachments/Screenshot_2023-03-28_at_8.25.39_PM.png)
 
-```mermaid
-flowchart TB
-  subgraph AI[Artificial Intelligence]
-    subgraph ML[Machine Learning]
-      subgraph DL[Deep Learning]
-        GA[Generative AI / LLMs]
-      end
-    end
-  end
-```
+{/* diagram source: /diagrams/diagram-013.mmd */}
+![diagram](/diagrams/diagram-013.svg)
 
 ## Kinds of ML tasks
 
